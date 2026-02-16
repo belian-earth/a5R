@@ -1,0 +1,12 @@
+src/rust/target
+src/rust/vendor
+src/*.o
+src/*.so
+src/*.dll
+src/*.a
+src/a5R-win.def
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+inst/doc

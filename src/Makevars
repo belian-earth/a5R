@@ -1,0 +1,39 @@
+TARGET_DIR = ./rust/target
+LIBDIR = $(TARGET_DIR)/release
+STATLIB = $(LIBDIR)/liba5R.a
+PKG_LIBS = -L$(LIBDIR) -la5R
+
+all: C_clean
+
+$(SHLIB): $(STATLIB)
+
+CARGOTMP = $(CURDIR)/.cargo
+
+$(STATLIB):
+	# In some environments, ~/.cargo/bin might not be in PATH, so we need
+	# to set it here.
+	export PATH="$(PATH):$(HOME)/.cargo/bin" && \
+		cargo build --lib --release --manifest-path=./rust/Cargo.toml --target-dir $(TARGET_DIR)
+	if [ "$(NOT_CRAN)" != "true" ]; then \
+		rm -Rf $(CARGOTMP) && \
+		mkdir -p $(CARGOTMP) && \
+		cp ./rust/Cargo.toml $(CARGOTMP)/Cargo.toml && \
+		$(MAKE) vendor-cleanup; \
+	fi
+
+vendor-cleanup:
+	if [ -d ./rust/vendor ]; then \
+		cd ./rust/vendor && \
+		find . -name "*.c" -delete && \
+		find . -name "*.cpp" -delete && \
+		find . -name "*.cc" -delete && \
+		find . -name "*.S" -delete && \
+		find . -name "*.py" -delete && \
+		find . -name "tests" -type d -exec rm -rf {} + 2>/dev/null; \
+	fi
+
+C_clean:
+	rm -Rf $(SHLIB) $(STATLIB) $(OBJECTS)
+
+clean:
+	rm -Rf $(SHLIB) $(STATLIB) $(OBJECTS) $(TARGET_DIR)

@@ -1,0 +1,6 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^src/\.cargo$
+^src/rust/\.cargo$
+^src/rust/target$
