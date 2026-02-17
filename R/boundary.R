@@ -1,6 +1,6 @@
 #' Get cell boundary polygons
 #'
-#' Returns the boundary of each cell as a [wk::wk_wkt()] or [wk::wk_wkb()]
+#' Returns the boundary of each cell as a [wk::wkt()] or [wk::wkb()]
 #' polygon geometry. Boundaries are pentagonal polygons on the WGS 84
 #' ellipsoid.
 #'
@@ -10,7 +10,7 @@
 #' @param segments Integer scalar or `NULL`. Number of interpolation segments
 #'   per edge for geodesic accuracy. `NULL` uses the default (straight edges).
 #' @returns A `wk_wkt` vector of polygon geometries with
-#'   `wk::wk_crs_lonlat()` CRS.
+#'   `wk::wk_crs_longlat()` CRS.
 #'
 #' @export
 #' @examples
@@ -25,13 +25,17 @@ a5_cell_to_boundary <- function(cell, closed = TRUE, segments = NULL) {
     vctrs::vec_assert(segments, size = 1L)
   }
   raw <- a5_cell_to_boundary_rs(vctrs::vec_data(cell), closed, segments)
-  wkt <- vapply(raw, function(ring) {
-    if (length(ring$lon) == 1L && is.na(ring$lon)) {
-      return(NA_character_)
-    }
-    coords <- paste(ring$lon, ring$lat, sep = " ")
-    ring_str <- paste(coords, collapse = ", ")
-    paste0("POLYGON ((", ring_str, "))")
-  }, character(1L))
-  wk::new_wk_wkt(wkt, crs = wk::wk_crs_lonlat())
+  wkt <- vapply(
+    raw,
+    function(ring) {
+      if (length(ring$lon) == 1L && is.na(ring$lon)) {
+        return(NA_character_)
+      }
+      coords <- paste(ring$lon, ring$lat, sep = " ")
+      ring_str <- paste(coords, collapse = ", ")
+      paste0("POLYGON ((", ring_str, "))")
+    },
+    character(1L)
+  )
+  wk::new_wk_wkt(wkt, crs = wk::wk_crs_longlat())
 }
