@@ -1,6 +1,6 @@
 Package: a5R
 Title: A5 Discrete Global Grid System
-Version: 0.0.0.9000
+Version: 0.0.1
 Authors@R:
     person("Hugh", "Graham", role = c("aut", "cre"),
            email = "hugh.a.graham@gmail.com")
@@ -10,7 +10,7 @@ Description: R bindings for the A5 Discrete Global Grid System (DGGS). A5
     Provides functions for indexing coordinates to cells, traversing the
     cell hierarchy, computing cell boundaries, and compacting/uncompacting
     cell sets. Powered by the 'a5' Rust crate via 'extendr'.
-License: MIT + file LICENSE
+License: Apache License (>= 2)
 URL: https://github.com/h-a-graham/a5R
 BugReports: https://github.com/h-a-graham/a5R/issues
 Depends:
@@ -18,10 +18,13 @@ Depends:
 Imports:
     cli,
     rlang (>= 1.1.0),
+    units,
     vctrs (>= 0.6.0),
     wk (>= 0.9.0)
 Suggests:
-    testthat (>= 3.0.0)
+    pillar,
+    testthat (>= 3.0.0),
+    tibble
 Config/testthat/edition: 3
 Config/rextendr/version: 0.4.2
 SystemRequirements: Cargo (Rust's package manager), rustc
