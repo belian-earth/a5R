@@ -19,3 +19,6 @@ Extracts the resolution level (0--30) encoded in each cell index.
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
 a5_get_resolution(cell)
 }
+\seealso{
+\code{\link[=a5_cell_to_parent]{a5_cell_to_parent()}}, \code{\link[=a5_cell_to_children]{a5_cell_to_children()}}
+}

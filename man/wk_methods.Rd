@@ -6,9 +6,9 @@
 \alias{wk_crs.a5_cell}
 \title{wk methods for a5_cell}
 \usage{
-wk_handle.a5_cell(handleable, handler, ...)
+\method{wk_handle}{a5_cell}(handleable, handler, ...)
 
-wk_crs.a5_cell(x)
+\method{wk_crs}{a5_cell}(x)
 }
 \arguments{
 \item{handleable, x}{An \link{a5_cell} vector.}

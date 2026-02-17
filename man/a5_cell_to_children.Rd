@@ -24,3 +24,6 @@ finer resolution.
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
 a5_cell_to_children(cell)
 }
+\seealso{
+\code{\link[=a5_cell_to_parent]{a5_cell_to_parent()}}, \code{\link[=a5_get_resolution]{a5_get_resolution()}}
+}

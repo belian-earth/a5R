@@ -19,3 +19,7 @@ Returns the centre-point longitude and latitude of each cell.
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
 a5_cell_to_lonlat(cell)
 }
+\seealso{
+\code{\link[=a5_lonlat_to_cell]{a5_lonlat_to_cell()}} for the inverse operation,
+\code{\link[=a5_cell_to_boundary]{a5_cell_to_boundary()}} for full cell polygons.
+}

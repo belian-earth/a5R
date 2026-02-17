@@ -28,3 +28,6 @@ ellipsoid.
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
 a5_cell_to_boundary(cell)
 }
+\seealso{
+\code{\link[=a5_cell_to_lonlat]{a5_cell_to_lonlat()}} for cell centroids.
+}

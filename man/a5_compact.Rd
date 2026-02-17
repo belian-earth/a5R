@@ -21,3 +21,6 @@ cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
 children <- a5_cell_to_children(cell)
 a5_compact(children) # back to the parent
 }
+\seealso{
+\code{\link[=a5_uncompact]{a5_uncompact()}}
+}

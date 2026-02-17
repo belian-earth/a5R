@@ -21,3 +21,6 @@ Expands each cell to its descendants at the target resolution.
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
 a5_uncompact(cell, resolution = 7)
 }
+\seealso{
+\code{\link[=a5_compact]{a5_compact()}}
+}
