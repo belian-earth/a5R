@@ -1,0 +1,56 @@
+url: https://h-a-graham.github.io/a5R/
+
+template:
+  bootstrap: 5
+  bootswatch: cosmo
+  bslib:
+    primary: "#4a6741"
+
+navbar:
+  structure:
+    left: [intro, reference, news]
+    right: [search, github]
+  components:
+    github:
+      icon: fa-github
+      href: https://github.com/h-a-graham/a5R
+
+reference:
+  - title: Indexing
+    desc: Convert between coordinates and A5 cell indices.
+    contents:
+      - a5_lonlat_to_cell
+      - a5_cell_to_lonlat
+
+  - title: Cell type
+    desc: The `a5_cell` vector type and helpers.
+    contents:
+      - a5_cell
+      - a5_hex_to_cell
+      - a5_is_cell
+
+  - title: Hierarchy
+    desc: Navigate the cell hierarchy across resolutions.
+    contents:
+      - a5_get_resolution
+      - a5_cell_to_parent
+      - a5_cell_to_children
+      - a5_get_res0_cells
+
+  - title: Geometry & info
+    desc: Cell boundaries, areas, and counts.
+    contents:
+      - a5_cell_to_boundary
+      - a5_cell_area
+      - a5_get_num_cells
+
+  - title: Compact & uncompact
+    desc: Compress and expand sets of cells.
+    contents:
+      - a5_compact
+      - a5_uncompact
+
+  - title: wk integration
+    desc: Methods for the wk geometry framework.
+    contents:
+      - wk_methods
