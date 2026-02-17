@@ -25,18 +25,6 @@ a5_cell_to_boundary <- function(cell, closed = TRUE, segments = NULL) {
     segments <- vctrs::vec_cast(segments, integer())
     vctrs::vec_assert(segments, size = 1L)
   }
-  raw <- a5_cell_to_boundary_rs(vctrs::vec_data(cell), closed, segments)
-  wkt <- vapply(
-    raw,
-    function(ring) {
-      if (length(ring$lon) == 1L && is.na(ring$lon)) {
-        return(NA_character_)
-      }
-      coords <- paste(ring$lon, ring$lat, sep = " ")
-      ring_str <- paste(coords, collapse = ", ")
-      paste0("POLYGON ((", ring_str, "))")
-    },
-    character(1L)
-  )
+  wkt <- a5_cell_to_boundary_rs(vctrs::vec_data(cell), closed, segments)
   wk::new_wk_wkt(wkt, crs = wk::wk_crs_longlat())
 }

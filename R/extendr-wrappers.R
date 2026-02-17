@@ -30,12 +30,12 @@ a5_lonlat_to_cell_rs <- function(lon, lat, resolution) .Call(wrap__a5_lonlat_to_
 #' @keywords internal
 a5_cell_to_lonlat_rs <- function(cell) .Call(wrap__a5_cell_to_lonlat_rs, cell)
 
-#' Get boundary polygon vertices for A5 cells.
+#' Get boundary polygons for A5 cells as WKT strings.
 #'
 #' @param cell Character vector of hex-encoded cell IDs.
 #' @param closed_ring Logical: should the polygon ring be closed?
 #' @param segments Integer: number of interpolation segments per edge.
-#' @return A list of lists, each with `lon` and `lat` numeric vectors.
+#' @return A character vector of WKT POLYGON strings.
 #' @noRd
 #' @keywords internal
 a5_cell_to_boundary_rs <- function(cell, closed_ring, segments) .Call(wrap__a5_cell_to_boundary_rs, cell, closed_ring, segments)

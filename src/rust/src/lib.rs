@@ -78,12 +78,12 @@ fn a5_cell_to_lonlat_rs(cell: Strings) -> List {
 // Cell boundaries
 // ---------------------------------------------------------------------------
 
-/// Get boundary polygon vertices for A5 cells.
+/// Get boundary polygons for A5 cells as WKT strings.
 ///
 /// @param cell Character vector of hex-encoded cell IDs.
 /// @param closed_ring Logical: should the polygon ring be closed?
 /// @param segments Integer: number of interpolation segments per edge.
-/// @return A list of lists, each with `lon` and `lat` numeric vectors.
+/// @return A character vector of WKT POLYGON strings.
 /// @noRd
 /// @keywords internal
 #[extendr]
@@ -91,17 +91,17 @@ fn a5_cell_to_boundary_rs(
     cell: Strings,
     closed_ring: bool,
     segments: Nullable<i32>,
-) -> List {
+) -> Strings {
     let seg: Option<i32> = match segments {
         Nullable::NotNull(s) => Some(s),
         Nullable::Null => None,
     };
     let n = cell.len();
-    let mut items: Vec<Robj> = Vec::with_capacity(n);
+    let mut out = Strings::new(n);
     for i in 0..n {
         let s = &cell[i];
         if s.is_na() {
-            items.push(list!(lon = Rfloat::na(), lat = Rfloat::na()).into());
+            out.set_elt(i, Rstr::na());
             continue;
         }
         let opts = a5::core::cell::CellToBoundaryOptions {
@@ -111,20 +111,19 @@ fn a5_cell_to_boundary_rs(
         match a5::hex_to_u64(s.as_str()) {
             Ok(id) => match a5::cell_to_boundary(id, Some(opts)) {
                 Ok(boundary) => {
-                    let lons: Vec<f64> = boundary.iter().map(|ll| ll.longitude()).collect();
-                    let lats: Vec<f64> = boundary.iter().map(|ll| ll.latitude()).collect();
-                    items.push(list!(lon = lons, lat = lats).into());
+                    let coords: Vec<String> = boundary
+                        .iter()
+                        .map(|ll| format!("{} {}", ll.longitude(), ll.latitude()))
+                        .collect();
+                    let wkt = format!("POLYGON (({}))", coords.join(", "));
+                    out.set_elt(i, Rstr::from(wkt));
                 }
-                Err(_) => {
-                    items.push(list!(lon = Rfloat::na(), lat = Rfloat::na()).into());
-                }
+                Err(_) => out.set_elt(i, Rstr::na()),
             },
-            Err(_) => {
-                items.push(list!(lon = Rfloat::na(), lat = Rfloat::na()).into());
-            }
+            Err(_) => out.set_elt(i, Rstr::na()),
         }
     }
-    List::from_values(items)
+    out
 }
 
 // ---------------------------------------------------------------------------
