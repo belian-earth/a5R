@@ -31,7 +31,9 @@ is_a5_cell <- function(x) {
 #' @export
 #' @rdname a5_cell
 as_a5_cell <- function(x) {
-  if (is_a5_cell(x)) return(x)
+  if (is_a5_cell(x)) {
+    return(x)
+  }
   a5_cell(x)
 }
 
