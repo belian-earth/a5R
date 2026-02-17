@@ -32,8 +32,9 @@
 #' (longitude/latitude) coordinates; projected geometries are not reprojected
 #' and will produce incorrect results.
 #'
-#' Antimeridian-crossing bounding boxes (where xmin > xmax) are not supported
-#' via the numeric input. Pass a multi-polygon geometry instead.
+#' Antimeridian-crossing bounding boxes are supported: when `xmin > xmax`
+#' in a numeric input (e.g. `c(170, -50, -170, -30)`), the bbox is
+#' automatically split into two rectangles either side of the antimeridian.
 #'
 #' @seealso [a5_cell_to_boundary()] to convert result cells to geometries.
 #' @export
@@ -110,19 +111,21 @@ as_geos_area <- function(x, call = rlang::caller_env()) {
         call = call
       )
     }
-    if (x[[1]] >= x[[3]]) {
-      cli::cli_abort(
-        "{.code xmin} ({x[[1]]}) must be less than {.code xmax} ({x[[3]]}).",
-        call = call
-      )
-    }
     if (x[[2]] >= x[[4]]) {
       cli::cli_abort(
         "{.code ymin} ({x[[2]]}) must be less than {.code ymax} ({x[[4]]}).",
         call = call
       )
     }
-    x <- wk::rct(x[[1]], x[[2]], x[[3]], x[[4]], crs = wk::wk_crs_longlat())
+    if (x[[1]] > x[[3]]) {
+      # Antimeridian-crossing bbox: split into two rectangles and union
+      x <- c(
+        wk::rct(x[[1]], x[[2]], 180, x[[4]], crs = wk::wk_crs_longlat()),
+        wk::rct(-180, x[[2]], x[[3]], x[[4]], crs = wk::wk_crs_longlat())
+      )
+    } else {
+      x <- wk::rct(x[[1]], x[[2]], x[[3]], x[[4]], crs = wk::wk_crs_longlat())
+    }
   }
 
   geom <- geos::as_geos_geometry(x)

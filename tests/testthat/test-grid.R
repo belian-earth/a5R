@@ -3,7 +3,6 @@
 test_that("a5_grid rejects bad bbox", {
   expect_error(a5_grid(c(1, 2, 3), resolution = 3), "length 4")
   expect_error(a5_grid(c(1, 2, NA, 4), resolution = 3), "NA")
-  expect_error(a5_grid(c(10, 0, 5, 1), resolution = 3), "xmin")
   expect_error(a5_grid(c(0, 10, 1, 5), resolution = 3), "ymin")
 })
 
@@ -80,4 +79,17 @@ test_that("res 1 works (below filter threshold)", {
 test_that("tiny bbox returns at least 1 cell", {
   cells <- a5_grid(c(-3.19, 55.95, -3.189, 55.951), resolution = 8)
   expect_true(length(cells) >= 1L)
+})
+
+test_that("antimeridian-crossing bbox works", {
+  # Fiji: bbox straddles the antimeridian (xmin > xmax)
+  cells <- a5_grid(c(177, -19, -178, -17), resolution = 5)
+  expect_s3_class(cells, "a5_cell")
+  expect_true(length(cells) > 0)
+  expect_true(all(a5_get_resolution(cells) == 5L))
+  # cells on both sides of the antimeridian
+  centres <- a5_cell_to_lonlat(cells)
+  lons <- wk::wk_coords(centres)$x
+  expect_true(any(lons > 0))
+  expect_true(any(lons < 0))
 })
