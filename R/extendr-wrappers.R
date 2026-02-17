@@ -16,7 +16,7 @@ NULL
 #'
 #' @param lon Numeric vector of longitudes (degrees).
 #' @param lat Numeric vector of latitudes (degrees).
-#' @param resolution Integer vector of resolutions (0-30).
+#' @param resolution Integer vector of resolutions (0--30).
 #' @return A character vector of cell IDs (hex-encoded).
 #' @noRd
 #' @keywords internal
@@ -42,7 +42,7 @@ a5_cell_to_boundary_rs <- function(cell, closed_ring, segments) .Call(wrap__a5_c
 
 #' Get the area (in square metres) of cells at a given resolution.
 #'
-#' @param resolution Integer vector of resolutions (0-30).
+#' @param resolution Integer vector of resolutions (0--30).
 #' @return Numeric vector of areas in square metres.
 #' @noRd
 #' @keywords internal
@@ -50,7 +50,7 @@ a5_cell_area_rs <- function(resolution) .Call(wrap__a5_cell_area_rs, resolution)
 
 #' Get total number of cells at a given resolution.
 #'
-#' @param resolution Integer scalar (0-30).
+#' @param resolution Integer scalar (0--30).
 #' @return Numeric scalar (as double, since R has no u64).
 #' @noRd
 #' @keywords internal
