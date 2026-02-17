@@ -8,6 +8,7 @@
 #' @param resolution Integer scalar or vector of resolutions (0--30).
 #' @returns An [a5_cell] vector of cell indices.
 #'
+#' @seealso [a5_cell_to_lonlat()] for the inverse operation.
 #' @export
 #' @examples
 #' a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
@@ -29,6 +30,8 @@ a5_lonlat_to_cell <- function(lon, lat, resolution) {
 #' @param cell An [a5_cell] vector (or character coercible to one).
 #' @returns A [wk::xy()] vector of (longitude, latitude) points.
 #'
+#' @seealso [a5_lonlat_to_cell()] for the inverse operation,
+#'   [a5_cell_to_boundary()] for full cell polygons.
 #' @export
 #' @examples
 #' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)

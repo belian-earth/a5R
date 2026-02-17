@@ -12,6 +12,7 @@
 #' @returns A `wk_wkt` vector of polygon geometries with
 #'   `wk::wk_crs_longlat()` CRS.
 #'
+#' @seealso [a5_cell_to_lonlat()] for cell centroids.
 #' @export
 #' @examples
 #' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)

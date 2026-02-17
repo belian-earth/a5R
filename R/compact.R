@@ -6,6 +6,7 @@
 #' @param cells An [a5_cell] vector.
 #' @returns An [a5_cell] vector of compacted cells.
 #'
+#' @seealso [a5_uncompact()]
 #' @export
 #' @examples
 #' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
@@ -25,6 +26,7 @@ a5_compact <- function(cells) {
 #' @param resolution Integer scalar target resolution (0--30).
 #' @returns An [a5_cell] vector of uncompacted cells.
 #'
+#' @seealso [a5_compact()]
 #' @export
 #' @examples
 #' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)

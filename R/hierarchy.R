@@ -5,6 +5,7 @@
 #' @param cell An [a5_cell] vector.
 #' @returns An integer vector of resolutions.
 #'
+#' @seealso [a5_cell_to_parent()], [a5_cell_to_children()]
 #' @export
 #' @examples
 #' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
@@ -25,6 +26,7 @@ a5_get_resolution <- function(cell) {
 #'   the immediate parent.
 #' @returns An [a5_cell] vector of parent cells.
 #'
+#' @seealso [a5_cell_to_children()], [a5_get_resolution()]
 #' @export
 #' @examples
 #' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
@@ -52,6 +54,7 @@ a5_cell_to_parent <- function(cell, resolution = NULL) {
 #'   immediate children.
 #' @returns An [a5_cell] vector of child cells.
 #'
+#' @seealso [a5_cell_to_parent()], [a5_get_resolution()]
 #' @export
 #' @examples
 #' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
