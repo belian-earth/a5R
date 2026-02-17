@@ -11,4 +11,8 @@
 ^README\.Rmd$
 ^.claude$
 ^.vscode$
-de\.R$
+^dev\.R$
+^\.github$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$

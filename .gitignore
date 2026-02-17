@@ -15,3 +15,4 @@ src/Makevars.win
 .claude/
 .vscode/
 dev.R
+docs
