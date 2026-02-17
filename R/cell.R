@@ -53,9 +53,7 @@ vec_ptype_full.a5_cell <- function(x, ...) "a5_cell"
 #' @noRd
 #' @keywords internal
 format.a5_cell <- function(x, ...) {
-  out <- vctrs::vec_data(x)
-  out[is.na(out)] <- NA_character_
-  out
+  vctrs::vec_data(x)
 }
 
 # --- coercion: a5_cell <-> character ---
