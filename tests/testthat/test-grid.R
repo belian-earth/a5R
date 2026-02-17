@@ -95,3 +95,15 @@ test_that("antimeridian-crossing bbox works", {
   expect_true(any(lons > 0))
   expect_true(any(lons < 0))
 })
+
+test_that("empty intermediate result warns and returns empty a5_cell", {
+  # Very small bbox near the pole — planar filtering can prune all cells at
+  # intermediate resolutions. This must warn and return an empty vector,
+  # not crash in Rust (which panics on empty input to a5_uncompact).
+  expect_warning(
+    cells <- a5_grid(c(0, 89.999, 0.001, 90), resolution = 5),
+    "No cells found"
+  )
+  expect_s3_class(cells, "a5_cell")
+  expect_length(cells, 0L)
+})

@@ -36,6 +36,14 @@
 #' in a numeric input (e.g. `c(170, -50, -170, -30)`), the bbox is
 #' automatically split into two rectangles either side of the antimeridian.
 #'
+#' **Known limitation:** spatial filtering uses planar geometry
+#' ([geos::geos_intersects()]) on longitude/latitude coordinates. This can
+#' produce incomplete results for target areas very close to the poles
+#' (above ~88° latitude) or touching the antimeridian (longitude ±180°),
+#' where cell boundary polygons do not accurately represent their true
+#' spherical coverage. For these areas, use a larger target geometry to
+#' ensure complete coverage.
+#'
 #' @seealso [a5_cell_to_boundary()] to convert result cells to geometries.
 #' @export
 #' @examples
@@ -66,14 +74,24 @@ a5_grid <- function(x, resolution) {
       if (current_res < resolution) {
         # Intermediate: buffer target to avoid pruning cells whose children
         # straddle the boundary (A5 hierarchy is not strictly nested spatially)
-        buf_dist <- cell_buffer_distance(current_res)
-        buffered <- geos::geos_buffer(target, buf_dist)
-        cells <- filter_cells_by_intersection(cells, buffered)
+        buf_dist <- cell_buffer_distance(current_res, target)
+        if (buf_dist < 45) {
+          buffered <- geos::geos_buffer(target, buf_dist)
+          cells <- filter_cells_by_intersection(cells, buffered)
+        }
+        # If buf_dist >= 45 (near poles), skip filtering to avoid false negatives
       } else {
         # Final resolution: exact intersection
         cells <- filter_cells_by_intersection(cells, target)
       }
-      if (length(cells) == 0L) return(cells)
+      if (length(cells) == 0L) {
+        cli::cli_warn(c(
+          "No cells found at resolution {resolution}.",
+          "i" = "This can happen for targets near the poles or antimeridian where planar geometry filtering is inaccurate.",
+          "i" = "Try a slightly larger target area."
+        ))
+        return(cells)
+      }
     }
   }
 
@@ -82,17 +100,25 @@ a5_grid <- function(x, resolution) {
 
 # -- internal helpers ----------------------------------------------------------
 
-#' Approximate cell diameter in degrees with safety margin
+#' Approximate cell diameter in degrees, latitude-adjusted
 #'
-#' Used to buffer the target geometry at intermediate resolutions so that
-#' cells near the boundary are not incorrectly pruned.
+#' Computes a buffer distance in degrees that accounts for longitude
+#' compression at high latitudes. Returns a value >= 45 near the poles
+#' as a signal to skip filtering (degree-based buffering breaks down there).
 #' @noRd
-cell_buffer_distance <- function(resolution) {
+cell_buffer_distance <- function(resolution, target) {
   area_m2 <- as.numeric(a5_cell_area(resolution))
   diameter_m <- sqrt(area_m2)
-  # Convert to degrees (111 km per degree at equator — conservative)
-  # 50% of diameter covers observed ~10% hierarchy gaps with margin
-  diameter_m / 111000 * 0.5
+  # Scale by latitude: 1 degree of longitude shrinks as cos(lat)
+  extent <- geos::geos_extent(target)
+  max_abs_lat <- max(abs(extent$ymin), abs(extent$ymax))
+  cos_lat <- cos(max_abs_lat * pi / 180)
+  # At extreme latitudes (> ~87°), cos is so small the buffer becomes
+
+  # meaningless in degree space — return a large sentinel so the caller
+  # skips filtering for this iteration
+  if (cos_lat < 0.05) return(90)
+  diameter_m / (111000 * cos_lat) * 0.5
 }
 
 #' Normalize user input to a single geos_geometry

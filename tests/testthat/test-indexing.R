@@ -51,3 +51,19 @@ test_that("lonlat_to_cell rejects invalid resolution", {
   expect_error(a5_lonlat_to_cell(0, 0, resolution = 31), "resolution")
   expect_error(a5_lonlat_to_cell(0, 0, resolution = -1), "resolution")
 })
+
+test_that("cell_to_lonlat normalise = FALSE returns raw data frame", {
+  cell <- a5_lonlat_to_cell(114.8, 4.1, resolution = 5)
+  raw <- a5_cell_to_lonlat(cell, normalise = FALSE)
+  expect_s3_class(raw, "data.frame")
+  expect_named(raw, c("lon", "lat"))
+  # raw longitude should be outside [-180, 180] for this cell
+  expect_true(raw$lon < -180 || raw$lon > 180)
+})
+
+test_that("cell_to_lonlat normalise = TRUE wraps longitude", {
+  cell <- a5_lonlat_to_cell(114.8, 4.1, resolution = 5)
+  pt <- a5_cell_to_lonlat(cell, normalise = TRUE)
+  lon <- wk::wk_coords(pt)$x
+  expect_true(lon >= -180 && lon <= 180)
+})
