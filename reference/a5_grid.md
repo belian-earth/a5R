@@ -66,6 +66,14 @@ Antimeridian-crossing bounding boxes are supported: when `xmin > xmax`
 in a numeric input (e.g. `c(170, -50, -170, -30)`), the bbox is
 automatically split into two rectangles either side of the antimeridian.
 
+**Known limitation:** spatial filtering uses planar geometry
+([`geos::geos_intersects()`](https://paleolimbot.github.io/geos/reference/geos_disjoint.html))
+on longitude/latitude coordinates. This can produce incomplete results
+for target areas very close to the poles (above ~88° latitude) or
+touching the antimeridian (longitude ±180°), where cell boundary
+polygons do not accurately represent their true spherical coverage. For
+these areas, use a larger target geometry to ensure complete coverage.
+
 ## See also
 
 [`a5_cell_to_boundary()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_boundary.md)
