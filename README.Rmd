@@ -74,7 +74,7 @@ Convert back to coordinates:
 a5_cell_to_lonlat(cell)
 ```
 
-Get the cell boundary as a WKT polygon:
+Get the cell boundary polygon:
 
 ```{r}
 a5_cell_to_boundary(cell)
@@ -92,6 +92,24 @@ Cell info:
 ```{r}
 a5_get_resolution(cell)
 a5_cell_area(0:5)
+```
+
+### Grid generation
+
+Generate all cells covering an area with `a5_grid()`:
+
+```{r grid-plot, fig.alt = "A5 grid cells covering Edinburgh at resolution 8"}
+cells <- a5_grid(c(114.8, 4.1, 119.8, 8.1), resolution = 8)
+plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
+```
+
+Any geometry that [geos](https://paleolimbot.github.io/geos/) can handle works
+as input, including sf objects and WKT strings. Bounding boxes that cross the
+antimeridian are supported too:
+
+```{r}
+# Fiji — bbox crosses the antimeridian
+a5_grid(c(177, -19, -178, -17), resolution = 5)
 ```
 
 ### Visualising the grid hierarchy
