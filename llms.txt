@@ -58,7 +58,7 @@ a5_cell_to_lonlat(cell)
 #> [1] (-3.280745 56.43135)
 ```
 
-Get the cell boundary as a WKT polygon:
+Get the cell boundary polygon:
 
 ``` r
 a5_cell_to_boundary(cell)
@@ -86,6 +86,32 @@ a5_cell_area(0:5)
 #> Units: [m^2]
 #> [1] 4.250547e+13 8.501094e+12 2.125273e+12 5.313184e+11 1.328296e+11
 #> [6] 3.320740e+10
+```
+
+### Grid generation
+
+Generate all cells covering an area with
+[`a5_grid()`](https://belian-earth.github.io/a5R/reference/a5_grid.md):
+
+``` r
+cells <- a5_grid(c(114.8, 4.1, 119.8, 8.1), resolution = 8)
+plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
+```
+
+![A5 grid cells covering Edinburgh at resolution
+8](reference/figures/README-grid-plot-1.png)
+
+Any geometry that [geos](https://paleolimbot.github.io/geos/) can handle
+works as input, including sf objects and WKT strings. Bounding boxes
+that cross the antimeridian are supported too:
+
+``` r
+# Fiji — bbox crosses the antimeridian
+a5_grid(c(177, -19, -178, -17), resolution = 5)
+#> <a5_cell[12]>
+#>  [1] 9862000000000000 9866000000000000 986a000000000000 963e000000000000
+#>  [5] 9642000000000000 964e000000000000 9766000000000000 976a000000000000
+#>  [9] 976e000000000000 9772000000000000 9776000000000000 9786000000000000
 ```
 
 ### Visualising the grid hierarchy

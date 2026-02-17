@@ -87,7 +87,7 @@
 <code class="sourceCode R"><span><span class="fu"><a href="reference/a5_cell_to_lonlat.html">a5_cell_to_lonlat</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;wk_xy[1] with CRS=OGC:CRS84&gt;</span></span>
 <span><span class="co">#&gt; [1] (-3.280745 56.43135)</span></span></code></pre></div>
-<p>Get the cell boundary as a WKT polygon:</p>
+<p>Get the cell boundary polygon:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;wk_wkb[1] with CRS=OGC:CRS84&gt;</span></span>
@@ -109,9 +109,26 @@
 <span><span class="co">#&gt; [1] 4.250547e+13 8.501094e+12 2.125273e+12 5.313184e+11 1.328296e+11</span></span>
 <span><span class="co">#&gt; [6] 3.320740e+10</span></span></code></pre></div>
 <div class="section level3">
+<h3 id="grid-generation">Grid generation<a class="anchor" aria-label="anchor" href="#grid-generation"></a>
+</h3>
+<p>Generate all cells covering an area with <code><a href="reference/a5_grid.html">a5_grid()</a></code>:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/a5_grid.html">a5_grid</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">114.8</span>, <span class="fl">4.1</span>, <span class="fl">119.8</span>, <span class="fl">8.1</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#206ead20"</span>, border <span class="op">=</span> <span class="st">"#206ead"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-grid-plot-1.png" alt="A5 grid cells covering Edinburgh at resolution 8" width="100%"></p>
+<p>Any geometry that <a href="https://paleolimbot.github.io/geos/" class="external-link">geos</a> can handle works as input, including sf objects and WKT strings. Bounding boxes that cross the antimeridian are supported too:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Fiji — bbox crosses the antimeridian</span></span>
+<span><span class="fu"><a href="reference/a5_grid.html">a5_grid</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">177</span>, <span class="op">-</span><span class="fl">19</span>, <span class="op">-</span><span class="fl">178</span>, <span class="op">-</span><span class="fl">17</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;a5_cell[12]&gt;</span></span>
+<span><span class="co">#&gt;  [1] 9862000000000000 9866000000000000 986a000000000000 963e000000000000</span></span>
+<span><span class="co">#&gt;  [5] 9642000000000000 964e000000000000 9766000000000000 976a000000000000</span></span>
+<span><span class="co">#&gt;  [9] 976e000000000000 9772000000000000 9776000000000000 9786000000000000</span></span></code></pre></div>
+</div>
+<div class="section level3">
 <h3 id="visualising-the-grid-hierarchy">Visualising the grid hierarchy<a class="anchor" aria-label="anchor" href="#visualising-the-grid-hierarchy"></a>
 </h3>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># A cell and its children two levels down</span></span>
 <span><span class="va">parent</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/a5_lonlat_to_cell.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, resolution <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">children</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/a5_cell_to_children.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">parent</span>, resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
