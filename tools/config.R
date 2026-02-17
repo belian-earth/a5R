@@ -25,10 +25,11 @@ if (!is_not_cran) {
   message("Building for CRAN.")
 }
 
-# we set cran flags only if NOT_CRAN is empty and if
-# the vendored crates are present.
+# Use --offline whenever vendored crates are present.
+# This prevents "Downloads Rust crates" warnings in R CMD check.
+# Developers who need to add new crates should re-vendor first.
 .cran_flags <- ifelse(
-  !is_not_cran && vendor_exists,
+  vendor_exists,
   "-j 2 --offline",
   ""
 )
