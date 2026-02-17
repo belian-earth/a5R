@@ -13,8 +13,8 @@ NULL
 #' @exportS3Method wk::wk_handle
 #' @rdname wk_methods
 wk_handle.a5_cell <- function(handleable, handler, ...) {
-  wkt <- a5_cell_to_boundary(handleable)
-  wk::wk_handle(wkt, handler, ...)
+  geom <- a5_cell_to_boundary(handleable, format = "wkb")
+  wk::wk_handle(geom, handler, ...)
 }
 
 #' @exportS3Method wk::wk_crs
