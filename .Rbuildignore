@@ -10,7 +10,6 @@
 ^src/Makevars\.win$
 ^README\.Rmd$
 ^.claude$
-^.vscode$
 ^dev\.R$
 ^\.github$
 ^_pkgdown\.yml$
