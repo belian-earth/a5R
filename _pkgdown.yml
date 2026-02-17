@@ -47,6 +47,10 @@ reference:
   contents:
   - a5_compact
   - a5_uncompact
+- title: Grid generation
+  desc: Generate grids of cells covering an area.
+  contents:
+  - a5_grid
 - title: wk integration
   desc: Methods for the wk geometry framework.
   contents: wk_methods
