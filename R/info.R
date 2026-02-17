@@ -5,15 +5,25 @@
 #' resolution have identical area.
 #'
 #' @param resolution Integer vector of resolutions (0--30).
-#' @returns A numeric vector of areas in square metres.
+#' @param units Character scalar specifying the output area unit (default
+#'   `"m^2"`). Any unit convertible from `m^2` via [units::set_units()] is
+#'   accepted (e.g. `"km^2"`, `"ha"`, `"acre"`).
+#' @returns A [units::units] vector of areas.
 #'
 #' @export
 #' @examples
 #' a5_cell_area(0:5)
-a5_cell_area <- function(resolution) {
+#' a5_cell_area(5, units = "km^2")
+a5_cell_area <- function(resolution, units = "m^2") {
   resolution <- vctrs::vec_cast(resolution, integer())
   check_resolution(resolution)
-  a5_cell_area_rs(resolution)
+  if (!units::ud_are_convertible("m^2", units)) {
+    cli::cli_abort(
+      "{.arg units} must be an area unit convertible from m^2, not {.val {units}}."
+    )
+  }
+  units::set_units(a5_cell_area_rs(resolution), "m^2", mode = "standard") |>
+    units::set_units(units, mode = "standard")
 }
 
 #' Total number of cells at a given resolution
