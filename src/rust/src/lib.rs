@@ -46,7 +46,7 @@ fn a5_cell_to_lonlat_rs(cell: Strings) -> List {
     let mut lon_out = Doubles::new(n);
     let mut lat_out = Doubles::new(n);
     for i in 0..n {
-        let s = cell[i];
+        let s = &cell[i];
         if s.is_na() {
             lon_out.set_elt(i, Rfloat::na());
             lat_out.set_elt(i, Rfloat::na());
@@ -96,7 +96,7 @@ fn a5_cell_to_boundary_rs(
     let n = cell.len();
     let mut items: Vec<Robj> = Vec::with_capacity(n);
     for i in 0..n {
-        let s = cell[i];
+        let s = &cell[i];
         if s.is_na() {
             items.push(list!(lon = Rfloat::na(), lat = Rfloat::na()).into());
             continue;
@@ -172,7 +172,7 @@ fn a5_get_resolution_rs(cell: Strings) -> Integers {
     let n = cell.len();
     let mut out = Integers::new(n);
     for i in 0..n {
-        let s = cell[i];
+        let s = &cell[i];
         if s.is_na() {
             out.set_elt(i, Rint::na());
             continue;
@@ -201,7 +201,7 @@ fn a5_cell_to_parent_rs(cell: Strings, parent_resolution: Nullable<i32>) -> Stri
     let n = cell.len();
     let mut out = Strings::new(n);
     for i in 0..n {
-        let s = cell[i];
+        let s = &cell[i];
         if s.is_na() {
             out.set_elt(i, Rstr::na());
             continue;
@@ -336,7 +336,7 @@ fn a5_is_valid_cell_rs(cell: Strings) -> Logicals {
     let n = cell.len();
     let mut out = Logicals::new(n);
     for i in 0..n {
-        let s = cell[i];
+        let s = &cell[i];
         if s.is_na() {
             out.set_elt(i, Rbool::na());
             continue;

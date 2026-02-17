@@ -13,5 +13,5 @@ inst/doc
 src/Makevars
 src/Makevars.win
 .claude/
-.vascode/
+.vscode/
 dev.R
