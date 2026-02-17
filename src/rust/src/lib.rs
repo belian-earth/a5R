@@ -11,7 +11,7 @@ use extendr_api::wrapper::Nullable;
 ///
 /// @param lon Numeric vector of longitudes (degrees).
 /// @param lat Numeric vector of latitudes (degrees).
-/// @param resolution Integer vector of resolutions (0-30).
+/// @param resolution Integer vector of resolutions (0--30).
 /// @return A character vector of cell IDs (hex-encoded).
 /// @noRd
 /// @keywords internal
@@ -133,7 +133,7 @@ fn a5_cell_to_boundary_rs(
 
 /// Get the area (in square metres) of cells at a given resolution.
 ///
-/// @param resolution Integer vector of resolutions (0-30).
+/// @param resolution Integer vector of resolutions (0--30).
 /// @return Numeric vector of areas in square metres.
 /// @noRd
 /// @keywords internal
@@ -154,7 +154,7 @@ fn a5_cell_area_rs(resolution: Integers) -> Doubles {
 
 /// Get total number of cells at a given resolution.
 ///
-/// @param resolution Integer scalar (0-30).
+/// @param resolution Integer scalar (0--30).
 /// @return Numeric scalar (as double, since R has no u64).
 /// @noRd
 /// @keywords internal
@@ -238,21 +238,16 @@ fn a5_cell_to_children_rs(cell: &str, child_resolution: Nullable<i32>) -> String
         Nullable::NotNull(v) => Some(v),
         Nullable::Null => None,
     };
-    match a5::hex_to_u64(cell) {
-        Ok(id) => match a5::cell_to_children(id, cres) {
-            Ok(children) => {
-                children
-                    .iter()
-                    .map(|c| Rstr::from(a5::u64_to_hex(*c)))
-                    .collect::<Strings>()
-            }
-            Err(e) => {
-                panic!("{}", e);
-            }
-        },
-        Err(e) => {
-            panic!("{}", e);
-        }
+    let id = match a5::hex_to_u64(cell) {
+        Ok(id) => id,
+        Err(e) => throw_r_error(format!("invalid cell ID: {}", e)),
+    };
+    match a5::cell_to_children(id, cres) {
+        Ok(children) => children
+            .iter()
+            .map(|c| Rstr::from(a5::u64_to_hex(*c)))
+            .collect::<Strings>(),
+        Err(e) => throw_r_error(format!("cell_to_children failed: {}", e)),
     }
 }
 
@@ -272,9 +267,7 @@ fn a5_get_res0_cells_rs() -> Strings {
             .iter()
             .map(|c| Rstr::from(a5::u64_to_hex(*c)))
             .collect::<Strings>(),
-        Err(e) => {
-            panic!("{}", e);
-        }
+        Err(e) => throw_r_error(format!("get_res0_cells failed: {}", e)),
     }
 }
 
@@ -302,9 +295,7 @@ fn a5_compact_rs(cells: Strings) -> Strings {
             .iter()
             .map(|c| Rstr::from(a5::u64_to_hex(*c)))
             .collect::<Strings>(),
-        Err(e) => {
-            panic!("{}", e);
-        }
+        Err(e) => throw_r_error(format!("compact failed: {}", e)),
     }
 }
 
@@ -327,9 +318,7 @@ fn a5_uncompact_rs(cells: Strings, target_resolution: i32) -> Strings {
             .iter()
             .map(|c| Rstr::from(a5::u64_to_hex(*c)))
             .collect::<Strings>(),
-        Err(e) => {
-            panic!("{}", e);
-        }
+        Err(e) => throw_r_error(format!("uncompact failed: {}", e)),
     }
 }
 
