@@ -19,6 +19,7 @@ NULL
 #' @param resolution Integer vector of resolutions (0-30).
 #' @return A character vector of cell IDs (hex-encoded).
 #' @noRd
+#' @keywords internal
 a5_lonlat_to_cell_rs <- function(lon, lat, resolution) .Call(wrap__a5_lonlat_to_cell_rs, lon, lat, resolution)
 
 #' Convert A5 cell indices to longitude/latitude coordinates.
@@ -26,6 +27,7 @@ a5_lonlat_to_cell_rs <- function(lon, lat, resolution) .Call(wrap__a5_lonlat_to_
 #' @param cell Character vector of hex-encoded cell IDs.
 #' @return A list with `lon` and `lat` numeric vectors.
 #' @noRd
+#' @keywords internal
 a5_cell_to_lonlat_rs <- function(cell) .Call(wrap__a5_cell_to_lonlat_rs, cell)
 
 #' Get boundary polygon vertices for A5 cells.
@@ -35,6 +37,7 @@ a5_cell_to_lonlat_rs <- function(cell) .Call(wrap__a5_cell_to_lonlat_rs, cell)
 #' @param segments Integer: number of interpolation segments per edge.
 #' @return A list of lists, each with `lon` and `lat` numeric vectors.
 #' @noRd
+#' @keywords internal
 a5_cell_to_boundary_rs <- function(cell, closed_ring, segments) .Call(wrap__a5_cell_to_boundary_rs, cell, closed_ring, segments)
 
 #' Get the area (in square metres) of cells at a given resolution.
@@ -42,6 +45,7 @@ a5_cell_to_boundary_rs <- function(cell, closed_ring, segments) .Call(wrap__a5_c
 #' @param resolution Integer vector of resolutions (0-30).
 #' @return Numeric vector of areas in square metres.
 #' @noRd
+#' @keywords internal
 a5_cell_area_rs <- function(resolution) .Call(wrap__a5_cell_area_rs, resolution)
 
 #' Get total number of cells at a given resolution.
@@ -49,6 +53,7 @@ a5_cell_area_rs <- function(resolution) .Call(wrap__a5_cell_area_rs, resolution)
 #' @param resolution Integer scalar (0-30).
 #' @return Numeric scalar (as double, since R has no u64).
 #' @noRd
+#' @keywords internal
 a5_get_num_cells_rs <- function(resolution) .Call(wrap__a5_get_num_cells_rs, resolution)
 
 #' Get the resolution of A5 cell indices.
@@ -56,6 +61,7 @@ a5_get_num_cells_rs <- function(resolution) .Call(wrap__a5_get_num_cells_rs, res
 #' @param cell Character vector of hex-encoded cell IDs.
 #' @return Integer vector of resolutions.
 #' @noRd
+#' @keywords internal
 a5_get_resolution_rs <- function(cell) .Call(wrap__a5_get_resolution_rs, cell)
 
 #' Navigate to parent cell(s).
@@ -65,6 +71,7 @@ a5_get_resolution_rs <- function(cell) .Call(wrap__a5_get_resolution_rs, cell)
 #'   immediate parent.
 #' @return Character vector of hex-encoded parent cell IDs.
 #' @noRd
+#' @keywords internal
 a5_cell_to_parent_rs <- function(cell, parent_resolution) .Call(wrap__a5_cell_to_parent_rs, cell, parent_resolution)
 
 #' Get child cells.
@@ -74,12 +81,14 @@ a5_cell_to_parent_rs <- function(cell, parent_resolution) .Call(wrap__a5_cell_to
 #'   immediate children.
 #' @return Character vector of hex-encoded child cell IDs.
 #' @noRd
+#' @keywords internal
 a5_cell_to_children_rs <- function(cell, child_resolution) .Call(wrap__a5_cell_to_children_rs, cell, child_resolution)
 
 #' Get all 12 resolution-0 root cells.
 #'
 #' @return Character vector of 12 hex-encoded cell IDs.
 #' @noRd
+#' @keywords internal
 a5_get_res0_cells_rs <- function() .Call(wrap__a5_get_res0_cells_rs)
 
 #' Compact a set of A5 cell IDs.
@@ -89,6 +98,7 @@ a5_get_res0_cells_rs <- function() .Call(wrap__a5_get_res0_cells_rs)
 #' @param cells Character vector of hex-encoded cell IDs.
 #' @return Character vector of compacted hex-encoded cell IDs.
 #' @noRd
+#' @keywords internal
 a5_compact_rs <- function(cells) .Call(wrap__a5_compact_rs, cells)
 
 #' Uncompact a set of A5 cell IDs to a target resolution.
@@ -97,6 +107,7 @@ a5_compact_rs <- function(cells) .Call(wrap__a5_compact_rs, cells)
 #' @param target_resolution Integer: the resolution to expand to.
 #' @return Character vector of uncompacted hex-encoded cell IDs.
 #' @noRd
+#' @keywords internal
 a5_uncompact_rs <- function(cells, target_resolution) .Call(wrap__a5_uncompact_rs, cells, target_resolution)
 
 #' Validate hex cell IDs.
@@ -104,6 +115,7 @@ a5_uncompact_rs <- function(cells, target_resolution) .Call(wrap__a5_uncompact_r
 #' @param cell Character vector of hex strings to validate.
 #' @return Logical vector indicating validity.
 #' @noRd
+#' @keywords internal
 a5_is_valid_cell_rs <- function(cell) .Call(wrap__a5_is_valid_cell_rs, cell)
 
 
