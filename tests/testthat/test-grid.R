@@ -4,6 +4,8 @@ test_that("a5_grid rejects bad bbox", {
   expect_error(a5_grid(c(1, 2, 3), resolution = 3), "length 4")
   expect_error(a5_grid(c(1, 2, NA, 4), resolution = 3), "NA")
   expect_error(a5_grid(c(0, 10, 1, 5), resolution = 3), "ymin")
+  expect_error(a5_grid(c(0, 5, 1, 5), resolution = 3), "ymin")
+  expect_error(a5_grid(c(5, 0, 5, 1), resolution = 3), "xmin.*xmax.*equal")
 })
 
 test_that("a5_grid rejects invalid resolution", {

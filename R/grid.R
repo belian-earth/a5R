@@ -117,6 +117,12 @@ as_geos_area <- function(x, call = rlang::caller_env()) {
         call = call
       )
     }
+    if (x[[1]] == x[[3]]) {
+      cli::cli_abort(
+        "{.code xmin} and {.code xmax} must not be equal ({x[[1]]}).",
+        call = call
+      )
+    }
     if (x[[1]] > x[[3]]) {
       # Antimeridian-crossing bbox: split into two rectangles and union
       x <- c(
