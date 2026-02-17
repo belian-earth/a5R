@@ -86,7 +86,7 @@ a5_grid <- function(x, resolution) {
       }
       if (length(cells) == 0L) {
         cli::cli_warn(c(
-          "No cells found at resolution {resolution}.",
+          "!" = "No cells found at resolution {resolution}.",
           "i" = "This can happen for targets near the poles or antimeridian where planar geometry filtering is inaccurate.",
           "i" = "Try a slightly larger target area."
         ))
@@ -117,7 +117,9 @@ cell_buffer_distance <- function(resolution, target) {
 
   # meaningless in degree space — return a large sentinel so the caller
   # skips filtering for this iteration
-  if (cos_lat < 0.05) return(90)
+  if (cos_lat < 0.05) {
+    return(90)
+  }
   diameter_m / (111000 * cos_lat) * 0.5
 }
 
