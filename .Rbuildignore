@@ -4,3 +4,11 @@
 ^src/\.cargo$
 ^src/rust/\.cargo$
 ^src/rust/target$
+^\.vscode$
+^src/rust/vendor$
+^src/Makevars$
+^src/Makevars\.win$
+^README\.Rmd$
+^.claude$
+^.vscode$
+de\.R$

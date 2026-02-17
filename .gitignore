@@ -10,3 +10,8 @@ src/a5R-win.def
 .RData
 .Ruserdata
 inst/doc
+src/Makevars
+src/Makevars.win
+.claude/
+.vascode/
+dev.R
