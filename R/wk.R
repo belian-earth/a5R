@@ -10,14 +10,14 @@
 #' @name wk_methods
 NULL
 
-#' @export
+#' @exportS3Method wk::wk_handle
 #' @rdname wk_methods
 wk_handle.a5_cell <- function(handleable, handler, ...) {
   wkt <- a5_cell_to_boundary(handleable)
   wk::wk_handle(wkt, handler, ...)
 }
 
-#' @export
+#' @exportS3Method wk::wk_crs
 #' @rdname wk_methods
 wk_crs.a5_cell <- function(x) {
   wk::wk_crs_longlat()
