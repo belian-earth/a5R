@@ -17,7 +17,7 @@ per edge for geodesic accuracy. \code{NULL} uses the default (straight edges).}
 }
 \value{
 A \code{wk_wkt} vector of polygon geometries with
-\code{wk::wk_crs_lonlat()} CRS.
+\code{wk::wk_crs_longlat()} CRS.
 }
 \description{
 Returns the boundary of each cell as a \code{\link[wk:wkt]{wk::wkt()}} or \code{\link[wk:wkb]{wk::wkb()}}

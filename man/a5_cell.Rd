@@ -4,6 +4,9 @@
 \alias{a5_cell}
 \alias{is_a5_cell}
 \alias{as_a5_cell}
+\alias{vec_ptype_abbr.a5_cell}
+\alias{vec_ptype_full.a5_cell}
+\alias{pillar_shaft.a5_cell}
 \title{A5 Cell Index Vector}
 \usage{
 a5_cell(x = character())
@@ -11,6 +14,12 @@ a5_cell(x = character())
 is_a5_cell(x)
 
 as_a5_cell(x)
+
+vec_ptype_abbr.a5_cell(x, ...)
+
+vec_ptype_full.a5_cell(x, ...)
+
+pillar_shaft.a5_cell(x, ...)
 }
 \arguments{
 \item{x}{A character vector of hex-encoded A5 cell IDs, or an object

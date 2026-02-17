@@ -4,13 +4,17 @@
 \alias{a5_cell_area}
 \title{Cell area at a given resolution}
 \usage{
-a5_cell_area(resolution)
+a5_cell_area(resolution, units = "m^2")
 }
 \arguments{
 \item{resolution}{Integer vector of resolutions (0--30).}
+
+\item{units}{Character scalar specifying the output area unit (default
+\code{"m^2"}). Any unit convertible from \code{m^2} via \code{\link[units:units]{units::set_units()}} is
+accepted (e.g. \code{"km^2"}, \code{"ha"}, \code{"acre"}).}
 }
 \value{
-A numeric vector of areas in square metres.
+A \link[units:units]{units::units} vector of areas.
 }
 \description{
 Returns the area of a single cell in square metres at the given
@@ -19,4 +23,5 @@ resolution have identical area.
 }
 \examples{
 a5_cell_area(0:5)
+a5_cell_area(5, units = "km^2")
 }
