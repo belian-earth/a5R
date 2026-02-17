@@ -28,7 +28,21 @@ a5_lonlat_to_cell <- function(lon, lat, resolution) {
 #' Returns the centre-point longitude and latitude of each cell.
 #'
 #' @param cell An [a5_cell] vector (or character coercible to one).
-#' @returns A [wk::xy()] vector of (longitude, latitude) points.
+#' @param normalise Logical scalar. If `TRUE` (default), longitudes are
+#'   wrapped to the \eqn{[-180, 180]} range and the result is returned as a
+#'   [wk::xy()] vector. If `FALSE`, the raw unwrapped coordinates from the
+#'   Rust API are returned as a two-column data frame (`lon`, `lat`).
+#' @returns If `normalise = TRUE`, a [wk::xy()] vector of (longitude,
+#'   latitude) points. If `normalise = FALSE`, a data frame with columns
+#'   `lon` and `lat` containing the unwrapped coordinates.
+#'
+#' @details
+#' The underlying Rust API returns longitudes in a continuous unwrapped range
+#' that can exceed \eqn{[-180, 180]} for cells near the antimeridian
+#' (e.g. \eqn{-245} instead of \eqn{115}). By default these are normalised
+#' to standard bounds. Set `normalise = FALSE` to retrieve the raw values,
+#' which can be useful for avoiding discontinuities in calculations that span
+#' the antimeridian.
 #'
 #' @seealso [a5_lonlat_to_cell()] for the inverse operation,
 #'   [a5_cell_to_boundary()] for full cell polygons.
@@ -36,8 +50,17 @@ a5_lonlat_to_cell <- function(lon, lat, resolution) {
 #' @examples
 #' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
 #' a5_cell_to_lonlat(cell)
-a5_cell_to_lonlat <- function(cell) {
+#'
+#' # Raw unwrapped coordinates
+#' cell2 <- a5_lonlat_to_cell(114.8, 4.1, resolution = 5)
+#' a5_cell_to_lonlat(cell2, normalise = FALSE)
+a5_cell_to_lonlat <- function(cell, normalise = TRUE) {
   cell <- as_a5_cell(cell)
   ll <- a5_cell_to_lonlat_rs(vctrs::vec_data(cell))
-  wk::xy(ll$lon, ll$lat, crs = wk::wk_crs_longlat())
+  if (normalise) {
+    lon <- ((ll$lon + 180) %% 360) - 180
+    wk::xy(lon, ll$lat, crs = wk::wk_crs_longlat())
+  } else {
+    data.frame(lon = ll$lon, lat = ll$lat)
+  }
 }

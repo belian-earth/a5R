@@ -4,20 +4,39 @@
 \alias{a5_cell_to_lonlat}
 \title{Convert A5 cell indices to coordinates}
 \usage{
-a5_cell_to_lonlat(cell)
+a5_cell_to_lonlat(cell, normalise = TRUE)
 }
 \arguments{
 \item{cell}{An \link{a5_cell} vector (or character coercible to one).}
+
+\item{normalise}{Logical scalar. If \code{TRUE} (default), longitudes are
+wrapped to the \eqn{[-180, 180]} range and the result is returned as a
+\code{\link[wk:xy]{wk::xy()}} vector. If \code{FALSE}, the raw unwrapped coordinates from the
+Rust API are returned as a two-column data frame (\code{lon}, \code{lat}).}
 }
 \value{
-A \code{\link[wk:xy]{wk::xy()}} vector of (longitude, latitude) points.
+If \code{normalise = TRUE}, a \code{\link[wk:xy]{wk::xy()}} vector of (longitude,
+latitude) points. If \code{normalise = FALSE}, a data frame with columns
+\code{lon} and \code{lat} containing the unwrapped coordinates.
 }
 \description{
 Returns the centre-point longitude and latitude of each cell.
 }
+\details{
+The underlying Rust API returns longitudes in a continuous unwrapped range
+that can exceed \eqn{[-180, 180]} for cells near the antimeridian
+(e.g. \eqn{-245} instead of \eqn{115}). By default these are normalised
+to standard bounds. Set \code{normalise = FALSE} to retrieve the raw values,
+which can be useful for avoiding discontinuities in calculations that span
+the antimeridian.
+}
 \examples{
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
 a5_cell_to_lonlat(cell)
+
+# Raw unwrapped coordinates
+cell2 <- a5_lonlat_to_cell(114.8, 4.1, resolution = 5)
+a5_cell_to_lonlat(cell2, normalise = FALSE)
 }
 \seealso{
 \code{\link[=a5_lonlat_to_cell]{a5_lonlat_to_cell()}} for the inverse operation,
