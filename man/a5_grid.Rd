@@ -44,8 +44,9 @@ unioned automatically. Input geometries are assumed to use WGS 84
 (longitude/latitude) coordinates; projected geometries are not reprojected
 and will produce incorrect results.
 
-Antimeridian-crossing bounding boxes (where xmin > xmax) are not supported
-via the numeric input. Pass a multi-polygon geometry instead.
+Antimeridian-crossing bounding boxes are supported: when \code{xmin > xmax}
+in a numeric input (e.g. \code{c(170, -50, -170, -30)}), the bbox is
+automatically split into two rectangles either side of the antimeridian.
 }
 \examples{
 # Grid from a bounding box

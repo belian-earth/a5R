@@ -12,6 +12,7 @@ R bindings for the A5 Discrete Global Grid System (DGGS). A5 partitions the Eart
 Useful links:
 \itemize{
   \item \url{https://github.com/belian-earth/a5R}
+  \item \url{https://belian-earth.github.io/a5R/}
   \item Report bugs at \url{https://github.com/belian-earth/a5R/issues}
 }
 

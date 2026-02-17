@@ -4,10 +4,17 @@
 \alias{a5_cell_to_boundary}
 \title{Get cell boundary polygons}
 \usage{
-a5_cell_to_boundary(cell, closed = TRUE, segments = NULL)
+a5_cell_to_boundary(
+  cell,
+  format = c("wkb", "wkt"),
+  closed = TRUE,
+  segments = NULL
+)
 }
 \arguments{
 \item{cell}{An \link{a5_cell} vector.}
+
+\item{format}{Character scalar, either \code{"wkb"} (default) or \code{"wkt"}.}
 
 \item{closed}{Logical scalar; if \code{TRUE} (default) the ring is closed
 (first vertex repeated at end).}
@@ -16,7 +23,7 @@ a5_cell_to_boundary(cell, closed = TRUE, segments = NULL)
 per edge for geodesic accuracy. \code{NULL} uses the default (straight edges).}
 }
 \value{
-A \code{wk_wkt} vector of polygon geometries with
+A \code{wk_wkt} or \code{wk_wkb} vector of polygon geometries with
 \code{wk::wk_crs_longlat()} CRS.
 }
 \description{
@@ -27,6 +34,7 @@ ellipsoid.
 \examples{
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
 a5_cell_to_boundary(cell)
+a5_cell_to_boundary(cell, format = "wkt")
 }
 \seealso{
 \code{\link[=a5_cell_to_lonlat]{a5_cell_to_lonlat()}} for cell centroids.
