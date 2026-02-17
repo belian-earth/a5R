@@ -5,9 +5,11 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/h-a-graham/a5R/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/h-a-graham/a5R/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/belian-earth/a5R/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/belian-earth/a5R/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
-coverage](https://codecov.io/gh/h-a-graham/a5R/graph/badge.svg)](https://app.codecov.io/gh/h-a-graham/a5R)
+coverage](https://codecov.io/gh/belian-earth/a5R/graph/badge.svg)](https://app.codecov.io/gh/belian-earth/a5R)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
 a5R provides R bindings for the [A5](https://a5geo.org/) pentagonal
@@ -35,11 +37,11 @@ Felix Palmer.
 ## Installation
 
 You can install the development version of a5R from
-[GitHub](https://github.com/h-a-graham/a5R) with:
+[GitHub](https://github.com/belian-earth/a5R) with:
 
 ``` r
 # install.packages("pak")
-pak::pak("h-a-graham/a5R")
+pak::pak("belian-earth/a5R")
 ```
 
 You will need a working [Rust toolchain](https://rustup.rs/) (`cargo`

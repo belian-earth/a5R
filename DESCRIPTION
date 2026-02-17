@@ -11,8 +11,8 @@ Description: R bindings for the A5 Discrete Global Grid System (DGGS). A5
     cell hierarchy, computing cell boundaries, and compacting/uncompacting
     cell sets. Powered by the 'a5' Rust crate via 'extendr'.
 License: Apache License (>= 2)
-URL: https://github.com/h-a-graham/a5R
-BugReports: https://github.com/h-a-graham/a5R/issues
+URL: https://github.com/belian-earth/a5R
+BugReports: https://github.com/belian-earth/a5R/issues
 Depends:
     R (>= 4.2)
 Imports:

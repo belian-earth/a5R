@@ -1,4 +1,4 @@
-url: https://h-a-graham.github.io/a5R/
+url: https://belian-earth.github.io/a5R/
 
 template:
   bootstrap: 5
@@ -13,7 +13,7 @@ navbar:
   components:
     github:
       icon: fa-github
-      href: https://github.com/h-a-graham/a5R
+      href: https://github.com/belian-earth/a5R
 
 reference:
   - title: Indexing
