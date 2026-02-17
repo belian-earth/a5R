@@ -39,13 +39,19 @@ as_a5_cell <- function(x) {
 
 # --- vctrs methods ---
 
-#' @export
+#' @exportS3Method vctrs::vec_ptype_abbr
+#' @noRd
+#' @keywords internal
 vec_ptype_abbr.a5_cell <- function(x, ...) "a5_cell"
 
-#' @export
+#' @exportS3Method vctrs::vec_ptype_full
+#' @noRd
+#' @keywords internal
 vec_ptype_full.a5_cell <- function(x, ...) "a5_cell"
 
 #' @export
+#' @noRd
+#' @keywords internal
 format.a5_cell <- function(x, ...) {
   out <- vctrs::vec_data(x)
   out[is.na(out)] <- NA_character_
@@ -55,26 +61,40 @@ format.a5_cell <- function(x, ...) {
 # --- coercion: a5_cell <-> character ---
 
 #' @export
+#' @noRd
+#' @keywords internal
 vec_ptype2.a5_cell.a5_cell <- function(x, y, ...) new_a5_cell()
 
 #' @export
+#' @noRd
+#' @keywords internal
 vec_ptype2.a5_cell.character <- function(x, y, ...) new_a5_cell()
 
 #' @export
+#' @noRd
+#' @keywords internal
 vec_ptype2.character.a5_cell <- function(x, y, ...) new_a5_cell()
 
 #' @export
+#' @noRd
+#' @keywords internal
 vec_cast.a5_cell.a5_cell <- function(x, to, ...) x
 
 #' @export
+#' @noRd
+#' @keywords internal
 vec_cast.a5_cell.character <- function(x, to, ...) new_a5_cell(x)
 
 #' @export
+#' @noRd
+#' @keywords internal
 vec_cast.character.a5_cell <- function(x, to, ...) vctrs::vec_data(x)
 
 # --- pillar formatting for tibbles ---
 
-#' @export
+#' @exportS3Method pillar::pillar_shaft
+#' @noRd
+#' @keywords internal
 pillar_shaft.a5_cell <- function(x, ...) {
   out <- format(x)
   pillar::new_pillar_shaft_simple(out, align = "left")
