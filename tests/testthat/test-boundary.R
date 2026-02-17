@@ -10,7 +10,7 @@ test_that("boundary has lonlat CRS", {
   cell <- a5_lonlat_to_cell(0, 0, resolution = 5)
   boundary <- a5_cell_to_boundary(cell)
   crs <- wk::wk_crs(boundary)
-  expect_identical(crs, wk::wk_crs_lonlat())
+  expect_identical(crs, wk::wk_crs_longlat())
 })
 
 test_that("cell_area returns positive values", {

@@ -36,5 +36,5 @@ a5_lonlat_to_cell <- function(lon, lat, resolution) {
 a5_cell_to_lonlat <- function(cell) {
   cell <- as_a5_cell(cell)
   ll <- a5_cell_to_lonlat_rs(vctrs::vec_data(cell))
-  wk::xy(ll$lon, ll$lat, crs = wk::wk_crs_lonlat())
+  wk::xy(ll$lon, ll$lat, crs = wk::wk_crs_longlat())
 }

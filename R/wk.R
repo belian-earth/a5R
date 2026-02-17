@@ -9,5 +9,5 @@ wk_handle.a5_cell <- function(handleable, handler, ...) {
 
 #' @export
 wk_crs.a5_cell <- function(x) {
-  wk::wk_crs_lonlat()
+  wk::wk_crs_longlat()
 }
