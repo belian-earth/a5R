@@ -166,6 +166,13 @@ Compress and expand sets of cells.
 - [`a5_uncompact()`](https://belian-earth.github.io/a5R/reference/a5_uncompact.md)
   : Uncompact a set of A5 cells to a target resolution
 
+## Grid generation
+
+Generate grids of cells covering an area.
+
+- [`a5_grid()`](https://belian-earth.github.io/a5R/reference/a5_grid.md)
+  : Generate a grid of A5 cells covering an area
+
 ## wk integration
 
 Methods for the wk geometry framework.
