@@ -10,6 +10,7 @@
 coverage](https://codecov.io/gh/belian-earth/a5R/graph/badge.svg)](https://app.codecov.io/gh/belian-earth/a5R)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![extendr](https://img.shields.io/badge/extendr-%5E0.8.1-276DC2)](https://extendr.github.io/extendr/extendr_api/)
 <!-- badges: end -->
 
 a5R provides R bindings for the [A5](https://a5geo.org/) pentagonal
@@ -74,8 +75,8 @@ Get the cell boundary as a WKT polygon:
 
 ``` r
 a5_cell_to_boundary(cell)
-#> <wk_wkt[1] with CRS=OGC:CRS84>
-#> [1] POLYGON ((-4.490769 56.63193, -4.575103 55.93184, -4.654266 55.23196, -3.592316 55.41531, -2.521971 55.5901, -2.031558 56.23106...
+#> <wk_wkb[1] with CRS=OGC:CRS84>
+#> [1] <POLYGON ((-4.490769 56.63193, -4.575103 55.93184, -4.654266 55.23196, -3.592316 55.41531, -2.521971 55.5901, -2.031558 56.23106...>
 ```
 
 Navigate the hierarchy:
