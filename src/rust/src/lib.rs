@@ -13,7 +13,7 @@ use extendr_api::wrapper::Nullable;
 /// @param lat Numeric vector of latitudes (degrees).
 /// @param resolution Integer vector of resolutions (0-30).
 /// @return A character vector of cell IDs (hex-encoded).
-/// @export
+/// @noRd
 #[extendr]
 fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Strings {
     let n = lon.len();
@@ -39,7 +39,7 @@ fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Str
 ///
 /// @param cell Character vector of hex-encoded cell IDs.
 /// @return A list with `lon` and `lat` numeric vectors.
-/// @export
+/// @noRd
 #[extendr]
 fn a5_cell_to_lonlat_rs(cell: Strings) -> List {
     let n = cell.len();
@@ -82,7 +82,7 @@ fn a5_cell_to_lonlat_rs(cell: Strings) -> List {
 /// @param closed_ring Logical: should the polygon ring be closed?
 /// @param segments Integer: number of interpolation segments per edge.
 /// @return A list of lists, each with `lon` and `lat` numeric vectors.
-/// @export
+/// @noRd
 #[extendr]
 fn a5_cell_to_boundary_rs(
     cell: Strings,
@@ -132,7 +132,7 @@ fn a5_cell_to_boundary_rs(
 ///
 /// @param resolution Integer vector of resolutions (0-30).
 /// @return Numeric vector of areas in square metres.
-/// @export
+/// @noRd
 #[extendr]
 fn a5_cell_area_rs(resolution: Integers) -> Doubles {
     let n = resolution.len();
@@ -152,7 +152,7 @@ fn a5_cell_area_rs(resolution: Integers) -> Doubles {
 ///
 /// @param resolution Integer scalar (0-30).
 /// @return Numeric scalar (as double, since R has no u64).
-/// @export
+/// @noRd
 #[extendr]
 fn a5_get_num_cells_rs(resolution: i32) -> f64 {
     a5::get_num_cells(resolution) as f64
@@ -166,7 +166,7 @@ fn a5_get_num_cells_rs(resolution: i32) -> f64 {
 ///
 /// @param cell Character vector of hex-encoded cell IDs.
 /// @return Integer vector of resolutions.
-/// @export
+/// @noRd
 #[extendr]
 fn a5_get_resolution_rs(cell: Strings) -> Integers {
     let n = cell.len();
@@ -191,7 +191,7 @@ fn a5_get_resolution_rs(cell: Strings) -> Integers {
 /// @param parent_resolution Integer: target parent resolution. NULL for
 ///   immediate parent.
 /// @return Character vector of hex-encoded parent cell IDs.
-/// @export
+/// @noRd
 #[extendr]
 fn a5_cell_to_parent_rs(cell: Strings, parent_resolution: Nullable<i32>) -> Strings {
     let pres: Option<i32> = match parent_resolution {
@@ -223,7 +223,7 @@ fn a5_cell_to_parent_rs(cell: Strings, parent_resolution: Nullable<i32>) -> Stri
 /// @param child_resolution Integer: target child resolution. NULL for
 ///   immediate children.
 /// @return Character vector of hex-encoded child cell IDs.
-/// @export
+/// @noRd
 #[extendr]
 fn a5_cell_to_children_rs(cell: &str, child_resolution: Nullable<i32>) -> Strings {
     let cres: Option<i32> = match child_resolution {
@@ -255,7 +255,7 @@ fn a5_cell_to_children_rs(cell: &str, child_resolution: Nullable<i32>) -> String
 /// Get all 12 resolution-0 root cells.
 ///
 /// @return Character vector of 12 hex-encoded cell IDs.
-/// @export
+/// @noRd
 #[extendr]
 fn a5_get_res0_cells_rs() -> Strings {
     match a5::get_res0_cells() {
@@ -279,7 +279,7 @@ fn a5_get_res0_cells_rs() -> Strings {
 ///
 /// @param cells Character vector of hex-encoded cell IDs.
 /// @return Character vector of compacted hex-encoded cell IDs.
-/// @export
+/// @noRd
 #[extendr]
 fn a5_compact_rs(cells: Strings) -> Strings {
     let ids: Vec<u64> = cells
@@ -303,7 +303,7 @@ fn a5_compact_rs(cells: Strings) -> Strings {
 /// @param cells Character vector of hex-encoded cell IDs.
 /// @param target_resolution Integer: the resolution to expand to.
 /// @return Character vector of uncompacted hex-encoded cell IDs.
-/// @export
+/// @noRd
 #[extendr]
 fn a5_uncompact_rs(cells: Strings, target_resolution: i32) -> Strings {
     let ids: Vec<u64> = cells
@@ -330,7 +330,7 @@ fn a5_uncompact_rs(cells: Strings, target_resolution: i32) -> Strings {
 ///
 /// @param cell Character vector of hex strings to validate.
 /// @return Logical vector indicating validity.
-/// @export
+/// @noRd
 #[extendr]
 fn a5_is_valid_cell_rs(cell: Strings) -> Logicals {
     let n = cell.len();
