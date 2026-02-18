@@ -159,7 +159,9 @@ against the Python, JavaScript, and DuckDB A5 implementations:
 R and DuckDB process all 10k elements in a single vectorised call
 (Rust/C++); Python and JS loop element-by-element, so the gap primarily
 reflects vectorisation overhead rather than per-element algorithm speed.
-See [`benchmarks/`](benchmarks/) for full results and methodology.
+See
+[`benchmarks/`](https://github.com/belian-earth/a5R/tree/main/benchmarks)
+for full results and methodology.
 
 ## Acknowledgements
 
