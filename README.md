@@ -139,6 +139,28 @@ plot(a5_cell_to_boundary(parent), border = "#333333", lwd = 2, add = TRUE)
 
 <img src="man/figures/README-hierarchy-plot-1.png" alt="Pentagonal A5 grid cells at two resolutions nested inside each other" width="100%" />
 
+## Performance
+
+Cross-language benchmarks (10k elements, median ms) comparing a5R
+against the Python, JavaScript, and DuckDB A5 implementations:
+
+| Operation        |  DuckDB | JavaScript | Python |       R |
+|------------------|--------:|-----------:|-------:|--------:|
+| lonlat_to_cell   |      38 |        264 |   4866 |  **36** |
+| cell_to_lonlat   |      12 |         40 |   1231 | **7.1** |
+| cell_to_boundary |      70 |         90 |   3161 |  **25** |
+| get_resolution   |     1.2 |        0.5 |     86 | **0.4** |
+| cell_to_parent   | **1.4** |        2.4 |    161 |     1.9 |
+| cell_to_children |     0.2 |    **0.0** |    0.1 |     0.0 |
+| compact          |     0.7 |    **0.0** |    0.2 |     0.0 |
+| uncompact        |     0.6 |    **0.0** |    0.3 |     0.0 |
+| cell_area        |     0.2 |    **0.0** |    0.0 |     0.2 |
+
+R and DuckDB process all 10k elements in a single vectorised call
+(Rust/C++); Python and JS loop element-by-element, so the gap primarily
+reflects vectorisation overhead rather than per-element algorithm speed.
+See [`benchmarks/`](benchmarks/) for full results and methodology.
+
 ## Acknowledgements
 
 A5 was created by [Felix Palmer](https://github.com/felixpalmer). This
