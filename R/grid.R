@@ -15,34 +15,35 @@
 #' @returns An [a5_cell] vector of cells at `resolution` that intersect `x`.
 #'
 #' @details
-#' The algorithm expands cells 3 resolution levels at a time (64x expansion)
-#' and filters by intersection at each step, keeping the working set small.
-#' At intermediate resolutions a spatial buffer is applied to avoid pruning
-#' cells whose children straddle the target boundary (A5 cells are not
-#' strictly geometrically nested across resolutions). The final step uses
-#' exact [geos::geos_intersects()] filtering.
+#' Grid generation runs entirely in Rust. The algorithm expands cells 3
+#' resolution levels at a time (64x expansion) and prunes by bounding-box
+#' overlap at each step, keeping the working set small. At intermediate
+#' resolutions a spatial buffer is applied to avoid pruning cells whose
+#' children straddle the target boundary (A5 cells are not strictly
+#' geometrically nested across resolutions). For non-bbox geometry inputs,
+#' a final exact intersection filter (via the Rust `geo` crate) removes
+#' cells that fall outside the target shape.
 #'
 #' No artificial cell count limit is imposed. High resolution combined with a
 #' large area can produce very large results and consume significant memory.
 #'
 #' In addition to numeric bounding boxes, `x` accepts any geometry that
-#' [geos::as_geos_geometry()] can handle, including `sf`/`sfc` objects,
+#' [wk::wk_handle()] can process, including `sf`/`sfc` objects,
 #' [wk::wkt()], [wk::wkb()], and [a5_cell] vectors. Multiple geometries are
-#' unioned automatically. Input geometries are assumed to use WGS 84
-#' (longitude/latitude) coordinates; projected geometries are not reprojected
-#' and will produce incorrect results.
+#' collected into a GEOMETRYCOLLECTION automatically. Input geometries are
+#' assumed to use WGS 84 (longitude/latitude) coordinates; projected
+#' geometries are not reprojected and will produce incorrect results.
 #'
 #' Antimeridian-crossing bounding boxes are supported: when `xmin > xmax`
 #' in a numeric input (e.g. `c(170, -50, -170, -30)`), the bbox is
 #' automatically split into two rectangles either side of the antimeridian.
 #'
-#' **Known limitation:** spatial filtering uses planar geometry
-#' ([geos::geos_intersects()]) on longitude/latitude coordinates. This can
-#' produce incomplete results for target areas very close to the poles
-#' (above ~88° latitude) or touching the antimeridian (longitude ±180°),
-#' where cell boundary polygons do not accurately represent their true
-#' spherical coverage. For these areas, use a larger target geometry to
-#' ensure complete coverage.
+#' **Known limitation:** spatial filtering uses planar geometry on
+#' longitude/latitude coordinates. This can produce incomplete results for
+#' target areas very close to the poles (above ~88° latitude) or touching
+#' the antimeridian (longitude ±180°), where cell boundary polygons do not
+#' accurately represent their true spherical coverage. For these areas, use
+#' a larger target geometry to ensure complete coverage.
 #'
 #' @seealso [a5_cell_to_boundary()] to convert result cells to geometries.
 #' @export
@@ -59,40 +60,41 @@ a5_grid <- function(x, resolution) {
   check_resolution(resolution)
   vctrs::vec_assert(resolution, size = 1L)
 
-  target <- as_geos_area(x)
+  is_bbox <- is.numeric(x)
 
-  cells <- a5_get_res0_cells()
-  current_res <- 0L
-  step <- 3L
-  filter_start <- 3L
+  if (is_bbox) {
+    validate_bbox(x)
+  }
 
-  while (current_res < resolution) {
-    next_res <- min(current_res + step, resolution)
-    cells <- a5_uncompact(cells, next_res)
-    current_res <- next_res
-    if (current_res >= filter_start) {
-      if (current_res < resolution) {
-        # Intermediate: buffer target to avoid pruning cells whose children
-        # straddle the boundary (A5 hierarchy is not strictly nested spatially)
-        buf_dist <- cell_buffer_distance(current_res, target)
-        if (buf_dist < 45) {
-          buffered <- geos::geos_buffer(target, buf_dist)
-          cells <- filter_cells_by_intersection(cells, buffered)
-        }
-        # If buf_dist >= 45 (near poles), skip filtering to avoid false negatives
-      } else {
-        # Final resolution: exact intersection
-        cells <- filter_cells_by_intersection(cells, target)
-      }
-      if (length(cells) == 0L) {
-        cli::cli_warn(c(
-          "!" = "No cells found at resolution {resolution}.",
-          "i" = "This can happen for targets near the poles or antimeridian where planar geometry filtering is inaccurate.",
-          "i" = "Try a slightly larger target area."
-        ))
-        return(cells)
-      }
+  # Get bbox for Rust grid generation
+  if (is_bbox && x[[1]] > x[[3]]) {
+    # Antimeridian-crossing: two halves
+    cells1 <- new_a5_cell(a5_grid_bbox_rs(x[[1]], x[[2]], 180, x[[4]], resolution))
+    cells2 <- new_a5_cell(a5_grid_bbox_rs(-180, x[[2]], x[[3]], x[[4]], resolution))
+    cells <- vctrs::vec_c(cells1, cells2)
+  } else {
+    if (is_bbox) {
+      bb <- list(xmin = x[[1]], ymin = x[[2]], xmax = x[[3]], ymax = x[[4]])
+    } else {
+      bb <- unclass(wk::wk_bbox(x))
     }
+    cells <- new_a5_cell(a5_grid_bbox_rs(bb$xmin, bb$ymin, bb$xmax, bb$ymax, resolution))
+  }
+
+  if (length(cells) == 0L) {
+    cli::cli_warn(c(
+      "!" = "No cells found at resolution {resolution}.",
+      "i" = "This can happen for targets near the poles or antimeridian.",
+      "i" = "Try a slightly larger target area."
+    ))
+    return(cells)
+  }
+
+  # Final exact filter for non-bbox inputs
+  if (!is_bbox) {
+    target_wkt <- as_target_wkt(x)
+    filtered <- a5_grid_intersects_rs(vctrs::vec_data(cells), target_wkt)
+    cells <- new_a5_cell(filtered)
   }
 
   cells
@@ -100,87 +102,43 @@ a5_grid <- function(x, resolution) {
 
 # -- internal helpers ----------------------------------------------------------
 
-#' Approximate cell diameter in degrees, latitude-adjusted
-#'
-#' Computes a buffer distance in degrees that accounts for longitude
-#' compression at high latitudes. Returns a value >= 45 near the poles
-#' as a signal to skip filtering (degree-based buffering breaks down there).
+#' Validate a numeric bounding box
 #' @noRd
-cell_buffer_distance <- function(resolution, target) {
-  area_m2 <- as.numeric(a5_cell_area(resolution))
-  diameter_m <- sqrt(area_m2)
-  # Scale by latitude: 1 degree of longitude shrinks as cos(lat)
-  extent <- geos::geos_extent(target)
-  max_abs_lat <- max(abs(extent$ymin), abs(extent$ymax))
-  cos_lat <- cos(max_abs_lat * pi / 180)
-  # At extreme latitudes (> ~87°), cos is so small the buffer becomes
-
-  # meaningless in degree space — return a large sentinel so the caller
-  # skips filtering for this iteration
-  if (cos_lat < 0.05) {
-    return(90)
+validate_bbox <- function(x, call = rlang::caller_env()) {
+  if (length(x) != 4L) {
+    cli::cli_abort(
+      "Numeric {.arg x} must have length 4 ({.code c(xmin, ymin, xmax, ymax)}), not {length(x)}.",
+      call = call
+    )
   }
-  diameter_m / (111000 * cos_lat) * 0.5
+  if (anyNA(x)) {
+    cli::cli_abort(
+      "{.arg x} must not contain {.code NA} values.",
+      call = call
+    )
+  }
+  if (x[[2]] >= x[[4]]) {
+    cli::cli_abort(
+      "{.code ymin} ({x[[2]]}) must be less than {.code ymax} ({x[[4]]}).",
+      call = call
+    )
+  }
+  if (x[[1]] == x[[3]]) {
+    cli::cli_abort(
+      "{.code xmin} and {.code xmax} must not be equal ({x[[1]]}).",
+      call = call
+    )
+  }
+  invisible(x)
 }
 
-#' Normalize user input to a single geos_geometry
+#' Convert geometry input to a single WKT string for Rust
 #' @noRd
-as_geos_area <- function(x, call = rlang::caller_env()) {
-  if (is.numeric(x)) {
-    if (length(x) != 4L) {
-      cli::cli_abort(
-        "Numeric {.arg x} must have length 4 ({.code c(xmin, ymin, xmax, ymax)}), not {length(x)}.",
-        call = call
-      )
-    }
-    if (anyNA(x)) {
-      cli::cli_abort(
-        "{.arg x} must not contain {.code NA} values.",
-        call = call
-      )
-    }
-    if (x[[2]] >= x[[4]]) {
-      cli::cli_abort(
-        "{.code ymin} ({x[[2]]}) must be less than {.code ymax} ({x[[4]]}).",
-        call = call
-      )
-    }
-    if (x[[1]] == x[[3]]) {
-      cli::cli_abort(
-        "{.code xmin} and {.code xmax} must not be equal ({x[[1]]}).",
-        call = call
-      )
-    }
-    if (x[[1]] > x[[3]]) {
-      # Antimeridian-crossing bbox: split into two rectangles and union
-      x <- c(
-        wk::rct(x[[1]], x[[2]], 180, x[[4]], crs = wk::wk_crs_longlat()),
-        wk::rct(-180, x[[2]], x[[3]], x[[4]], crs = wk::wk_crs_longlat())
-      )
-    } else {
-      x <- wk::rct(x[[1]], x[[2]], x[[3]], x[[4]], crs = wk::wk_crs_longlat())
-    }
+as_target_wkt <- function(x) {
+  wkt_vec <- as.character(wk::as_wkt(x))
+  if (length(wkt_vec) == 1L) {
+    wkt_vec
+  } else {
+    paste0("GEOMETRYCOLLECTION (", paste(wkt_vec, collapse = ", "), ")")
   }
-
-  geom <- geos::as_geos_geometry(x)
-
-  if (length(geom) > 1L) {
-    geom <- geos::geos_unary_union(geos::geos_make_collection(geom))
-  }
-
-  # Ensure CRS matches cell boundaries (OGC:CRS84)
-  if (is.null(wk::wk_crs(geom))) {
-    geom <- wk::wk_set_crs(geom, wk::wk_crs_longlat())
-  }
-
-  geom
-}
-
-#' Filter cells to those intersecting a target geometry
-#' @noRd
-filter_cells_by_intersection <- function(cells, target) {
-  boundaries <- a5_cell_to_boundary(cells)
-  cell_geoms <- geos::as_geos_geometry(boundaries)
-  hits <- geos::geos_intersects(cell_geoms, target)
-  cells[hits]
 }
