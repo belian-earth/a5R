@@ -141,6 +141,86 @@
 </div>
 </div>
 <div class="section level2">
+<h2 id="performance">Performance<a class="anchor" aria-label="anchor" href="#performance"></a>
+</h2>
+<p>Cross-language benchmarks (10k elements, median ms) comparing a5R against the Python, JavaScript, and DuckDB A5 implementations:</p>
+<table class="table">
+<thead><tr class="header">
+<th>Operation</th>
+<th align="right">DuckDB</th>
+<th align="right">JavaScript</th>
+<th align="right">Python</th>
+<th align="right">R</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>lonlat_to_cell</td>
+<td align="right">38</td>
+<td align="right">264</td>
+<td align="right">4866</td>
+<td align="right"><strong>36</strong></td>
+</tr>
+<tr class="even">
+<td>cell_to_lonlat</td>
+<td align="right">12</td>
+<td align="right">40</td>
+<td align="right">1231</td>
+<td align="right"><strong>7.1</strong></td>
+</tr>
+<tr class="odd">
+<td>cell_to_boundary</td>
+<td align="right">70</td>
+<td align="right">90</td>
+<td align="right">3161</td>
+<td align="right"><strong>25</strong></td>
+</tr>
+<tr class="even">
+<td>get_resolution</td>
+<td align="right">1.2</td>
+<td align="right">0.5</td>
+<td align="right">86</td>
+<td align="right"><strong>0.4</strong></td>
+</tr>
+<tr class="odd">
+<td>cell_to_parent</td>
+<td align="right"><strong>1.4</strong></td>
+<td align="right">2.4</td>
+<td align="right">161</td>
+<td align="right">1.9</td>
+</tr>
+<tr class="even">
+<td>cell_to_children</td>
+<td align="right">0.2</td>
+<td align="right"><strong>0.0</strong></td>
+<td align="right">0.1</td>
+<td align="right">0.0</td>
+</tr>
+<tr class="odd">
+<td>compact</td>
+<td align="right">0.7</td>
+<td align="right"><strong>0.0</strong></td>
+<td align="right">0.2</td>
+<td align="right">0.0</td>
+</tr>
+<tr class="even">
+<td>uncompact</td>
+<td align="right">0.6</td>
+<td align="right"><strong>0.0</strong></td>
+<td align="right">0.3</td>
+<td align="right">0.0</td>
+</tr>
+<tr class="odd">
+<td>cell_area</td>
+<td align="right">0.2</td>
+<td align="right"><strong>0.0</strong></td>
+<td align="right">0.0</td>
+<td align="right">0.2</td>
+</tr>
+</tbody>
+</table>
+<p>R and DuckDB process all 10k elements in a single vectorised call (Rust/C++); Python and JS loop element-by-element, so the gap primarily reflects vectorisation overhead rather than per-element algorithm speed. See <a href="benchmarks/"><code>benchmarks/</code></a> for full results and methodology.</p>
+</div>
+<div class="section level2">
 <h2 id="acknowledgements">Acknowledgements<a class="anchor" aria-label="anchor" href="#acknowledgements"></a>
 </h2>
 <p>A5 was created by <a href="https://github.com/felixpalmer" class="external-link">Felix Palmer</a>. This package is a thin R wrapper around his work and would not exist without it.</p>
