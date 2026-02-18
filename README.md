@@ -112,17 +112,17 @@ plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
 
 <img src="man/figures/README-grid-plot-1.png" alt="A5 grid cells covering Edinburgh at resolution 8" width="100%" />
 
-Any geometry that [geos](https://paleolimbot.github.io/geos/) can handle
+Any geometry that [wk](https://paleolimbot.github.io/wk/) can handle
 works as input, including sf objects and WKT strings. Bounding boxes
 that cross the antimeridian are supported too:
 
 ``` r
 # Fiji — bbox crosses the antimeridian
 a5_grid(c(177, -19, -178, -17), resolution = 5)
-#> <a5_cell[12]>
-#>  [1] 9862000000000000 9866000000000000 986a000000000000 963e000000000000
-#>  [5] 9642000000000000 964e000000000000 9766000000000000 976a000000000000
-#>  [9] 976e000000000000 9772000000000000 9776000000000000 9786000000000000
+#> <a5_cell[9]>
+#> [1] 963e000000000000 9642000000000000 964e000000000000 9766000000000000
+#> [5] 976a000000000000 976e000000000000 9862000000000000 9866000000000000
+#> [9] 9786000000000000
 ```
 
 ### Visualising the grid hierarchy

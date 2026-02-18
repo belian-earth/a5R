@@ -103,7 +103,7 @@ cells <- a5_grid(c(114.8, 4.1, 119.8, 8.1), resolution = 8)
 plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
 ```
 
-Any geometry that [geos](https://paleolimbot.github.io/geos/) can handle works
+Any geometry that [wk](https://paleolimbot.github.io/wk/) can handle works
 as input, including sf objects and WKT strings. Bounding boxes that cross the
 antimeridian are supported too:
 
