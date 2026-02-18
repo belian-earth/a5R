@@ -72,30 +72,31 @@ as a WGS 84 bounding box.</p></li>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The algorithm expands cells 3 resolution levels at a time (64x expansion)
-and filters by intersection at each step, keeping the working set small.
-At intermediate resolutions a spatial buffer is applied to avoid pruning
-cells whose children straddle the target boundary (A5 cells are not
-strictly geometrically nested across resolutions). The final step uses
-exact <code><a href="https://paleolimbot.github.io/geos/reference/geos_disjoint.html" class="external-link">geos::geos_intersects()</a></code> filtering.</p>
+    <p>Grid generation runs entirely in Rust. The algorithm expands cells 3
+resolution levels at a time (64x expansion) and prunes by bounding-box
+overlap at each step, keeping the working set small. At intermediate
+resolutions a spatial buffer is applied to avoid pruning cells whose
+children straddle the target boundary (A5 cells are not strictly
+geometrically nested across resolutions). For non-bbox geometry inputs,
+a final exact intersection filter (via the Rust <code>geo</code> crate) removes
+cells that fall outside the target shape.</p>
 <p>No artificial cell count limit is imposed. High resolution combined with a
 large area can produce very large results and consume significant memory.</p>
 <p>In addition to numeric bounding boxes, <code>x</code> accepts any geometry that
-<code><a href="https://paleolimbot.github.io/geos/reference/as_geos_geometry.html" class="external-link">geos::as_geos_geometry()</a></code> can handle, including <code>sf</code>/<code>sfc</code> objects,
+<code><a href="https://paleolimbot.github.io/wk/reference/wk_handle.html" class="external-link">wk::wk_handle()</a></code> can process, including <code>sf</code>/<code>sfc</code> objects,
 <code><a href="https://paleolimbot.github.io/wk/reference/wkt.html" class="external-link">wk::wkt()</a></code>, <code><a href="https://paleolimbot.github.io/wk/reference/wkb.html" class="external-link">wk::wkb()</a></code>, and <a href="a5_cell.html">a5_cell</a> vectors. Multiple geometries are
-unioned automatically. Input geometries are assumed to use WGS 84
-(longitude/latitude) coordinates; projected geometries are not reprojected
-and will produce incorrect results.</p>
+collected into a GEOMETRYCOLLECTION automatically. Input geometries are
+assumed to use WGS 84 (longitude/latitude) coordinates; projected
+geometries are not reprojected and will produce incorrect results.</p>
 <p>Antimeridian-crossing bounding boxes are supported: when <code>xmin &gt; xmax</code>
 in a numeric input (e.g. <code>c(170, -50, -170, -30)</code>), the bbox is
 automatically split into two rectangles either side of the antimeridian.</p>
-<p><strong>Known limitation:</strong> spatial filtering uses planar geometry
-(<code><a href="https://paleolimbot.github.io/geos/reference/geos_disjoint.html" class="external-link">geos::geos_intersects()</a></code>) on longitude/latitude coordinates. This can
-produce incomplete results for target areas very close to the poles
-(above ~88° latitude) or touching the antimeridian (longitude ±180°),
-where cell boundary polygons do not accurately represent their true
-spherical coverage. For these areas, use a larger target geometry to
-ensure complete coverage.</p>
+<p><strong>Known limitation:</strong> spatial filtering uses planar geometry on
+longitude/latitude coordinates. This can produce incomplete results for
+target areas very close to the poles (above ~88° latitude) or touching
+the antimeridian (longitude ±180°), where cell boundary polygons do not
+accurately represent their true spherical coverage. For these areas, use
+a larger target geometry to ensure complete coverage.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
