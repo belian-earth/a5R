@@ -25,10 +25,11 @@ a5_lonlat_to_cell_rs <- function(lon, lat, resolution) .Call(wrap__a5_lonlat_to_
 #' Convert A5 cell indices to longitude/latitude coordinates.
 #'
 #' @param cell Character vector of hex-encoded cell IDs.
+#' @param normalise Logical: if TRUE, wrap longitudes to the standard range.
 #' @return A list with `lon` and `lat` numeric vectors.
 #' @noRd
 #' @keywords internal
-a5_cell_to_lonlat_rs <- function(cell) .Call(wrap__a5_cell_to_lonlat_rs, cell)
+a5_cell_to_lonlat_rs <- function(cell, normalise) .Call(wrap__a5_cell_to_lonlat_rs, cell, normalise)
 
 #' Get boundary polygons for A5 cells as WKT strings.
 #'
@@ -39,6 +40,16 @@ a5_cell_to_lonlat_rs <- function(cell) .Call(wrap__a5_cell_to_lonlat_rs, cell)
 #' @noRd
 #' @keywords internal
 a5_cell_to_boundary_rs <- function(cell, closed_ring, segments) .Call(wrap__a5_cell_to_boundary_rs, cell, closed_ring, segments)
+
+#' Get boundary polygons for A5 cells as WKB raw vectors.
+#'
+#' @param cell Character vector of hex-encoded cell IDs.
+#' @param closed_ring Logical: should the polygon ring be closed?
+#' @param segments Integer: number of interpolation segments per edge.
+#' @return A list of raw vectors (WKB bytes) or NULL for NA cells.
+#' @noRd
+#' @keywords internal
+a5_cell_to_boundary_wkb_rs <- function(cell, closed_ring, segments) .Call(wrap__a5_cell_to_boundary_wkb_rs, cell, closed_ring, segments)
 
 #' Get the area (in square metres) of cells at a given resolution.
 #'
@@ -117,6 +128,26 @@ a5_uncompact_rs <- function(cells, target_resolution) .Call(wrap__a5_uncompact_r
 #' @noRd
 #' @keywords internal
 a5_is_valid_cell_rs <- function(cell) .Call(wrap__a5_is_valid_cell_rs, cell)
+
+#' Generate a grid of A5 cells covering a bounding box.
+#'
+#' Uses hierarchical descent with bbox filtering entirely in Rust.
+#'
+#' @param xmin,ymin,xmax,ymax Bounding box coordinates.
+#' @param resolution Target resolution (0--30).
+#' @return Character vector of hex-encoded cell IDs.
+#' @noRd
+#' @keywords internal
+a5_grid_bbox_rs <- function(xmin, ymin, xmax, ymax, resolution) .Call(wrap__a5_grid_bbox_rs, xmin, ymin, xmax, ymax, resolution)
+
+#' Filter cell IDs to those whose boundary polygons intersect a target geometry.
+#'
+#' @param cells Character vector of hex-encoded cell IDs.
+#' @param target_wkt WKT string of the target geometry.
+#' @return Character vector of cell IDs that intersect the target.
+#' @noRd
+#' @keywords internal
+a5_grid_intersects_rs <- function(cells, target_wkt) .Call(wrap__a5_grid_intersects_rs, cells, target_wkt)
 
 
 # nolint end

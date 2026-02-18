@@ -56,10 +56,9 @@ a5_lonlat_to_cell <- function(lon, lat, resolution) {
 #' a5_cell_to_lonlat(cell2, normalise = FALSE)
 a5_cell_to_lonlat <- function(cell, normalise = TRUE) {
   cell <- as_a5_cell(cell)
-  ll <- a5_cell_to_lonlat_rs(vctrs::vec_data(cell))
+  ll <- a5_cell_to_lonlat_rs(vctrs::vec_data(cell), normalise)
   if (normalise) {
-    lon <- ((ll$lon + 180) %% 360) - 180
-    wk::xy(lon, ll$lat, crs = wk::wk_crs_longlat())
+    wk::xy(ll$lon, ll$lat, crs = wk::wk_crs_longlat())
   } else {
     data.frame(lon = ll$lon, lat = ll$lat)
   }
