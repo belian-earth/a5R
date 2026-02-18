@@ -1,5 +1,80 @@
 use extendr_api::prelude::*;
 use extendr_api::wrapper::Nullable;
+use geo::Intersects;
+use std::str::FromStr;
+
+// ---------------------------------------------------------------------------
+// WKB helpers
+// ---------------------------------------------------------------------------
+
+/// Encode a slice of LonLat coordinates as a WKB Polygon (little-endian, one ring).
+fn lonlats_to_wkb(coords: &[a5::LonLat]) -> Vec<u8> {
+    let n = coords.len();
+    let mut buf = Vec::with_capacity(13 + n * 16);
+    buf.push(0x01); // little-endian
+    buf.extend_from_slice(&3u32.to_le_bytes()); // wkbPolygon
+    buf.extend_from_slice(&1u32.to_le_bytes()); // 1 ring
+    buf.extend_from_slice(&(n as u32).to_le_bytes()); // point count
+    for ll in coords {
+        buf.extend_from_slice(&ll.longitude().to_le_bytes());
+        buf.extend_from_slice(&ll.latitude().to_le_bytes());
+    }
+    buf
+}
+
+// ---------------------------------------------------------------------------
+// Shared constants
+// ---------------------------------------------------------------------------
+
+const BOUNDARY_OPTS_CLOSED: a5::core::cell::CellToBoundaryOptions =
+    a5::core::cell::CellToBoundaryOptions {
+        closed_ring: true,
+        segments: None,
+    };
+
+const BOUNDARY_OPTS_OPEN: a5::core::cell::CellToBoundaryOptions =
+    a5::core::cell::CellToBoundaryOptions {
+        closed_ring: false,
+        segments: None,
+    };
+
+// ---------------------------------------------------------------------------
+// Grid helpers
+// ---------------------------------------------------------------------------
+
+struct BBox {
+    xmin: f64,
+    ymin: f64,
+    xmax: f64,
+    ymax: f64,
+}
+
+fn bboxes_overlap(a: &BBox, b: &BBox) -> bool {
+    a.xmin <= b.xmax && a.xmax >= b.xmin && a.ymin <= b.ymax && a.ymax >= b.ymin
+}
+
+fn cell_bbox(boundary: &[a5::LonLat]) -> BBox {
+    let (mut xmin, mut xmax) = (f64::MAX, f64::MIN);
+    let (mut ymin, mut ymax) = (f64::MAX, f64::MIN);
+    for ll in boundary {
+        xmin = xmin.min(ll.longitude());
+        xmax = xmax.max(ll.longitude());
+        ymin = ymin.min(ll.latitude());
+        ymax = ymax.max(ll.latitude());
+    }
+    BBox { xmin, ymin, xmax, ymax }
+}
+
+/// Buffer distance in degrees, latitude-adjusted.
+fn buffer_distance(resolution: i32, max_abs_lat: f64) -> f64 {
+    let area_m2 = a5::cell_area(resolution);
+    let diameter_m = area_m2.sqrt();
+    let cos_lat = (max_abs_lat * std::f64::consts::PI / 180.0).cos();
+    if cos_lat < 0.05 {
+        return 90.0; // sentinel: skip filtering near poles
+    }
+    diameter_m / (111000.0 * cos_lat) * 0.5
+}
 
 // ---------------------------------------------------------------------------
 // Core indexing
@@ -39,11 +114,12 @@ fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Str
 /// Convert A5 cell indices to longitude/latitude coordinates.
 ///
 /// @param cell Character vector of hex-encoded cell IDs.
+/// @param normalise Logical: if TRUE, wrap longitudes to the standard range.
 /// @return A list with `lon` and `lat` numeric vectors.
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_cell_to_lonlat_rs(cell: Strings) -> List {
+fn a5_cell_to_lonlat_rs(cell: Strings, normalise: bool) -> List {
     let n = cell.len();
     let mut lon_out = Doubles::new(n);
     let mut lat_out = Doubles::new(n);
@@ -57,7 +133,12 @@ fn a5_cell_to_lonlat_rs(cell: Strings) -> List {
         match a5::hex_to_u64(s.as_str()) {
             Ok(id) => match a5::cell_to_lonlat(id) {
                 Ok(ll) => {
-                    lon_out.set_elt(i, Rfloat::from(ll.longitude()));
+                    let lon = if normalise {
+                        ((ll.longitude() + 180.0) % 360.0 + 360.0) % 360.0 - 180.0
+                    } else {
+                        ll.longitude()
+                    };
+                    lon_out.set_elt(i, Rfloat::from(lon));
                     lat_out.set_elt(i, Rfloat::from(ll.latitude()));
                 }
                 Err(_) => {
@@ -348,6 +429,169 @@ fn a5_is_valid_cell_rs(cell: Strings) -> Logicals {
 }
 
 // ---------------------------------------------------------------------------
+// WKB boundary output
+// ---------------------------------------------------------------------------
+
+/// Get boundary polygons for A5 cells as WKB raw vectors.
+///
+/// @param cell Character vector of hex-encoded cell IDs.
+/// @param closed_ring Logical: should the polygon ring be closed?
+/// @param segments Integer: number of interpolation segments per edge.
+/// @return A list of raw vectors (WKB bytes) or NULL for NA cells.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn a5_cell_to_boundary_wkb_rs(
+    cell: Strings,
+    closed_ring: bool,
+    segments: Nullable<i32>,
+) -> List {
+    let seg: Option<i32> = match segments {
+        Nullable::NotNull(s) => Some(s),
+        Nullable::Null => None,
+    };
+    let n = cell.len();
+    let values: Vec<Robj> = (0..n)
+        .map(|i| {
+            let s = &cell[i];
+            if s.is_na() {
+                return ().into();
+            }
+            let opts = a5::core::cell::CellToBoundaryOptions {
+                closed_ring,
+                segments: seg,
+            };
+            match a5::hex_to_u64(s.as_str()) {
+                Ok(id) => match a5::cell_to_boundary(id, Some(opts)) {
+                    Ok(boundary) => Robj::from(lonlats_to_wkb(&boundary)),
+                    Err(_) => ().into(),
+                },
+                Err(_) => ().into(),
+            }
+        })
+        .collect();
+    List::from_values(values)
+}
+
+// ---------------------------------------------------------------------------
+// Grid generation
+// ---------------------------------------------------------------------------
+
+/// Generate a grid of A5 cells covering a bounding box.
+///
+/// Uses hierarchical descent with bbox filtering entirely in Rust.
+///
+/// @param xmin,ymin,xmax,ymax Bounding box coordinates.
+/// @param resolution Target resolution (0--30).
+/// @return Character vector of hex-encoded cell IDs.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn a5_grid_bbox_rs(xmin: f64, ymin: f64, xmax: f64, ymax: f64, resolution: i32) -> Strings {
+    let target = BBox { xmin, ymin, xmax, ymax };
+    let max_abs_lat = ymin.abs().max(ymax.abs());
+
+    let mut cells = match a5::get_res0_cells() {
+        Ok(c) => c,
+        Err(_) => return Strings::new(0),
+    };
+    let mut current_res: i32 = 0;
+    let step: i32 = 3;
+    let filter_start: i32 = 3;
+
+    while current_res < resolution {
+        let next_res = (current_res + step).min(resolution);
+        cells = match a5::uncompact(&cells, next_res) {
+            Ok(c) => c,
+            Err(_) => return Strings::new(0),
+        };
+        current_res = next_res;
+
+        if current_res >= filter_start {
+            let buf = if current_res < resolution {
+                buffer_distance(current_res, max_abs_lat)
+            } else {
+                0.0
+            };
+            if buf < 45.0 {
+                // skip filtering if near poles
+                let buffered = BBox {
+                    xmin: target.xmin - buf,
+                    ymin: (target.ymin - buf).max(-90.0),
+                    xmax: target.xmax + buf,
+                    ymax: (target.ymax + buf).min(90.0),
+                };
+                cells.retain(|&cell_id| {
+                    match a5::cell_to_boundary(cell_id, Some(BOUNDARY_OPTS_OPEN)) {
+                        Ok(boundary) => bboxes_overlap(&cell_bbox(&boundary), &buffered),
+                        Err(_) => false,
+                    }
+                });
+            }
+        }
+    }
+
+    cells
+        .iter()
+        .map(|c| Rstr::from(a5::u64_to_hex(*c)))
+        .collect::<Strings>()
+}
+
+// ---------------------------------------------------------------------------
+// Intersection filtering
+// ---------------------------------------------------------------------------
+
+/// Convert A5 cell boundary to a geo::Polygon for intersection testing.
+fn cell_to_geo_polygon(cell_id: u64) -> Option<geo::Polygon<f64>> {
+    let boundary = a5::cell_to_boundary(cell_id, Some(BOUNDARY_OPTS_CLOSED)).ok()?;
+    let coords: Vec<geo::Coord<f64>> = boundary
+        .iter()
+        .map(|ll| geo::Coord {
+            x: ll.longitude(),
+            y: ll.latitude(),
+        })
+        .collect();
+    Some(geo::Polygon::new(geo::LineString::from(coords), vec![]))
+}
+
+/// Filter cell IDs to those whose boundary polygons intersect a target geometry.
+///
+/// @param cells Character vector of hex-encoded cell IDs.
+/// @param target_wkt WKT string of the target geometry.
+/// @return Character vector of cell IDs that intersect the target.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn a5_grid_intersects_rs(cells: Strings, target_wkt: &str) -> Strings {
+    let wkt_obj = match wkt::Wkt::<f64>::from_str(target_wkt) {
+        Ok(w) => w,
+        Err(_) => return Strings::new(0),
+    };
+    let target: geo::Geometry<f64> = match geo::Geometry::try_from(wkt_obj) {
+        Ok(g) => g,
+        Err(_) => return Strings::new(0),
+    };
+
+    let n = cells.len();
+    let mut out = Vec::with_capacity(n);
+    for i in 0..n {
+        let s = &cells[i];
+        if s.is_na() {
+            continue;
+        }
+        let keep = a5::hex_to_u64(s.as_str())
+            .ok()
+            .and_then(|id| cell_to_geo_polygon(id))
+            .map(|poly| target.intersects(&poly))
+            .unwrap_or(false);
+        if keep {
+            out.push(Rstr::from(s.as_str()));
+        }
+    }
+    out.into_iter().collect::<Strings>()
+}
+
+// ---------------------------------------------------------------------------
 // Module registration
 // ---------------------------------------------------------------------------
 
@@ -356,6 +600,7 @@ extendr_module! {
     fn a5_lonlat_to_cell_rs;
     fn a5_cell_to_lonlat_rs;
     fn a5_cell_to_boundary_rs;
+    fn a5_cell_to_boundary_wkb_rs;
     fn a5_cell_area_rs;
     fn a5_get_num_cells_rs;
     fn a5_get_resolution_rs;
@@ -365,4 +610,6 @@ extendr_module! {
     fn a5_compact_rs;
     fn a5_uncompact_rs;
     fn a5_is_valid_cell_rs;
+    fn a5_grid_bbox_rs;
+    fn a5_grid_intersects_rs;
 }
