@@ -22,9 +22,12 @@ Imports:
     vctrs (>= 0.6.0),
     wk (>= 0.9.0)
 Suggests:
+    knitr,
     pillar,
+    rmarkdown,
     testthat (>= 3.0.0),
     tibble
+VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/rextendr/version: 0.4.2
 SystemRequirements: Cargo (Rust's package manager), rustc
