@@ -16,3 +16,5 @@ src/Makevars.win
 .vscode/
 dev.R
 docs
+/doc/
+/Meta/

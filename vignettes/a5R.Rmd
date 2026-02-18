@@ -1,0 +1,102 @@
+---
+title: "Getting started with a5R"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with a5R}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(a5R)
+```
+
+## Index a point
+
+Map a longitude/latitude coordinate to a cell at a given resolution (0--30).
+Higher resolutions produce smaller cells.
+
+```{r}
+cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
+cell
+```
+
+Convert back to the cell centre point:
+
+```{r}
+a5_cell_to_lonlat(cell)
+```
+
+## Cell boundaries
+
+Get the boundary polygon for one or more cells:
+
+```{r boundary-plot, fig.width = 5, fig.height = 4}
+boundary <- a5_cell_to_boundary(cell)
+boundary
+
+plot(boundary, col = "#206ead20", border = "#206ead", asp = 1)
+```
+
+Boundaries are returned as `wk_wkb` vectors by default (set `format = "wkt"` for
+WKT). Both integrate directly with sf, terra, and other spatial tooling via the
+wk package.
+
+## Hierarchy
+
+Every cell has a parent at a coarser resolution and children at finer
+resolutions. A5 cells have 4 children per level.
+
+```{r}
+a5_cell_to_parent(cell)
+children <- a5_cell_to_children(cell)
+children
+```
+
+Cell area decreases geometrically with resolution:
+
+```{r}
+a5_cell_area(0:5)
+```
+
+## Grid generation
+
+`a5_grid()` returns all cells at a target resolution that cover a given area.
+Pass a bounding box as a numeric vector:
+```{r grid-plot, fig.width = 5, fig.height = 4}
+cells <- a5_grid(c(-3.3, 55.9, -3.1, 56.0), resolution = 8)
+length(cells)
+
+plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
+```
+
+Any geometry that wk can handle works too --- polygons, sf objects, or even
+`a5_cell` vectors:
+
+```{r}
+poly <- wk::wkt("POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))")
+a5_grid(poly, resolution = 5)
+```
+
+## Compact and uncompact
+
+When a complete set of siblings is present, `a5_compact()` merges them into
+their shared parent, reducing the number of cells without losing coverage:
+
+```{r}
+children <- a5_cell_to_children(cell)
+length(children)
+
+compacted <- a5_compact(children)
+compacted
+
+# Round-trip back to the original set
+a5_uncompact(compacted, resolution = 6)
+```
