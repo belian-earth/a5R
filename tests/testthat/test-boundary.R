@@ -55,8 +55,7 @@ test_that("boundary handles NA cell", {
   expect_true(is.na(as.character(boundaries)[2]))
 })
 
-test_that("cell_area decreases with
-  resolution", {
+test_that("cell_area decreases with resolution", {
   areas <- a5_cell_area(0:5)
   expect_true(all(diff(areas) < units::as_units(0, "m^2")))
 })

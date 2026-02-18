@@ -29,15 +29,28 @@ test_that("res 0 with global bbox returns 12 cells", {
   expect_length(cells, 12L)
 })
 
-test_that("result cells intersect the target", {
+test_that("result cells intersect the target (bbox path)", {
   bbox <- c(-3.3, 55.9, -3.1, 56.0)
   cells <- a5_grid(bbox, resolution = 5)
-  boundaries <- a5_cell_to_boundary(cells)
-  cell_geoms <- geos::as_geos_geometry(boundaries)
-  target <- geos::as_geos_geometry(
-    wk::rct(bbox[1], bbox[2], bbox[3], bbox[4], crs = wk::wk_crs_longlat())
+  target_wkt <- sprintf(
+    "POLYGON ((%s %s, %s %s, %s %s, %s %s, %s %s))",
+    bbox[1], bbox[2], bbox[3], bbox[2], bbox[3], bbox[4],
+    bbox[1], bbox[4], bbox[1], bbox[2]
   )
-  expect_true(all(geos::geos_intersects(cell_geoms, target)))
+  filtered <- a5_grid_intersects_rs(vctrs::vec_data(cells), target_wkt)
+  expect_equal(length(filtered), length(cells))
+})
+
+test_that("geometry input filters cells by intersection", {
+  # Triangle is strictly smaller than its bounding box, so the exact
+
+  # intersection filter should return fewer cells than a bbox grid
+  tri <- wk::wkt("POLYGON ((-3.3 55.9, -3.1 55.95, -3.3 56, -3.3 55.9))")
+  tri_cells <- a5_grid(tri, resolution = 8)
+  bbox_cells <- a5_grid(c(-3.3, 55.9, -3.1, 56.0), resolution = 8)
+  expect_true(length(tri_cells) < length(bbox_cells))
+  # All triangle cells should be a subset of the bbox cells
+  expect_true(all(vctrs::vec_data(tri_cells) %in% vctrs::vec_data(bbox_cells)))
 })
 
 test_that("interior point is covered by a returned cell", {
@@ -96,14 +109,9 @@ test_that("antimeridian-crossing bbox works", {
   expect_true(any(lons < 0))
 })
 
-test_that("empty intermediate result warns and returns empty a5_cell", {
-  # Very small bbox near the pole — planar filtering can prune all cells at
-  # intermediate resolutions. This must warn and return an empty vector,
-  # not crash in Rust (which panics on empty input to a5_uncompact).
-  expect_warning(
-    cells <- a5_grid(c(0, 89.999, 0.001, 90), resolution = 5),
-    "No cells found"
-  )
+test_that("near-pole bbox returns cells", {
+  # Rust bbox grid skips filtering near poles (buf >= 45) to avoid false negatives
+  cells <- a5_grid(c(0, 89.999, 0.001, 90), resolution = 5)
   expect_s3_class(cells, "a5_cell")
-  expect_length(cells, 0L)
+  expect_true(length(cells) >= 1L)
 })
