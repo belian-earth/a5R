@@ -134,7 +134,7 @@ other](reference/figures/README-hierarchy-plot-1.png)
 a5R provides a performant interface to the A5 indexing system, with all
 core operations implemented in Rust and called directly from R via
 [extendr](https://extendr.github.io/). Cross-language
-[benchmarks](https://github.com/belian-earth/a5R/tree/main/benchmarks)
+[benchmarks](https://github.com/belian-earth/a5R/blob/main/benchmarks/RESULTS.md)
 and consistency checks against the Python, JavaScript, and DuckDB A5
 implementations confirm that results are identical across all APIs.
 
