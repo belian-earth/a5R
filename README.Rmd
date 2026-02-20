@@ -27,7 +27,7 @@ global grid system (DGGS), powered by the
 [a5 Rust crate](https://crates.io/crates/A5) via
 [extendr](https://extendr.github.io/extendr/extendr_api/).
 
-A5 partitions the Earth's surface into pentagonal cells across 31 resolution
+a5 partitions the Earth's surface into pentagonal cells across 31 resolution
 levels. Cells are equal-area, encoded as 64-bit integers, and achieve
 millimetre-level precision at the finest resolution. For a full description of
 the system, see the [A5 project page](https://a5geo.org/) and the
@@ -126,50 +126,15 @@ plot(a5_cell_to_boundary(parent), border = "#333333", lwd = 2, add = TRUE)
 
 ## Performance
 
-```{r bench-table, echo = FALSE, results = "asis"}
-files <- list.files("benchmarks", pattern = "^results_.*\\.json$", full.names = TRUE)
-if (length(files) > 0) {
-  all <- lapply(files, jsonlite::fromJSON)
-  bench_df <- do.call(rbind, lapply(all, function(d) {
-    res <- d$results
-    res$lang <- d$lang
-    res
-  }))
-  wide <- reshape(bench_df[, c("operation", "lang", "median_ms")],
-                  idvar = "operation", timevar = "lang",
-                  direction = "wide", sep = "_")
-  names(wide) <- gsub("median_ms_", "", names(wide))
-
-  # Order operations consistently
-  op_order <- c("lonlat_to_cell", "cell_to_lonlat", "cell_to_boundary",
-                "get_resolution", "cell_to_parent", "cell_to_children",
-                "compact", "uncompact", "cell_area")
-  wide <- wide[match(op_order, wide$operation), ]
-  langs <- setdiff(names(wide), "operation")
-
-  cat("Cross-language benchmarks (10k elements, median ms) comparing a5R against the\n")
-  cat("Python, JavaScript, and DuckDB A5 implementations:\n\n")
-  cat("| Operation |", paste(langs, collapse = " | "), "|\n")
-  cat("|---|", paste(rep("---:", length(langs)), collapse = "|"), "|\n", sep = "")
-
-  for (i in seq_len(nrow(wide))) {
-    vals <- sapply(langs, function(l) wide[[l]][i])
-    fastest <- which.min(vals)
-    fmt <- sapply(seq_along(vals), function(j) {
-      txt <- if (vals[j] >= 10) sprintf("%.0f", vals[j]) else sprintf("%.1f", vals[j])
-      if (j == fastest) paste0("**", txt, "**") else txt
-    })
-    cat("| ", wide$operation[i], " | ", paste(fmt, collapse = " | "), " |\n", sep = "")
-  }
-}
-```
-
-R and DuckDB process all 10k elements in a single vectorised call (Rust/C++);
-Python and JS loop element-by-element, so the gap primarily reflects
-vectorisation overhead rather than per-element algorithm speed.
-See [`benchmarks/`](https://github.com/belian-earth/a5R/tree/main/benchmarks) for full results and methodology.
+a5R provides a performant interface to the A5 indexing system, with all
+core operations implemented in Rust and called directly from R via
+[extendr](https://extendr.github.io/). Cross-language
+[benchmarks](https://github.com/belian-earth/a5R/tree/main/benchmarks)
+and consistency checks against the Python, JavaScript, and DuckDB A5
+implementations confirm that results are identical across all APIs.
 
 ## Acknowledgements
 
 A5 was created by [Felix Palmer](https://github.com/felixpalmer). This package
-is a thin R wrapper around his work and would not exist without it.
+is a thin R wrapper around his work and would not exist without it. The [Query-farm](https://github.com/Query-farm/a5) team maintain the
+DuckDB A5 extension, which wraps the same Rust crate and provided a valuable reference for this project.
