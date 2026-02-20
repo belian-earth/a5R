@@ -52,7 +52,7 @@
 <!-- badges: start -->
 
 <p>a5R provides R bindings for the <a href="https://a5geo.org/" class="external-link">A5</a> pentagonal discrete global grid system (DGGS), powered by the <a href="https://crates.io/crates/A5" class="external-link">a5 Rust crate</a> via <a href="https://extendr.github.io/extendr/extendr_api/" class="external-link">extendr</a>.</p>
-<p>A5 partitions the Earth’s surface into pentagonal cells across 31 resolution levels. Cells are equal-area, encoded as 64-bit integers, and achieve millimetre-level precision at the finest resolution. For a full description of the system, see the <a href="https://a5geo.org/" class="external-link">A5 project page</a> and the <a href="https://github.com/felixpalmer/a5" class="external-link">reference implementation</a> by Felix Palmer.</p>
+<p>a5 partitions the Earth’s surface into pentagonal cells across 31 resolution levels. Cells are equal-area, encoded as 64-bit integers, and achieve millimetre-level precision at the finest resolution. For a full description of the system, see the <a href="https://a5geo.org/" class="external-link">A5 project page</a> and the <a href="https://github.com/felixpalmer/a5" class="external-link">reference implementation</a> by Felix Palmer.</p>
 <div class="section level2">
 <h2 id="r-specific-design">R-specific design<a class="anchor" aria-label="anchor" href="#r-specific-design"></a>
 </h2>
@@ -143,87 +143,12 @@
 <div class="section level2">
 <h2 id="performance">Performance<a class="anchor" aria-label="anchor" href="#performance"></a>
 </h2>
-<p>Cross-language benchmarks (10k elements, median ms) comparing a5R against the Python, JavaScript, and DuckDB A5 implementations:</p>
-<table class="table">
-<thead><tr class="header">
-<th>Operation</th>
-<th align="right">DuckDB</th>
-<th align="right">JavaScript</th>
-<th align="right">Python</th>
-<th align="right">R</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>lonlat_to_cell</td>
-<td align="right">38</td>
-<td align="right">264</td>
-<td align="right">4866</td>
-<td align="right"><strong>36</strong></td>
-</tr>
-<tr class="even">
-<td>cell_to_lonlat</td>
-<td align="right">12</td>
-<td align="right">40</td>
-<td align="right">1231</td>
-<td align="right"><strong>7.1</strong></td>
-</tr>
-<tr class="odd">
-<td>cell_to_boundary</td>
-<td align="right">70</td>
-<td align="right">90</td>
-<td align="right">3161</td>
-<td align="right"><strong>25</strong></td>
-</tr>
-<tr class="even">
-<td>get_resolution</td>
-<td align="right">1.2</td>
-<td align="right">0.5</td>
-<td align="right">86</td>
-<td align="right"><strong>0.4</strong></td>
-</tr>
-<tr class="odd">
-<td>cell_to_parent</td>
-<td align="right"><strong>1.4</strong></td>
-<td align="right">2.4</td>
-<td align="right">161</td>
-<td align="right">1.9</td>
-</tr>
-<tr class="even">
-<td>cell_to_children</td>
-<td align="right">0.2</td>
-<td align="right"><strong>0.0</strong></td>
-<td align="right">0.1</td>
-<td align="right">0.0</td>
-</tr>
-<tr class="odd">
-<td>compact</td>
-<td align="right">0.7</td>
-<td align="right"><strong>0.0</strong></td>
-<td align="right">0.2</td>
-<td align="right">0.0</td>
-</tr>
-<tr class="even">
-<td>uncompact</td>
-<td align="right">0.6</td>
-<td align="right"><strong>0.0</strong></td>
-<td align="right">0.3</td>
-<td align="right">0.0</td>
-</tr>
-<tr class="odd">
-<td>cell_area</td>
-<td align="right">0.2</td>
-<td align="right"><strong>0.0</strong></td>
-<td align="right">0.0</td>
-<td align="right">0.2</td>
-</tr>
-</tbody>
-</table>
-<p>R and DuckDB process all 10k elements in a single vectorised call (Rust/C++); Python and JS loop element-by-element, so the gap primarily reflects vectorisation overhead rather than per-element algorithm speed. See <a href="https://github.com/belian-earth/a5R/tree/main/benchmarks" class="external-link"><code>benchmarks/</code></a> for full results and methodology.</p>
+<p>a5R provides a performant interface to the A5 indexing system, with all core operations implemented in Rust and called directly from R via <a href="https://extendr.github.io/" class="external-link">extendr</a>. Cross-language <a href="https://github.com/belian-earth/a5R/tree/main/benchmarks" class="external-link">benchmarks</a> and consistency checks against the Python, JavaScript, and DuckDB A5 implementations confirm that results are identical across all APIs.</p>
 </div>
 <div class="section level2">
 <h2 id="acknowledgements">Acknowledgements<a class="anchor" aria-label="anchor" href="#acknowledgements"></a>
 </h2>
-<p>A5 was created by <a href="https://github.com/felixpalmer" class="external-link">Felix Palmer</a>. This package is a thin R wrapper around his work and would not exist without it.</p>
+<p>A5 was created by <a href="https://github.com/felixpalmer" class="external-link">Felix Palmer</a>. This package is a thin R wrapper around his work and would not exist without it. The <a href="https://github.com/Query-farm/a5" class="external-link">Query-farm</a> team maintain the DuckDB A5 extension, which wraps the same Rust crate and provided a valuable reference for this project.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
