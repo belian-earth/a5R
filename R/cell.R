@@ -37,6 +37,20 @@ as_a5_cell <- function(x) {
   a5_cell(x)
 }
 
+#' @export
+#' @rdname a5_cell
+#' @examples
+#' a5_is_cell(c("0800000000000006", "not_a_cell", NA))
+a5_is_cell <- function(x) {
+  if (is_a5_cell(x)) {
+    x <- vctrs::vec_data(x)
+  } else {
+    x <- vctrs::vec_cast(x, character())
+  }
+  a5_is_valid_cell_rs(x)
+}
+
+
 # --- vctrs methods ---
 
 #' @exportS3Method vctrs::vec_ptype_abbr

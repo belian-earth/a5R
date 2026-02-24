@@ -4,6 +4,7 @@
 \alias{a5_cell}
 \alias{is_a5_cell}
 \alias{as_a5_cell}
+\alias{a5_is_cell}
 \title{A5 Cell Index Vector}
 \usage{
 a5_cell(x = character())
@@ -11,6 +12,8 @@ a5_cell(x = character())
 is_a5_cell(x)
 
 as_a5_cell(x)
+
+a5_is_cell(x)
 }
 \arguments{
 \item{x}{A character vector of hex-encoded A5 cell IDs, or an object
@@ -28,4 +31,5 @@ framework.
 \examples{
 cells <- a5_cell(c("0800000000000006", "0800000000000016"))
 cells
+a5_is_cell(c("0800000000000006", "not_a_cell", NA))
 }
