@@ -1,4 +1,4 @@
-#' @importFrom rlang abort caller_env %||%
+#' @importFrom rlang caller_env
 #' @importFrom vctrs vec_cast vec_ptype2
 NULL
 

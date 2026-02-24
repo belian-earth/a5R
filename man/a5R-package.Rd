@@ -6,7 +6,7 @@
 \alias{a5R-package}
 \title{a5R: A5 Discrete Global Grid System}
 \description{
-R bindings for the A5 Discrete Global Grid System (DGGS). A5 partitions the Earth's surface into pentagonal cells across 31 resolution levels using an equal-area projection onto a dodecahedron. Provides functions for indexing coordinates to cells, traversing the cell hierarchy, computing cell boundaries, and compacting/uncompacting cell sets. Powered by the 'a5' Rust crate via 'extendr'.
+Bindings for the A5 Discrete Global Grid System (DGGS). A5 partitions the Earth's surface into pentagonal cells across 31 resolution levels using an equal-area projection onto a dodecahedron. Provides functions for indexing coordinates to cells, traversing the cell hierarchy, computing cell boundaries, and compacting/uncompacting cell sets. Powered by the 'a5' Rust crate via 'extendr'.
 }
 \seealso{
 Useful links:

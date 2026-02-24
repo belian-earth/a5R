@@ -29,20 +29,11 @@ a5_lonlat_to_cell <- function(lon, lat, resolution) {
 #'
 #' @param cell An [a5_cell] vector (or character coercible to one).
 #' @param normalise Logical scalar. If `TRUE` (default), longitudes are
-#'   wrapped to the \eqn{[-180, 180]} range and the result is returned as a
-#'   [wk::xy()] vector. If `FALSE`, the raw unwrapped coordinates from the
-#'   Rust API are returned as a two-column data frame (`lon`, `lat`).
-#' @returns If `normalise = TRUE`, a [wk::xy()] vector of (longitude,
-#'   latitude) points. If `normalise = FALSE`, a data frame with columns
-#'   `lon` and `lat` containing the unwrapped coordinates.
-#'
-#' @details
-#' The underlying Rust API returns longitudes in a continuous unwrapped range
-#' that can exceed \eqn{[-180, 180]} for cells near the antimeridian
-#' (e.g. \eqn{-245} instead of \eqn{115}). By default these are normalised
-#' to standard bounds. Set `normalise = FALSE` to retrieve the raw values,
-#' which can be useful for avoiding discontinuities in calculations that span
-#' the antimeridian.
+#'   wrapped to \eqn{[-180, 180]} and returned as a [wk::xy()] vector.
+#'   If `FALSE`, raw unwrapped coordinates are returned as a data frame
+#'   (`lon`, `lat`) — useful for calculations spanning the antimeridian.
+#' @returns A [wk::xy()] vector (if `normalise = TRUE`) or a data frame
+#'   with columns `lon` and `lat`.
 #'
 #' @seealso [a5_lonlat_to_cell()] for the inverse operation,
 #'   [a5_cell_to_boundary()] for full cell polygons.

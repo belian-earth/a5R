@@ -20,13 +20,12 @@ a5_is_cell(x)
 coercible to one.}
 }
 \value{
-An \code{a5_cell} vector.
+An \code{a5_cell} vector (\code{a5_cell}, \code{as_a5_cell}), a logical
+scalar (\code{is_a5_cell}), or a logical vector (\code{a5_is_cell}).
 }
 \description{
-A vctrs-based vector type representing A5 cell indices. Cell IDs are
-stored as hex-encoded character strings internally. The \code{a5_cell} type
-provides type safety, pretty-printing, and integration with the vctrs
-framework.
+Create, test, and coerce A5 cell index vectors. Cells are stored as
+hex-encoded character strings.
 }
 \examples{
 cells <- a5_cell(c("0800000000000006", "0800000000000016"))

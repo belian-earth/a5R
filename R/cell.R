@@ -1,13 +1,12 @@
 #' A5 Cell Index Vector
 #'
-#' A vctrs-based vector type representing A5 cell indices. Cell IDs are
-#' stored as hex-encoded character strings internally. The `a5_cell` type
-#' provides type safety, pretty-printing, and integration with the vctrs
-#' framework.
+#' Create, test, and coerce A5 cell index vectors. Cells are stored as
+#' hex-encoded character strings.
 #'
 #' @param x A character vector of hex-encoded A5 cell IDs, or an object
 #'   coercible to one.
-#' @returns An `a5_cell` vector.
+#' @returns An `a5_cell` vector (`a5_cell`, `as_a5_cell`), a logical
+#'   scalar (`is_a5_cell`), or a logical vector (`a5_is_cell`).
 #'
 #' @export
 #' @examples
