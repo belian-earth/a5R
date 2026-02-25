@@ -60,17 +60,6 @@ test_that("vec_cast round-trips a5_cell <-> character", {
   expect_equal(vctrs::vec_data(back), "0800000000000006")
 })
 
-test_that("a5_hex_to_cell creates a5_cell", {
-  cell <- a5_hex_to_cell("0800000000000006")
-  expect_s3_class(cell, "a5_cell")
-  expect_equal(vctrs::vec_data(cell), "0800000000000006")
-})
-
-test_that("a5_hex_to_cell is vectorised", {
-  cells <- a5_hex_to_cell(c("0800000000000006", "0800000000000016"))
-  expect_length(cells, 2L)
-})
-
 test_that("vec_c combines a5_cell + a5_cell", {
   a <- a5_cell("0800000000000006")
   b <- a5_cell("0800000000000016")

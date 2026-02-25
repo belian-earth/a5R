@@ -4,6 +4,7 @@
 \alias{a5_cell}
 \alias{is_a5_cell}
 \alias{as_a5_cell}
+\alias{a5_is_cell}
 \title{A5 Cell Index Vector}
 \usage{
 a5_cell(x = character())
@@ -11,21 +12,23 @@ a5_cell(x = character())
 is_a5_cell(x)
 
 as_a5_cell(x)
+
+a5_is_cell(x)
 }
 \arguments{
 \item{x}{A character vector of hex-encoded A5 cell IDs, or an object
 coercible to one.}
 }
 \value{
-An \code{a5_cell} vector.
+An \code{a5_cell} vector (\code{a5_cell}, \code{as_a5_cell}), a logical
+scalar (\code{is_a5_cell}), or a logical vector (\code{a5_is_cell}).
 }
 \description{
-A vctrs-based vector type representing A5 cell indices. Cell IDs are
-stored as hex-encoded character strings internally. The \code{a5_cell} type
-provides type safety, pretty-printing, and integration with the vctrs
-framework.
+Create, test, and coerce A5 cell index vectors. Cells are stored as
+hex-encoded character strings.
 }
 \examples{
 cells <- a5_cell(c("0800000000000006", "0800000000000016"))
 cells
+a5_is_cell(c("0800000000000006", "not_a_cell", NA))
 }

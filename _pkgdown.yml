@@ -4,6 +4,7 @@ template:
   bootswatch: cosmo
   bslib:
     primary: '#4a6741'
+  math-rendering: mathjax
 navbar:
   structure:
     left:
@@ -27,8 +28,6 @@ reference:
   desc: The `a5_cell` vector type and helpers.
   contents:
   - a5_cell
-  - a5_hex_to_cell
-  - a5_is_cell
 - title: Hierarchy
   desc: Navigate the cell hierarchy across resolutions.
   contents:
