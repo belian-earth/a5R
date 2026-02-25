@@ -1,6 +1,6 @@
 # a5R: A5 Discrete Global Grid System
 
-R bindings for the A5 Discrete Global Grid System (DGGS). A5 partitions
+Bindings for the A5 Discrete Global Grid System (DGGS). A5 partitions
 the Earth's surface into pentagonal cells across 31 resolution levels
 using an equal-area projection onto a dodecahedron. Provides functions
 for indexing coordinates to cells, traversing the cell hierarchy,

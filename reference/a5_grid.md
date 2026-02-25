@@ -39,40 +39,22 @@ vector of cells at `resolution` that intersect `x`.
 
 ## Details
 
-Grid generation runs entirely in Rust. The algorithm expands cells 3
-resolution levels at a time (64x expansion) and prunes by bounding-box
-overlap at each step, keeping the working set small. At intermediate
-resolutions a spatial buffer is applied to avoid pruning cells whose
-children straddle the target boundary (A5 cells are not strictly
-geometrically nested across resolutions). For non-bbox geometry inputs,
-a final exact intersection filter (via the Rust `geo` crate) removes
-cells that fall outside the target shape.
+Grid generation runs entirely in Rust via hierarchical flood-fill with
+bounding-box pruning. For non-bbox geometry inputs, an exact
+intersection filter removes cells that fall outside the target shape. No
+cell count limit is imposed — high resolutions over large areas can
+consume significant memory.
 
-No artificial cell count limit is imposed. High resolution combined with
-a large area can produce very large results and consume significant
-memory.
-
-In addition to numeric bounding boxes, `x` accepts any geometry that
-[`wk::wk_handle()`](https://paleolimbot.github.io/wk/reference/wk_handle.html)
-can process, including `sf`/`sfc` objects,
-[`wk::wkt()`](https://paleolimbot.github.io/wk/reference/wkt.html),
-[`wk::wkb()`](https://paleolimbot.github.io/wk/reference/wkb.html), and
-[a5_cell](https://belian-earth.github.io/a5R/reference/a5_cell.md)
-vectors. Multiple geometries are collected into a GEOMETRYCOLLECTION
-automatically. Input geometries are assumed to use WGS 84
-(longitude/latitude) coordinates; projected geometries are not
-reprojected and will produce incorrect results.
-
+Input geometries must use WGS 84 coordinates; projected geometries are
+not reprojected and will produce incorrect results. Multiple geometries
+are collected into a GEOMETRYCOLLECTION automatically.
 Antimeridian-crossing bounding boxes are supported: when `xmin > xmax`
-in a numeric input (e.g. `c(170, -50, -170, -30)`), the bbox is
-automatically split into two rectangles either side of the antimeridian.
+(e.g. `c(170, -50, -170, -30)`), the bbox is split at the antimeridian.
 
-**Known limitation:** spatial filtering uses planar geometry on
-longitude/latitude coordinates. This can produce incomplete results for
-target areas very close to the poles (above ~88° latitude) or touching
-the antimeridian (longitude ±180°), where cell boundary polygons do not
-accurately represent their true spherical coverage. For these areas, use
-a larger target geometry to ensure complete coverage.
+**Limitation:** spatial filtering uses planar geometry on lon/lat
+coordinates, which can produce incomplete results very close to the
+poles (above ~88° latitude) or the antimeridian. Use a larger target
+geometry to ensure complete coverage in these areas.
 
 ## See also
 

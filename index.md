@@ -88,6 +88,21 @@ a5_cell_area(0:5)
 #> [6] 3.320740e+10
 ```
 
+### Visualising the grid hierarchy
+
+``` r
+# A cell and its children two levels down
+parent <- a5_lonlat_to_cell(0, 0, resolution = 3)
+children <- a5_cell_to_children(parent, resolution = 5)
+
+# wk geometries plot directly with base graphics
+plot(a5_cell_to_boundary(children), col = "#206ead20", border = "#206ead", asp = 1)
+plot(a5_cell_to_boundary(parent), border = "#333333", lwd = 2, add = TRUE)
+```
+
+![Pentagonal A5 grid cells at two resolutions nested inside each
+other](reference/figures/README-hierarchy-plot-1.png)
+
 ### Grid generation
 
 Generate all cells covering an area with
@@ -113,21 +128,6 @@ a5_grid(c(177, -19, -178, -17), resolution = 5)
 #> [5] 976a000000000000 976e000000000000 9862000000000000 9866000000000000
 #> [9] 9786000000000000
 ```
-
-### Visualising the grid hierarchy
-
-``` r
-# A cell and its children two levels down
-parent <- a5_lonlat_to_cell(0, 0, resolution = 3)
-children <- a5_cell_to_children(parent, resolution = 5)
-
-# wk geometries plot directly with base graphics
-plot(a5_cell_to_boundary(children), col = "#206ead20", border = "#206ead", asp = 1)
-plot(a5_cell_to_boundary(parent), border = "#333333", lwd = 2, add = TRUE)
-```
-
-![Pentagonal A5 grid cells at two resolutions nested inside each
-other](reference/figures/README-hierarchy-plot-1.png)
 
 ## Performance
 

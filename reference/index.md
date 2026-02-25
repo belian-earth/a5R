@@ -16,11 +16,8 @@ The `a5_cell` vector type and helpers.
 - [`a5_cell()`](https://belian-earth.github.io/a5R/reference/a5_cell.md)
   [`is_a5_cell()`](https://belian-earth.github.io/a5R/reference/a5_cell.md)
   [`as_a5_cell()`](https://belian-earth.github.io/a5R/reference/a5_cell.md)
+  [`a5_is_cell()`](https://belian-earth.github.io/a5R/reference/a5_cell.md)
   : A5 Cell Index Vector
-- [`a5_hex_to_cell()`](https://belian-earth.github.io/a5R/reference/a5_hex_to_cell.md)
-  : Convert hex string to A5 cell
-- [`a5_is_cell()`](https://belian-earth.github.io/a5R/reference/a5_is_cell.md)
-  : Test if values are valid A5 cell indices
 
 ## Hierarchy
 

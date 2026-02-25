@@ -17,27 +17,18 @@ a5_cell_to_lonlat(cell, normalise = TRUE)
 
 - normalise:
 
-  Logical scalar. If `TRUE` (default), longitudes are wrapped to the
-  \\\[-180, 180\]\\ range and the result is returned as a
+  Logical scalar. If `TRUE` (default), longitudes are wrapped to
+  \\\[-180, 180\]\\ and returned as a
   [`wk::xy()`](https://paleolimbot.github.io/wk/reference/xy.html)
-  vector. If `FALSE`, the raw unwrapped coordinates from the Rust API
-  are returned as a two-column data frame (`lon`, `lat`).
+  vector. If `FALSE`, raw unwrapped coordinates are returned as a data
+  frame (`lon`, `lat`) — useful for calculations spanning the
+  antimeridian.
 
 ## Value
 
-If `normalise = TRUE`, a
-[`wk::xy()`](https://paleolimbot.github.io/wk/reference/xy.html) vector
-of (longitude, latitude) points. If `normalise = FALSE`, a data frame
-with columns `lon` and `lat` containing the unwrapped coordinates.
-
-## Details
-
-The underlying Rust API returns longitudes in a continuous unwrapped
-range that can exceed \\\[-180, 180\]\\ for cells near the antimeridian
-(e.g. \\-245\\ instead of \\115\\). By default these are normalised to
-standard bounds. Set `normalise = FALSE` to retrieve the raw values,
-which can be useful for avoiding discontinuities in calculations that
-span the antimeridian.
+A [`wk::xy()`](https://paleolimbot.github.io/wk/reference/xy.html)
+vector (if `normalise = TRUE`) or a data frame with columns `lon` and
+`lat`.
 
 ## See also
 
