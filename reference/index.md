@@ -43,6 +43,15 @@ Cell boundaries, areas, and counts.
 - [`a5_get_num_cells()`](https://belian-earth.github.io/a5R/reference/a5_get_num_cells.md)
   : Total number of cells at a given resolution
 
+## Traversal
+
+Neighbourhood and distance-based cell selection.
+
+- [`a5_grid_disk()`](https://belian-earth.github.io/a5R/reference/a5_grid_disk.md)
+  : Cells within k hops of a cell
+- [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/reference/a5_spherical_cap.md)
+  : Cells within a great-circle radius
+
 ## Compact & uncompact
 
 Compress and expand sets of cells.

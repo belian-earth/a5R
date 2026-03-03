@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,15 +73,15 @@
 <p>Map a longitude/latitude coordinate to a cell at a given resolution
 (0–30). Higher resolutions produce smaller cells.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cell</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_lonlat_to_cell.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">55.95</span>, resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">cell</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_lonlat_to_cell.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">55.95</span>, resolution <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="va">cell</span></span>
 <span><span class="co">#&gt; &lt;a5_cell[1]&gt;</span></span>
-<span><span class="co">#&gt; [1] 633e000000000000</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 6344be8000000000</span></span></code></pre></div>
 <p>Convert back to the cell centre point:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/a5_cell_to_lonlat.html">a5_cell_to_lonlat</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;wk_xy[1] with CRS=OGC:CRS84&gt;</span></span>
-<span><span class="co">#&gt; [1] (-3.280745 56.43135)</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] (-3.183746 55.9806)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="cell-boundaries">Cell boundaries<a class="anchor" aria-label="anchor" href="#cell-boundaries"></a>
@@ -91,7 +91,7 @@
 <code class="sourceCode R"><span><span class="va">boundary</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span>
 <span><span class="va">boundary</span></span>
 <span><span class="co">#&gt; &lt;wk_wkb[1] with CRS=OGC:CRS84&gt;</span></span>
-<span><span class="co">#&gt; [1] &lt;POLYGON ((-4.490769 56.63193, -4.575103 55.93184, -4.654266 55.23196, -3.592316 55.41531, -2.521971 55.5901, -2.031558 56.23106...&gt;</span></span>
+<span><span class="co">#&gt; [1] &lt;POLYGON ((-3.175718 55.93546, -3.145905 55.97569, -3.151641 56.01921, -3.219413 56.00818, -3.226037 55.96443, -3.175718 55.93546...&gt;</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">boundary</span>, col <span class="op">=</span> <span class="st">"#206ead20"</span>, border <span class="op">=</span> <span class="st">"#206ead"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p><img src="a5R_files/figure-html/boundary-plot-1.png" class="r-plt" alt="" width="480"></p>
@@ -107,11 +107,11 @@ resolutions. A5 cells have 4 children per level.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/a5_cell_to_parent.html">a5_cell_to_parent</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;a5_cell[1]&gt;</span></span>
-<span><span class="co">#&gt; [1] 6338000000000000</span></span>
+<span><span class="co">#&gt; [1] 6344be0000000000</span></span>
 <span><span class="va">children</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_cell_to_children.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span>
 <span><span class="va">children</span></span>
 <span><span class="co">#&gt; &lt;a5_cell[4]&gt;</span></span>
-<span><span class="co">#&gt; [1] 633c800000000000 633d800000000000 633e800000000000 633f800000000000</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 6344be2000000000 6344be6000000000 6344bea000000000 6344bee000000000</span></span></code></pre></div>
 <p>Cell area decreases geometrically with resolution:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/a5_cell_area.html">a5_cell_area</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span></span>
@@ -120,24 +120,54 @@ resolutions. A5 cells have 4 children per level.</p>
 <span><span class="co">#&gt; [6] 3.320740e+10</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="traversal">Traversal<a class="anchor" aria-label="anchor" href="#traversal"></a>
+</h2>
+<p>Find neighbouring cells by hop count with
+<code><a href="../reference/a5_grid_disk.html">a5_grid_disk()</a></code>, or by great-circle distance with
+<code><a href="../reference/a5_spherical_cap.html">a5_spherical_cap()</a></code>:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">disk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_grid_disk.html">a5_grid_disk</a></span><span class="op">(</span><span class="va">cell</span>, k <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="va">cap</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spherical_cap.html">a5_spherical_cap</a></span><span class="op">(</span><span class="va">cell</span>, radius <span class="op">=</span> <span class="fl">50000</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cap</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#6ead2020"</span>, border <span class="op">=</span> <span class="st">"#6ead20"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="a5R_files/figure-html/traversal-1.png" class="r-plt" alt="" width="480"></p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">disk</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#206ead20"</span>, border <span class="op">=</span> <span class="st">"#206ead"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="a5R_files/figure-html/traversal-2.png" class="r-plt" alt="" width="480"></p>
+<p>Both functions return a <strong>compacted</strong> cell vector —
+sibling groups are merged into coarser parent cells to save space. To
+recover a uniform grid at the original resolution, pass the result
+through <code><a href="../reference/a5_uncompact.html">a5_uncompact()</a></code>:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">disk_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_uncompact.html">a5_uncompact</a></span><span class="op">(</span><span class="va">disk</span>, resolution <span class="op">=</span> <span class="fu"><a href="../reference/a5_get_resolution.html">a5_get_resolution</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">disk_grid</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#206ead20"</span>, border <span class="op">=</span> <span class="st">"#206ead"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="a5R_files/figure-html/traversal-uncompact-1.png" class="r-plt" alt="" width="480"></p>
+</div>
+<div class="section level2">
 <h2 id="grid-generation">Grid generation<a class="anchor" aria-label="anchor" href="#grid-generation"></a>
 </h2>
-<p><code><a href="../reference/a5_grid.html">a5_grid()</a></code> returns all cells at a target resolution that
-cover a given area. Pass a bounding box as a numeric vector:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_grid.html">a5_grid</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.3</span>, <span class="fl">55.9</span>, <span class="op">-</span><span class="fl">3.1</span>, <span class="fl">56.0</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
+<p><code><a href="../reference/a5_grid.html">a5_grid()</a></code> is a convenience function provided by a5R (not
+part of the underlying a5 Rust crate) that returns all cells at a target
+resolution covering a given area — handy for binning, zonal statistics,
+and other spatial analysis workflows common in R.</p>
+<p>Pass a bounding box as a numeric vector:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_grid.html">a5_grid</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.3</span>, <span class="fl">55.9</span>, <span class="op">-</span><span class="fl">3.1</span>, <span class="fl">56.0</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 3</span></span>
+<span><span class="co">#&gt; [1] 90</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#206ead20"</span>, border <span class="op">=</span> <span class="st">"#206ead"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p><img src="a5R_files/figure-html/grid-plot-1.png" class="r-plt" alt="" width="480"></p>
 <p>Any geometry that wk can handle works too — polygons, sf objects, or
 even <code>a5_cell</code> vectors:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">poly</span> <span class="op">&lt;-</span> <span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wkt.html" class="external-link">wkt</a></span><span class="op">(</span><span class="st">"POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/a5_grid.html">a5_grid</a></span><span class="op">(</span><span class="va">poly</span>, resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
-<span><span class="co">#&gt; &lt;a5_cell[1]&gt;</span></span>
-<span><span class="co">#&gt; [1] 633e000000000000</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; Linking to GEOS 3.12.1, GDAL 3.8.4, PROJ 9.4.0; sf_use_s2() is TRUE</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/demo.html" class="external-link">demo</a></span><span class="op">(</span><span class="va">nc</span>, ask <span class="op">=</span> <span class="cn">FALSE</span>, echo <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">nca5</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_grid.html">a5_grid</a></span><span class="op">(</span><span class="va">nc</span>, resolution <span class="op">=</span> <span class="fl">9</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">nca5</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#6d20ad20"</span>, border <span class="op">=</span> <span class="st">"#6d20adff"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="a5R_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="700"></p>
 </div>
 <div class="section level2">
 <h2 id="compact-and-uncompact">Compact and uncompact<a class="anchor" aria-label="anchor" href="#compact-and-uncompact"></a>
@@ -145,20 +175,21 @@ even <code>a5_cell</code> vectors:</p>
 <p>When a complete set of siblings is present, <code><a href="../reference/a5_compact.html">a5_compact()</a></code>
 merges them into their shared parent, reducing the number of cells
 without losing coverage:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">children</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_cell_to_children.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">children</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 4</span></span>
+<span><span class="va">children</span></span>
+<span><span class="co">#&gt; &lt;a5_cell[4]&gt;</span></span>
+<span><span class="co">#&gt; [1] 6344be2000000000 6344be6000000000 6344bea000000000 6344bee000000000</span></span>
 <span></span>
 <span><span class="va">compacted</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_compact.html">a5_compact</a></span><span class="op">(</span><span class="va">children</span><span class="op">)</span></span>
 <span><span class="va">compacted</span></span>
 <span><span class="co">#&gt; &lt;a5_cell[1]&gt;</span></span>
-<span><span class="co">#&gt; [1] 633e000000000000</span></span>
+<span><span class="co">#&gt; [1] 6344be8000000000</span></span>
 <span></span>
 <span><span class="co"># Round-trip back to the original set</span></span>
-<span><span class="fu"><a href="../reference/a5_uncompact.html">a5_uncompact</a></span><span class="op">(</span><span class="va">compacted</span>, resolution <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/a5_uncompact.html">a5_uncompact</a></span><span class="op">(</span><span class="va">compacted</span>, resolution <span class="op">=</span> <span class="fl">11</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;a5_cell[4]&gt;</span></span>
-<span><span class="co">#&gt; [1] 633c800000000000 633d800000000000 633e800000000000 633f800000000000</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 6344be2000000000 6344be6000000000 6344bea000000000 6344bee000000000</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
