@@ -24,7 +24,7 @@ Map a longitude/latitude coordinate to a cell at a given resolution (0--30).
 Higher resolutions produce smaller cells.
 
 ```{r}
-cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
+cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
 cell
 ```
 
@@ -66,12 +66,40 @@ Cell area decreases geometrically with resolution:
 a5_cell_area(0:5)
 ```
 
+## Traversal
+
+Find neighbouring cells by hop count with `a5_grid_disk()`, or by
+great-circle distance with `a5_spherical_cap()`:
+
+```{r traversal, fig.width = 5, fig.height = 4}
+disk <- a5_grid_disk(cell, k = 10)
+cap <- a5_spherical_cap(cell, radius = 50000)
+
+plot(a5_cell_to_boundary(cap), col = "#6ead2020", border = "#6ead20", asp = 1)
+plot(a5_cell_to_boundary(disk), col = "#206ead20", border = "#206ead", asp = 1)
+```
+
+Both functions return a **compacted** cell vector --- sibling groups are
+merged into coarser parent cells to save space. To recover a uniform grid
+at the original resolution, pass the result through `a5_uncompact()`:
+
+```{r traversal-uncompact, fig.width = 5, fig.height = 4}
+disk_grid <- a5_uncompact(disk, resolution = a5_get_resolution(cell))
+
+plot(a5_cell_to_boundary(disk_grid), col = "#206ead20", border = "#206ead", asp = 1)
+```
+
 ## Grid generation
 
-`a5_grid()` returns all cells at a target resolution that cover a given area.
+`a5_grid()` is a convenience function provided by a5R (not part of the
+underlying a5 Rust crate) that returns all cells at a target resolution
+covering a given area --- handy for binning, zonal statistics, and other
+spatial analysis workflows common in R.
+
+
 Pass a bounding box as a numeric vector:
 ```{r grid-plot, fig.width = 5, fig.height = 4}
-cells <- a5_grid(c(-3.3, 55.9, -3.1, 56.0), resolution = 8)
+cells <- a5_grid(c(-3.3, 55.9, -3.1, 56.0), resolution = 12)
 length(cells)
 
 plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
@@ -81,8 +109,11 @@ Any geometry that wk can handle works too --- polygons, sf objects, or even
 `a5_cell` vectors:
 
 ```{r}
-poly <- wk::wkt("POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))")
-a5_grid(poly, resolution = 5)
+library(sf)
+demo(nc, ask = FALSE, echo = FALSE)
+nca5 <- a5_grid(nc, resolution = 9)
+plot(a5_cell_to_boundary(nca5), col = "#6d20ad20", border = "#6d20adff", asp = 1)
+
 ```
 
 ## Compact and uncompact
@@ -92,11 +123,11 @@ their shared parent, reducing the number of cells without losing coverage:
 
 ```{r}
 children <- a5_cell_to_children(cell)
-length(children)
+children
 
 compacted <- a5_compact(children)
 compacted
 
 # Round-trip back to the original set
-a5_uncompact(compacted, resolution = 6)
+a5_uncompact(compacted, resolution = 11)
 ```

@@ -41,6 +41,11 @@ reference:
   - a5_cell_to_boundary
   - a5_cell_area
   - a5_get_num_cells
+- title: Traversal
+  desc: Neighbourhood and distance-based cell selection.
+  contents:
+  - a5_grid_disk
+  - a5_spherical_cap
 - title: Compact & uncompact
   desc: Compress and expand sets of cells.
   contents:
