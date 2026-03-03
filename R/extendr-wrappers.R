@@ -149,5 +149,24 @@ a5_grid_bbox_rs <- function(xmin, ymin, xmax, ymax, resolution) .Call(wrap__a5_g
 #' @keywords internal
 a5_grid_intersects_rs <- function(cells, target_wkt) .Call(wrap__a5_grid_intersects_rs, cells, target_wkt)
 
+#' Get all cells within k hops of a centre cell.
+#'
+#' @param cell A single hex-encoded cell ID.
+#' @param k Number of hops.
+#' @param vertex If TRUE, include vertex-sharing (8-connected) neighbours.
+#' @return Character vector of hex-encoded cell IDs.
+#' @noRd
+#' @keywords internal
+a5_grid_disk_rs <- function(cell, k, vertex) .Call(wrap__a5_grid_disk_rs, cell, k, vertex)
+
+#' Get all cells within a great-circle radius of a centre cell.
+#'
+#' @param cell A single hex-encoded cell ID.
+#' @param radius Great-circle radius in metres.
+#' @return Character vector of hex-encoded cell IDs.
+#' @noRd
+#' @keywords internal
+a5_spherical_cap_rs <- function(cell, radius) .Call(wrap__a5_spherical_cap_rs, cell, radius)
+
 
 # nolint end
