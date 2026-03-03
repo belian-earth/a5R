@@ -1,9 +1,9 @@
 Package: a5R
 Title: A5 Discrete Global Grid System
-Version: 0.0.2
+Version: 0.0.3
 Authors@R:
     person("Hugh", "Graham", role = c("aut", "cre"),
-           email = "hugh.a.graham@gmail.com")
+           email = "hugh@belian.earth")
 Description: Bindings for the A5 Discrete Global Grid System (DGGS). A5
     partitions the Earth's surface into pentagonal cells across 31
     resolution levels using an equal-area projection onto a dodecahedron.
