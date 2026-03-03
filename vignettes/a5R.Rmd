@@ -71,21 +71,32 @@ a5_cell_area(0:5)
 Find neighbouring cells by hop count with `a5_grid_disk()`, or by
 great-circle distance with `a5_spherical_cap()`:
 
-```{r traversal-plot, fig.width = 5, fig.height = 4}
+```{r traversal, fig.width = 5, fig.height = 4}
 disk <- a5_grid_disk(cell, k = 10)
 cap <- a5_spherical_cap(cell, radius = 50000)
 
-
 plot(a5_cell_to_boundary(cap), col = "#6ead2020", border = "#6ead20", asp = 1)
 plot(a5_cell_to_boundary(disk), col = "#206ead20", border = "#206ead", asp = 1)
+```
 
-plot(a5_cell_to_boundary(a5_uncompact(disk, resolution = a5_get_resolution(cell))), col = "#206ead20", border = "#206ead", asp = 1)
+Both functions return a **compacted** cell vector --- sibling groups are
+merged into coarser parent cells to save space. To recover a uniform grid
+at the original resolution, pass the result through `a5_uncompact()`:
 
+```{r traversal-uncompact, fig.width = 5, fig.height = 4}
+disk_grid <- a5_uncompact(disk, resolution = a5_get_resolution(cell))
+
+plot(a5_cell_to_boundary(disk_grid), col = "#206ead20", border = "#206ead", asp = 1)
 ```
 
 ## Grid generation
 
-`a5_grid()` returns all cells at a target resolution that cover a given area.
+`a5_grid()` is a convenience function provided by a5R (not part of the
+underlying a5 Rust crate) that returns all cells at a target resolution
+covering a given area --- handy for binning, zonal statistics, and other
+spatial analysis workflows common in R.
+
+
 Pass a bounding box as a numeric vector:
 ```{r grid-plot, fig.width = 5, fig.height = 4}
 cells <- a5_grid(c(-3.3, 55.9, -3.1, 56.0), resolution = 12)
@@ -112,7 +123,7 @@ their shared parent, reducing the number of cells without losing coverage:
 
 ```{r}
 children <- a5_cell_to_children(cell)
-length(children)
+children
 
 compacted <- a5_compact(children)
 compacted
