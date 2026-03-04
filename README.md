@@ -8,8 +8,6 @@
 [![R-CMD-check](https://github.com/belian-earth/a5R/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/belian-earth/a5R/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
 coverage](https://codecov.io/gh/belian-earth/a5R/graph/badge.svg)](https://app.codecov.io/gh/belian-earth/a5R)
-[![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![extendr](https://img.shields.io/badge/extendr-%5E0.8.1-276DC2)](https://extendr.github.io/extendr/extendr_api/)
 [![Lifecycle:
 stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
