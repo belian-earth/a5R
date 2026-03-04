@@ -1,7 +1,58 @@
 use extendr_api::prelude::*;
 use extendr_api::wrapper::Nullable;
 use geo::Intersects;
+use rayon::prelude::*;
 use std::str::FromStr;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Mutex;
+
+// ---------------------------------------------------------------------------
+// Thread pool management
+// ---------------------------------------------------------------------------
+
+static NUM_THREADS: AtomicUsize = AtomicUsize::new(1);
+static POOL: Mutex<Option<rayon::ThreadPool>> = Mutex::new(None);
+
+fn get_num_threads() -> usize {
+    NUM_THREADS.load(Ordering::Relaxed)
+}
+
+fn set_num_threads(n: usize) {
+    let n = n.max(1);
+    NUM_THREADS.store(n, Ordering::Relaxed);
+    if n > 1 {
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(n)
+            .build()
+            .expect("failed to build thread pool");
+        *POOL.lock().unwrap() = Some(pool);
+    } else {
+        *POOL.lock().unwrap() = None;
+    }
+}
+
+/// Run closure on custom pool if threads > 1, otherwise run directly.
+fn maybe_par<F, R>(f: F) -> R
+where
+    F: FnOnce() -> R + Send,
+    R: Send,
+{
+    let guard = POOL.lock().unwrap();
+    match guard.as_ref() {
+        Some(pool) => pool.install(f),
+        None => f(),
+    }
+}
+
+#[extendr]
+fn a5_set_threads_rs(n: i32) {
+    set_num_threads(n as usize);
+}
+
+#[extendr]
+fn a5_get_threads_rs() -> i32 {
+    get_num_threads() as i32
+}
 
 // ---------------------------------------------------------------------------
 // WKB helpers
@@ -93,22 +144,60 @@ fn buffer_distance(resolution: i32, max_abs_lat: f64) -> f64 {
 #[extendr]
 fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Strings {
     let n = lon.len();
-    let mut out = Strings::new(n);
-    for i in 0..n {
-        let lo = lon[i];
-        let la = lat[i];
-        let res = resolution[i];
-        if lo.is_na() || la.is_na() || res.is_na() {
-            out.set_elt(i, Rstr::na());
-            continue;
+
+    if get_num_threads() <= 1 {
+        let mut out = Strings::new(n);
+        for i in 0..n {
+            let lo = lon[i];
+            let la = lat[i];
+            let res = resolution[i];
+            if lo.is_na() || la.is_na() || res.is_na() {
+                out.set_elt(i, Rstr::na());
+                continue;
+            }
+            let lonlat = a5::LonLat::new(lo.inner(), la.inner());
+            match a5::lonlat_to_cell(lonlat, res.inner()) {
+                Ok(cell) => out.set_elt(i, Rstr::from(a5::u64_to_hex(cell))),
+                Err(_) => out.set_elt(i, Rstr::na()),
+            }
         }
-        let lonlat = a5::LonLat::new(lo.inner(), la.inner());
-        match a5::lonlat_to_cell(lonlat, res.inner()) {
-            Ok(cell) => out.set_elt(i, Rstr::from(a5::u64_to_hex(cell))),
-            Err(_) => out.set_elt(i, Rstr::na()),
+        out
+    } else {
+        let inputs: Vec<(f64, f64, i32, bool)> = (0..n)
+            .map(|i| {
+                let lo = lon[i];
+                let la = lat[i];
+                let res = resolution[i];
+                if lo.is_na() || la.is_na() || res.is_na() {
+                    (0.0, 0.0, 0, true)
+                } else {
+                    (lo.inner(), la.inner(), res.inner(), false)
+                }
+            })
+            .collect();
+
+        let results: Vec<Option<String>> = maybe_par(|| {
+            inputs
+                .par_iter()
+                .map(|&(lo, la, res, is_na)| {
+                    if is_na {
+                        return None;
+                    }
+                    let lonlat = a5::LonLat::new(lo, la);
+                    a5::lonlat_to_cell(lonlat, res).ok().map(|c| a5::u64_to_hex(c))
+                })
+                .collect()
+        });
+
+        let mut out = Strings::new(n);
+        for (i, r) in results.into_iter().enumerate() {
+            match r {
+                Some(s) => out.set_elt(i, Rstr::from(s)),
+                None => out.set_elt(i, Rstr::na()),
+            }
         }
+        out
     }
-    out
 }
 
 /// Convert A5 cell indices to longitude/latitude coordinates.
@@ -121,38 +210,81 @@ fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Str
 #[extendr]
 fn a5_cell_to_lonlat_rs(cell: Strings, normalise: bool) -> List {
     let n = cell.len();
-    let mut lon_out = Doubles::new(n);
-    let mut lat_out = Doubles::new(n);
-    for i in 0..n {
-        let s = &cell[i];
-        if s.is_na() {
-            lon_out.set_elt(i, Rfloat::na());
-            lat_out.set_elt(i, Rfloat::na());
-            continue;
+
+    if get_num_threads() <= 1 {
+        let mut lon_out = Doubles::new(n);
+        let mut lat_out = Doubles::new(n);
+        for i in 0..n {
+            let s = &cell[i];
+            if s.is_na() {
+                lon_out.set_elt(i, Rfloat::na());
+                lat_out.set_elt(i, Rfloat::na());
+                continue;
+            }
+            match a5::hex_to_u64(s.as_str()) {
+                Ok(id) => match a5::cell_to_lonlat(id) {
+                    Ok(ll) => {
+                        let lon = if normalise {
+                            ((ll.longitude() + 180.0) % 360.0 + 360.0) % 360.0 - 180.0
+                        } else {
+                            ll.longitude()
+                        };
+                        lon_out.set_elt(i, Rfloat::from(lon));
+                        lat_out.set_elt(i, Rfloat::from(ll.latitude()));
+                    }
+                    Err(_) => {
+                        lon_out.set_elt(i, Rfloat::na());
+                        lat_out.set_elt(i, Rfloat::na());
+                    }
+                },
+                Err(_) => {
+                    lon_out.set_elt(i, Rfloat::na());
+                    lat_out.set_elt(i, Rfloat::na());
+                }
+            }
         }
-        match a5::hex_to_u64(s.as_str()) {
-            Ok(id) => match a5::cell_to_lonlat(id) {
-                Ok(ll) => {
+        list!(lon = lon_out, lat = lat_out)
+    } else {
+        let inputs: Vec<Option<&str>> = (0..n)
+            .map(|i| {
+                let s = &cell[i];
+                if s.is_na() { None } else { Some(s.as_str()) }
+            })
+            .collect();
+
+        let results: Vec<Option<(f64, f64)>> = maybe_par(|| {
+            inputs
+                .par_iter()
+                .map(|opt_s| {
+                    let s = (*opt_s)?;
+                    let id = a5::hex_to_u64(s).ok()?;
+                    let ll = a5::cell_to_lonlat(id).ok()?;
                     let lon = if normalise {
                         ((ll.longitude() + 180.0) % 360.0 + 360.0) % 360.0 - 180.0
                     } else {
                         ll.longitude()
                     };
+                    Some((lon, ll.latitude()))
+                })
+                .collect()
+        });
+
+        let mut lon_out = Doubles::new(n);
+        let mut lat_out = Doubles::new(n);
+        for (i, r) in results.into_iter().enumerate() {
+            match r {
+                Some((lon, lat)) => {
                     lon_out.set_elt(i, Rfloat::from(lon));
-                    lat_out.set_elt(i, Rfloat::from(ll.latitude()));
+                    lat_out.set_elt(i, Rfloat::from(lat));
                 }
-                Err(_) => {
+                None => {
                     lon_out.set_elt(i, Rfloat::na());
                     lat_out.set_elt(i, Rfloat::na());
                 }
-            },
-            Err(_) => {
-                lon_out.set_elt(i, Rfloat::na());
-                lat_out.set_elt(i, Rfloat::na());
             }
         }
+        list!(lon = lon_out, lat = lat_out)
     }
-    list!(lon = lon_out, lat = lat_out)
 }
 
 // ---------------------------------------------------------------------------
@@ -178,33 +310,72 @@ fn a5_cell_to_boundary_rs(
         Nullable::Null => None,
     };
     let n = cell.len();
-    let mut out = Strings::new(n);
-    for i in 0..n {
-        let s = &cell[i];
-        if s.is_na() {
-            out.set_elt(i, Rstr::na());
-            continue;
+
+    if get_num_threads() <= 1 {
+        let mut out = Strings::new(n);
+        for i in 0..n {
+            let s = &cell[i];
+            if s.is_na() {
+                out.set_elt(i, Rstr::na());
+                continue;
+            }
+            let opts = a5::core::cell::CellToBoundaryOptions {
+                closed_ring,
+                segments: seg,
+            };
+            match a5::hex_to_u64(s.as_str()) {
+                Ok(id) => match a5::cell_to_boundary(id, Some(opts)) {
+                    Ok(boundary) => {
+                        let coords: Vec<String> = boundary
+                            .iter()
+                            .map(|ll| format!("{} {}", ll.longitude(), ll.latitude()))
+                            .collect();
+                        let wkt = format!("POLYGON (({}))", coords.join(", "));
+                        out.set_elt(i, Rstr::from(wkt));
+                    }
+                    Err(_) => out.set_elt(i, Rstr::na()),
+                },
+                Err(_) => out.set_elt(i, Rstr::na()),
+            }
         }
-        let opts = a5::core::cell::CellToBoundaryOptions {
-            closed_ring,
-            segments: seg,
-        };
-        match a5::hex_to_u64(s.as_str()) {
-            Ok(id) => match a5::cell_to_boundary(id, Some(opts)) {
-                Ok(boundary) => {
+        out
+    } else {
+        let inputs: Vec<Option<&str>> = (0..n)
+            .map(|i| {
+                let s = &cell[i];
+                if s.is_na() { None } else { Some(s.as_str()) }
+            })
+            .collect();
+
+        let results: Vec<Option<String>> = maybe_par(|| {
+            inputs
+                .par_iter()
+                .map(|opt_s| {
+                    let s = (*opt_s)?;
+                    let id = a5::hex_to_u64(s).ok()?;
+                    let opts = a5::core::cell::CellToBoundaryOptions {
+                        closed_ring,
+                        segments: seg,
+                    };
+                    let boundary = a5::cell_to_boundary(id, Some(opts)).ok()?;
                     let coords: Vec<String> = boundary
                         .iter()
                         .map(|ll| format!("{} {}", ll.longitude(), ll.latitude()))
                         .collect();
-                    let wkt = format!("POLYGON (({}))", coords.join(", "));
-                    out.set_elt(i, Rstr::from(wkt));
-                }
-                Err(_) => out.set_elt(i, Rstr::na()),
-            },
-            Err(_) => out.set_elt(i, Rstr::na()),
+                    Some(format!("POLYGON (({}))", coords.join(", ")))
+                })
+                .collect()
+        });
+
+        let mut out = Strings::new(n);
+        for (i, r) in results.into_iter().enumerate() {
+            match r {
+                Some(s) => out.set_elt(i, Rstr::from(s)),
+                None => out.set_elt(i, Rstr::na()),
+            }
         }
+        out
     }
-    out
 }
 
 // ---------------------------------------------------------------------------
@@ -256,19 +427,49 @@ fn a5_get_num_cells_rs(resolution: i32) -> f64 {
 #[extendr]
 fn a5_get_resolution_rs(cell: Strings) -> Integers {
     let n = cell.len();
-    let mut out = Integers::new(n);
-    for i in 0..n {
-        let s = &cell[i];
-        if s.is_na() {
-            out.set_elt(i, Rint::na());
-            continue;
+
+    if get_num_threads() <= 1 {
+        let mut out = Integers::new(n);
+        for i in 0..n {
+            let s = &cell[i];
+            if s.is_na() {
+                out.set_elt(i, Rint::na());
+                continue;
+            }
+            match a5::hex_to_u64(s.as_str()) {
+                Ok(id) => out.set_elt(i, Rint::from(a5::get_resolution(id))),
+                Err(_) => out.set_elt(i, Rint::na()),
+            }
         }
-        match a5::hex_to_u64(s.as_str()) {
-            Ok(id) => out.set_elt(i, Rint::from(a5::get_resolution(id))),
-            Err(_) => out.set_elt(i, Rint::na()),
+        out
+    } else {
+        let inputs: Vec<Option<&str>> = (0..n)
+            .map(|i| {
+                let s = &cell[i];
+                if s.is_na() { None } else { Some(s.as_str()) }
+            })
+            .collect();
+
+        let results: Vec<Option<i32>> = maybe_par(|| {
+            inputs
+                .par_iter()
+                .map(|opt_s| {
+                    let s = (*opt_s)?;
+                    let id = a5::hex_to_u64(s).ok()?;
+                    Some(a5::get_resolution(id))
+                })
+                .collect()
+        });
+
+        let mut out = Integers::new(n);
+        for (i, r) in results.into_iter().enumerate() {
+            match r {
+                Some(v) => out.set_elt(i, Rint::from(v)),
+                None => out.set_elt(i, Rint::na()),
+            }
         }
+        out
     }
-    out
 }
 
 /// Navigate to parent cell(s).
@@ -286,22 +487,53 @@ fn a5_cell_to_parent_rs(cell: Strings, parent_resolution: Nullable<i32>) -> Stri
         Nullable::Null => None,
     };
     let n = cell.len();
-    let mut out = Strings::new(n);
-    for i in 0..n {
-        let s = &cell[i];
-        if s.is_na() {
-            out.set_elt(i, Rstr::na());
-            continue;
-        }
-        match a5::hex_to_u64(s.as_str()) {
-            Ok(id) => match a5::cell_to_parent(id, pres) {
-                Ok(parent) => out.set_elt(i, Rstr::from(a5::u64_to_hex(parent))),
+
+    if get_num_threads() <= 1 {
+        let mut out = Strings::new(n);
+        for i in 0..n {
+            let s = &cell[i];
+            if s.is_na() {
+                out.set_elt(i, Rstr::na());
+                continue;
+            }
+            match a5::hex_to_u64(s.as_str()) {
+                Ok(id) => match a5::cell_to_parent(id, pres) {
+                    Ok(parent) => out.set_elt(i, Rstr::from(a5::u64_to_hex(parent))),
+                    Err(_) => out.set_elt(i, Rstr::na()),
+                },
                 Err(_) => out.set_elt(i, Rstr::na()),
-            },
-            Err(_) => out.set_elt(i, Rstr::na()),
+            }
         }
+        out
+    } else {
+        let inputs: Vec<Option<&str>> = (0..n)
+            .map(|i| {
+                let s = &cell[i];
+                if s.is_na() { None } else { Some(s.as_str()) }
+            })
+            .collect();
+
+        let results: Vec<Option<String>> = maybe_par(|| {
+            inputs
+                .par_iter()
+                .map(|opt_s| {
+                    let s = (*opt_s)?;
+                    let id = a5::hex_to_u64(s).ok()?;
+                    let parent = a5::cell_to_parent(id, pres).ok()?;
+                    Some(a5::u64_to_hex(parent))
+                })
+                .collect()
+        });
+
+        let mut out = Strings::new(n);
+        for (i, r) in results.into_iter().enumerate() {
+            match r {
+                Some(s) => out.set_elt(i, Rstr::from(s)),
+                None => out.set_elt(i, Rstr::na()),
+            }
+        }
+        out
     }
-    out
 }
 
 /// Get child cells.
@@ -415,17 +647,46 @@ fn a5_uncompact_rs(cells: Strings, target_resolution: i32) -> Strings {
 #[extendr]
 fn a5_is_valid_cell_rs(cell: Strings) -> Logicals {
     let n = cell.len();
-    let mut out = Logicals::new(n);
-    for i in 0..n {
-        let s = &cell[i];
-        if s.is_na() {
-            out.set_elt(i, Rbool::na());
-            continue;
+
+    if get_num_threads() <= 1 {
+        let mut out = Logicals::new(n);
+        for i in 0..n {
+            let s = &cell[i];
+            if s.is_na() {
+                out.set_elt(i, Rbool::na());
+                continue;
+            }
+            let valid = a5::hex_to_u64(s.as_str()).is_ok();
+            out.set_elt(i, Rbool::from(valid));
         }
-        let valid = a5::hex_to_u64(s.as_str()).is_ok();
-        out.set_elt(i, Rbool::from(valid));
+        out
+    } else {
+        let inputs: Vec<Option<&str>> = (0..n)
+            .map(|i| {
+                let s = &cell[i];
+                if s.is_na() { None } else { Some(s.as_str()) }
+            })
+            .collect();
+
+        let results: Vec<Option<bool>> = maybe_par(|| {
+            inputs
+                .par_iter()
+                .map(|opt_s| {
+                    let s = (*opt_s)?;
+                    Some(a5::hex_to_u64(s).is_ok())
+                })
+                .collect()
+        });
+
+        let mut out = Logicals::new(n);
+        for (i, r) in results.into_iter().enumerate() {
+            match r {
+                Some(v) => out.set_elt(i, Rbool::from(v)),
+                None => out.set_elt(i, Rbool::na()),
+            }
+        }
+        out
     }
-    out
 }
 
 // ---------------------------------------------------------------------------
@@ -451,26 +712,61 @@ fn a5_cell_to_boundary_wkb_rs(
         Nullable::Null => None,
     };
     let n = cell.len();
-    let values: Vec<Robj> = (0..n)
-        .map(|i| {
-            let s = &cell[i];
-            if s.is_na() {
-                return ().into();
-            }
-            let opts = a5::core::cell::CellToBoundaryOptions {
-                closed_ring,
-                segments: seg,
-            };
-            match a5::hex_to_u64(s.as_str()) {
-                Ok(id) => match a5::cell_to_boundary(id, Some(opts)) {
-                    Ok(boundary) => Robj::from(lonlats_to_wkb(&boundary)),
+
+    if get_num_threads() <= 1 {
+        let values: Vec<Robj> = (0..n)
+            .map(|i| {
+                let s = &cell[i];
+                if s.is_na() {
+                    return ().into();
+                }
+                let opts = a5::core::cell::CellToBoundaryOptions {
+                    closed_ring,
+                    segments: seg,
+                };
+                match a5::hex_to_u64(s.as_str()) {
+                    Ok(id) => match a5::cell_to_boundary(id, Some(opts)) {
+                        Ok(boundary) => Robj::from(lonlats_to_wkb(&boundary)),
+                        Err(_) => ().into(),
+                    },
                     Err(_) => ().into(),
-                },
-                Err(_) => ().into(),
-            }
-        })
-        .collect();
-    List::from_values(values)
+                }
+            })
+            .collect();
+        List::from_values(values)
+    } else {
+        let inputs: Vec<Option<&str>> = (0..n)
+            .map(|i| {
+                let s = &cell[i];
+                if s.is_na() { None } else { Some(s.as_str()) }
+            })
+            .collect();
+
+        let results: Vec<Option<Vec<u8>>> = maybe_par(|| {
+            inputs
+                .par_iter()
+                .map(|opt_s| {
+                    let s = (*opt_s)?;
+                    let id = a5::hex_to_u64(s).ok()?;
+                    let opts = a5::core::cell::CellToBoundaryOptions {
+                        closed_ring,
+                        segments: seg,
+                    };
+                    let boundary = a5::cell_to_boundary(id, Some(opts)).ok()?;
+                    Some(lonlats_to_wkb(&boundary))
+                })
+                .collect()
+        });
+
+        let values: Vec<Robj> = results
+            .into_iter()
+            .map(|r| match r {
+                Some(wkb) => Robj::from(wkb),
+                None => ().into(),
+            })
+            .collect();
+        List::from_values(values)
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -521,12 +817,25 @@ fn a5_grid_bbox_rs(xmin: f64, ymin: f64, xmax: f64, ymax: f64, resolution: i32) 
                     xmax: target.xmax + buf,
                     ymax: (target.ymax + buf).min(90.0),
                 };
-                cells.retain(|&cell_id| {
-                    match a5::cell_to_boundary(cell_id, Some(BOUNDARY_OPTS_OPEN)) {
-                        Ok(boundary) => bboxes_overlap(&cell_bbox(&boundary), &buffered),
-                        Err(_) => false,
-                    }
-                });
+                if get_num_threads() <= 1 {
+                    cells.retain(|&cell_id| {
+                        a5::cell_to_boundary(cell_id, Some(BOUNDARY_OPTS_OPEN))
+                            .map(|b| bboxes_overlap(&cell_bbox(&b), &buffered))
+                            .unwrap_or(false)
+                    });
+                } else {
+                    cells = maybe_par(|| {
+                        cells
+                            .par_iter()
+                            .copied()
+                            .filter(|&cell_id| {
+                                a5::cell_to_boundary(cell_id, Some(BOUNDARY_OPTS_OPEN))
+                                    .map(|b| bboxes_overlap(&cell_bbox(&b), &buffered))
+                                    .unwrap_or(false)
+                            })
+                            .collect()
+                    });
+                }
             }
         }
     }
@@ -573,22 +882,53 @@ fn a5_grid_intersects_rs(cells: Strings, target_wkt: &str) -> Strings {
     };
 
     let n = cells.len();
-    let mut out = Vec::with_capacity(n);
-    for i in 0..n {
-        let s = &cells[i];
-        if s.is_na() {
-            continue;
+
+    if get_num_threads() <= 1 {
+        let mut out = Vec::with_capacity(n);
+        for i in 0..n {
+            let s = &cells[i];
+            if s.is_na() {
+                continue;
+            }
+            let keep = a5::hex_to_u64(s.as_str())
+                .ok()
+                .and_then(|id| cell_to_geo_polygon(id))
+                .map(|poly| target.intersects(&poly))
+                .unwrap_or(false);
+            if keep {
+                out.push(Rstr::from(s.as_str()));
+            }
         }
-        let keep = a5::hex_to_u64(s.as_str())
-            .ok()
-            .and_then(|id| cell_to_geo_polygon(id))
-            .map(|poly| target.intersects(&poly))
-            .unwrap_or(false);
-        if keep {
-            out.push(Rstr::from(s.as_str()));
-        }
+        out.into_iter().collect::<Strings>()
+    } else {
+        let inputs: Vec<Option<&str>> = (0..n)
+            .map(|i| {
+                let s = &cells[i];
+                if s.is_na() { None } else { Some(s.as_str()) }
+            })
+            .collect();
+
+        let kept: Vec<Option<String>> = maybe_par(|| {
+            inputs
+                .par_iter()
+                .map(|opt_s| {
+                    let s = (*opt_s)?;
+                    let id = a5::hex_to_u64(s).ok()?;
+                    let poly = cell_to_geo_polygon(id)?;
+                    if target.intersects(&poly) {
+                        Some(s.to_string())
+                    } else {
+                        None
+                    }
+                })
+                .collect()
+        });
+
+        kept.into_iter()
+            .flatten()
+            .map(|s| Rstr::from(s))
+            .collect::<Strings>()
     }
-    out.into_iter().collect::<Strings>()
 }
 
 // ---------------------------------------------------------------------------
@@ -651,6 +991,8 @@ fn a5_spherical_cap_rs(cell: &str, radius: f64) -> Strings {
 
 extendr_module! {
     mod a5R;
+    fn a5_set_threads_rs;
+    fn a5_get_threads_rs;
     fn a5_lonlat_to_cell_rs;
     fn a5_cell_to_lonlat_rs;
     fn a5_cell_to_boundary_rs;
