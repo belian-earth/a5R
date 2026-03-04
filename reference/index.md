@@ -68,6 +68,14 @@ Generate grids of cells covering an area.
 - [`a5_grid()`](https://belian-earth.github.io/a5R/reference/a5_grid.md)
   : Generate a grid of A5 cells covering an area
 
+## Configuration
+
+Thread control for parallel processing.
+
+- [`a5_set_threads()`](https://belian-earth.github.io/a5R/reference/a5_threads.md)
+  [`a5_get_threads()`](https://belian-earth.github.io/a5R/reference/a5_threads.md)
+  : Set the number of threads used by a5R
+
 ## wk integration
 
 Methods for the wk geometry framework.
