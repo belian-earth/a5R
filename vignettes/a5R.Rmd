@@ -66,8 +66,11 @@ We can visualise the relationship - the parent (dark outline) contains
 our cell (blue fill), which in turn contains its 4 children (orange):
 
 ```{r hierarchy-plot, fig.width = 5, fig.height = 4}
+plot(NULL, xlim = c(-3.23, -3),  ylim = c(55.98, 55.99),               
+       xlab = "", ylab = "", asp = 1
+       )
 plot(a5_cell_to_boundary(a5_cell_to_children(cell)),
-     col = "#ad6e2020", border = "#ad6e20", asp = 1)
+     col = "#ad6e2020", border = "#ad6e20", add = TRUE)
 plot(a5_cell_to_boundary(cell), col = "#206ead40", border = "#206ead",
      lwd = 2, add = TRUE)
 plot(a5_cell_to_boundary(parent), border = "#333333", lwd = 2, add = TRUE)
