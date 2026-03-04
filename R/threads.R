@@ -6,19 +6,21 @@
 #'
 #' @param n Integer scalar. Number of threads. Must be >= 1.
 #' @returns Invisibly returns the previous thread count.
+#' @rdname a5_threads
 #' @export
 a5_set_threads <- function(n = 1L) {
-    n <- vctrs::vec_cast(n, integer())
-    vctrs::vec_assert(n, size = 1L)
-    old <- a5_get_threads_rs()
-    a5_set_threads_rs(n)
-    invisible(old)
+  n <- vctrs::vec_cast(n, integer())
+  vctrs::vec_assert(n, size = 1L)
+  old <- a5_get_threads_rs()
+  a5_set_threads_rs(n)
+  invisible(old)
 }
 
 #' Get the current number of threads
 #'
+#' @rdname a5_threads
 #' @returns Integer scalar.
 #' @export
 a5_get_threads <- function() {
-    a5_get_threads_rs()
+  a5_get_threads_rs()
 }
