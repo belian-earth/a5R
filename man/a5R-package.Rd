@@ -4,10 +4,70 @@
 \name{a5R-package}
 \alias{a5R}
 \alias{a5R-package}
-\title{a5R: A5 Discrete Global Grid System}
+\title{a5R: A5 Pentagonal Geospatial Index for R}
 \description{
-Bindings for the A5 geospatial index. a5 partitions the Earth's surface into pentagonal cells across 31 resolution levels using an equal-area projection onto a dodecahedron. Provides functions for indexing coordinates to cells, traversing the cell hierarchy, computing cell boundaries, and compacting/uncompacting cell sets. Powered by the 'a5' Rust crate via 'extendr'.
+R bindings for the \href{https://a5geo.org/}{A5} pentagonal geospatial index /
+discrete global grid system, powered by the a5 Rust crate via extendr.
 }
+\section{Indexing}{
+
+\itemize{
+\item \code{\link[=a5_lonlat_to_cell]{a5_lonlat_to_cell()}} --- coordinates to cell IDs
+\item \code{\link[=a5_cell_to_lonlat]{a5_cell_to_lonlat()}} --- cell IDs to centre coordinates
+\item \code{\link[=a5_is_cell]{a5_is_cell()}} --- validate cell IDs
+}
+}
+
+\section{Geometry}{
+
+\itemize{
+\item \code{\link[=a5_cell_to_boundary]{a5_cell_to_boundary()}} --- cell boundary polygons (WKB or WKT)
+\item \code{\link[=a5_cell_area]{a5_cell_area()}} --- cell area at a given resolution
+\item \code{\link[=a5_get_num_cells]{a5_get_num_cells()}} --- total cell count at a resolution
+}
+}
+
+\section{Hierarchy}{
+
+\itemize{
+\item \code{\link[=a5_get_resolution]{a5_get_resolution()}} --- extract resolution from cell IDs
+\item \code{\link[=a5_cell_to_parent]{a5_cell_to_parent()}} --- navigate to coarser cells
+\item \code{\link[=a5_cell_to_children]{a5_cell_to_children()}} --- navigate to finer cells
+\item \code{\link[=a5_get_res0_cells]{a5_get_res0_cells()}} --- the 12 root cells
+\item \code{\link[=a5_compact]{a5_compact()}} / \code{\link[=a5_uncompact]{a5_uncompact()}} --- compress and expand cell sets
+}
+}
+
+\section{Traversal}{
+
+\itemize{
+\item \code{\link[=a5_grid_disk]{a5_grid_disk()}} --- neighbours by hop count
+\item \code{\link[=a5_spherical_cap]{a5_spherical_cap()}} --- neighbours by great-circle distance
+}
+}
+
+\section{Grid generation}{
+
+\itemize{
+\item \code{\link[=a5_grid]{a5_grid()}} --- fill a bbox or geometry with cells
+}
+}
+
+\section{Configuration}{
+
+\itemize{
+\item \code{\link[=a5_set_threads]{a5_set_threads()}} / \code{\link[=a5_get_threads]{a5_get_threads()}} --- multi-threading control
+}
+}
+
+\section{Vignettes}{
+
+\itemize{
+\item \code{vignette("a5R")} --- getting started
+\item \code{vignette("multithreading")} --- parallel processing
+}
+}
+
 \seealso{
 Useful links:
 \itemize{
