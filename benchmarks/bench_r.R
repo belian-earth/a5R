@@ -18,7 +18,8 @@ parent_cell <- a5_cell_to_parent(single_cell, resolution = 3L)
 # Pre-generate children for compact benchmark
 children <- a5_cell_to_children(parent_cell, resolution = 5L)
 
-# -- Benchmarks ---------------------------------------------------------------
+# -- Benchmarks (single-threaded) ---------------------------------------------
+a5_set_threads(1L)
 results <- bench::mark(
   lonlat_to_cell = a5_lonlat_to_cell(lons, lats, resolution = res),
   cell_to_lonlat = a5_cell_to_lonlat(cells),
@@ -32,6 +33,21 @@ results <- bench::mark(
   min_iterations = 10,
   check = FALSE
 )
+
+# -- Benchmarks (multi-threaded, 8 threads) -----------------------------------
+# Only vectorised functions benefit from threading; scalar ops are unchanged.
+mt_threads <- 8L
+a5_set_threads(mt_threads)
+results_mt <- bench::mark(
+  lonlat_to_cell = a5_lonlat_to_cell(lons, lats, resolution = res),
+  cell_to_lonlat = a5_cell_to_lonlat(cells),
+  cell_to_boundary = a5_cell_to_boundary(cells),
+  get_resolution = a5_get_resolution(cells),
+  cell_to_parent = a5_cell_to_parent(cells),
+  min_iterations = 10,
+  check = FALSE
+)
+a5_set_threads(1L)
 
 # -- Correctness reference values ---------------------------------------------
 ref_cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5L)
@@ -57,8 +73,18 @@ out <- data.frame(
   mem_alloc_kb = as.numeric(results$mem_alloc) / 1024
 )
 
-cat("=== BENCHMARK RESULTS (R / a5R) ===\n")
+# Build mt output with NA for non-vectorised ops
+mt_df <- data.frame(
+  operation = as.character(results_mt$expression),
+  median_ms = as.numeric(results_mt$median) * 1000,
+  mem_alloc_kb = as.numeric(results_mt$mem_alloc) / 1024
+)
+out_mt <- merge(out["operation"], mt_df, by = "operation", all.x = TRUE)
+
+cat("=== BENCHMARK RESULTS (R / a5R, 1 thread) ===\n")
 print(out, row.names = FALSE)
+cat(sprintf("\n=== BENCHMARK RESULTS (R / a5R, %d threads) ===\n", mt_threads))
+print(out_mt, row.names = FALSE)
 cat("\n=== REFERENCE VALUES ===\n")
 cat(jsonlite::toJSON(ref, auto_unbox = TRUE, pretty = TRUE, digits = 15), "\n")
 
@@ -66,5 +92,11 @@ cat(jsonlite::toJSON(ref, auto_unbox = TRUE, pretty = TRUE, digits = 15), "\n")
 jsonlite::write_json(
   list(lang = "R", results = out, reference = ref),
   "/home/hugh/belian/a5R/benchmarks/results_r.json",
+  auto_unbox = TRUE, pretty = TRUE, digits = 15
+)
+
+jsonlite::write_json(
+  list(lang = sprintf("R (%dt)", mt_threads), results = out_mt, reference = ref),
+  "/home/hugh/belian/a5R/benchmarks/results_r_mt.json",
   auto_unbox = TRUE, pretty = TRUE, digits = 15
 )

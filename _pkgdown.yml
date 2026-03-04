@@ -8,8 +8,9 @@ template:
 navbar:
   structure:
     left:
-    - intro
     - reference
+    - intro
+    - articles
     - news
     right:
     - search
@@ -55,6 +56,10 @@ reference:
   desc: Generate grids of cells covering an area.
   contents:
   - a5_grid
+- title: Configuration
+  desc: Thread control for parallel processing.
+  contents:
+  - a5_set_threads
 - title: wk integration
   desc: Methods for the wk geometry framework.
   contents: wk_methods

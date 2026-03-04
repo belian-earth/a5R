@@ -26,12 +26,15 @@ op_order <- c("lonlat_to_cell", "cell_to_lonlat", "cell_to_boundary",
               "compact", "uncompact", "cell_area")
 wide <- wide[match(op_order, wide$operation), ]
 
-# -- Reference comparison ----------------------------------------------------
-refs <- lapply(all_results, function(x) {
-  r <- x$reference
-  r$lang <- x$lang
-  r
-})
+# -- Reference comparison (skip multi-threaded variants — same reference) -----
+refs <- lapply(
+  Filter(function(x) !grepl("\\dt\\)", x$lang), all_results),
+  function(x) {
+    r <- x$reference
+    r$lang <- x$lang
+    r
+  }
+)
 
 # -- Write markdown -----------------------------------------------------------
 md <- character()
@@ -108,6 +111,9 @@ add("- The bulk operations (top 5 rows) primarily measure **vectorisation overhe
 add("- Single-element operations (bottom 4 rows) are sub-millisecond across all ",
     "compiled implementations — differences at this scale are dominated by ",
     "benchmarking and FFI overhead, not algorithm speed.")
+add("- **R (8t)**: Same as R but with `a5_set_threads(8L)` — parallelises ",
+    "vectorised operations via rayon. Scalar operations (children, compact, ",
+    "uncompact, cell_area) are unchanged.")
 add("- R's `cell_area` includes `units` package overhead; ",
     "`cell_to_lonlat` and `cell_to_boundary` include `wk` geometry object construction.")
 
