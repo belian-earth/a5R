@@ -71,6 +71,15 @@ a5_cell_area_rs <- function(resolution) .Call(wrap__a5_cell_area_rs, resolution)
 #' @keywords internal
 a5_get_num_cells_rs <- function(resolution) .Call(wrap__a5_get_num_cells_rs, resolution)
 
+#' Number of children per parent cell between two resolutions.
+#'
+#' @param parent_resolution Integer scalar.
+#' @param child_resolution Integer scalar.
+#' @return Numeric scalar (as double).
+#' @noRd
+#' @keywords internal
+a5_get_num_children_rs <- function(parent_resolution, child_resolution) .Call(wrap__a5_get_num_children_rs, parent_resolution, child_resolution)
+
 #' Validate hex cell IDs.
 #'
 #' @param cell Character vector of hex strings to validate.
@@ -78,6 +87,16 @@ a5_get_num_cells_rs <- function(resolution) .Call(wrap__a5_get_num_cells_rs, res
 #' @noRd
 #' @keywords internal
 a5_is_valid_cell_rs <- function(cell) .Call(wrap__a5_is_valid_cell_rs, cell)
+
+#' Distance between pairs of cell centroids.
+#'
+#' @param from Character vector of hex-encoded cell IDs.
+#' @param to Character vector of hex-encoded cell IDs (same length).
+#' @param method Distance method: "haversine", "geodesic", or "rhumb".
+#' @return Numeric vector of distances in metres.
+#' @noRd
+#' @keywords internal
+a5_cell_distance_rs <- function(from, to, method) .Call(wrap__a5_cell_distance_rs, from, to, method)
 
 #' Get the resolution of A5 cell indices.
 #'
