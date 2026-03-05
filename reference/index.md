@@ -34,14 +34,18 @@ Navigate the cell hierarchy across resolutions.
 
 ## Geometry & info
 
-Cell boundaries, areas, and counts.
+Cell boundaries, areas, counts, and distances.
 
 - [`a5_cell_to_boundary()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_boundary.md)
   : Get cell boundary polygons
+- [`a5_cell_distance()`](https://belian-earth.github.io/a5R/reference/a5_cell_distance.md)
+  : Distance between cell centroids
 - [`a5_cell_area()`](https://belian-earth.github.io/a5R/reference/a5_cell_area.md)
   : Cell area at a given resolution
 - [`a5_get_num_cells()`](https://belian-earth.github.io/a5R/reference/a5_get_num_cells.md)
   : Total number of cells at a given resolution
+- [`a5_get_num_children()`](https://belian-earth.github.io/a5R/reference/a5_get_num_children.md)
+  : Number of children between two resolutions
 
 ## Traversal
 

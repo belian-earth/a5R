@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
+    <li><a class="dropdown-item" href="../articles/traversal-and-distance.html">Traversal and distance</a></li>
   </ul>
 </li>
       </ul>
@@ -132,21 +133,26 @@ process each element independently:</p>
 <td>High</td>
 </tr>
 <tr class="even">
+<td><code><a href="../reference/a5_cell_distance.html">a5_cell_distance()</a></code></td>
+<td>Moderate (2x projection + distance)</td>
+<td>Medium</td>
+</tr>
+<tr class="odd">
 <td><code><a href="../reference/a5_cell_to_lonlat.html">a5_cell_to_lonlat()</a></code></td>
 <td>Moderate (reverse projection)</td>
 <td>Medium</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code><a href="../reference/a5_cell_to_parent.html">a5_cell_to_parent()</a></code></td>
 <td>Light (bit ops + hex)</td>
 <td>Low</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code><a href="../reference/a5_get_resolution.html">a5_get_resolution()</a></code></td>
 <td>Light (bit ops)</td>
 <td>Low</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code><a href="../reference/a5_cell.html">a5_is_cell()</a></code></td>
 <td>Light (hex parse)</td>
 <td>Low</td>

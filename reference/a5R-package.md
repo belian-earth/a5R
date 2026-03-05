@@ -22,8 +22,14 @@ R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 - [`a5_cell_area()`](https://belian-earth.github.io/a5R/reference/a5_cell_area.md)
   — cell area at a given resolution
 
+- [`a5_cell_distance()`](https://belian-earth.github.io/a5R/reference/a5_cell_distance.md)
+  — distance between cell centroids
+
 - [`a5_get_num_cells()`](https://belian-earth.github.io/a5R/reference/a5_get_num_cells.md)
   — total cell count at a resolution
+
+- [`a5_get_num_children()`](https://belian-earth.github.io/a5R/reference/a5_get_num_children.md)
+  — child count between resolutions
 
 ## Hierarchy
 
