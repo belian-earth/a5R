@@ -30,8 +30,8 @@ Computes the distance between the centroids of pairs of A5 cells
 using the specified method.
 }
 \examples{
-a <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 8)
-b <- a5_lonlat_to_cell(-3.10, 55.90, resolution = 8)
+a <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 24)
+b <- a5_lonlat_to_cell(-3.10, 55.90, resolution = 24)
 a5_cell_distance(a, b)
 a5_cell_distance(a, b, units = "km")
 a5_cell_distance(a, b, method = "geodesic")

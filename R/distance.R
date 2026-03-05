@@ -16,13 +16,17 @@
 #'   [a5_cell_area()] for cell areas.
 #' @export
 #' @examples
-#' a <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 8)
-#' b <- a5_lonlat_to_cell(-3.10, 55.90, resolution = 8)
+#' a <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 24)
+#' b <- a5_lonlat_to_cell(-3.10, 55.90, resolution = 24)
 #' a5_cell_distance(a, b)
 #' a5_cell_distance(a, b, units = "km")
 #' a5_cell_distance(a, b, method = "geodesic")
-a5_cell_distance <- function(from, to, units = "m",
-                             method = c("haversine", "geodesic", "rhumb")) {
+a5_cell_distance <- function(
+  from,
+  to,
+  units = "m",
+  method = c("haversine", "geodesic", "rhumb")
+) {
   from <- as_a5_cell(from)
   to <- as_a5_cell(to)
   args <- vctrs::vec_recycle_common(from = from, to = to)
@@ -33,7 +37,9 @@ a5_cell_distance <- function(from, to, units = "m",
     )
   }
   d <- a5_cell_distance_rs(
-    vctrs::vec_data(args$from), vctrs::vec_data(args$to), method
+    vctrs::vec_data(args$from),
+    vctrs::vec_data(args$to),
+    method
   )
   units::set_units(d, "m", mode = "standard") |>
     units::set_units(units, mode = "standard")
