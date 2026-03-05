@@ -65,7 +65,7 @@ children
 We can visualise the relationship - the parent (dark outline) contains
 our cell (blue fill), which in turn contains its 4 children (orange):
 
-```{r hierarchy-plot, fig.width = 5, fig.height = 4}
+```{r hierarchy-plot, fig.width = 8, fig.height = 8}
 plot(NULL, xlim = c(-3.23, -3),  ylim = c(55.98, 55.99),               
        xlab = "", ylab = "", asp = 1
        )
@@ -108,7 +108,7 @@ Many a5R functions return compacted output automatically. For example,
 Find neighbouring cells by hop count with `a5_grid_disk()`, or by
 great-circle distance with `a5_spherical_cap()`:
 
-```{r traversal, fig.width = 5, fig.height = 4}
+```{r traversal, fig.width = 7}
 disk <- a5_grid_disk(cell, k = 10)
 cap <- a5_spherical_cap(cell, radius = 50000)
 
@@ -120,7 +120,7 @@ Both functions return a **compacted** cell vector --- sibling groups are
 merged into coarser parent cells to save space. To recover a uniform grid
 at the original resolution, pass the result through `a5_uncompact()`:
 
-```{r traversal-uncompact, fig.width = 5, fig.height = 4}
+```{r traversal-uncompact, fig.width = 7}
 disk_grid <- a5_uncompact(disk, resolution = a5_get_resolution(cell))
 
 plot(a5_cell_to_boundary(disk_grid), col = "#206ead20", border = "#206ead", asp = 1)
@@ -136,7 +136,7 @@ spatial analysis workflows common in R.
 
 
 Pass a bounding box as a numeric vector:
-```{r grid-plot, fig.width = 5, fig.height = 4}
+```{r grid-plot, fig.width = 7}
 cells <- a5_grid(c(-3.3, 55.9, -3.1, 56.0), resolution = 12)
 length(cells)
 
