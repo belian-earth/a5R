@@ -44,7 +44,7 @@ Compute the distance from the origin to every cell in the cap (or disk) and
 visualise it as a colour gradient.
 
 
-```{r heatmap, fig.width = 10}
+```{r heatmap, fig.width = 10, fig.height = 10}
 dcap <- a5_cell_distance(origin, cap, units = "km")
 dcap_compact <- a5_cell_distance(origin, cap_compact, units = "km")
 ddisk <- a5_cell_distance(origin, disk, units = "km")
@@ -78,12 +78,8 @@ a5R supports three distance methods: **haversine** (great-circle),
 constant-bearing). For short distances they are nearly identical; differences
 grow with distance.
 
-```{r, include = FALSE}
 
-```
-
-
-```{r methods, fig.width = 10}
+```{r methods, fig.width = 10, fig.height = 10}
 wide_origin <- a5_lonlat_to_cell(35, 55, resolution = 8)
 wide_cap <- a5_uncompact(
   a5_spherical_cap(wide_origin, radius = 500000),
