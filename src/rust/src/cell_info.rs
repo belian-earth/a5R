@@ -34,6 +34,18 @@ fn a5_get_num_cells_rs(resolution: i32) -> f64 {
     a5::get_num_cells(resolution) as f64
 }
 
+/// Number of children per parent cell between two resolutions.
+///
+/// @param parent_resolution Integer scalar.
+/// @param child_resolution Integer scalar.
+/// @return Numeric scalar (as double).
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn a5_get_num_children_rs(parent_resolution: i32, child_resolution: i32) -> f64 {
+    a5::get_num_children(parent_resolution, child_resolution) as f64
+}
+
 /// Validate hex cell IDs.
 ///
 /// @param cell Character vector of hex strings to validate.
@@ -59,5 +71,6 @@ extendr_module! {
     mod cell_info;
     fn a5_cell_area_rs;
     fn a5_get_num_cells_rs;
+    fn a5_get_num_children_rs;
     fn a5_is_valid_cell_rs;
 }

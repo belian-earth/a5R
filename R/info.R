@@ -43,6 +43,33 @@ a5_get_num_cells <- function(resolution) {
   a5_get_num_cells_rs(resolution)
 }
 
+#' Number of children between two resolutions
+#'
+#' Returns the number of child cells each parent cell contains when
+#' expanding from one resolution to another.
+#'
+#' @param parent_resolution Integer scalar (0--30).
+#' @param child_resolution Integer scalar (0--30), must be >=
+#'   `parent_resolution`.
+#' @returns A numeric scalar. Returned as double because the count can
+#'   exceed R's integer range at large resolution deltas.
+#'
+#' @seealso [a5_get_num_cells()], [a5_cell_to_children()],
+#'   [a5_uncompact()]
+#' @export
+#' @examples
+#' a5_get_num_children(5, 8)   # 4^3 = 64
+#' a5_get_num_children(0, 5)
+a5_get_num_children <- function(parent_resolution, child_resolution) {
+  parent_resolution <- vctrs::vec_cast(parent_resolution, integer())
+  child_resolution <- vctrs::vec_cast(child_resolution, integer())
+  check_resolution(parent_resolution)
+  check_resolution(child_resolution)
+  vctrs::vec_assert(parent_resolution, size = 1L)
+  vctrs::vec_assert(child_resolution, size = 1L)
+  a5_get_num_children_rs(parent_resolution, child_resolution)
+}
+
 #' Get all resolution-0 root cells
 #'
 #' Returns the 12 root cells corresponding to the 12 faces of the
