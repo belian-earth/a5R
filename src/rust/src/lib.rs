@@ -4,6 +4,7 @@ mod threading;
 mod indexing;
 mod boundary;
 mod cell_info;
+mod distance;
 mod hierarchy;
 mod grid;
 mod traversal;
@@ -14,6 +15,7 @@ extendr_module! {
     use indexing;
     use boundary;
     use cell_info;
+    use distance;
     use hierarchy;
     use grid;
     use traversal;
