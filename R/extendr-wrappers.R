@@ -71,6 +71,14 @@ a5_cell_area_rs <- function(resolution) .Call(wrap__a5_cell_area_rs, resolution)
 #' @keywords internal
 a5_get_num_cells_rs <- function(resolution) .Call(wrap__a5_get_num_cells_rs, resolution)
 
+#' Validate hex cell IDs.
+#'
+#' @param cell Character vector of hex strings to validate.
+#' @return Logical vector indicating validity.
+#' @noRd
+#' @keywords internal
+a5_is_valid_cell_rs <- function(cell) .Call(wrap__a5_is_valid_cell_rs, cell)
+
 #' Get the resolution of A5 cell indices.
 #'
 #' @param cell Character vector of hex-encoded cell IDs.
@@ -124,14 +132,6 @@ a5_compact_rs <- function(cells) .Call(wrap__a5_compact_rs, cells)
 #' @noRd
 #' @keywords internal
 a5_uncompact_rs <- function(cells, target_resolution) .Call(wrap__a5_uncompact_rs, cells, target_resolution)
-
-#' Validate hex cell IDs.
-#'
-#' @param cell Character vector of hex strings to validate.
-#' @return Logical vector indicating validity.
-#' @noRd
-#' @keywords internal
-a5_is_valid_cell_rs <- function(cell) .Call(wrap__a5_is_valid_cell_rs, cell)
 
 #' Generate a grid of A5 cells covering a bounding box.
 #'
