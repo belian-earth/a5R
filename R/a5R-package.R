@@ -12,7 +12,9 @@
 #' @section Geometry:
 #' - [a5_cell_to_boundary()] --- cell boundary polygons (WKB or WKT)
 #' - [a5_cell_area()] --- cell area at a given resolution
+#' - [a5_cell_distance()] --- distance between cell centroids
 #' - [a5_get_num_cells()] --- total cell count at a resolution
+#' - [a5_get_num_children()] --- child count between resolutions
 #'
 #' @section Hierarchy:
 #' - [a5_get_resolution()] --- extract resolution from cell IDs

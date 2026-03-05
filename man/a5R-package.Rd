@@ -23,7 +23,9 @@ discrete global grid system, powered by the a5 Rust crate via extendr.
 \itemize{
 \item \code{\link[=a5_cell_to_boundary]{a5_cell_to_boundary()}} --- cell boundary polygons (WKB or WKT)
 \item \code{\link[=a5_cell_area]{a5_cell_area()}} --- cell area at a given resolution
+\item \code{\link[=a5_cell_distance]{a5_cell_distance()}} --- distance between cell centroids
 \item \code{\link[=a5_get_num_cells]{a5_get_num_cells()}} --- total cell count at a resolution
+\item \code{\link[=a5_get_num_children]{a5_get_num_children()}} --- child count between resolutions
 }
 }
 
