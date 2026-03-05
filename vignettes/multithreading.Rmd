@@ -67,6 +67,7 @@ independently:
 | `a5_cell_to_boundary()` | Heavy (boundary + WKT/WKB) | High |
 | `a5_grid()` | Heavy (boundary filtering) | High |
 | `a5_lonlat_to_cell()` | Moderate (projection) | High |
+| `a5_cell_distance()` | Moderate (2x projection + distance) | Medium |
 | `a5_cell_to_lonlat()` | Moderate (reverse projection) | Medium |
 | `a5_cell_to_parent()` | Light (bit ops + hex) | Low |
 | `a5_get_resolution()` | Light (bit ops) | Low |

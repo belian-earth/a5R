@@ -37,11 +37,13 @@ reference:
   - a5_cell_to_children
   - a5_get_res0_cells
 - title: Geometry & info
-  desc: Cell boundaries, areas, and counts.
+  desc: Cell boundaries, areas, counts, and distances.
   contents:
   - a5_cell_to_boundary
+  - a5_cell_distance
   - a5_cell_area
   - a5_get_num_cells
+  - a5_get_num_children
 - title: Traversal
   desc: Neighbourhood and distance-based cell selection.
   contents:
