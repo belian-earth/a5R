@@ -1,7 +1,7 @@
 use extendr_api::prelude::*;
 use rayon::prelude::*;
 
-use crate::threading::{get_num_threads, maybe_par};
+use crate::threading::{get_num_threads, map_cells, maybe_par};
 
 /// Convert longitude/latitude coordinates to A5 cell indices.
 ///
@@ -17,6 +17,7 @@ use crate::threading::{get_num_threads, maybe_par};
 fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Strings {
     let n = lon.len();
 
+    // Three parallel input vectors — doesn't fit `map_cells` (cell-string input).
     if get_num_threads() <= 1 {
         let mut out = Strings::new(n);
         for i in 0..n {
@@ -81,82 +82,33 @@ fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Str
 /// @keywords internal
 #[extendr]
 fn a5_cell_to_lonlat_rs(cell: Strings, normalise: bool) -> List {
-    let n = cell.len();
+    let results = map_cells(&cell, |s| {
+        let id = a5::hex_to_u64(s).ok()?;
+        let ll = a5::cell_to_lonlat(id).ok()?;
+        let lon = if normalise {
+            ((ll.longitude() + 180.0) % 360.0 + 360.0) % 360.0 - 180.0
+        } else {
+            ll.longitude()
+        };
+        Some((lon, ll.latitude()))
+    });
 
-    if get_num_threads() <= 1 {
-        let mut lon_out = Doubles::new(n);
-        let mut lat_out = Doubles::new(n);
-        for i in 0..n {
-            let s = &cell[i];
-            if s.is_na() {
+    let n = cell.len();
+    let mut lon_out = Doubles::new(n);
+    let mut lat_out = Doubles::new(n);
+    for (i, r) in results.into_iter().enumerate() {
+        match r {
+            Some((lon, lat)) => {
+                lon_out.set_elt(i, Rfloat::from(lon));
+                lat_out.set_elt(i, Rfloat::from(lat));
+            }
+            None => {
                 lon_out.set_elt(i, Rfloat::na());
                 lat_out.set_elt(i, Rfloat::na());
-                continue;
-            }
-            match a5::hex_to_u64(s.as_str()) {
-                Ok(id) => match a5::cell_to_lonlat(id) {
-                    Ok(ll) => {
-                        let lon = if normalise {
-                            ((ll.longitude() + 180.0) % 360.0 + 360.0) % 360.0 - 180.0
-                        } else {
-                            ll.longitude()
-                        };
-                        lon_out.set_elt(i, Rfloat::from(lon));
-                        lat_out.set_elt(i, Rfloat::from(ll.latitude()));
-                    }
-                    Err(_) => {
-                        lon_out.set_elt(i, Rfloat::na());
-                        lat_out.set_elt(i, Rfloat::na());
-                    }
-                },
-                Err(_) => {
-                    lon_out.set_elt(i, Rfloat::na());
-                    lat_out.set_elt(i, Rfloat::na());
-                }
             }
         }
-        list!(lon = lon_out, lat = lat_out)
-    } else {
-        let inputs: Vec<Option<&str>> = (0..n)
-            .map(|i| {
-                let s = &cell[i];
-                if s.is_na() { None } else { Some(s.as_str()) }
-            })
-            .collect();
-
-        let results: Vec<Option<(f64, f64)>> = maybe_par(|| {
-            inputs
-                .par_iter()
-                .map(|opt_s| {
-                    let s = (*opt_s)?;
-                    let id = a5::hex_to_u64(s).ok()?;
-                    let ll = a5::cell_to_lonlat(id).ok()?;
-                    let lon = if normalise {
-                        ((ll.longitude() + 180.0) % 360.0 + 360.0) % 360.0 - 180.0
-                    } else {
-                        ll.longitude()
-                    };
-                    Some((lon, ll.latitude()))
-                })
-                .collect()
-        });
-
-        let mut lon_out = Doubles::new(n);
-        let mut lat_out = Doubles::new(n);
-        for (i, r) in results.into_iter().enumerate() {
-            match r {
-                Some((lon, lat)) => {
-                    lon_out.set_elt(i, Rfloat::from(lon));
-                    lat_out.set_elt(i, Rfloat::from(lat));
-                }
-                None => {
-                    lon_out.set_elt(i, Rfloat::na());
-                    lat_out.set_elt(i, Rfloat::na());
-                }
-            }
-        }
-        list!(lon = lon_out, lat = lat_out)
     }
+    list!(lon = lon_out, lat = lat_out)
 }
 
 extendr_module! {

@@ -1,8 +1,7 @@
 use extendr_api::prelude::*;
 use extendr_api::wrapper::Nullable;
-use rayon::prelude::*;
 
-use crate::threading::{get_num_threads, maybe_par};
+use crate::threading::map_cells;
 
 /// Get the resolution of A5 cell indices.
 ///
@@ -12,50 +11,20 @@ use crate::threading::{get_num_threads, maybe_par};
 /// @keywords internal
 #[extendr]
 fn a5_get_resolution_rs(cell: Strings) -> Integers {
+    let results = map_cells(&cell, |s| {
+        let id = a5::hex_to_u64(s).ok()?;
+        Some(a5::get_resolution(id))
+    });
+
     let n = cell.len();
-
-    if get_num_threads() <= 1 {
-        let mut out = Integers::new(n);
-        for i in 0..n {
-            let s = &cell[i];
-            if s.is_na() {
-                out.set_elt(i, Rint::na());
-                continue;
-            }
-            match a5::hex_to_u64(s.as_str()) {
-                Ok(id) => out.set_elt(i, Rint::from(a5::get_resolution(id))),
-                Err(_) => out.set_elt(i, Rint::na()),
-            }
+    let mut out = Integers::new(n);
+    for (i, r) in results.into_iter().enumerate() {
+        match r {
+            Some(v) => out.set_elt(i, Rint::from(v)),
+            None => out.set_elt(i, Rint::na()),
         }
-        out
-    } else {
-        let inputs: Vec<Option<&str>> = (0..n)
-            .map(|i| {
-                let s = &cell[i];
-                if s.is_na() { None } else { Some(s.as_str()) }
-            })
-            .collect();
-
-        let results: Vec<Option<i32>> = maybe_par(|| {
-            inputs
-                .par_iter()
-                .map(|opt_s| {
-                    let s = (*opt_s)?;
-                    let id = a5::hex_to_u64(s).ok()?;
-                    Some(a5::get_resolution(id))
-                })
-                .collect()
-        });
-
-        let mut out = Integers::new(n);
-        for (i, r) in results.into_iter().enumerate() {
-            match r {
-                Some(v) => out.set_elt(i, Rint::from(v)),
-                None => out.set_elt(i, Rint::na()),
-            }
-        }
-        out
     }
+    out
 }
 
 /// Navigate to parent cell(s).
@@ -72,54 +41,22 @@ fn a5_cell_to_parent_rs(cell: Strings, parent_resolution: Nullable<i32>) -> Stri
         Nullable::NotNull(v) => Some(v),
         Nullable::Null => None,
     };
+
+    let results = map_cells(&cell, |s| {
+        let id = a5::hex_to_u64(s).ok()?;
+        let parent = a5::cell_to_parent(id, pres).ok()?;
+        Some(a5::u64_to_hex(parent))
+    });
+
     let n = cell.len();
-
-    if get_num_threads() <= 1 {
-        let mut out = Strings::new(n);
-        for i in 0..n {
-            let s = &cell[i];
-            if s.is_na() {
-                out.set_elt(i, Rstr::na());
-                continue;
-            }
-            match a5::hex_to_u64(s.as_str()) {
-                Ok(id) => match a5::cell_to_parent(id, pres) {
-                    Ok(parent) => out.set_elt(i, Rstr::from(a5::u64_to_hex(parent))),
-                    Err(_) => out.set_elt(i, Rstr::na()),
-                },
-                Err(_) => out.set_elt(i, Rstr::na()),
-            }
+    let mut out = Strings::new(n);
+    for (i, r) in results.into_iter().enumerate() {
+        match r {
+            Some(s) => out.set_elt(i, Rstr::from(s)),
+            None => out.set_elt(i, Rstr::na()),
         }
-        out
-    } else {
-        let inputs: Vec<Option<&str>> = (0..n)
-            .map(|i| {
-                let s = &cell[i];
-                if s.is_na() { None } else { Some(s.as_str()) }
-            })
-            .collect();
-
-        let results: Vec<Option<String>> = maybe_par(|| {
-            inputs
-                .par_iter()
-                .map(|opt_s| {
-                    let s = (*opt_s)?;
-                    let id = a5::hex_to_u64(s).ok()?;
-                    let parent = a5::cell_to_parent(id, pres).ok()?;
-                    Some(a5::u64_to_hex(parent))
-                })
-                .collect()
-        });
-
-        let mut out = Strings::new(n);
-        for (i, r) in results.into_iter().enumerate() {
-            match r {
-                Some(s) => out.set_elt(i, Rstr::from(s)),
-                None => out.set_elt(i, Rstr::na()),
-            }
-        }
-        out
     }
+    out
 }
 
 /// Get child cells.

@@ -4,7 +4,7 @@ use rayon::prelude::*;
 use std::str::FromStr;
 
 use crate::boundary::{BOUNDARY_OPTS_CLOSED, BOUNDARY_OPTS_OPEN};
-use crate::threading::{get_num_threads, maybe_par};
+use crate::threading::{get_num_threads, map_cells, maybe_par};
 
 struct BBox {
     xmin: f64,
@@ -29,13 +29,14 @@ fn cell_bbox(boundary: &[a5::LonLat]) -> BBox {
     BBox { xmin, ymin, xmax, ymax }
 }
 
-/// Buffer distance in degrees, latitude-adjusted.
+/// Buffer distance in degrees, adjusted for latitude.
+/// Returns a large sentinel (90°) near poles to skip filtering.
 fn buffer_distance(resolution: i32, max_abs_lat: f64) -> f64 {
     let area_m2 = a5::cell_area(resolution);
     let diameter_m = area_m2.sqrt();
     let cos_lat = (max_abs_lat * std::f64::consts::PI / 180.0).cos();
     if cos_lat < 0.05 {
-        return 90.0; // sentinel: skip filtering near poles
+        return 90.0;
     }
     diameter_m / (111000.0 * cos_lat) * 0.5
 }
@@ -90,7 +91,6 @@ fn a5_grid_bbox_rs(xmin: f64, ymin: f64, xmax: f64, ymax: f64, resolution: i32) 
                 0.0
             };
             if buf < 45.0 {
-                // skip filtering if near poles
                 let buffered = BBox {
                     xmin: target.xmin - buf,
                     ymin: (target.ymin - buf).max(-90.0),
@@ -144,54 +144,17 @@ fn a5_grid_intersects_rs(cells: Strings, target_wkt: &str) -> Strings {
         Err(_) => return Strings::new(0),
     };
 
-    let n = cells.len();
+    let results = map_cells(&cells, |s| {
+        let id = a5::hex_to_u64(s).ok()?;
+        let poly = cell_to_geo_polygon(id)?;
+        if target.intersects(&poly) { Some(s.to_string()) } else { None }
+    });
 
-    if get_num_threads() <= 1 {
-        let mut out = Vec::with_capacity(n);
-        for i in 0..n {
-            let s = &cells[i];
-            if s.is_na() {
-                continue;
-            }
-            let keep = a5::hex_to_u64(s.as_str())
-                .ok()
-                .and_then(|id| cell_to_geo_polygon(id))
-                .map(|poly| target.intersects(&poly))
-                .unwrap_or(false);
-            if keep {
-                out.push(Rstr::from(s.as_str()));
-            }
-        }
-        out.into_iter().collect::<Strings>()
-    } else {
-        let inputs: Vec<Option<&str>> = (0..n)
-            .map(|i| {
-                let s = &cells[i];
-                if s.is_na() { None } else { Some(s.as_str()) }
-            })
-            .collect();
-
-        let kept: Vec<Option<String>> = maybe_par(|| {
-            inputs
-                .par_iter()
-                .map(|opt_s| {
-                    let s = (*opt_s)?;
-                    let id = a5::hex_to_u64(s).ok()?;
-                    let poly = cell_to_geo_polygon(id)?;
-                    if target.intersects(&poly) {
-                        Some(s.to_string())
-                    } else {
-                        None
-                    }
-                })
-                .collect()
-        });
-
-        kept.into_iter()
-            .flatten()
-            .map(|s| Rstr::from(s))
-            .collect::<Strings>()
-    }
+    results
+        .into_iter()
+        .flatten()
+        .map(|s| Rstr::from(s))
+        .collect::<Strings>()
 }
 
 extendr_module! {

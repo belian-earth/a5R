@@ -1,8 +1,7 @@
 use extendr_api::prelude::*;
 use extendr_api::wrapper::Nullable;
-use rayon::prelude::*;
 
-use crate::threading::{get_num_threads, maybe_par};
+use crate::threading::map_cells;
 
 pub(crate) const BOUNDARY_OPTS_CLOSED: a5::core::cell::CellToBoundaryOptions =
     a5::core::cell::CellToBoundaryOptions {
@@ -49,73 +48,30 @@ fn a5_cell_to_boundary_rs(
         Nullable::NotNull(s) => Some(s),
         Nullable::Null => None,
     };
-    let n = cell.len();
 
-    if get_num_threads() <= 1 {
-        let mut out = Strings::new(n);
-        for i in 0..n {
-            let s = &cell[i];
-            if s.is_na() {
-                out.set_elt(i, Rstr::na());
-                continue;
-            }
-            let opts = a5::core::cell::CellToBoundaryOptions {
-                closed_ring,
-                segments: seg,
-            };
-            match a5::hex_to_u64(s.as_str()) {
-                Ok(id) => match a5::cell_to_boundary(id, Some(opts)) {
-                    Ok(boundary) => {
-                        let coords: Vec<String> = boundary
-                            .iter()
-                            .map(|ll| format!("{} {}", ll.longitude(), ll.latitude()))
-                            .collect();
-                        let wkt = format!("POLYGON (({}))", coords.join(", "));
-                        out.set_elt(i, Rstr::from(wkt));
-                    }
-                    Err(_) => out.set_elt(i, Rstr::na()),
-                },
-                Err(_) => out.set_elt(i, Rstr::na()),
-            }
-        }
-        out
-    } else {
-        let inputs: Vec<Option<&str>> = (0..n)
-            .map(|i| {
-                let s = &cell[i];
-                if s.is_na() { None } else { Some(s.as_str()) }
-            })
+    let results = map_cells(&cell, |s| {
+        let id = a5::hex_to_u64(s).ok()?;
+        let opts = a5::core::cell::CellToBoundaryOptions {
+            closed_ring,
+            segments: seg,
+        };
+        let boundary = a5::cell_to_boundary(id, Some(opts)).ok()?;
+        let coords: Vec<String> = boundary
+            .iter()
+            .map(|ll| format!("{} {}", ll.longitude(), ll.latitude()))
             .collect();
+        Some(format!("POLYGON (({}))", coords.join(", ")))
+    });
 
-        let results: Vec<Option<String>> = maybe_par(|| {
-            inputs
-                .par_iter()
-                .map(|opt_s| {
-                    let s = (*opt_s)?;
-                    let id = a5::hex_to_u64(s).ok()?;
-                    let opts = a5::core::cell::CellToBoundaryOptions {
-                        closed_ring,
-                        segments: seg,
-                    };
-                    let boundary = a5::cell_to_boundary(id, Some(opts)).ok()?;
-                    let coords: Vec<String> = boundary
-                        .iter()
-                        .map(|ll| format!("{} {}", ll.longitude(), ll.latitude()))
-                        .collect();
-                    Some(format!("POLYGON (({}))", coords.join(", ")))
-                })
-                .collect()
-        });
-
-        let mut out = Strings::new(n);
-        for (i, r) in results.into_iter().enumerate() {
-            match r {
-                Some(s) => out.set_elt(i, Rstr::from(s)),
-                None => out.set_elt(i, Rstr::na()),
-            }
+    let n = cell.len();
+    let mut out = Strings::new(n);
+    for (i, r) in results.into_iter().enumerate() {
+        match r {
+            Some(s) => out.set_elt(i, Rstr::from(s)),
+            None => out.set_elt(i, Rstr::na()),
         }
-        out
     }
+    out
 }
 
 /// Get boundary polygons for A5 cells as WKB raw vectors.
@@ -136,62 +92,25 @@ fn a5_cell_to_boundary_wkb_rs(
         Nullable::NotNull(s) => Some(s),
         Nullable::Null => None,
     };
-    let n = cell.len();
 
-    if get_num_threads() <= 1 {
-        let values: Vec<Robj> = (0..n)
-            .map(|i| {
-                let s = &cell[i];
-                if s.is_na() {
-                    return ().into();
-                }
-                let opts = a5::core::cell::CellToBoundaryOptions {
-                    closed_ring,
-                    segments: seg,
-                };
-                match a5::hex_to_u64(s.as_str()) {
-                    Ok(id) => match a5::cell_to_boundary(id, Some(opts)) {
-                        Ok(boundary) => Robj::from(lonlats_to_wkb(&boundary)),
-                        Err(_) => ().into(),
-                    },
-                    Err(_) => ().into(),
-                }
-            })
-            .collect();
-        List::from_values(values)
-    } else {
-        let inputs: Vec<Option<&str>> = (0..n)
-            .map(|i| {
-                let s = &cell[i];
-                if s.is_na() { None } else { Some(s.as_str()) }
-            })
-            .collect();
+    let results = map_cells(&cell, |s| {
+        let id = a5::hex_to_u64(s).ok()?;
+        let opts = a5::core::cell::CellToBoundaryOptions {
+            closed_ring,
+            segments: seg,
+        };
+        let boundary = a5::cell_to_boundary(id, Some(opts)).ok()?;
+        Some(lonlats_to_wkb(&boundary))
+    });
 
-        let results: Vec<Option<Vec<u8>>> = maybe_par(|| {
-            inputs
-                .par_iter()
-                .map(|opt_s| {
-                    let s = (*opt_s)?;
-                    let id = a5::hex_to_u64(s).ok()?;
-                    let opts = a5::core::cell::CellToBoundaryOptions {
-                        closed_ring,
-                        segments: seg,
-                    };
-                    let boundary = a5::cell_to_boundary(id, Some(opts)).ok()?;
-                    Some(lonlats_to_wkb(&boundary))
-                })
-                .collect()
-        });
-
-        let values: Vec<Robj> = results
-            .into_iter()
-            .map(|r| match r {
-                Some(wkb) => Robj::from(wkb),
-                None => ().into(),
-            })
-            .collect();
-        List::from_values(values)
-    }
+    let values: Vec<Robj> = results
+        .into_iter()
+        .map(|r| match r {
+            Some(wkb) => Robj::from(wkb),
+            None => ().into(),
+        })
+        .collect();
+    List::from_values(values)
 }
 
 extendr_module! {
