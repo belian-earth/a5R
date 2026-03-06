@@ -20,3 +20,4 @@
 ^benchmarks$
 ^inst/hex/a5Rhex\.R$   
 ^scratch$
+^cran-comments\.md$
