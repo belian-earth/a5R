@@ -17,6 +17,12 @@
 
 \item{...}{Passed to underlying methods.}
 }
+\value{
+\itemize{
+\item \code{wk_handle()}: the result of the handler.
+\item \code{wk_crs()}: a \link[wk:wk_crs]{wk::wk_crs} object (WGS 84 lon/lat).
+}
+}
 \description{
 Integration with the \link[wk:wk-package]{wk} geometry framework. Allows
 \code{a5_cell} vectors to be handled as geometry (via their boundary polygons)
