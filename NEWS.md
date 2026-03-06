@@ -1,3 +1,3 @@
-# a5R 0.1.1
+# a5R 0.2.0
 
 * Initial CRAN submission.
