@@ -32,7 +32,7 @@ pub(crate) fn lonlats_to_wkb(coords: &[a5::LonLat]) -> Vec<u8> {
 
 /// Get boundary polygons for A5 cells as WKT strings.
 ///
-/// @param cell Character vector of hex-encoded cell IDs.
+/// @param cell List of raw(8) cell ID blobs.
 /// @param closed_ring Logical: should the polygon ring be closed?
 /// @param segments Integer: number of interpolation segments per edge.
 /// @return A character vector of WKT POLYGON strings.
@@ -40,7 +40,7 @@ pub(crate) fn lonlats_to_wkb(coords: &[a5::LonLat]) -> Vec<u8> {
 /// @keywords internal
 #[extendr]
 fn a5_cell_to_boundary_rs(
-    cell: Strings,
+    cell: List,
     closed_ring: bool,
     segments: Nullable<i32>,
 ) -> Strings {
@@ -49,8 +49,7 @@ fn a5_cell_to_boundary_rs(
         Nullable::Null => None,
     };
 
-    let results = map_cells(&cell, |s| {
-        let id = a5::hex_to_u64(s).ok()?;
+    let results = map_cells(&cell, |id| {
         let opts = a5::core::cell::CellToBoundaryOptions {
             closed_ring,
             segments: seg,
@@ -76,7 +75,7 @@ fn a5_cell_to_boundary_rs(
 
 /// Get boundary polygons for A5 cells as WKB raw vectors.
 ///
-/// @param cell Character vector of hex-encoded cell IDs.
+/// @param cell List of raw(8) cell ID blobs.
 /// @param closed_ring Logical: should the polygon ring be closed?
 /// @param segments Integer: number of interpolation segments per edge.
 /// @return A list of raw vectors (WKB bytes) or NULL for NA cells.
@@ -84,7 +83,7 @@ fn a5_cell_to_boundary_rs(
 /// @keywords internal
 #[extendr]
 fn a5_cell_to_boundary_wkb_rs(
-    cell: Strings,
+    cell: List,
     closed_ring: bool,
     segments: Nullable<i32>,
 ) -> List {
@@ -93,8 +92,7 @@ fn a5_cell_to_boundary_wkb_rs(
         Nullable::Null => None,
     };
 
-    let results = map_cells(&cell, |s| {
-        let id = a5::hex_to_u64(s).ok()?;
+    let results = map_cells(&cell, |id| {
         let opts = a5::core::cell::CellToBoundaryOptions {
             closed_ring,
             segments: seg,

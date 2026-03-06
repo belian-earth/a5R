@@ -1,7 +1,9 @@
 test_that("a5_cell constructor", {
   cell <- a5_cell("0800000000000006")
   expect_s3_class(cell, "a5_cell")
-  expect_equal(vctrs::vec_data(cell), "0800000000000006")
+  expect_true(is.list(vctrs::vec_data(cell)))
+  expect_true(is.raw(vctrs::vec_data(cell)[[1]]))
+  expect_equal(length(vctrs::vec_data(cell)[[1]]), 8L)
 })
 
 test_that("a5_cell coercion with character", {
@@ -41,7 +43,8 @@ test_that("as_a5_cell coerces character", {
 test_that("a5_cell handles NA values", {
   cell <- a5_cell(c("0800000000000006", NA))
   expect_length(cell, 2L)
-  expect_true(is.na(vctrs::vec_data(cell)[2]))
+  # NA is represented as NULL in the underlying list
+  expect_null(vctrs::vec_data(cell)[[2]])
 })
 
 test_that("format.a5_cell preserves hex strings", {
@@ -57,7 +60,8 @@ test_that("vec_cast round-trips a5_cell <-> character", {
   expect_equal(chr, "0800000000000006")
   back <- vctrs::vec_cast(chr, a5_cell())
   expect_s3_class(back, "a5_cell")
-  expect_equal(vctrs::vec_data(back), "0800000000000006")
+  # Round-trip via format
+  expect_equal(format(back), "0800000000000006")
 })
 
 test_that("vec_c combines a5_cell + a5_cell", {
@@ -67,7 +71,7 @@ test_that("vec_c combines a5_cell + a5_cell", {
   expect_s3_class(combined, "a5_cell")
   expect_length(combined, 2L)
   expect_equal(
-    vctrs::vec_data(combined),
+    format(combined),
     c("0800000000000006", "0800000000000016")
   )
 })

@@ -37,7 +37,7 @@ test_that("result cells intersect the target (bbox path)", {
     bbox[1], bbox[2], bbox[3], bbox[2], bbox[3], bbox[4],
     bbox[1], bbox[4], bbox[1], bbox[2]
   )
-  filtered <- a5_grid_intersects_rs(vctrs::vec_data(cells), target_wkt)
+  filtered <- new_a5_cell(a5_grid_intersects_rs(vctrs::vec_data(cells), target_wkt))
   expect_equal(length(filtered), length(cells))
 })
 
@@ -50,7 +50,7 @@ test_that("geometry input filters cells by intersection", {
   bbox_cells <- a5_grid(c(-3.3, 55.9, -3.1, 56.0), resolution = 8)
   expect_true(length(tri_cells) < length(bbox_cells))
   # All triangle cells should be a subset of the bbox cells
-  expect_true(all(vctrs::vec_data(tri_cells) %in% vctrs::vec_data(bbox_cells)))
+  expect_true(all(format(tri_cells) %in% format(bbox_cells)))
 })
 
 test_that("interior point is covered by a returned cell", {
@@ -58,12 +58,12 @@ test_that("interior point is covered by a returned cell", {
   cells <- a5_grid(bbox, resolution = 5)
   # the centroid of the bbox should fall inside one of the cells
   centre <- a5_lonlat_to_cell(-3.2, 55.95, resolution = 5)
-  expect_true(any(vctrs::vec_data(cells) == vctrs::vec_data(centre)))
+  expect_true(any(format(cells) == format(centre)))
 })
 
 test_that("no duplicate cells", {
   cells <- a5_grid(c(-3.3, 55.9, -3.1, 56.0), resolution = 5)
-  expect_equal(length(cells), length(unique(vctrs::vec_data(cells))))
+  expect_equal(length(cells), length(unique(format(cells))))
 })
 
 # -- input types ---------------------------------------------------------------

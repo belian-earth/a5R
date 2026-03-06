@@ -1,7 +1,7 @@
 #' A5 Cell Index Vector
 #'
 #' Create, test, and coerce A5 cell index vectors. Cells are stored as
-#' hex-encoded character strings.
+#' a list of raw(8) blobs (little-endian u64).
 #'
 #' @param x A character vector of hex-encoded A5 cell IDs, or an object
 #'   coercible to one.
@@ -14,10 +14,10 @@
 #' cells
 a5_cell <- function(x = character()) {
   x <- vctrs::vec_cast(x, character())
-  new_a5_cell(x)
+  new_a5_cell(hex_to_blob_rs(x))
 }
 
-new_a5_cell <- function(x = character()) {
+new_a5_cell <- function(x = list()) {
   vctrs::new_vctr(x, class = "a5_cell")
 }
 
@@ -42,11 +42,11 @@ as_a5_cell <- function(x) {
 #' a5_is_cell(c("0800000000000006", "not_a_cell", NA))
 a5_is_cell <- function(x) {
   if (is_a5_cell(x)) {
-    x <- vctrs::vec_data(x)
+    a5_is_valid_cell_rs(vctrs::vec_data(x))
   } else {
     x <- vctrs::vec_cast(x, character())
+    a5_is_valid_hex_rs(x)
   }
-  a5_is_valid_cell_rs(x)
 }
 
 
@@ -66,7 +66,10 @@ vec_ptype_full.a5_cell <- function(x, ...) "a5_cell"
 #' @noRd
 #' @keywords internal
 format.a5_cell <- function(x, ...) {
-  vctrs::vec_data(x)
+  out <- blob_to_hex_rs(vctrs::vec_data(x))
+  # Convert NA_character_ from blob_to_hex_rs to NA for proper display
+  out[is.na(out)] <- NA
+  out
 }
 
 # --- coercion: a5_cell <-> character ---
@@ -94,12 +97,12 @@ vec_cast.a5_cell.a5_cell <- function(x, to, ...) x
 #' @export
 #' @noRd
 #' @keywords internal
-vec_cast.a5_cell.character <- function(x, to, ...) new_a5_cell(x)
+vec_cast.a5_cell.character <- function(x, to, ...) new_a5_cell(hex_to_blob_rs(x))
 
 #' @export
 #' @noRd
 #' @keywords internal
-vec_cast.character.a5_cell <- function(x, to, ...) vctrs::vec_data(x)
+vec_cast.character.a5_cell <- function(x, to, ...) blob_to_hex_rs(vctrs::vec_data(x))
 
 # --- pillar formatting for tibbles ---
 

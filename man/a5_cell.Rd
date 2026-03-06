@@ -25,7 +25,7 @@ scalar (\code{is_a5_cell}), or a logical vector (\code{a5_is_cell}).
 }
 \description{
 Create, test, and coerce A5 cell index vectors. Cells are stored as
-hex-encoded character strings.
+a list of raw(8) blobs (little-endian u64).
 }
 \examples{
 cells <- a5_cell(c("0800000000000006", "0800000000000016"))

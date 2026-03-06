@@ -67,6 +67,6 @@ a5_cell_to_children <- function(cell, resolution = NULL) {
     check_resolution(resolution)
     vctrs::vec_assert(resolution, size = 1L)
   }
-  out <- a5_cell_to_children_rs(vctrs::vec_data(cell), resolution)
+  out <- a5_cell_to_children_rs(vctrs::vec_data(cell)[[1]], resolution)
   new_a5_cell(out)
 }

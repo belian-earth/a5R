@@ -1,40 +1,38 @@
 use extendr_api::prelude::*;
 use rayon::prelude::*;
 
-use crate::threading::{get_num_threads, map_cells, maybe_par};
+use crate::threading::{get_num_threads, map_cells, maybe_par, u64_to_raw, u64s_to_list};
 
 /// Convert longitude/latitude coordinates to A5 cell indices.
-///
-/// Vectorised over `lon`, `lat`, and `resolution`.
 ///
 /// @param lon Numeric vector of longitudes (degrees).
 /// @param lat Numeric vector of latitudes (degrees).
 /// @param resolution Integer vector of resolutions (0--30).
-/// @return A character vector of cell IDs (hex-encoded).
+/// @return A list of raw(8) cell ID blobs.
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Strings {
+fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> List {
     let n = lon.len();
 
-    // Three parallel input vectors — doesn't fit `map_cells` (cell-string input).
     if get_num_threads() <= 1 {
-        let mut out = Strings::new(n);
-        for i in 0..n {
-            let lo = lon[i];
-            let la = lat[i];
-            let res = resolution[i];
-            if lo.is_na() || la.is_na() || res.is_na() {
-                out.set_elt(i, Rstr::na());
-                continue;
-            }
-            let lonlat = a5::LonLat::new(lo.inner(), la.inner());
-            match a5::lonlat_to_cell(lonlat, res.inner()) {
-                Ok(cell) => out.set_elt(i, Rstr::from(a5::u64_to_hex(cell))),
-                Err(_) => out.set_elt(i, Rstr::na()),
-            }
-        }
-        out
+        let values: Vec<Robj> = (0..n)
+            .map(|i| {
+                let lo = lon[i];
+                let la = lat[i];
+                let res = resolution[i];
+                if lo.is_na() || la.is_na() || res.is_na() {
+                    ().into()
+                } else {
+                    let lonlat = a5::LonLat::new(lo.inner(), la.inner());
+                    match a5::lonlat_to_cell(lonlat, res.inner()) {
+                        Ok(cell) => u64_to_raw(cell),
+                        Err(_) => ().into(),
+                    }
+                }
+            })
+            .collect();
+        List::from_values(values)
     } else {
         let inputs: Vec<(f64, f64, i32, bool)> = (0..n)
             .map(|i| {
@@ -49,7 +47,7 @@ fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Str
             })
             .collect();
 
-        let results: Vec<Option<String>> = maybe_par(|| {
+        let results: Vec<Option<u64>> = maybe_par(|| {
             inputs
                 .par_iter()
                 .map(|&(lo, la, res, is_na)| {
@@ -57,33 +55,25 @@ fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Str
                         return None;
                     }
                     let lonlat = a5::LonLat::new(lo, la);
-                    a5::lonlat_to_cell(lonlat, res).ok().map(|c| a5::u64_to_hex(c))
+                    a5::lonlat_to_cell(lonlat, res).ok()
                 })
                 .collect()
         });
 
-        let mut out = Strings::new(n);
-        for (i, r) in results.into_iter().enumerate() {
-            match r {
-                Some(s) => out.set_elt(i, Rstr::from(s)),
-                None => out.set_elt(i, Rstr::na()),
-            }
-        }
-        out
+        u64s_to_list(results)
     }
 }
 
 /// Convert A5 cell indices to longitude/latitude coordinates.
 ///
-/// @param cell Character vector of hex-encoded cell IDs.
+/// @param cell List of raw(8) cell ID blobs.
 /// @param normalise Logical: if TRUE, wrap longitudes to the standard range.
 /// @return A list with `lon` and `lat` numeric vectors.
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_cell_to_lonlat_rs(cell: Strings, normalise: bool) -> List {
-    let results = map_cells(&cell, |s| {
-        let id = a5::hex_to_u64(s).ok()?;
+fn a5_cell_to_lonlat_rs(cell: List, normalise: bool) -> List {
+    let results = map_cells(&cell, |id| {
         let ll = a5::cell_to_lonlat(id).ok()?;
         let lon = if normalise {
             ((ll.longitude() + 180.0) % 360.0 + 360.0) % 360.0 - 180.0
