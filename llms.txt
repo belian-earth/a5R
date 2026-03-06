@@ -1,4 +1,4 @@
-# a5R [![ggplot2 website](reference/figures/a5Rhex.png)](https://belian-earth.github.io/a5R/)
+# a5R [![a5R hex logo](reference/figures/a5Rhex.png)](https://belian-earth.github.io/a5R/)
 
 a5R provides R bindings for the [A5](https://a5geo.org/) pentagonal
 geospatial index, powered by the [a5 Rust
