@@ -1,9 +1,11 @@
 Package: a5R
 Title: A5 Discrete Global Grid System
 Version: 0.1.1
-Authors@R:
-    person("Hugh", "Graham", role = c("aut", "cre", "cph"),
-           email = "hugh@belian.earth")
+Authors@R: c(
+    person("Hugh", "Graham", role = c("aut", "cre"),
+           email = "hugh@belian.earth"),
+    person("belian.earth", role = "cph")
+    )
 Description: Bindings for the 'A5' geospatial index. 'A5'
     partitions the Earth's surface into pentagonal cells across 31
     resolution levels using an equal-area projection onto a dodecahedron.
