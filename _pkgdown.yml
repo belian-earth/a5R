@@ -3,7 +3,7 @@ template:
   bootstrap: 5
   bootswatch: cosmo
   bslib:
-    primary: '#4a6741'
+    primary: '#74ac90ff'
   math-rendering: mathjax
 navbar:
   structure:
