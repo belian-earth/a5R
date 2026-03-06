@@ -18,3 +18,5 @@
 ^doc$
 ^Meta$
 ^benchmarks$
+^inst/hex/a5Rhex\.R$   
+^scratch$
