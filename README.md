@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# a5R
+# a5R <a href="https://belian-earth.github.io/a5R/"><img src="man/figures/a5Rhex.png" align="right" height="138" alt="ggplot2 website" /></a>
 
 <!-- badges: start -->
 
@@ -63,12 +63,13 @@ a5_cell_to_children(cell)
 ```
 
 ``` r
-# Generate a grid covering an area
-cells <- a5_grid(c(114.8, 4.1, 119.8, 8.1), resolution = 8)
+# Create a collection of cells whose centres fall within a great-circle distance of 100km from the origin cell
+cells <- a5_spherical_cap(cell, radius = 100000) |> 
+  a5_uncompact(resolution = 10)
 plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
 ```
 
-<img src="man/figures/README-grid-plot-1.png" alt="A5 grid cells covering part of Southeast Asia at resolution 8" width="100%" />
+<img src="man/figures/README-grid-plot-1.png" alt="A5 grid plot showing a collection of cells around a point" width="100%" />
 
 See `vignette("a5R")` for a full walkthrough of indexing, boundaries,
 hierarchy, traversal, and grid generation.
