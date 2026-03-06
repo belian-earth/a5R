@@ -99,10 +99,13 @@ tf <- fs::file_temp(ext = "png")
 
 ggsave(tf, width = 100, height = 100, units = "mm", dpi = 300)
 
+t2 <- fs::file_temp(ext = "png")
 cropcircles::crop_hex(
   tf,
-  to = "man/figures/a5Rhex.png",
+  to = t2,
   border_size = 10,
   border_colour = "#74ac90ff",
   bg_fill = "#000000ff"
 )
+
+usethis::use_logo(t2)

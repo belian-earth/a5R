@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# a5R <a href="https://belian-earth.github.io/a5R/"><img src="man/figures/a5Rhex.png" align="right" width="200" height="200" alt="a5R hex logo" />
+# a5R <a href="https://belian-earth.github.io/a5R/"><img src="man/figures/logo.png" align="right" height="200" alt="a5R website" /></a>
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/belian-earth/a5R/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/belian-earth/a5R/actions/workflows/R-CMD-check.yaml)
