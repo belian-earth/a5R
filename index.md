@@ -1,4 +1,4 @@
-# a5R
+# a5R [![ggplot2 website](reference/figures/a5Rhex.png)](https://belian-earth.github.io/a5R/)
 
 a5R provides R bindings for the [A5](https://a5geo.org/) pentagonal
 geospatial index, powered by the [a5 Rust
@@ -45,13 +45,14 @@ a5_cell_to_children(cell)
 ```
 
 ``` r
-# Generate a grid covering an area
-cells <- a5_grid(c(114.8, 4.1, 119.8, 8.1), resolution = 8)
+# Create a collection of cells whose centres fall within a great-circle distance of 100km from the origin cell
+cells <- a5_spherical_cap(cell, radius = 100000) |> 
+  a5_uncompact(resolution = 10)
 plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
 ```
 
-![A5 grid cells covering part of Southeast Asia at resolution
-8](reference/figures/README-grid-plot-1.png)
+![A5 grid plot showing a collection of cells around a
+point](reference/figures/README-grid-plot-1.png)
 
 See
 [`vignette("a5R")`](https://belian-earth.github.io/a5R/articles/a5R.md)
