@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# a5R <a href="https://belian-earth.github.io/a5R/"><img src="man/figures/a5Rhex.png" align="right" height="138" alt="ggplot2 website" /></a>
+# a5R <a href="https://belian-earth.github.io/a5R/"><img src="man/figures/a5Rhex.png" align="right" height="200" alt="ggplot2 website" /></a>
 
 <!-- badges: start -->
 
