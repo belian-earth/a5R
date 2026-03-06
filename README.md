@@ -16,6 +16,8 @@ stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://
 stars](https://img.shields.io/github/stars/belian-earth/a5R?style=social)](https://github.com/belian-earth/a5R/stargazers)
 [![GitHub
 Issues](https://img.shields.io/github/issues/belian-earth/a5R)](https://github.com/belian-earth/a5R/issues)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/a5R)](https://CRAN.R-project.org/package=a5R)
 <!-- badges: end -->
 
 a5R provides R bindings for the [A5](https://a5geo.org/) pentagonal
