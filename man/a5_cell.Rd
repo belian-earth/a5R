@@ -4,7 +4,7 @@
 \alias{a5_cell}
 \alias{is_a5_cell}
 \alias{as_a5_cell}
-\alias{a5_is_cell}
+\alias{a5_is_valid}
 \title{A5 Cell Index Vector}
 \usage{
 a5_cell(x = character())
@@ -13,7 +13,7 @@ is_a5_cell(x)
 
 as_a5_cell(x)
 
-a5_is_cell(x)
+a5_is_valid(x)
 }
 \arguments{
 \item{x}{A character vector of hex-encoded A5 cell IDs, or an object
@@ -21,14 +21,16 @@ coercible to one.}
 }
 \value{
 An \code{a5_cell} vector (\code{a5_cell}, \code{as_a5_cell}), a logical
-scalar (\code{is_a5_cell}), or a logical vector (\code{a5_is_cell}).
+scalar (\code{is_a5_cell}), or a logical vector (\code{a5_is_valid}).
 }
 \description{
 Create, test, and coerce A5 cell index vectors. Cells are stored as
-a list of raw(8) blobs (little-endian u64).
+a record with two double fields (\code{hi}, \code{lo}) representing the upper
+and lower 32-bit halves of the u64 cell ID. This avoids per-element
+allocation overhead and keeps memory contiguous.
 }
 \examples{
 cells <- a5_cell(c("0800000000000006", "0800000000000016"))
 cells
-a5_is_cell(c("0800000000000006", "not_a_cell", NA))
+a5_is_valid(c("0800000000000006", "not_a_cell", NA))
 }
