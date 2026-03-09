@@ -23,13 +23,14 @@ test_that("vectorised indexing works", {
 
 test_that("NA handling in lonlat_to_cell", {
   cell <- a5_lonlat_to_cell(NA_real_, 55.95, resolution = 5)
-  expect_null(vctrs::vec_data(cell)[[1]])
+  expect_true(is.na(vctrs::field(cell, "hi")[1]))
+  expect_true(is.na(vctrs::field(cell, "lo")[1]))
 
   cell2 <- a5_lonlat_to_cell(0, NA_real_, resolution = 5)
-  expect_null(vctrs::vec_data(cell2)[[1]])
+  expect_true(is.na(vctrs::field(cell2, "hi")[1]))
 
   cell3 <- a5_lonlat_to_cell(0, 0, resolution = NA_integer_)
-  expect_null(vctrs::vec_data(cell3)[[1]])
+  expect_true(is.na(vctrs::field(cell3, "hi")[1]))
 })
 
 test_that("cell_to_lonlat handles NA", {

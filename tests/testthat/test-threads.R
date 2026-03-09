@@ -18,14 +18,14 @@ test_that("results are identical with 1 vs 2 threads", {
     lonlat_1 <- a5_cell_to_lonlat(cells)
     parent_1 <- a5_cell_to_parent(cells)
     res_1 <- a5_get_resolution(cells)
-    valid_1 <- a5_is_cell(cells)
+    valid_1 <- a5_is_valid(cells)
 
     a5_set_threads(2L)
     boundary_2 <- a5_cell_to_boundary(cells, format = "wkt")
     lonlat_2 <- a5_cell_to_lonlat(cells)
     parent_2 <- a5_cell_to_parent(cells)
     res_2 <- a5_get_resolution(cells)
-    valid_2 <- a5_is_cell(cells)
+    valid_2 <- a5_is_valid(cells)
 
     expect_identical(as.character(boundary_1), as.character(boundary_2))
     expect_identical(lonlat_1, lonlat_2)
