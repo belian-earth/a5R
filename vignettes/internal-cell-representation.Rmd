@@ -1,0 +1,141 @@
+---
+title: "How a5R stores cell IDs without strings"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{How a5R stores cell IDs without strings}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## The problem
+
+An A5 cell ID is a 64-bit unsigned integer (`u64`).
+R has no native `u64` type — its integers are 32-bit signed (`-2^31` to
+`2^31 - 1`), and its doubles are 64-bit IEEE 754 floating point. A `double`
+can only represent integers exactly up to 2^53, while a `u64` can go up to
+2^64 - 1.
+
+The obvious workaround is to store cell IDs as hex strings
+(`"0800000000000006"`). This works, but every trip across the R ↔ Rust
+boundary requires hex parsing and formatting — O(n) string allocation that
+dominates the cost of lightweight operations like `a5_get_resolution()` or
+`a5_cell_to_parent()`.
+
+## The solution: split into two 32-bit halves
+
+A `u64` has exactly 64 bits. We split it into two 32-bit unsigned integers
+and store each as an R `double`:
+
+```
+cell_id (u64):  0x0800000000000006
+
+hi (upper 32 bits):  0x08000000  →  134217728.0  (stored as R double)
+lo (lower 32 bits):  0x00000006  →          6.0  (stored as R double)
+```
+
+This is lossless because:
+
+- A `u32` ranges from 0 to 4,294,967,295 (< 2^32)
+- An R `double` represents all integers up to 2^53 exactly
+- So every `u32` value survives the `u32 → f64 → u32` round-trip perfectly
+
+On the Rust side, the split and recombination are single bitwise operations:
+
+```rust
+// u64 → two f64 values
+fn u64_to_hilo(id: u64) -> (f64, f64) {
+    ((id >> 32) as f64, (id & 0xFFFFFFFF) as f64)
+}
+
+// two f64 values → u64
+fn hilo_to_u64(hi: f64, lo: f64) -> Option<u64> {
+    if hi.is_nan() || lo.is_nan() { return None; }
+    Some(((hi as u64) << 32) | (lo as u64))
+}
+```
+
+No string allocation, no parsing — just bit shifts and casts.
+
+## R-side: a vctrs record type
+
+On the R side, `a5_cell` is a **vctrs record** (`vctrs::new_rcrd()`) with two
+fields:
+
+```{r}
+library(a5R)
+cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
+vctrs::field(cell, "hi")
+vctrs::field(cell, "lo")
+```
+
+The two fields are plain numeric vectors — contiguous blocks of memory with
+no per-element overhead. Subsetting, combining, and NA propagation are all
+handled automatically by vctrs.
+
+Hex strings are only produced on demand:
+
+```{r}
+# Display calls format(), which converts to hex for readability
+cell
+
+# Explicit conversion
+a5_u64_to_hex(cell)
+
+# Round-trip from hex
+a5_cell("0800000000000006")
+```
+
+## Why this matters
+
+Compare memory for one million cells:
+
+```{r}
+set.seed(42)
+cells <- a5_lonlat_to_cell(
+  runif(1e6, -180, 180),
+  runif(1e6, -80, 80),
+  resolution = 10
+)
+
+# rcrd: two contiguous double vectors (2 × 8 bytes × 1M = 15.3 MB)
+format(object.size(cells), units = "MB")
+
+# equivalent hex strings would be ~81 MB
+# (16 chars + 56-byte SEXP header per string)
+hex <- a5_u64_to_hex(cells)
+format(object.size(hex), units = "MB")
+```
+
+Operations that were previously bottlenecked by hex parsing — like
+`a5_cell_to_parent()` or `a5_compact()` — now run at near-native speed
+because the `u64` cell ID is reconstructed from two doubles with a bit shift,
+not parsed from a 16-character string.
+
+## NA handling
+
+R represents missing doubles as `NA_real_`, a special "not a number" value.
+On the Rust side, `hilo_to_u64` detects this and returns `None`, which maps
+back to `NA` in both fields on the R side. This means standard R idioms work
+as expected:
+
+```{r}
+cells_with_na <- a5_cell(c("0800000000000006", NA))
+is.na(cells_with_na)
+```
+
+## Summary
+
+| Aspect | Hex strings | Hi/lo doubles |
+|--------|------------|---------------|
+| R type | `character` vector | `vctrs_rcrd` (two `double` fields) |
+| Memory (1M cells) | ~81 MB | ~15 MB |
+| R ↔ Rust crossing | O(n) hex parse/format | O(1) bit shift per element |
+| Human-readable | Always | On `format()` / `print()` |
+| Lossless | Yes | Yes (u32 ⊂ exact doubles) |
