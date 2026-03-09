@@ -1,14 +1,15 @@
 use extendr_api::prelude::*;
 use rayon::prelude::*;
 
-use crate::threading::{get_num_threads, map_cells, maybe_par, u64_to_raw, u64s_to_list};
+use crate::hilo::{map_cells, u64s_to_hilo_list};
+use crate::threading::{get_num_threads, maybe_par};
 
 /// Convert longitude/latitude coordinates to A5 cell indices.
 ///
 /// @param lon Numeric vector of longitudes (degrees).
 /// @param lat Numeric vector of latitudes (degrees).
 /// @param resolution Integer vector of resolutions (0--30).
-/// @return A list of raw(8) cell ID blobs.
+/// @return A list with `hi` and `lo` double vectors.
 /// @noRd
 /// @keywords internal
 #[extendr]
@@ -16,23 +17,20 @@ fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Lis
     let n = lon.len();
 
     if get_num_threads() <= 1 {
-        let values: Vec<Robj> = (0..n)
+        let results: Vec<Option<u64>> = (0..n)
             .map(|i| {
                 let lo = lon[i];
                 let la = lat[i];
                 let res = resolution[i];
                 if lo.is_na() || la.is_na() || res.is_na() {
-                    ().into()
+                    None
                 } else {
                     let lonlat = a5::LonLat::new(lo.inner(), la.inner());
-                    match a5::lonlat_to_cell(lonlat, res.inner()) {
-                        Ok(cell) => u64_to_raw(cell),
-                        Err(_) => ().into(),
-                    }
+                    a5::lonlat_to_cell(lonlat, res.inner()).ok()
                 }
             })
             .collect();
-        List::from_values(values)
+        u64s_to_hilo_list(results)
     } else {
         let inputs: Vec<(f64, f64, i32, bool)> = (0..n)
             .map(|i| {
@@ -60,20 +58,20 @@ fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Lis
                 .collect()
         });
 
-        u64s_to_list(results)
+        u64s_to_hilo_list(results)
     }
 }
 
 /// Convert A5 cell indices to longitude/latitude coordinates.
 ///
-/// @param cell List of raw(8) cell ID blobs.
+/// @param hi,lo Double vectors (hi/lo u32 halves of cell IDs).
 /// @param normalise Logical: if TRUE, wrap longitudes to the standard range.
 /// @return A list with `lon` and `lat` numeric vectors.
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_cell_to_lonlat_rs(cell: List, normalise: bool) -> List {
-    let results = map_cells(&cell, |id| {
+fn a5_cell_to_lonlat_rs(hi: Doubles, lo: Doubles, normalise: bool) -> List {
+    let results = map_cells(&hi, &lo, |id| {
         let ll = a5::cell_to_lonlat(id).ok()?;
         let lon = if normalise {
             ((ll.longitude() + 180.0) % 360.0 + 360.0) % 360.0 - 180.0
@@ -83,7 +81,7 @@ fn a5_cell_to_lonlat_rs(cell: List, normalise: bool) -> List {
         Some((lon, ll.latitude()))
     });
 
-    let n = cell.len();
+    let n = hi.len();
     let mut lon_out = Doubles::new(n);
     let mut lat_out = Doubles::new(n);
     for (i, r) in results.into_iter().enumerate() {

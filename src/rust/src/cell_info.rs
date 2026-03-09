@@ -1,6 +1,6 @@
 use extendr_api::prelude::*;
 
-use crate::threading::raw_to_u64;
+use crate::hilo::hilo_to_u64;
 
 /// Get the area (in square metres) of cells at a given resolution.
 ///
@@ -46,28 +46,29 @@ fn a5_get_num_children_rs(parent_resolution: i32, child_resolution: i32) -> f64 
     a5::get_num_children(parent_resolution, child_resolution) as f64
 }
 
-/// Validate cell ID blobs.
+/// Validate cell IDs stored as hi/lo doubles.
 ///
-/// @param cell List of raw(8) cell ID blobs.
+/// @param hi,lo Double vectors (hi/lo u32 halves of cell IDs).
 /// @return Logical vector indicating validity.
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_is_valid_cell_rs(cell: List) -> Logicals {
-    let n = cell.len();
+fn a5_is_valid_cell_rs(hi: Doubles, lo: Doubles) -> Logicals {
+    let n = hi.len();
     let mut out = Logicals::new(n);
     for i in 0..n {
-        let robj = cell.elt(i).unwrap_or_default();
-        if robj.is_null() {
+        let h = hi[i];
+        let l = lo[i];
+        if h.is_na() || l.is_na() {
             out.set_elt(i, Rbool::na());
         } else {
-            out.set_elt(i, Rbool::from(raw_to_u64(&robj).is_some()));
+            out.set_elt(i, Rbool::from(hilo_to_u64(h.inner(), l.inner()).is_some()));
         }
     }
     out
 }
 
-/// Validate hex cell ID strings (for use before conversion to blob).
+/// Validate hex cell ID strings (for use before conversion to rcrd).
 ///
 /// @param cell Character vector of hex strings to validate.
 /// @return Logical vector indicating validity.

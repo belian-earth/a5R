@@ -1,7 +1,7 @@
 use extendr_api::prelude::*;
 use geo::{Distance, Geodesic, Haversine, Point, Rhumb};
 
-use crate::threading::map_cell_pairs;
+use crate::hilo::map_cell_pairs;
 
 /// Distance between two cell centroids using the specified method.
 fn cell_distance(from: u64, to: u64, method: &str) -> Option<f64> {
@@ -18,15 +18,24 @@ fn cell_distance(from: u64, to: u64, method: &str) -> Option<f64> {
 
 /// Distance between pairs of cell centroids.
 ///
-/// @param from List of raw(8) cell ID blobs.
-/// @param to List of raw(8) cell ID blobs (same length).
+/// @param from_hi,from_lo Double vectors (hi/lo halves of `from` cell IDs).
+/// @param to_hi,to_lo Double vectors (hi/lo halves of `to` cell IDs).
 /// @param method Distance method: "haversine", "geodesic", or "rhumb".
 /// @return Numeric vector of distances in metres.
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_cell_distance_rs(from: List, to: List, method: &str) -> Doubles {
-    let results = map_cell_pairs(&from, &to, |f, t| cell_distance(f, t, method));
+fn a5_cell_distance_rs(
+    from_hi: Doubles,
+    from_lo: Doubles,
+    to_hi: Doubles,
+    to_lo: Doubles,
+    method: &str,
+) -> Doubles {
+    let results =
+        map_cell_pairs(&from_hi, &from_lo, &to_hi, &to_lo, |f, t| {
+            cell_distance(f, t, method)
+        });
 
     let mut out = Doubles::new(results.len());
     for (i, r) in results.into_iter().enumerate() {
