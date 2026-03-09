@@ -33,11 +33,13 @@ a5_cell_to_boundary <- function(
     segments <- vctrs::vec_cast(segments, integer())
     vctrs::vec_assert(segments, size = 1L)
   }
+  hi <- vctrs::field(cell, "hi")
+  lo <- vctrs::field(cell, "lo")
   if (format == "wkb") {
-    raw_list <- a5_cell_to_boundary_wkb_rs(vctrs::vec_data(cell), closed, segments)
+    raw_list <- a5_cell_to_boundary_wkb_rs(hi, lo, closed, segments)
     wk::new_wk_wkb(raw_list, crs = wk::wk_crs_longlat())
   } else {
-    wkt <- a5_cell_to_boundary_rs(vctrs::vec_data(cell), closed, segments)
+    wkt <- a5_cell_to_boundary_rs(hi, lo, closed, segments)
     wk::new_wk_wkt(wkt, crs = wk::wk_crs_longlat())
   }
 }

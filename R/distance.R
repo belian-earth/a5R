@@ -37,8 +37,8 @@ a5_cell_distance <- function(
     )
   }
   d <- a5_cell_distance_rs(
-    vctrs::vec_data(args$from),
-    vctrs::vec_data(args$to),
+    vctrs::field(args$from, "hi"), vctrs::field(args$from, "lo"),
+    vctrs::field(args$to, "hi"), vctrs::field(args$to, "lo"),
     method
   )
   units::set_units(d, "m", mode = "standard") |>

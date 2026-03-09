@@ -81,5 +81,5 @@ a5_get_num_children <- function(parent_resolution, child_resolution) {
 #' @examples
 #' a5_get_res0_cells()
 a5_get_res0_cells <- function() {
-  new_a5_cell(a5_get_res0_cells_rs())
+  cells_from_rs(a5_get_res0_cells_rs())
 }

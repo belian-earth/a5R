@@ -56,8 +56,8 @@ a5_grid <- function(x, resolution) {
   # Get bbox for Rust grid generation
   if (is_bbox && x[[1]] > x[[3]]) {
     # Antimeridian-crossing: two halves
-    cells1 <- new_a5_cell(a5_grid_bbox_rs(x[[1]], x[[2]], 180, x[[4]], resolution))
-    cells2 <- new_a5_cell(a5_grid_bbox_rs(-180, x[[2]], x[[3]], x[[4]], resolution))
+    cells1 <- cells_from_rs(a5_grid_bbox_rs(x[[1]], x[[2]], 180, x[[4]], resolution))
+    cells2 <- cells_from_rs(a5_grid_bbox_rs(-180, x[[2]], x[[3]], x[[4]], resolution))
     cells <- vctrs::vec_c(cells1, cells2)
   } else {
     if (is_bbox) {
@@ -65,7 +65,9 @@ a5_grid <- function(x, resolution) {
     } else {
       bb <- unclass(wk::wk_bbox(x))
     }
-    cells <- new_a5_cell(a5_grid_bbox_rs(bb$xmin, bb$ymin, bb$xmax, bb$ymax, resolution))
+    cells <- cells_from_rs(
+      a5_grid_bbox_rs(bb$xmin, bb$ymin, bb$xmax, bb$ymax, resolution)
+    )
   }
 
   if (length(cells) == 0L) {
@@ -80,8 +82,10 @@ a5_grid <- function(x, resolution) {
   # Final exact filter for non-bbox inputs
   if (!is_bbox) {
     target_wkt <- as_target_wkt(x)
-    filtered <- a5_grid_intersects_rs(vctrs::vec_data(cells), target_wkt)
-    cells <- new_a5_cell(filtered)
+    filtered <- a5_grid_intersects_rs(
+      vctrs::field(cells, "hi"), vctrs::field(cells, "lo"), target_wkt
+    )
+    cells <- cells_from_rs(filtered)
   }
 
   cells

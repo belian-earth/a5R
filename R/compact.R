@@ -14,8 +14,9 @@
 #' a5_compact(children) # back to the parent
 a5_compact <- function(cells) {
   cells <- as_a5_cell(cells)
-  out <- a5_compact_rs(vctrs::vec_data(cells))
-  new_a5_cell(out)
+  cells_from_rs(a5_compact_rs(
+    vctrs::field(cells, "hi"), vctrs::field(cells, "lo")
+  ))
 }
 
 #' Uncompact a set of A5 cells to a target resolution
@@ -36,6 +37,7 @@ a5_uncompact <- function(cells, resolution) {
   resolution <- vctrs::vec_cast(resolution, integer())
   check_resolution(resolution)
   vctrs::vec_assert(resolution, size = 1L)
-  out <- a5_uncompact_rs(vctrs::vec_data(cells), resolution)
-  new_a5_cell(out)
+  cells_from_rs(a5_uncompact_rs(
+    vctrs::field(cells, "hi"), vctrs::field(cells, "lo"), resolution
+  ))
 }

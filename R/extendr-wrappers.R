@@ -14,50 +14,68 @@ a5_set_threads_rs <- function(n) invisible(.Call(wrap__a5_set_threads_rs, n))
 
 a5_get_threads_rs <- function() .Call(wrap__a5_get_threads_rs)
 
-#' Convert a list of raw(8) blobs to hex strings (zero-padded to 16 chars).
-blob_to_hex_rs <- function(cells) .Call(wrap__blob_to_hex_rs, cells)
+#' Convert hi/lo doubles to hex strings (zero-padded to 16 chars).
+#' @noRd
+#' @keywords internal
+hilo_to_hex_rs <- function(hi, lo) .Call(wrap__hilo_to_hex_rs, hi, lo)
 
-#' Convert hex strings to a list of raw(8) blobs.
-hex_to_blob_rs <- function(cells) .Call(wrap__hex_to_blob_rs, cells)
+#' Convert hex strings to hi/lo doubles.
+#' Returns list(hi = double(), lo = double()).
+#' @noRd
+#' @keywords internal
+hex_to_hilo_rs <- function(cells) .Call(wrap__hex_to_hilo_rs, cells)
+
+#' Convert a list of raw(8) vectors (little-endian u64) to hi/lo doubles.
+#' NULL elements produce NA.
+#' Returns list(hi = double(), lo = double()).
+#' @noRd
+#' @keywords internal
+raw8_to_hilo_rs <- function(blobs) .Call(wrap__raw8_to_hilo_rs, blobs)
+
+#' Convert hi/lo doubles to a list of raw(8) vectors (little-endian u64).
+#' NA inputs produce NULL elements.
+#' @noRd
+#' @keywords internal
+hilo_to_raw8_rs <- function(hi, lo) .Call(wrap__hilo_to_raw8_rs, hi, lo)
 
 #' Convert longitude/latitude coordinates to A5 cell indices.
 #'
 #' @param lon Numeric vector of longitudes (degrees).
 #' @param lat Numeric vector of latitudes (degrees).
 #' @param resolution Integer vector of resolutions (0--30).
-#' @return A list of raw(8) cell ID blobs.
+#' @return A list with `hi` and `lo` double vectors.
 #' @noRd
 #' @keywords internal
 a5_lonlat_to_cell_rs <- function(lon, lat, resolution) .Call(wrap__a5_lonlat_to_cell_rs, lon, lat, resolution)
 
 #' Convert A5 cell indices to longitude/latitude coordinates.
 #'
-#' @param cell List of raw(8) cell ID blobs.
+#' @param hi,lo Double vectors (hi/lo u32 halves of cell IDs).
 #' @param normalise Logical: if TRUE, wrap longitudes to the standard range.
 #' @return A list with `lon` and `lat` numeric vectors.
 #' @noRd
 #' @keywords internal
-a5_cell_to_lonlat_rs <- function(cell, normalise) .Call(wrap__a5_cell_to_lonlat_rs, cell, normalise)
+a5_cell_to_lonlat_rs <- function(hi, lo, normalise) .Call(wrap__a5_cell_to_lonlat_rs, hi, lo, normalise)
 
 #' Get boundary polygons for A5 cells as WKT strings.
 #'
-#' @param cell List of raw(8) cell ID blobs.
+#' @param hi,lo Double vectors (hi/lo u32 halves of cell IDs).
 #' @param closed_ring Logical: should the polygon ring be closed?
 #' @param segments Integer: number of interpolation segments per edge.
 #' @return A character vector of WKT POLYGON strings.
 #' @noRd
 #' @keywords internal
-a5_cell_to_boundary_rs <- function(cell, closed_ring, segments) .Call(wrap__a5_cell_to_boundary_rs, cell, closed_ring, segments)
+a5_cell_to_boundary_rs <- function(hi, lo, closed_ring, segments) .Call(wrap__a5_cell_to_boundary_rs, hi, lo, closed_ring, segments)
 
 #' Get boundary polygons for A5 cells as WKB raw vectors.
 #'
-#' @param cell List of raw(8) cell ID blobs.
+#' @param hi,lo Double vectors (hi/lo u32 halves of cell IDs).
 #' @param closed_ring Logical: should the polygon ring be closed?
 #' @param segments Integer: number of interpolation segments per edge.
 #' @return A list of raw vectors (WKB bytes) or NULL for NA cells.
 #' @noRd
 #' @keywords internal
-a5_cell_to_boundary_wkb_rs <- function(cell, closed_ring, segments) .Call(wrap__a5_cell_to_boundary_wkb_rs, cell, closed_ring, segments)
+a5_cell_to_boundary_wkb_rs <- function(hi, lo, closed_ring, segments) .Call(wrap__a5_cell_to_boundary_wkb_rs, hi, lo, closed_ring, segments)
 
 #' Get the area (in square metres) of cells at a given resolution.
 #'
@@ -84,15 +102,15 @@ a5_get_num_cells_rs <- function(resolution) .Call(wrap__a5_get_num_cells_rs, res
 #' @keywords internal
 a5_get_num_children_rs <- function(parent_resolution, child_resolution) .Call(wrap__a5_get_num_children_rs, parent_resolution, child_resolution)
 
-#' Validate cell ID blobs.
+#' Validate cell IDs stored as hi/lo doubles.
 #'
-#' @param cell List of raw(8) cell ID blobs.
+#' @param hi,lo Double vectors (hi/lo u32 halves of cell IDs).
 #' @return Logical vector indicating validity.
 #' @noRd
 #' @keywords internal
-a5_is_valid_cell_rs <- function(cell) .Call(wrap__a5_is_valid_cell_rs, cell)
+a5_is_valid_cell_rs <- function(hi, lo) .Call(wrap__a5_is_valid_cell_rs, hi, lo)
 
-#' Validate hex cell ID strings (for use before conversion to blob).
+#' Validate hex cell ID strings (for use before conversion to rcrd).
 #'
 #' @param cell Character vector of hex strings to validate.
 #' @return Logical vector indicating validity.
@@ -102,102 +120,102 @@ a5_is_valid_hex_rs <- function(cell) .Call(wrap__a5_is_valid_hex_rs, cell)
 
 #' Distance between pairs of cell centroids.
 #'
-#' @param from List of raw(8) cell ID blobs.
-#' @param to List of raw(8) cell ID blobs (same length).
+#' @param from_hi,from_lo Double vectors (hi/lo halves of `from` cell IDs).
+#' @param to_hi,to_lo Double vectors (hi/lo halves of `to` cell IDs).
 #' @param method Distance method: "haversine", "geodesic", or "rhumb".
 #' @return Numeric vector of distances in metres.
 #' @noRd
 #' @keywords internal
-a5_cell_distance_rs <- function(from, to, method) .Call(wrap__a5_cell_distance_rs, from, to, method)
+a5_cell_distance_rs <- function(from_hi, from_lo, to_hi, to_lo, method) .Call(wrap__a5_cell_distance_rs, from_hi, from_lo, to_hi, to_lo, method)
 
 #' Get the resolution of A5 cell indices.
 #'
-#' @param cell List of raw(8) cell ID blobs.
+#' @param hi,lo Double vectors (hi/lo u32 halves of cell IDs).
 #' @return Integer vector of resolutions.
 #' @noRd
 #' @keywords internal
-a5_get_resolution_rs <- function(cell) .Call(wrap__a5_get_resolution_rs, cell)
+a5_get_resolution_rs <- function(hi, lo) .Call(wrap__a5_get_resolution_rs, hi, lo)
 
 #' Navigate to parent cell(s).
 #'
-#' @param cell List of raw(8) cell ID blobs.
+#' @param hi,lo Double vectors (hi/lo u32 halves of cell IDs).
 #' @param parent_resolution Integer: target parent resolution. NULL for
 #'   immediate parent.
-#' @return List of raw(8) parent cell ID blobs.
+#' @return List with `hi` and `lo` double vectors.
 #' @noRd
 #' @keywords internal
-a5_cell_to_parent_rs <- function(cell, parent_resolution) .Call(wrap__a5_cell_to_parent_rs, cell, parent_resolution)
+a5_cell_to_parent_rs <- function(hi, lo, parent_resolution) .Call(wrap__a5_cell_to_parent_rs, hi, lo, parent_resolution)
 
 #' Get child cells.
 #'
-#' @param cell A single raw(8) cell ID blob.
+#' @param hi,lo Scalar doubles (hi/lo u32 halves of a single cell ID).
 #' @param child_resolution Integer: target child resolution. NULL for
 #'   immediate children.
-#' @return List of raw(8) child cell ID blobs.
+#' @return List with `hi` and `lo` double vectors.
 #' @noRd
 #' @keywords internal
-a5_cell_to_children_rs <- function(cell, child_resolution) .Call(wrap__a5_cell_to_children_rs, cell, child_resolution)
+a5_cell_to_children_rs <- function(hi, lo, child_resolution) .Call(wrap__a5_cell_to_children_rs, hi, lo, child_resolution)
 
 #' Get all 12 resolution-0 root cells.
 #'
-#' @return List of 12 raw(8) cell ID blobs.
+#' @return List with `hi` and `lo` double vectors.
 #' @noRd
 #' @keywords internal
 a5_get_res0_cells_rs <- function() .Call(wrap__a5_get_res0_cells_rs)
 
 #' Compact a set of A5 cell IDs.
 #'
-#' @param cells List of raw(8) cell ID blobs.
-#' @return List of raw(8) compacted cell ID blobs.
+#' @param hi,lo Double vectors (hi/lo u32 halves of cell IDs).
+#' @return List with `hi` and `lo` double vectors.
 #' @noRd
 #' @keywords internal
-a5_compact_rs <- function(cells) .Call(wrap__a5_compact_rs, cells)
+a5_compact_rs <- function(hi, lo) .Call(wrap__a5_compact_rs, hi, lo)
 
 #' Uncompact a set of A5 cell IDs to a target resolution.
 #'
-#' @param cells List of raw(8) cell ID blobs.
+#' @param hi,lo Double vectors (hi/lo u32 halves of cell IDs).
 #' @param target_resolution Integer: the resolution to expand to.
-#' @return List of raw(8) uncompacted cell ID blobs.
+#' @return List with `hi` and `lo` double vectors.
 #' @noRd
 #' @keywords internal
-a5_uncompact_rs <- function(cells, target_resolution) .Call(wrap__a5_uncompact_rs, cells, target_resolution)
+a5_uncompact_rs <- function(hi, lo, target_resolution) .Call(wrap__a5_uncompact_rs, hi, lo, target_resolution)
 
 #' Generate a grid of A5 cells covering a bounding box.
 #'
 #' @param xmin,ymin,xmax,ymax Bounding box coordinates.
 #' @param resolution Target resolution (0--30).
-#' @return List of raw(8) cell ID blobs.
+#' @return List with `hi` and `lo` double vectors.
 #' @noRd
 #' @keywords internal
 a5_grid_bbox_rs <- function(xmin, ymin, xmax, ymax, resolution) .Call(wrap__a5_grid_bbox_rs, xmin, ymin, xmax, ymax, resolution)
 
 #' Filter cell IDs to those whose boundary polygons intersect a target geometry.
 #'
-#' @param cells List of raw(8) cell ID blobs.
+#' @param hi,lo Double vectors (hi/lo u32 halves of cell IDs).
 #' @param target_wkt WKT string of the target geometry.
-#' @return List of raw(8) cell ID blobs that intersect the target.
+#' @return List with `hi` and `lo` double vectors (filtered).
 #' @noRd
 #' @keywords internal
-a5_grid_intersects_rs <- function(cells, target_wkt) .Call(wrap__a5_grid_intersects_rs, cells, target_wkt)
+a5_grid_intersects_rs <- function(hi, lo, target_wkt) .Call(wrap__a5_grid_intersects_rs, hi, lo, target_wkt)
 
 #' Get all cells within k hops of a centre cell.
 #'
-#' @param cell A single raw(8) cell ID blob.
+#' @param hi,lo Scalar doubles (hi/lo u32 halves of a single cell ID).
 #' @param k Number of hops.
 #' @param vertex If TRUE, include vertex-sharing (8-connected) neighbours.
-#' @return List of raw(8) cell ID blobs.
+#' @return List with `hi` and `lo` double vectors.
 #' @noRd
 #' @keywords internal
-a5_grid_disk_rs <- function(cell, k, vertex) .Call(wrap__a5_grid_disk_rs, cell, k, vertex)
+a5_grid_disk_rs <- function(hi, lo, k, vertex) .Call(wrap__a5_grid_disk_rs, hi, lo, k, vertex)
 
 #' Get all cells within a great-circle radius of a centre cell.
 #'
-#' @param cell A single raw(8) cell ID blob.
+#' @param hi,lo Scalar doubles (hi/lo u32 halves of a single cell ID).
 #' @param radius Great-circle radius in metres.
-#' @return List of raw(8) cell ID blobs.
+#' @return List with `hi` and `lo` double vectors.
 #' @noRd
 #' @keywords internal
-a5_spherical_cap_rs <- function(cell, radius) .Call(wrap__a5_spherical_cap_rs, cell, radius)
+a5_spherical_cap_rs <- function(hi, lo, radius) .Call(wrap__a5_spherical_cap_rs, hi, lo, radius)
 
 
 # nolint end
