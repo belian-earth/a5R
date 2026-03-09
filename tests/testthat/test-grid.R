@@ -117,3 +117,29 @@ test_that("near-pole bbox returns cells", {
   expect_s3_class(cells, "a5_cell")
   expect_true(length(cells) >= 1L)
 })
+
+test_that("a5_grid accepts multiple geometries (GEOMETRYCOLLECTION path)", {
+  # Two small polygons far apart — should return cells near both
+  polys <- wk::wkt(c(
+    "POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))",
+    "POLYGON ((135 -33, 136 -33, 136 -32, 135 -32, 135 -33))"
+  ))
+  cells <- a5_grid(polys, resolution = 5)
+  expect_s3_class(cells, "a5_cell")
+  expect_true(length(cells) > 0)
+  centres <- a5_cell_to_lonlat(cells)
+  lons <- wk::wk_coords(centres)$x
+  # Cells near both polygons
+  expect_true(any(lons < 0))
+  expect_true(any(lons > 100))
+})
+
+test_that("a5_grid coerces double resolution to integer", {
+  cells <- a5_grid(c(-3.3, 55.9, -3.1, 56.0), resolution = 5.0)
+  expect_s3_class(cells, "a5_cell")
+  expect_true(all(a5_get_resolution(cells) == 5L))
+})
+
+test_that("a5_grid rejects vector resolution", {
+  expect_error(a5_grid(c(0, 0, 1, 1), resolution = c(3, 5)), "size 1")
+})
