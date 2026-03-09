@@ -29,6 +29,11 @@ reference:
   desc: The `a5_cell` vector type and helpers.
   contents:
   - a5_cell
+  - a5_u64_to_hex
+- title: Arrow & Parquet
+  desc: Lossless conversion between `a5_cell` and Arrow `uint64` arrays.
+  contents:
+  - a5_cell_from_arrow
 - title: Hierarchy
   desc: Navigate the cell hierarchy across resolutions.
   contents:
