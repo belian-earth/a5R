@@ -34,9 +34,9 @@ results <- bench::mark(
   check = FALSE
 )
 
-# -- Benchmarks (multi-threaded, 8 threads) -----------------------------------
+# -- Benchmarks (multi-threaded, 16 threads) -----------------------------------
 # Only vectorised functions benefit from threading; scalar ops are unchanged.
-mt_threads <- 8L
+mt_threads <- 16L
 a5_set_threads(mt_threads)
 results_mt <- bench::mark(
   lonlat_to_cell = a5_lonlat_to_cell(lons, lats, resolution = res),
@@ -92,11 +92,19 @@ cat(jsonlite::toJSON(ref, auto_unbox = TRUE, pretty = TRUE, digits = 15), "\n")
 jsonlite::write_json(
   list(lang = "R", results = out, reference = ref),
   "/home/hugh/belian/a5R/benchmarks/results_r.json",
-  auto_unbox = TRUE, pretty = TRUE, digits = 15
+  auto_unbox = TRUE,
+  pretty = TRUE,
+  digits = 15
 )
 
 jsonlite::write_json(
-  list(lang = sprintf("R (%dt)", mt_threads), results = out_mt, reference = ref),
+  list(
+    lang = sprintf("R (%dt)", mt_threads),
+    results = out_mt,
+    reference = ref
+  ),
   "/home/hugh/belian/a5R/benchmarks/results_r_mt.json",
-  auto_unbox = TRUE, pretty = TRUE, digits = 15
+  auto_unbox = TRUE,
+  pretty = TRUE,
+  digits = 15
 )
