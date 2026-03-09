@@ -70,15 +70,6 @@ a5_grid <- function(x, resolution) {
     )
   }
 
-  if (length(cells) == 0L) {
-    cli::cli_warn(c(
-      "!" = "No cells found at resolution {resolution}.",
-      "i" = "This can happen for targets near the poles or antimeridian.",
-      "i" = "Try a slightly larger target area."
-    ))
-    return(cells)
-  }
-
   # Final exact filter for non-bbox inputs
   if (!is_bbox) {
     target_wkt <- as_target_wkt(x)
