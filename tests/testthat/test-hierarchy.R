@@ -58,3 +58,19 @@ test_that("get_num_cells increases with resolution", {
   n10 <- a5_get_num_cells(10)
   expect_true(n10 > n5)
 })
+
+# -- NA propagation -----------------------------------------------------------
+
+test_that("get_resolution propagates NA", {
+  cells <- a5_cell(c("0800000000000006", NA))
+  res <- a5_get_resolution(cells)
+  expect_false(is.na(res[1]))
+  expect_true(is.na(res[2]))
+})
+
+test_that("cell_to_parent propagates NA", {
+  cells <- a5_cell(c("0800000000000006", NA))
+  parents <- a5_cell_to_parent(cells)
+  expect_false(is.na(parents[1]))
+  expect_true(is.na(parents[2]))
+})
