@@ -20,9 +20,7 @@ a5_grid_disk <- function(cell, k, vertex = FALSE) {
   vctrs::vec_assert(cell, size = 1L)
   k <- vctrs::vec_cast(k, integer())
   vctrs::vec_assert(k, size = 1L)
-  cells_from_rs(a5_grid_disk_rs(
-    vctrs::field(cell, "hi"), vctrs::field(cell, "lo"), k, vertex
-  ))
+  cells_from_rs(a5_grid_disk_rs(cell_data(cell), k, vertex))
 }
 
 #' Cells within a great-circle radius
@@ -44,7 +42,5 @@ a5_spherical_cap <- function(cell, radius) {
   vctrs::vec_assert(cell, size = 1L)
   radius <- vctrs::vec_cast(radius, double())
   vctrs::vec_assert(radius, size = 1L)
-  cells_from_rs(a5_spherical_cap_rs(
-    vctrs::field(cell, "hi"), vctrs::field(cell, "lo"), radius
-  ))
+  cells_from_rs(a5_spherical_cap_rs(cell_data(cell), radius))
 }

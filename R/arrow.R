@@ -15,7 +15,7 @@
 #' @details
 #' Internally these use Arrow's zero-copy `View()` to reinterpret
 #' `uint64` bytes as `fixed_size_binary(8)`, then convert to/from the
-#' hi/lo double representation used by [a5_cell]. The resulting Arrow
+#' raw-byte representation used by [a5_cell]. The resulting Arrow
 #' arrays can be written directly to Parquet and read correctly by
 #' DuckDB, Python, and other Arrow-compatible tools.
 #'
@@ -59,10 +59,7 @@ a5_cell_to_arrow <- function(x) {
   rlang::check_installed("arrow", reason = "to convert a5_cell to Arrow arrays")
   x <- as_a5_cell(x)
 
-  raw_list <- hilo_to_raw8_rs(
-    vctrs::field(x, "hi"),
-    vctrs::field(x, "lo")
-  )
+  raw_list <- raw8_to_blobs_rs(cell_data(x))
 
   bin_arr <- arrow::Array$create(raw_list, type = arrow::fixed_size_binary(8L))
   bin_arr$View(arrow::uint64())
@@ -73,6 +70,6 @@ a5_cell_to_arrow <- function(x) {
 chunk_to_a5 <- function(chunk) {
   fsb <- chunk$View(arrow::fixed_size_binary(8L))
   raw_list <- fsb$as_vector()
-  hilo <- raw8_to_hilo_rs(raw_list)
-  cells_from_rs(hilo)
+  rs <- blobs_to_raw8_rs(raw_list)
+  cells_from_rs(rs)
 }

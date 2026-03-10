@@ -12,7 +12,7 @@
 #' a5_get_resolution(cell)
 a5_get_resolution <- function(cell) {
   cell <- as_a5_cell(cell)
-  a5_get_resolution_rs(vctrs::field(cell, "hi"), vctrs::field(cell, "lo"))
+  a5_get_resolution_rs(cell_data(cell))
 }
 
 #' Navigate to parent cell(s)
@@ -39,9 +39,7 @@ a5_cell_to_parent <- function(cell, resolution = NULL) {
     check_resolution(resolution)
     vctrs::vec_assert(resolution, size = 1L)
   }
-  cells_from_rs(a5_cell_to_parent_rs(
-    vctrs::field(cell, "hi"), vctrs::field(cell, "lo"), resolution
-  ))
+  cells_from_rs(a5_cell_to_parent_rs(cell_data(cell), resolution))
 }
 
 #' Get child cells
@@ -68,7 +66,5 @@ a5_cell_to_children <- function(cell, resolution = NULL) {
     check_resolution(resolution)
     vctrs::vec_assert(resolution, size = 1L)
   }
-  cells_from_rs(a5_cell_to_children_rs(
-    vctrs::field(cell, "hi"), vctrs::field(cell, "lo"), resolution
-  ))
+  cells_from_rs(a5_cell_to_children_rs(cell_data(cell), resolution))
 }

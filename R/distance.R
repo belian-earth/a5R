@@ -36,11 +36,7 @@ a5_cell_distance <- function(
       "{.arg units} must be a distance unit convertible from m, not {.val {units}}."
     )
   }
-  d <- a5_cell_distance_rs(
-    vctrs::field(args$from, "hi"), vctrs::field(args$from, "lo"),
-    vctrs::field(args$to, "hi"), vctrs::field(args$to, "lo"),
-    method
-  )
+  d <- a5_cell_distance_rs(cell_data(args$from), cell_data(args$to), method)
   units::set_units(d, "m", mode = "standard") |>
     units::set_units(units, mode = "standard")
 }

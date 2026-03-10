@@ -73,9 +73,7 @@ a5_grid <- function(x, resolution) {
   # Final exact filter for non-bbox inputs
   if (!is_bbox) {
     target_wkt <- as_target_wkt(x)
-    filtered <- a5_grid_intersects_rs(
-      vctrs::field(cells, "hi"), vctrs::field(cells, "lo"), target_wkt
-    )
+    filtered <- a5_grid_intersects_rs(cell_data(cells), target_wkt)
     cells <- cells_from_rs(filtered)
   }
 
