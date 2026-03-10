@@ -138,9 +138,103 @@ test_that("wk_handle.a5_cell produces boundary geometry", {
   expect_true(grepl("^POLYGON", as.character(wkt)))
 })
 
+# -- sentinel / NA byte-level tests -------------------------------------------
+
+test_that("NA sentinel has b8 == 0xFC", {
+  cell <- a5_cell(c("0800000000000006", NA))
+  # Non-NA cell: b8 should NOT be 0xFC
+  expect_false(vctrs::field(cell, "b8")[1] == as.raw(0xFC))
+  # NA cell: b8 IS the sentinel byte
+
+  expect_equal(vctrs::field(cell, "b8")[2], as.raw(0xFC))
+})
+
+test_that("sentinel hex value fc00000000000000 becomes NA", {
+  cell <- a5_cell("fc00000000000000")
+  expect_true(is.na(cell))
+  expect_true(is.na(format(cell)))
+})
+
+test_that("known hex encodes to correct little-endian bytes", {
+  cell <- a5_cell("0800000000000006")
+  # 0x0800000000000006 in little-endian: 06 00 00 00 00 00 00 08
+  expect_equal(vctrs::field(cell, "b1"), as.raw(0x06))
+  expect_equal(vctrs::field(cell, "b2"), as.raw(0x00))
+  expect_equal(vctrs::field(cell, "b7"), as.raw(0x00))
+  expect_equal(vctrs::field(cell, "b8"), as.raw(0x08))
+})
+
+# -- empty / all-NA edge cases ------------------------------------------------
+
+test_that("empty a5_cell works", {
+  cell <- a5_cell(character())
+  expect_length(cell, 0L)
+  expect_s3_class(cell, "a5_cell")
+  expect_equal(format(cell), character())
+})
+
+test_that("all-NA a5_cell works", {
+  cell <- a5_cell(c(NA, NA, NA))
+  expect_length(cell, 3L)
+  expect_true(all(is.na(cell)))
+})
+
+test_that("single NA a5_cell works", {
+  cell <- a5_cell(NA)
+  expect_length(cell, 1L)
+  expect_true(is.na(cell))
+})
+
+# -- vctrs operations: unique, duplicated, match ------------------------------
+
+test_that("unique works on a5_cell", {
+  cells <- a5_cell(c(
+    "0800000000000006",
+    "0800000000000016",
+    "0800000000000006"
+  ))
+  u <- unique(cells)
+  expect_length(u, 2L)
+  expect_equal(sort(format(u)), c("0800000000000006", "0800000000000016"))
+})
+
+test_that("duplicated works on a5_cell", {
+  cells <- a5_cell(c(
+    "0800000000000006",
+    "0800000000000016",
+    "0800000000000006"
+  ))
+  expect_equal(duplicated(cells), c(FALSE, FALSE, TRUE))
+})
+
+test_that("match works on a5_cell", {
+  haystack <- a5_cell(c("0800000000000006", "0800000000000016"))
+  needle <- a5_cell("0800000000000016")
+  expect_equal(match(needle, haystack), 2L)
+})
+
+test_that("%in% works on a5_cell", {
+  cells <- a5_cell(c(
+    "0800000000000006",
+    "0800000000000016",
+    "0800000000000026"
+  ))
+  subset <- a5_cell(c("0800000000000006", "0800000000000026"))
+  expect_equal(cells %in% subset, c(TRUE, FALSE, TRUE))
+})
+
+test_that("unique handles NA correctly", {
+  cells <- a5_cell(c("0800000000000006", NA, NA))
+  u <- unique(cells)
+  expect_length(u, 2L)
+  expect_equal(sum(is.na(u)), 1L)
+})
+
+# -- memory -------------------------------------------------------------------
+
 test_that("a5_cell memory is compact (8 raw vectors)", {
   cells <- a5_lonlat_to_cell(runif(1000, -180, 180), runif(1000, -80, 80), 10L)
   # Should be ~8 KB (8 x 1 byte x 1000), not ~56 KB+ from list-of-raw
   sz <- as.numeric(object.size(cells))
-  expect_true(sz < 50000)  # well under list-of-raw overhead
+  expect_true(sz < 50000) # well under list-of-raw overhead
 })
