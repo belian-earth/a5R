@@ -28,54 +28,37 @@ boundary requires hex parsing and formatting — O(n) string allocation that
 dominates the cost of lightweight operations like `a5_get_resolution()` or
 `a5_cell_to_parent()`.
 
-## The solution: split into two 32-bit halves
+## The solution: eight raw-byte fields
 
-A `u64` has exactly 64 bits. We split it into two 32-bit unsigned integers
-and store each as an R `double`:
+A `u64` is exactly 8 bytes. We store each byte of the little-endian
+representation as a separate `raw` vector field in a vctrs record type:
 
 ```
 cell_id (u64):  0x0800000000000006
 
-hi (upper 32 bits):  0x08000000  →  134217728.0  (stored as R double)
-lo (lower 32 bits):  0x00000006  →          6.0  (stored as R double)
+little-endian bytes:
+  b1 = 0x06, b2 = 0x00, b3 = 0x00, b4 = 0x00,
+  b5 = 0x00, b6 = 0x00, b7 = 0x00, b8 = 0x08
 ```
 
-This is lossless because:
-
-- A `u32` ranges from 0 to 4,294,967,295 (< 2^32)
-- An R `double` represents all integers up to 2^53 exactly
-- So every `u32` value survives the `u32 → f64 → u32` round-trip perfectly
-
-On the Rust side, the split and recombination are single bitwise operations:
-
-```rust
-// u64 → two f64 values
-fn u64_to_hilo(id: u64) -> (f64, f64) {
-    ((id >> 32) as f64, (id & 0xFFFFFFFF) as f64)
-}
-
-// two f64 values → u64
-fn hilo_to_u64(hi: f64, lo: f64) -> Option<u64> {
-    if hi.is_nan() || lo.is_nan() { return None; }
-    Some(((hi as u64) << 32) | (lo as u64))
-}
-```
-
-No string allocation, no parsing — just bit shifts and casts.
+This is lossless — the eight bytes are the exact same bits as the original
+`u64`, just stored across eight contiguous `raw` vectors. No precision loss,
+no special-case handling. On the Rust side, reconstructing the `u64` from
+the eight byte slices is a single `u64::from_le_bytes()` call.
 
 ## R-side: a vctrs record type
 
-On the R side, `a5_cell` is a **vctrs record** (`vctrs::new_rcrd()`) with two
-fields:
+On the R side, `a5_cell` is a **vctrs record** (`vctrs::new_rcrd()`) with
+eight fields (`b1` through `b8`):
 
 ```{r}
 library(a5R)
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
-vctrs::field(cell, "hi")
-vctrs::field(cell, "lo")
+vctrs::field(cell, "b1")
+vctrs::field(cell, "b8")
 ```
 
-The two fields are plain numeric vectors — contiguous blocks of memory with
+Each field is a plain `raw` vector — a contiguous block of memory with
 no per-element overhead. Subsetting, combining, and NA propagation are all
 handled automatically by vctrs.
 
@@ -104,7 +87,7 @@ cells <- a5_lonlat_to_cell(
   resolution = 10
 )
 
-# rcrd: two contiguous double vectors (2 × 8 bytes × 1M = 15.3 MB)
+# rcrd: eight contiguous raw vectors (8 × 1 byte × 1M ≈ 7.6 MB)
 format(object.size(cells), units = "MB")
 
 # equivalent hex strings would be ~81 MB
@@ -115,15 +98,17 @@ format(object.size(hex), units = "MB")
 
 Operations that were previously bottlenecked by hex parsing — like
 `a5_cell_to_parent()` or `a5_compact()` — now run at near-native speed
-because the `u64` cell ID is reconstructed from two doubles with a bit shift,
-not parsed from a 16-character string.
+because the `u64` cell ID is reconstructed from raw bytes with no parsing.
 
 ## NA handling
 
-R represents missing doubles as `NA_real_`, a special "not a number" value.
-On the Rust side, `hilo_to_u64` detects this and returns `None`, which maps
-back to `NA` in both fields on the R side. This means standard R idioms work
-as expected:
+A5 cell IDs use 60 "quintants" (values 0–59) in their top 6 bits. Quintant
+63 (binary `111111`) is invalid in the A5 system, so we use
+`0xFC00000000000000` as a sentinel value for `NA`. In little-endian, the
+last byte (`b8`) is `0xFC`, making NA detection a fast single-byte check.
+
+On the Rust side, the sentinel is detected and mapped to `None`. Standard
+R idioms work as expected:
 
 ```{r}
 cells_with_na <- a5_cell(c("0800000000000006", NA))
@@ -132,10 +117,10 @@ is.na(cells_with_na)
 
 ## Summary
 
-| Aspect | Hex strings | Hi/lo doubles |
-|--------|------------|---------------|
-| R type | `character` vector | `vctrs_rcrd` (two `double` fields) |
-| Memory (1M cells) | ~81 MB | ~15 MB |
-| R ↔ Rust crossing | O(n) hex parse/format | O(1) bit shift per element |
+| Aspect | Hex strings | Raw bytes |
+|--------|------------|-----------|
+| R type | `character` vector | `vctrs_rcrd` (eight `raw` fields) |
+| Memory (1M cells) | ~81 MB | ~7.6 MB |
+| R ↔ Rust crossing | O(n) hex parse/format | Zero-copy byte access |
 | Human-readable | Always | On `format()` / `print()` |
-| Lossless | Yes | Yes (u32 ⊂ exact doubles) |
+| Lossless | Yes | Yes (exact byte representation) |

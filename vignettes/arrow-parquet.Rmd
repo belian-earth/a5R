@@ -115,15 +115,15 @@ identical(format(cities$cell), format(result$cell))
 
 ## How it works under the hood
 
-1. **`a5_cell_to_arrow()`**: converts the hi/lo double fields to 8-byte
-   little-endian raw vectors (one per cell), creates an Arrow
+1. **`a5_cell_to_arrow()`**: packs the eight raw-byte fields into 8-byte
+   little-endian blobs (one per cell), creates an Arrow
    `fixed_size_binary(8)` array, then uses `View(uint64)` to
    reinterpret the bytes as unsigned 64-bit integers — zero-copy.
 
 2. **`a5_cell_from_arrow()`**: does the reverse — `View(fixed_size_binary(8))`
-   on the `uint64` array to get the raw bytes, then converts each 8-byte
-   vector to hi/lo doubles via bit-shift.
+   on the `uint64` array to get the raw bytes, then unpacks each 8-byte
+   blob into the eight raw-byte fields used by `a5_cell`.
 
 The raw bytes never pass through `double`, so there is no precision loss
 at any step. See `vignette("internal-cell-representation")` for details
-on the hi/lo representation.
+on the raw-byte representation.
