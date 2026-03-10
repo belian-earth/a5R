@@ -1,21 +1,21 @@
 # A5 Cross-Language Benchmark Results
 
-**N = 10,000** random points | Resolution 10 | 2026-03-09 22:00
+**N = 10,000** random points | Resolution 10 | 2026-03-10 11:24
 
 
 ## Performance (median ms, 10k elements)
 
 | Operation | DuckDB | JavaScript | Python | R (16t) | R |
 |---:|---:|---:|---:|---:|---:|
-| lonlat_to_cell | 40.80 | 267.88 | 4938.21 | **5.35** | 34.92 |
-| cell_to_lonlat | 12.40 | 38.15 | 1281.42 | **1.67** | 6.80 |
-| cell_to_boundary | 73.55 | 105.47 | 3194.82 | **6.11** | 23.81 |
-| get_resolution | 1.29 | 0.60 | 82.94 | **0.28** | 0.29 |
-| cell_to_parent | 1.36 | 2.55 | 164.57 | 0.56 | **0.49** |
-| cell_to_children | 0.26 | **0.01** | 0.12 | — | 0.03 |
-| compact | 0.62 | **0.02** | 0.18 | — | 0.02 |
-| uncompact | 0.59 | **0.02** | 0.30 | — | 0.05 |
-| cell_area | 0.22 | **0.00** | 0.03 | — | 0.19 |
+| lonlat_to_cell | 39.30 | 263.65 | 4963.18 | **4.64** | 34.02 |
+| cell_to_lonlat | 11.95 | 41.20 | 1288.33 | **1.18** | 7.02 |
+| cell_to_boundary | 71.47 | 92.54 | 3185.26 | **5.22** | 25.51 |
+| get_resolution | 1.26 | 0.57 | 84.69 | 0.41 | **0.31** |
+| cell_to_parent | 1.40 | 2.13 | 161.94 | 0.54 | **0.49** |
+| cell_to_children | 0.28 | **0.01** | 0.11 | — | 0.04 |
+| compact | 0.59 | **0.01** | 0.18 | — | 0.02 |
+| uncompact | 0.54 | **0.01** | 0.29 | — | 0.05 |
+| cell_area | 0.15 | **0.00** | 0.03 | — | 0.19 |
 
 ## Correctness
 
