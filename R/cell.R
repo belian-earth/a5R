@@ -20,9 +20,6 @@ a5_cell <- function(x = character()) {
   cells_from_rs(rs)
 }
 
-#' @noRd
-cell_fields <- function() c("b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8")
-
 new_a5_cell <- function(b1 = raw(), b2 = raw(), b3 = raw(), b4 = raw(),
                         b5 = raw(), b6 = raw(), b7 = raw(), b8 = raw()) {
   vctrs::new_rcrd(
