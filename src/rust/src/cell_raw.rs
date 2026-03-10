@@ -4,8 +4,11 @@ use rayon::prelude::*;
 use crate::threading::{get_num_threads, maybe_par};
 
 // --- NA sentinel ---
-// Quintant 63 (first 6 bits = 111111) is invalid in A5 (only 0-59 are valid).
-// We use 0xFC00000000000000 as the NA sentinel.
+// A5 cell IDs encode a quintant (0–59) in the top 6 bits. Quintant 63
+// (binary 111111) is guaranteed invalid, so 0xFC00_0000_0000_0000 can
+// never be a real cell. In little-endian layout the most-significant byte
+// (b8) is 0xFC — this is what the R-side is.na() method checks.
+// Any input that decodes to NA_SENTINEL is treated as missing data.
 pub(crate) const NA_SENTINEL: u64 = 0xFC00_0000_0000_0000;
 pub(crate) const NA_BYTES: [u8; 8] = NA_SENTINEL.to_le_bytes();
 
@@ -19,17 +22,16 @@ pub(crate) struct CellSlices<'a> {
 
 impl<'a> CellSlices<'a> {
     pub fn from_list(list: &'a List) -> Self {
-        // SAFETY: List fields are borrowed from the R list which lives for 'a.
-        // We use unsafe to extend the lifetime of the raw slices obtained from
-        // the Robj wrappers. The Robj returned by dollar() is a temporary, but
-        // the underlying RAWSXP data pointer is valid as long as the List lives.
+        // SAFETY: Each field (b1..b8) is a RAWSXP owned by the R list.
+        // dollar() returns a temporary Robj wrapper, but as_raw_slice()
+        // yields a pointer into the RAWSXP's data block, which is kept
+        // alive by R's protection of the List for lifetime 'a. Dropping
+        // the Robj wrapper does not free the underlying R allocation.
         let names = ["b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8"];
         let mut slices: [&'a [u8]; 8] = [&[]; 8];
         for (j, name) in names.iter().enumerate() {
             let robj = list.dollar(name).expect("missing field in cell list");
             let slice = robj.as_raw_slice().expect("field is not raw");
-            // The raw slice points into the R RAWSXP allocation owned by
-            // the List, so it is valid for 'a.
             slices[j] = unsafe { std::mem::transmute::<&[u8], &'a [u8]>(slice) };
         }
         let len = slices[0].len();
@@ -176,8 +178,8 @@ fn hex_to_raw8_rs(cells: Strings) -> List {
             values.push(None);
         } else {
             match a5::hex_to_u64(s.as_str()) {
-                Ok(id) => values.push(Some(id)),
-                Err(_) => values.push(None),
+                Ok(id) if id != NA_SENTINEL => values.push(Some(id)),
+                _ => values.push(None),
             }
         }
     }
@@ -197,7 +199,12 @@ fn blobs_to_raw8_rs(blobs: List) -> List {
             values.push(None);
         } else if let Some(slice) = robj.as_raw_slice() {
             if slice.len() == 8 {
-                values.push(Some(u64::from_le_bytes(slice[..8].try_into().unwrap())));
+                let id = u64::from_le_bytes(slice[..8].try_into().unwrap());
+                if id == NA_SENTINEL {
+                    values.push(None);
+                } else {
+                    values.push(Some(id));
+                }
             } else {
                 values.push(None);
             }
