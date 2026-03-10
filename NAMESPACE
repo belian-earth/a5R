@@ -3,6 +3,8 @@
 S3method(format,a5_cell)
 S3method(is.na,a5_cell)
 S3method(pillar::pillar_shaft,a5_cell)
+S3method(vctrs::vec_proxy_compare,a5_cell)
+S3method(vctrs::vec_proxy_order,a5_cell)
 S3method(vctrs::vec_ptype_abbr,a5_cell)
 S3method(vctrs::vec_ptype_full,a5_cell)
 S3method(vec_cast,a5_cell.a5_cell)
