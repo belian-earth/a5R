@@ -143,6 +143,31 @@ is.na.a5_cell <- function(x) {
   vctrs::field(x, "b8") == as.raw(0xFC)
 }
 
+# --- ordering: big-endian byte order = u64 numeric order ---
+
+#' @exportS3Method vctrs::vec_proxy_compare
+#' @noRd
+#' @keywords internal
+vec_proxy_compare.a5_cell <- function(x, ...) {
+  data.frame(
+    b8 = as.integer(vctrs::field(x, "b8")),
+    b7 = as.integer(vctrs::field(x, "b7")),
+    b6 = as.integer(vctrs::field(x, "b6")),
+    b5 = as.integer(vctrs::field(x, "b5")),
+    b4 = as.integer(vctrs::field(x, "b4")),
+    b3 = as.integer(vctrs::field(x, "b3")),
+    b2 = as.integer(vctrs::field(x, "b2")),
+    b1 = as.integer(vctrs::field(x, "b1"))
+  )
+}
+
+#' @exportS3Method vctrs::vec_proxy_order
+#' @noRd
+#' @keywords internal
+vec_proxy_order.a5_cell <- function(x, ...) {
+  vec_proxy_compare.a5_cell(x, ...)
+}
+
 # --- coercion: a5_cell <-> character ---
 
 #' @export
