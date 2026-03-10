@@ -38,15 +38,20 @@ impl<'a> CellSlices<'a> {
         CellSlices { slices, len }
     }
 
-    /// Get the u64 cell ID at index i. Returns None for NA sentinel.
+    /// Get the u64 cell ID at index i. Returns None if b8 == 0xFC (NA sentinel).
+    /// Checks only b8 (the MSB in little-endian) to match the R-side is.na()
+    /// check. Any cell with b8 == 0xFC has quintant 63, which is always
+    /// invalid in A5, so this is safe.
     #[inline]
     pub fn get(&self, i: usize) -> Option<u64> {
+        if self.slices[7][i] == NA_BYTES[7] {
+            return None;
+        }
         let bytes = [
             self.slices[0][i], self.slices[1][i], self.slices[2][i], self.slices[3][i],
             self.slices[4][i], self.slices[5][i], self.slices[6][i], self.slices[7][i],
         ];
-        let id = u64::from_le_bytes(bytes);
-        if id == NA_SENTINEL { None } else { Some(id) }
+        Some(u64::from_le_bytes(bytes))
     }
 }
 
