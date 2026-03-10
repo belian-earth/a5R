@@ -1,7 +1,7 @@
 use extendr_api::prelude::*;
 use rayon::prelude::*;
 
-use crate::hilo::{map_cells, u64s_to_hilo_list};
+use crate::cell_raw::{map_cells, u64s_to_raw8_list};
 use crate::threading::{get_num_threads, maybe_par};
 
 /// Convert longitude/latitude coordinates to A5 cell indices.
@@ -9,7 +9,7 @@ use crate::threading::{get_num_threads, maybe_par};
 /// @param lon Numeric vector of longitudes (degrees).
 /// @param lat Numeric vector of latitudes (degrees).
 /// @param resolution Integer vector of resolutions (0--30).
-/// @return A list with `hi` and `lo` double vectors.
+/// @return A list with b1..b8 raw vectors.
 /// @noRd
 /// @keywords internal
 #[extendr]
@@ -30,7 +30,7 @@ fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Lis
                 }
             })
             .collect();
-        u64s_to_hilo_list(results)
+        u64s_to_raw8_list(results)
     } else {
         let inputs: Vec<(f64, f64, i32, bool)> = (0..n)
             .map(|i| {
@@ -58,20 +58,20 @@ fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Lis
                 .collect()
         });
 
-        u64s_to_hilo_list(results)
+        u64s_to_raw8_list(results)
     }
 }
 
 /// Convert A5 cell indices to longitude/latitude coordinates.
 ///
-/// @param hi,lo Double vectors (hi/lo u32 halves of cell IDs).
+/// @param cells List with b1..b8 raw vectors.
 /// @param normalise Logical: if TRUE, wrap longitudes to the standard range.
 /// @return A list with `lon` and `lat` numeric vectors.
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_cell_to_lonlat_rs(hi: Doubles, lo: Doubles, normalise: bool) -> List {
-    let results = map_cells(&hi, &lo, |id| {
+fn a5_cell_to_lonlat_rs(cells: List, normalise: bool) -> List {
+    let results = map_cells(&cells, |id| {
         let ll = a5::cell_to_lonlat(id).ok()?;
         let lon = if normalise {
             ((ll.longitude() + 180.0) % 360.0 + 360.0) % 360.0 - 180.0
@@ -81,7 +81,7 @@ fn a5_cell_to_lonlat_rs(hi: Doubles, lo: Doubles, normalise: bool) -> List {
         Some((lon, ll.latitude()))
     });
 
-    let n = hi.len();
+    let n = results.len();
     let mut lon_out = Doubles::new(n);
     let mut lat_out = Doubles::new(n);
     for (i, r) in results.into_iter().enumerate() {

@@ -1,6 +1,6 @@
 use extendr_api::prelude::*;
 
-use crate::hilo::hilo_to_u64;
+use crate::cell_raw::CellSlices;
 
 /// Get the area (in square metres) of cells at a given resolution.
 ///
@@ -46,23 +46,21 @@ fn a5_get_num_children_rs(parent_resolution: i32, child_resolution: i32) -> f64 
     a5::get_num_children(parent_resolution, child_resolution) as f64
 }
 
-/// Validate cell IDs stored as hi/lo doubles.
+/// Validate cell IDs stored as raw bytes.
 ///
-/// @param hi,lo Double vectors (hi/lo u32 halves of cell IDs).
+/// @param cells List with b1..b8 raw vectors.
 /// @return Logical vector indicating validity.
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_is_valid_cell_rs(hi: Doubles, lo: Doubles) -> Logicals {
-    let n = hi.len();
+fn a5_is_valid_cell_rs(cells: List) -> Logicals {
+    let cs = CellSlices::from_list(&cells);
+    let n = cs.len;
     let mut out = Logicals::new(n);
     for i in 0..n {
-        let h = hi[i];
-        let l = lo[i];
-        if h.is_na() || l.is_na() {
-            out.set_elt(i, Rbool::na());
-        } else {
-            out.set_elt(i, Rbool::from(hilo_to_u64(h.inner(), l.inner()).is_some()));
+        match cs.get(i) {
+            Some(_) => out.set_elt(i, Rbool::from(true)),
+            None => out.set_elt(i, Rbool::na()),
         }
     }
     out

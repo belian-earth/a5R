@@ -4,7 +4,7 @@ use rayon::prelude::*;
 use std::str::FromStr;
 
 use crate::boundary::{BOUNDARY_OPTS_CLOSED, BOUNDARY_OPTS_OPEN};
-use crate::hilo::{map_cells, u64s_to_hilo_list};
+use crate::cell_raw::{map_cells, u64s_to_raw8_list};
 use crate::threading::{get_num_threads, maybe_par};
 
 struct BBox {
@@ -58,7 +58,7 @@ fn cell_to_geo_polygon(cell_id: u64) -> Option<geo::Polygon<f64>> {
 ///
 /// @param xmin,ymin,xmax,ymax Bounding box coordinates.
 /// @param resolution Target resolution (0--30).
-/// @return List with `hi` and `lo` double vectors.
+/// @return List with b1..b8 raw vectors.
 /// @noRd
 /// @keywords internal
 #[extendr]
@@ -68,7 +68,7 @@ fn a5_grid_bbox_rs(xmin: f64, ymin: f64, xmax: f64, ymax: f64, resolution: i32) 
 
     let mut cells = match a5::get_res0_cells() {
         Ok(c) => c,
-        Err(_) => return u64s_to_hilo_list(vec![]),
+        Err(_) => return u64s_to_raw8_list(vec![]),
     };
     let mut current_res: i32 = 0;
     let step: i32 = 3;
@@ -78,7 +78,7 @@ fn a5_grid_bbox_rs(xmin: f64, ymin: f64, xmax: f64, ymax: f64, resolution: i32) 
         let next_res = (current_res + step).min(resolution);
         cells = match a5::uncompact(&cells, next_res) {
             Ok(c) => c,
-            Err(_) => return u64s_to_hilo_list(vec![]),
+            Err(_) => return u64s_to_raw8_list(vec![]),
         };
         current_res = next_res;
 
@@ -119,35 +119,35 @@ fn a5_grid_bbox_rs(xmin: f64, ymin: f64, xmax: f64, ymax: f64, resolution: i32) 
     }
 
     let results: Vec<Option<u64>> = cells.into_iter().map(|c| Some(c)).collect();
-    u64s_to_hilo_list(results)
+    u64s_to_raw8_list(results)
 }
 
 /// Filter cell IDs to those whose boundary polygons intersect a target geometry.
 ///
-/// @param hi,lo Double vectors (hi/lo u32 halves of cell IDs).
+/// @param cells List with b1..b8 raw vectors.
 /// @param target_wkt WKT string of the target geometry.
-/// @return List with `hi` and `lo` double vectors (filtered).
+/// @return List with b1..b8 raw vectors (filtered).
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_grid_intersects_rs(hi: Doubles, lo: Doubles, target_wkt: &str) -> List {
+fn a5_grid_intersects_rs(cells: List, target_wkt: &str) -> List {
     let wkt_obj = match wkt::Wkt::<f64>::from_str(target_wkt) {
         Ok(w) => w,
-        Err(_) => return u64s_to_hilo_list(vec![]),
+        Err(_) => return u64s_to_raw8_list(vec![]),
     };
     let target: geo::Geometry<f64> = match geo::Geometry::try_from(wkt_obj) {
         Ok(g) => g,
-        Err(_) => return u64s_to_hilo_list(vec![]),
+        Err(_) => return u64s_to_raw8_list(vec![]),
     };
 
-    let results = map_cells(&hi, &lo, |id| {
+    let results = map_cells(&cells, |id| {
         let poly = cell_to_geo_polygon(id)?;
         if target.intersects(&poly) { Some(id) } else { None }
     });
 
     // Filter out non-intersecting cells (None values)
     let filtered: Vec<Option<u64>> = results.into_iter().flatten().map(|id| Some(id)).collect();
-    u64s_to_hilo_list(filtered)
+    u64s_to_raw8_list(filtered)
 }
 
 extendr_module! {
