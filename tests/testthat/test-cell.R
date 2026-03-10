@@ -230,6 +230,47 @@ test_that("unique handles NA correctly", {
   expect_equal(sum(is.na(u)), 1L)
 })
 
+# -- ordering -----------------------------------------------------------------
+
+test_that("sort orders by u64 value", {
+  # Create cells with known ordering: lower hex = lower u64
+  cells <- a5_cell(c(
+    "0800000000000016",
+    "0800000000000006",
+    "0800000000000026"
+  ))
+  sorted <- sort(cells)
+  expect_equal(
+    format(sorted),
+    c("0800000000000006", "0800000000000016", "0800000000000026")
+  )
+})
+
+test_that("sort handles NA (pushed to end)", {
+  cells <- a5_cell(c(NA, "0800000000000016", "0800000000000006"))
+  sorted <- sort(cells, na.last = TRUE)
+  expect_equal(format(sorted)[1:2], c("0800000000000006", "0800000000000016"))
+  expect_true(is.na(sorted[3]))
+})
+
+test_that("order returns correct indices", {
+  cells <- a5_cell(c(
+    "0800000000000016",
+    "0800000000000006",
+    "0800000000000026"
+  ))
+  expect_equal(order(cells), c(2L, 1L, 3L))
+})
+
+test_that("comparison operators work", {
+  a <- a5_cell("0800000000000006")
+  b <- a5_cell("0800000000000016")
+  expect_true(a < b)
+  expect_false(a > b)
+  expect_true(a == a)
+  expect_true(a != b)
+})
+
 # -- memory -------------------------------------------------------------------
 
 test_that("a5_cell memory is compact (8 raw vectors)", {
