@@ -28,8 +28,8 @@ These are named to match \code{u64_to_hex} / \code{hex_to_u64} in the upstream
 Python, JavaScript, and DuckDB A5 bindings. In those languages the
 functions convert between a native 64-bit unsigned integer and its hex
 representation. Because R has no native \code{uint64} type, \code{a5_u64_to_hex()}
-accepts an \link{a5_cell} (which stores the \code{u64} internally as two 32-bit
-halves) instead of a bare integer.
+accepts an \link{a5_cell} (which stores the \code{u64} internally as eight raw
+bytes) instead of a bare integer.
 }
 \examples{
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)

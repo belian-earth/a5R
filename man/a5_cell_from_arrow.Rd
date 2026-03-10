@@ -28,7 +28,7 @@ integers exactly up to 2^53, while A5 cell IDs span the full
 \details{
 Internally these use Arrow's zero-copy \code{View()} to reinterpret
 \code{uint64} bytes as \code{fixed_size_binary(8)}, then convert to/from the
-hi/lo double representation used by \link{a5_cell}. The resulting Arrow
+raw-byte representation used by \link{a5_cell}. The resulting Arrow
 arrays can be written directly to Parquet and read correctly by
 DuckDB, Python, and other Arrow-compatible tools.
 }

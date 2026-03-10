@@ -25,9 +25,9 @@ scalar (\code{is_a5_cell}), or a logical vector (\code{a5_is_valid}).
 }
 \description{
 Create, test, and coerce A5 cell index vectors. Cells are stored as
-a record with two double fields (\code{hi}, \code{lo}) representing the upper
-and lower 32-bit halves of the u64 cell ID. This avoids per-element
-allocation overhead and keeps memory contiguous.
+a record with eight raw-byte fields (\code{b1}--\code{b8}) representing the
+little-endian bytes of the u64 cell ID. This avoids the precision
+loss of floating-point storage and keeps memory compact.
 }
 \examples{
 cells <- a5_cell(c("0800000000000006", "0800000000000016"))
