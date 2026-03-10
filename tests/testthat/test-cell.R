@@ -2,8 +2,8 @@ test_that("a5_cell constructor", {
   cell <- a5_cell("0800000000000006")
   expect_s3_class(cell, "a5_cell")
   expect_s3_class(cell, "vctrs_rcrd")
-  expect_true(is.double(vctrs::field(cell, "hi")))
-  expect_true(is.double(vctrs::field(cell, "lo")))
+  expect_true(is.raw(vctrs::field(cell, "b1")))
+  expect_true(is.raw(vctrs::field(cell, "b8")))
 })
 
 test_that("a5_cell coercion with character", {
@@ -43,9 +43,8 @@ test_that("as_a5_cell coerces character", {
 test_that("a5_cell handles NA values", {
   cell <- a5_cell(c("0800000000000006", NA))
   expect_length(cell, 2L)
-  # NA is represented as NA_real_ in hi/lo fields
-  expect_true(is.na(vctrs::field(cell, "hi")[2]))
-  expect_true(is.na(vctrs::field(cell, "lo")[2]))
+  # NA is represented by the sentinel value (b8 == 0xFC)
+  expect_true(is.na(cell[2]))
 })
 
 test_that("format.a5_cell preserves hex strings", {
@@ -139,9 +138,9 @@ test_that("wk_handle.a5_cell produces boundary geometry", {
   expect_true(grepl("^POLYGON", as.character(wkt)))
 })
 
-test_that("a5_cell memory is contiguous (not list-of-raw)", {
+test_that("a5_cell memory is compact (8 raw vectors)", {
   cells <- a5_lonlat_to_cell(runif(1000, -180, 180), runif(1000, -80, 80), 10L)
-  # Should be ~16 KB (2 x 8 bytes x 1000), not ~56 KB+ from list-of-raw
+  # Should be ~8 KB (8 x 1 byte x 1000), not ~56 KB+ from list-of-raw
   sz <- as.numeric(object.size(cells))
   expect_true(sz < 50000)  # well under list-of-raw overhead
 })

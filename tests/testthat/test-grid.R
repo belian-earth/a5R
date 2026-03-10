@@ -38,7 +38,7 @@ test_that("result cells intersect the target (bbox path)", {
     bbox[1], bbox[4], bbox[1], bbox[2]
   )
   filtered <- cells_from_rs(a5_grid_intersects_rs(
-    vctrs::field(cells, "hi"), vctrs::field(cells, "lo"), target_wkt
+    cell_data(cells), target_wkt
   ))
   expect_equal(length(filtered), length(cells))
 })
