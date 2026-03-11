@@ -1,17 +1,18 @@
 Package: a5R
-Title: A5 Discrete Global Grid System
+Title: 'A5' Discrete Global Grid System
 Version: 0.2.0
 Authors@R: c(
     person("Hugh", "Graham", role = c("aut", "cre"),
            email = "hugh@belian.earth"),
     person("belian.earth", role = "cph")
     )
-Description: Bindings for the 'A5' geospatial index. 'A5'
-    partitions the Earth's surface into pentagonal cells across 31
-    resolution levels using an equal-area projection onto a dodecahedron.
-    Provides functions for indexing coordinates to cells, traversing the
-    cell hierarchy, computing cell boundaries, and compacting/uncompacting
-    cell sets. Powered by the 'A5' 'Rust' crate via 'extendr'.
+Description: Bindings for the "A5 geospatial index"
+    <https://a5geo.org/>. 'A5' partitions the Earth's surface into
+    pentagonal cells across 31 resolution levels using an equal-area
+    projection onto a dodecahedron. Provides functions for indexing
+    coordinates to cells, traversing the cell hierarchy, computing cell
+    boundaries, and compacting/uncompacting cell sets. Powered by the
+    'A5' 'Rust' crate via 'extendr'.
 License: Apache License (>= 2)
 URL: https://github.com/belian-earth/a5R, https://belian-earth.github.io/a5R/
 BugReports: https://github.com/belian-earth/a5R/issues
