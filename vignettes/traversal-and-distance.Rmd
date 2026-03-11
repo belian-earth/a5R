@@ -52,7 +52,7 @@ ddisk_vertex <- a5_cell_distance(origin, disk_vertex, units = "km")
 
 pal <- hcl.colors(256, "Inferno")
 
-par(mfrow = c(2, 2), mar = c(2, 2, 2, 1))
+oldpar <- par(mfrow = c(2, 2), mar = c(2, 2, 2, 1))
 for (info in list(
   list(s = disk, d = ddisk, lab = "Grid disk (edges)"),
   list(s = disk_vertex, d = ddisk_vertex, lab = "Grid disk (vertices)"),
@@ -66,6 +66,10 @@ for (info in list(
        main = info$lab)
   plot(a5_cell_to_boundary(origin), border = "#ffffffff", add = TRUE)
 }
+```
+
+```{r, include = FALSE}
+par(oldpar)
 ```
 
 Distance radiates smoothly from the centre — cells near the origin are dark,
@@ -93,6 +97,7 @@ diff_m <- as.numeric(geo - hav)
 brk <- seq(min(diff_m), max(diff_m), length.out = 257)
 cols <- pal[findInterval(diff_m, brk, all.inside = TRUE)]
 
+oldpar <- par(no.readonly = TRUE)
 layout(matrix(c(1, 2), nrow = 1), widths = c(4, 1))
 par(mar = c(2, 2, 2, 1))
 plot(a5_cell_to_boundary(wide_cap), col = cols, border = NA, asp = 1,
@@ -102,6 +107,10 @@ par(mar = c(9, 0, 9, 9))
 image(1, seq(min(diff_m), max(diff_m), length.out = 256),
       t(seq_along(pal)), col = pal, axes = FALSE, xlab = "", ylab = "")
 axis(4, las = 1)
+```
+
+```{r, include = FALSE}
+par(oldpar)
 ```
 
 The difference is near zero at the centre and grows to ~`r round(max(diff_m))` m
