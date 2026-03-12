@@ -57,6 +57,16 @@ test_that("cell_distance is close to s2/sf", {
   expect_equal(d, sf_d, tolerance = 0.1) # within 1 metre.
 })
 
+test_that("cell_distance with units = NULL returns plain numeric in metres", {
+  a <- a5_lonlat_to_cell(0, 0, resolution = 8)
+  b <- a5_lonlat_to_cell(1, 1, resolution = 8)
+  d_null <- a5_cell_distance(a, b, units = NULL)
+  d_m <- a5_cell_distance(a, b, units = "m")
+  expect_type(d_null, "double")
+  expect_false(inherits(d_null, "units"))
+  expect_equal(d_null, as.numeric(d_m))
+})
+
 test_that("cell_distance rejects invalid units", {
   a <- a5_lonlat_to_cell(0, 0, resolution = 8)
   expect_error(a5_cell_distance(a, a, units = "kg"), "distance unit")
