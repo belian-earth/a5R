@@ -6,7 +6,8 @@
 #' @param from,to [a5_cell] vectors (recycled to common length).
 #' @param units Character scalar specifying the distance unit (default
 #'   `"m"`). Any unit convertible from metres via [units::set_units()] is
-#'   accepted (e.g. `"km"`, `"mi"`). If NULL, the distance is returned as a numeric vector in metres.
+#'   accepted (e.g. `"km"`, `"mi"`). If NULL, the distance is returned as a
+#'   numeric vector in metres.
 #' @param method Distance calculation method. One of `"haversine"`
 #'   (great-circle, default), `"geodesic"` (WGS84 ellipsoid via Karney
 #'   2013), or `"rhumb"` (loxodrome / constant-bearing).
@@ -33,7 +34,7 @@ a5_cell_distance <- function(
   method <- rlang::arg_match(method)
   if (!is.null(units) && !units::ud_are_convertible("m", units)) {
     cli::cli_abort(
-      "{.arg units} must be a distance unit convertible from m, not {.val {units}}."
+      "{.arg units} must be a distance unit convertible from m (or NULL), not {.val {units}}."
     )
   }
   d <- a5_cell_distance_rs(cell_data(args$from), cell_data(args$to), method)
