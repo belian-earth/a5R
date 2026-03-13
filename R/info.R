@@ -7,7 +7,8 @@
 #' @param resolution Integer vector of resolutions (0--30).
 #' @param units Character scalar specifying the output area unit (default
 #'   `"m^2"`). Any unit convertible from `m^2` via [units::set_units()] is
-#'   accepted (e.g. `"km^2"`, `"ha"`, `"acre"`).
+#'   accepted (e.g. `"km^2"`, `"ha"`, `"acre"`).  If NULL, the area is
+#'   returned as a numeric vector in m^2.
 #' @returns A [units::units] vector of areas.
 #'
 #' @export
@@ -17,12 +18,18 @@
 a5_cell_area <- function(resolution, units = "m^2") {
   resolution <- vctrs::vec_cast(resolution, integer())
   check_resolution(resolution)
-  if (!units::ud_are_convertible("m^2", units)) {
+  if (!is.null(units) && !units::ud_are_convertible("m^2", units)) {
     cli::cli_abort(
-      "{.arg units} must be an area unit convertible from m^2, not {.val {units}}."
+      "{.arg units} must be an area unit convertible from m^2 (or NULL), not {.val {units}}."
     )
   }
-  units::set_units(a5_cell_area_rs(resolution), "m^2", mode = "standard") |>
+  r <- a5_cell_area_rs(resolution)
+
+  if (is.null(units)) {
+    return(r)
+  }
+
+  units::set_units(r, "m^2", mode = "standard") |>
     units::set_units(units, mode = "standard")
 }
 
