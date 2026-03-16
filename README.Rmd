@@ -13,29 +13,36 @@ knitr::opts_chunk$set(
 )
 ```
 
-# a5R <a href="https://belian-earth.github.io/a5R/"><img src="man/figures/a5Rhex.png" align="right" width="200" height="200" alt="a5R hex logo" />
+# a5R <a href="https://belian-earth.github.io/a5R/"><img src="man/figures/logo.png" align="right" height="200" alt="a5R website" /></a>
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/belian-earth/a5R/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/belian-earth/a5R/actions/workflows/R-CMD-check.yaml)
 [![Codecov test coverage](https://codecov.io/gh/belian-earth/a5R/graph/badge.svg)](https://app.codecov.io/gh/belian-earth/a5R)
-[![extendr](https://img.shields.io/badge/extendr-^0.8.1-276DC2)](https://extendr.github.io/extendr/extendr_api/)
+[![extendr](https://img.shields.io/badge/extendr-^0.8.1-276DC2)](https://extendr.rs/extendr/extendr_api/)
 [![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![License:Apache](https://img.shields.io/github/license/belian-earth/a5R)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Github
 stars](https://img.shields.io/github/stars/belian-earth/a5R?style=social)](https://github.com/belian-earth/a5R/stargazers)
 [![GitHub
 Issues](https://img.shields.io/github/issues/belian-earth/a5R)](https://github.com/belian-earth/a5R/issues)
+[![CRAN status](https://www.r-pkg.org/badges/version/a5R)](https://CRAN.R-project.org/package=a5R)
 <!-- badges: end -->
 
 a5R provides R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index, powered by the
-[a5 Rust crate](https://crates.io/crates/A5) via
-[extendr](https://extendr.github.io/extendr/extendr_api/).
+[a5 Rust crate](https://github.com/felixpalmer/a5-rs) via
+[extendr](https://extendr.rs/extendr/extendr_api/).
 
 A5 partitions the Earth's surface into pentagonal cells across 31 resolution
 levels. Cells are equal-area, encoded as 64-bit integers, and achieve
 millimetre-level precision at the finest resolution.
 
 ## Installation
+
+``` r
+install.packages("a5R")
+```
+
+Or install the development version from GitHub:
 
 ``` r
 # install.packages("pak")

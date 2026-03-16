@@ -82,5 +82,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Hugh Graham \email{hugh@belian.earth}
 
+Other contributors:
+\itemize{
+  \item belian.earth [copyright holder]
+}
+
 }
 \keyword{internal}

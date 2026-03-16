@@ -7,6 +7,9 @@
 #' @param handleable,x An [a5_cell] vector.
 #' @param handler A [wk handler][wk::wk_handle].
 #' @param ... Passed to underlying methods.
+#' @returns
+#' - `wk_handle()`: the result of the handler.
+#' - `wk_crs()`: a [wk::wk_crs] object (WGS 84 lon/lat).
 #' @name wk_methods
 NULL
 
