@@ -30,3 +30,11 @@ wk_crs(x)
 - ...:
 
   Passed to underlying methods.
+
+## Value
+
+- `wk_handle()`: the result of the handler.
+
+- `wk_crs()`: a
+  [wk::wk_crs](https://paleolimbot.github.io/wk/reference/wk_crs.html)
+  object (WGS 84 lon/lat).

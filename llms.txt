@@ -1,15 +1,21 @@
-# a5R [![a5R hex logo](reference/figures/a5Rhex.png)](https://belian-earth.github.io/a5R/)
+# a5R
 
 a5R provides R bindings for the [A5](https://a5geo.org/) pentagonal
 geospatial index, powered by the [a5 Rust
-crate](https://crates.io/crates/A5) via
-[extendr](https://extendr.github.io/extendr/extendr_api/).
+crate](https://github.com/felixpalmer/a5-rs) via
+[extendr](https://extendr.rs/extendr/extendr_api/).
 
 A5 partitions the Earth’s surface into pentagonal cells across 31
 resolution levels. Cells are equal-area, encoded as 64-bit integers, and
 achieve millimetre-level precision at the finest resolution.
 
 ## Installation
+
+``` r
+install.packages("a5R")
+```
+
+Or install the development version from GitHub:
 
 ``` r
 # install.packages("pak")

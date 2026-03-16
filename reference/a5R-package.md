@@ -91,3 +91,7 @@ Useful links:
 ## Author
 
 **Maintainer**: Hugh Graham <hugh@belian.earth>
+
+Other contributors:
+
+- belian.earth \[copyright holder\]
