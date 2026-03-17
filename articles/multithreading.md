@@ -55,7 +55,7 @@ independently:
 | [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_lonlat.md)     | Moderate (reverse projection)       | Medium  |
 | [`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_parent.md)     | Light (bit ops + hex)               | Low     |
 | [`a5_get_resolution()`](https://belian-earth.github.io/a5R/reference/a5_get_resolution.md)     | Light (bit ops)                     | Low     |
-| [`a5_is_valid()`](https://belian-earth.github.io/a5R/reference/a5_cell.md)                     | Light (hex parse)                   | Low     |
+| [`a5_is_cell()`](https://belian-earth.github.io/a5R/reference/a5_cell.md)                      | Light (hex parse)                   | Low     |
 
 Scalar and bulk operations
 ([`a5_cell_to_children()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_children.md),

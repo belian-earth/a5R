@@ -3,21 +3,6 @@
 R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 / discrete global grid system, powered by the a5 Rust crate via extendr.
 
-## Cell type
-
-- [`a5_cell()`](https://belian-earth.github.io/a5R/reference/a5_cell.md)
-  — construct cell ID vectors
-
-- [is_a5_cell()](https://belian-earth.github.io/a5R/reference/a5_cell.md)
-  /
-  [a5_is_valid()](https://belian-earth.github.io/a5R/reference/a5_cell.md)
-  — type test and validation
-
-- [`a5_u64_to_hex()`](https://belian-earth.github.io/a5R/reference/a5_u64_to_hex.md)
-  /
-  [a5_hex_to_u64()](https://belian-earth.github.io/a5R/reference/a5_u64_to_hex.md)
-  — hex string conversion
-
 ## Indexing
 
 - [`a5_lonlat_to_cell()`](https://belian-earth.github.io/a5R/reference/a5_lonlat_to_cell.md)
@@ -25,6 +10,9 @@ R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 
 - [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_lonlat.md)
   — cell IDs to centre coordinates
+
+- [`a5_is_cell()`](https://belian-earth.github.io/a5R/reference/a5_cell.md)
+  — validate cell IDs
 
 ## Geometry
 
@@ -75,13 +63,6 @@ R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 - [`a5_grid()`](https://belian-earth.github.io/a5R/reference/a5_grid.md)
   — fill a bbox or geometry with cells
 
-## Arrow & Parquet
-
-- [`a5_cell_from_arrow()`](https://belian-earth.github.io/a5R/reference/a5_cell_from_arrow.md)
-  /
-  [a5_cell_to_arrow()](https://belian-earth.github.io/a5R/reference/a5_cell_from_arrow.md)
-  — lossless conversion to/from Arrow `uint64`
-
 ## Configuration
 
 - [`a5_set_threads()`](https://belian-earth.github.io/a5R/reference/a5_threads.md)
@@ -96,12 +77,6 @@ R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 
 - [`vignette("multithreading")`](https://belian-earth.github.io/a5R/articles/multithreading.md)
   — parallel processing
-
-- [`vignette("internal-cell-representation")`](https://belian-earth.github.io/a5R/articles/internal-cell-representation.md)
-  — how cell IDs are stored
-
-- [`vignette("arrow-parquet")`](https://belian-earth.github.io/a5R/articles/arrow-parquet.md)
-  — Arrow and Parquet interop
 
 ## See also
 

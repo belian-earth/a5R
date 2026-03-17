@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -25,9 +25,7 @@
 <li class="nav-item"><a class="nav-link" href="../articles/a5R.html">Get started</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/arrow-parquet.html">Working with Arrow and Parquet</a></li>
-    <li><a class="dropdown-item" href="../articles/internal-cell-representation.html">How a5R stores cell IDs without strings</a></li>
-    <li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
     <li><a class="dropdown-item" href="../articles/traversal-and-distance.html">Traversal and distance</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -42,24 +40,14 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/belian-earth/a5R/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/belian-earth/a5R/blob/v0.2.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
-    <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.3.0" id="a5r-030">a5R 0.3.0<a class="anchor" aria-label="anchor" href="#a5r-030"></a></h2>
-<ul><li>Replaced internal cell representation: cell IDs are now stored as 8 parallel raw byte vectors instead of hex strings, reducing memory usage from ~80 bytes/cell to 8 bytes/cell.</li>
-<li>Added lossless Arrow <code>uint64</code> conversion for zero-copy Parquet I/O.</li>
-<li>Added <code>vec_proxy_compare()</code> and <code>vec_proxy_order()</code> methods for <code>a5_cell</code>, enabling <code><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort()</a></code>, <code><a href="https://rdrr.io/r/base/order.html" class="external-link">order()</a></code>, <code><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique()</a></code>, <code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated()</a></code>, <code><a href="https://rdrr.io/r/base/match.html" class="external-link">match()</a></code>, and <code>%in%</code>.</li>
-<li>Added <code><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na()</a></code> method for <code>a5_cell</code>.</li>
-<li>
-<code><a href="../reference/a5_cell_distance.html">a5_cell_distance()</a></code> and <code><a href="../reference/a5_cell_area.html">a5_cell_area()</a></code> gain <code>units = NULL</code> option to return plain numeric vectors (in metres / m²) without <code>units</code> class overhead.</li>
-</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.0" id="a5r-020">a5R 0.2.0<a class="anchor" aria-label="anchor" href="#a5r-020"></a></h2><p class="text-muted">CRAN release: 2026-03-16</p>
 <ul><li>Initial CRAN submission.</li>
 </ul></div>
-  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
-    </nav></aside></div>
+  </main></div>
 
 
     <footer><div class="pkgdown-footer-left">
