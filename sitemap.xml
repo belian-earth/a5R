@@ -2,7 +2,9 @@
 <url><loc>https://belian-earth.github.io/a5R/404.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/LICENSE.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/articles/a5R.html</loc></url>
+<url><loc>https://belian-earth.github.io/a5R/articles/arrow-parquet.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/articles/index.html</loc></url>
+<url><loc>https://belian-earth.github.io/a5R/articles/internal-cell-representation.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/articles/multithreading.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/articles/traversal-and-distance.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/authors.html</loc></url>
@@ -12,6 +14,7 @@
 <url><loc>https://belian-earth.github.io/a5R/reference/a5_cell.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/reference/a5_cell_area.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/reference/a5_cell_distance.html</loc></url>
+<url><loc>https://belian-earth.github.io/a5R/reference/a5_cell_from_arrow.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/reference/a5_cell_to_boundary.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/reference/a5_cell_to_children.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/reference/a5_cell_to_lonlat.html</loc></url>
@@ -26,6 +29,7 @@
 <url><loc>https://belian-earth.github.io/a5R/reference/a5_lonlat_to_cell.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/reference/a5_spherical_cap.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/reference/a5_threads.html</loc></url>
+<url><loc>https://belian-earth.github.io/a5R/reference/a5_u64_to_hex.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/reference/a5_uncompact.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/reference/index.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/reference/wk_methods.html</loc></url>
