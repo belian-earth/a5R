@@ -1,14 +1,6 @@
-## Resubmission
-
-This is a resubmission addressing reviewer feedback:
-
-- Quoted 'A5' in the DESCRIPTION Title field.
-- Added reference URL to the Description field.
-- Save and restore `par()` in the traversal-and-distance vignette.
-
 ## R CMD check results
 
-Duration: 1m 34s
+Duration: 1m 8.1s
 
 ❯ checking for future file timestamps ... NOTE
   unable to verify current time
@@ -18,3 +10,5 @@ Duration: 1m 34s
     ‘-mno-omit-leaf-frame-pointer’
 
 0 errors ✔ | 0 warnings ✔ | 2 notes ✖
+
+* This is a new release.
