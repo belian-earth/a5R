@@ -26,8 +26,7 @@ a5_cell_distance(
   Character scalar specifying the distance unit (default `"m"`). Any
   unit convertible from metres via
   [`units::set_units()`](https://r-quantities.github.io/units/reference/units.html)
-  is accepted (e.g. `"km"`, `"mi"`). If NULL, the distance is returned
-  as a numeric vector in metres.
+  is accepted (e.g. `"km"`, `"mi"`).
 
 - method:
 
