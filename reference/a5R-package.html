@@ -15,7 +15,7 @@ discrete global grid system, powered by the a5 Rust crate via extendr."><meta pr
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -27,7 +27,9 @@ discrete global grid system, powered by the a5 Rust crate via extendr."><meta pr
 <li class="nav-item"><a class="nav-link" href="../articles/a5R.html">Get started</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/arrow-parquet.html">Working with Arrow and Parquet</a></li>
+    <li><a class="dropdown-item" href="../articles/internal-cell-representation.html">How a5R stores cell IDs without strings</a></li>
+    <li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
     <li><a class="dropdown-item" href="../articles/traversal-and-distance.html">Traversal and distance</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -53,12 +55,21 @@ discrete global grid system, powered by the a5 Rust crate via extendr.</p>
 
 
     <div class="section level2">
+    <h2 id="cell-type">Cell type<a class="anchor" aria-label="anchor" href="#cell-type"></a></h2>
+
+
+<ul><li><p><code><a href="a5_cell.html">a5_cell()</a></code> — construct cell ID vectors</p></li>
+<li><p><a href="a5_cell.html">is_a5_cell()</a> / <a href="a5_cell.html">a5_is_valid()</a> — type test and
+validation</p></li>
+<li><p><code><a href="a5_u64_to_hex.html">a5_u64_to_hex()</a></code> / <a href="a5_u64_to_hex.html">a5_hex_to_u64()</a> — hex string
+conversion</p></li>
+</ul></div>
+    <div class="section level2">
     <h2 id="indexing">Indexing<a class="anchor" aria-label="anchor" href="#indexing"></a></h2>
 
 
 <ul><li><p><code><a href="a5_lonlat_to_cell.html">a5_lonlat_to_cell()</a></code> — coordinates to cell IDs</p></li>
 <li><p><code><a href="a5_cell_to_lonlat.html">a5_cell_to_lonlat()</a></code> — cell IDs to centre coordinates</p></li>
-<li><p><code><a href="a5_cell.html">a5_is_cell()</a></code> — validate cell IDs</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="geometry">Geometry<a class="anchor" aria-label="anchor" href="#geometry"></a></h2>
@@ -94,6 +105,13 @@ discrete global grid system, powered by the a5 Rust crate via extendr.</p>
 <ul><li><p><code><a href="a5_grid.html">a5_grid()</a></code> — fill a bbox or geometry with cells</p></li>
 </ul></div>
     <div class="section level2">
+    <h2 id="arrow-amp-parquet">Arrow &amp; Parquet<a class="anchor" aria-label="anchor" href="#arrow-amp-parquet"></a></h2>
+
+
+<ul><li><p><code><a href="a5_cell_from_arrow.html">a5_cell_from_arrow()</a></code> / <a href="a5_cell_from_arrow.html">a5_cell_to_arrow()</a> —
+lossless conversion to/from Arrow <code>uint64</code></p></li>
+</ul></div>
+    <div class="section level2">
     <h2 id="configuration">Configuration<a class="anchor" aria-label="anchor" href="#configuration"></a></h2>
 
 
@@ -105,6 +123,8 @@ discrete global grid system, powered by the a5 Rust crate via extendr.</p>
 
 <ul><li><p><code><a href="../articles/a5R.html">vignette("a5R")</a></code> — getting started</p></li>
 <li><p><code><a href="../articles/multithreading.html">vignette("multithreading")</a></code> — parallel processing</p></li>
+<li><p><code><a href="../articles/internal-cell-representation.html">vignette("internal-cell-representation")</a></code> — how cell IDs are stored</p></li>
+<li><p><code><a href="../articles/arrow-parquet.html">vignette("arrow-parquet")</a></code> — Arrow and Parquet interop</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

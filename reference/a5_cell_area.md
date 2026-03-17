@@ -21,7 +21,8 @@ a5_cell_area(resolution, units = "m^2")
   Character scalar specifying the output area unit (default `"m^2"`).
   Any unit convertible from `m^2` via
   [`units::set_units()`](https://r-quantities.github.io/units/reference/units.html)
-  is accepted (e.g. `"km^2"`, `"ha"`, `"acre"`).
+  is accepted (e.g. `"km^2"`, `"ha"`, `"acre"`). If NULL, the area is
+  returned as a numeric vector in m^2.
 
 ## Value
 
