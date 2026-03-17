@@ -47,7 +47,13 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.0" id="a5r-030">a5R 0.3.0<a class="anchor" aria-label="anchor" href="#a5r-030"></a></h2>
-</div>
+<ul><li>Replaced internal cell representation: cell IDs are now stored as 8 parallel raw byte vectors instead of hex strings, reducing memory usage from ~80 bytes/cell to 8 bytes/cell.</li>
+<li>Added lossless Arrow <code>uint64</code> conversion for zero-copy Parquet I/O.</li>
+<li>Added <code>vec_proxy_compare()</code> and <code>vec_proxy_order()</code> methods for <code>a5_cell</code>, enabling <code><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort()</a></code>, <code><a href="https://rdrr.io/r/base/order.html" class="external-link">order()</a></code>, <code><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique()</a></code>, <code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated()</a></code>, <code><a href="https://rdrr.io/r/base/match.html" class="external-link">match()</a></code>, and <code>%in%</code>.</li>
+<li>Added <code><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na()</a></code> method for <code>a5_cell</code>.</li>
+<li>
+<code><a href="../reference/a5_cell_distance.html">a5_cell_distance()</a></code> and <code><a href="../reference/a5_cell_area.html">a5_cell_area()</a></code> gain <code>units = NULL</code> option to return plain numeric vectors (in metres / m²) without <code>units</code> class overhead.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.0" id="a5r-020">a5R 0.2.0<a class="anchor" aria-label="anchor" href="#a5r-020"></a></h2><p class="text-muted">CRAN release: 2026-03-16</p>
 <ul><li>Initial CRAN submission.</li>
