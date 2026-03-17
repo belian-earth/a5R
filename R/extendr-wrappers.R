@@ -14,46 +14,66 @@ a5_set_threads_rs <- function(n) invisible(.Call(wrap__a5_set_threads_rs, n))
 
 a5_get_threads_rs <- function() .Call(wrap__a5_get_threads_rs)
 
+#' Convert cell raw bytes to hex strings (zero-padded to 16 chars).
+#' @noRd
+#' @keywords internal
+raw8_to_hex_rs <- function(cells) .Call(wrap__raw8_to_hex_rs, cells)
+
+#' Convert hex strings to cell raw bytes.
+#' Returns list(b1 = raw(), ..., b8 = raw()).
+#' @noRd
+#' @keywords internal
+hex_to_raw8_rs <- function(cells) .Call(wrap__hex_to_raw8_rs, cells)
+
+#' Convert a list of raw(8) blobs (from Arrow) to cell raw bytes.
+#' @noRd
+#' @keywords internal
+blobs_to_raw8_rs <- function(blobs) .Call(wrap__blobs_to_raw8_rs, blobs)
+
+#' Convert cell raw bytes to a list of raw(8) blobs (for Arrow).
+#' NA cells produce NULL elements.
+#' @noRd
+#' @keywords internal
+raw8_to_blobs_rs <- function(cells) .Call(wrap__raw8_to_blobs_rs, cells)
+
 #' Convert longitude/latitude coordinates to A5 cell indices.
-#'
-#' Vectorised over `lon`, `lat`, and `resolution`.
 #'
 #' @param lon Numeric vector of longitudes (degrees).
 #' @param lat Numeric vector of latitudes (degrees).
 #' @param resolution Integer vector of resolutions (0--30).
-#' @return A character vector of cell IDs (hex-encoded).
+#' @return A list with b1..b8 raw vectors.
 #' @noRd
 #' @keywords internal
 a5_lonlat_to_cell_rs <- function(lon, lat, resolution) .Call(wrap__a5_lonlat_to_cell_rs, lon, lat, resolution)
 
 #' Convert A5 cell indices to longitude/latitude coordinates.
 #'
-#' @param cell Character vector of hex-encoded cell IDs.
+#' @param cells List with b1..b8 raw vectors.
 #' @param normalise Logical: if TRUE, wrap longitudes to the standard range.
 #' @return A list with `lon` and `lat` numeric vectors.
 #' @noRd
 #' @keywords internal
-a5_cell_to_lonlat_rs <- function(cell, normalise) .Call(wrap__a5_cell_to_lonlat_rs, cell, normalise)
+a5_cell_to_lonlat_rs <- function(cells, normalise) .Call(wrap__a5_cell_to_lonlat_rs, cells, normalise)
 
 #' Get boundary polygons for A5 cells as WKT strings.
 #'
-#' @param cell Character vector of hex-encoded cell IDs.
+#' @param cells List with b1..b8 raw vectors.
 #' @param closed_ring Logical: should the polygon ring be closed?
 #' @param segments Integer: number of interpolation segments per edge.
 #' @return A character vector of WKT POLYGON strings.
 #' @noRd
 #' @keywords internal
-a5_cell_to_boundary_rs <- function(cell, closed_ring, segments) .Call(wrap__a5_cell_to_boundary_rs, cell, closed_ring, segments)
+a5_cell_to_boundary_rs <- function(cells, closed_ring, segments) .Call(wrap__a5_cell_to_boundary_rs, cells, closed_ring, segments)
 
 #' Get boundary polygons for A5 cells as WKB raw vectors.
 #'
-#' @param cell Character vector of hex-encoded cell IDs.
+#' @param cells List with b1..b8 raw vectors.
 #' @param closed_ring Logical: should the polygon ring be closed?
 #' @param segments Integer: number of interpolation segments per edge.
 #' @return A list of raw vectors (WKB bytes) or NULL for NA cells.
 #' @noRd
 #' @keywords internal
-a5_cell_to_boundary_wkb_rs <- function(cell, closed_ring, segments) .Call(wrap__a5_cell_to_boundary_wkb_rs, cell, closed_ring, segments)
+a5_cell_to_boundary_wkb_rs <- function(cells, closed_ring, segments) .Call(wrap__a5_cell_to_boundary_wkb_rs, cells, closed_ring, segments)
 
 #' Get the area (in square metres) of cells at a given resolution.
 #'
@@ -80,113 +100,117 @@ a5_get_num_cells_rs <- function(resolution) .Call(wrap__a5_get_num_cells_rs, res
 #' @keywords internal
 a5_get_num_children_rs <- function(parent_resolution, child_resolution) .Call(wrap__a5_get_num_children_rs, parent_resolution, child_resolution)
 
-#' Validate hex cell IDs.
+#' Validate cell IDs stored as raw bytes.
+#'
+#' @param cells List with b1..b8 raw vectors.
+#' @return Logical vector indicating validity.
+#' @noRd
+#' @keywords internal
+a5_is_valid_cell_rs <- function(cells) .Call(wrap__a5_is_valid_cell_rs, cells)
+
+#' Validate hex cell ID strings (for use before conversion to rcrd).
 #'
 #' @param cell Character vector of hex strings to validate.
 #' @return Logical vector indicating validity.
 #' @noRd
 #' @keywords internal
-a5_is_valid_cell_rs <- function(cell) .Call(wrap__a5_is_valid_cell_rs, cell)
+a5_is_valid_hex_rs <- function(cell) .Call(wrap__a5_is_valid_hex_rs, cell)
 
 #' Distance between pairs of cell centroids.
 #'
-#' @param from Character vector of hex-encoded cell IDs.
-#' @param to Character vector of hex-encoded cell IDs (same length).
+#' @param from_cells List with b1..b8 raw vectors for `from` cells.
+#' @param to_cells List with b1..b8 raw vectors for `to` cells.
 #' @param method Distance method: "haversine", "geodesic", or "rhumb".
 #' @return Numeric vector of distances in metres.
 #' @noRd
 #' @keywords internal
-a5_cell_distance_rs <- function(from, to, method) .Call(wrap__a5_cell_distance_rs, from, to, method)
+a5_cell_distance_rs <- function(from_cells, to_cells, method) .Call(wrap__a5_cell_distance_rs, from_cells, to_cells, method)
 
 #' Get the resolution of A5 cell indices.
 #'
-#' @param cell Character vector of hex-encoded cell IDs.
+#' @param cells List with b1..b8 raw vectors.
 #' @return Integer vector of resolutions.
 #' @noRd
 #' @keywords internal
-a5_get_resolution_rs <- function(cell) .Call(wrap__a5_get_resolution_rs, cell)
+a5_get_resolution_rs <- function(cells) .Call(wrap__a5_get_resolution_rs, cells)
 
 #' Navigate to parent cell(s).
 #'
-#' @param cell Character vector of hex-encoded cell IDs.
+#' @param cells List with b1..b8 raw vectors.
 #' @param parent_resolution Integer: target parent resolution. NULL for
 #'   immediate parent.
-#' @return Character vector of hex-encoded parent cell IDs.
+#' @return List with b1..b8 raw vectors.
 #' @noRd
 #' @keywords internal
-a5_cell_to_parent_rs <- function(cell, parent_resolution) .Call(wrap__a5_cell_to_parent_rs, cell, parent_resolution)
+a5_cell_to_parent_rs <- function(cells, parent_resolution) .Call(wrap__a5_cell_to_parent_rs, cells, parent_resolution)
 
 #' Get child cells.
 #'
-#' @param cell A single hex-encoded cell ID.
+#' @param cell List with b1..b8 raw vectors (length 1).
 #' @param child_resolution Integer: target child resolution. NULL for
 #'   immediate children.
-#' @return Character vector of hex-encoded child cell IDs.
+#' @return List with b1..b8 raw vectors.
 #' @noRd
 #' @keywords internal
 a5_cell_to_children_rs <- function(cell, child_resolution) .Call(wrap__a5_cell_to_children_rs, cell, child_resolution)
 
 #' Get all 12 resolution-0 root cells.
 #'
-#' @return Character vector of 12 hex-encoded cell IDs.
+#' @return List with b1..b8 raw vectors.
 #' @noRd
 #' @keywords internal
 a5_get_res0_cells_rs <- function() .Call(wrap__a5_get_res0_cells_rs)
 
 #' Compact a set of A5 cell IDs.
 #'
-#' Merges sibling groups into their common parent.
-#'
-#' @param cells Character vector of hex-encoded cell IDs.
-#' @return Character vector of compacted hex-encoded cell IDs.
+#' @param cells List with b1..b8 raw vectors.
+#' @return List with b1..b8 raw vectors.
 #' @noRd
 #' @keywords internal
 a5_compact_rs <- function(cells) .Call(wrap__a5_compact_rs, cells)
 
 #' Uncompact a set of A5 cell IDs to a target resolution.
 #'
-#' @param cells Character vector of hex-encoded cell IDs.
+#' @param cells List with b1..b8 raw vectors.
 #' @param target_resolution Integer: the resolution to expand to.
-#' @return Character vector of uncompacted hex-encoded cell IDs.
+#' @return List with b1..b8 raw vectors.
 #' @noRd
 #' @keywords internal
 a5_uncompact_rs <- function(cells, target_resolution) .Call(wrap__a5_uncompact_rs, cells, target_resolution)
 
 #' Generate a grid of A5 cells covering a bounding box.
 #'
-#' Uses hierarchical descent with bbox filtering entirely in Rust.
-#'
 #' @param xmin,ymin,xmax,ymax Bounding box coordinates.
 #' @param resolution Target resolution (0--30).
-#' @return Character vector of hex-encoded cell IDs.
+#' @return List with b1..b8 raw vectors.
 #' @noRd
 #' @keywords internal
 a5_grid_bbox_rs <- function(xmin, ymin, xmax, ymax, resolution) .Call(wrap__a5_grid_bbox_rs, xmin, ymin, xmax, ymax, resolution)
 
 #' Filter cell IDs to those whose boundary polygons intersect a target geometry.
 #'
-#' @param cells Character vector of hex-encoded cell IDs.
+#' @param cells List with b1..b8 raw vectors.
 #' @param target_wkt WKT string of the target geometry.
-#' @return Character vector of cell IDs that intersect the target.
+#' @return List with b1..b8 raw vectors (filtered).
 #' @noRd
 #' @keywords internal
 a5_grid_intersects_rs <- function(cells, target_wkt) .Call(wrap__a5_grid_intersects_rs, cells, target_wkt)
 
 #' Get all cells within k hops of a centre cell.
 #'
-#' @param cell A single hex-encoded cell ID.
+#' @param cell List with b1..b8 raw vectors (length 1).
 #' @param k Number of hops.
 #' @param vertex If TRUE, include vertex-sharing (8-connected) neighbours.
-#' @return Character vector of hex-encoded cell IDs.
+#' @return List with b1..b8 raw vectors.
 #' @noRd
 #' @keywords internal
 a5_grid_disk_rs <- function(cell, k, vertex) .Call(wrap__a5_grid_disk_rs, cell, k, vertex)
 
 #' Get all cells within a great-circle radius of a centre cell.
 #'
-#' @param cell A single hex-encoded cell ID.
+#' @param cell List with b1..b8 raw vectors (length 1).
 #' @param radius Great-circle radius in metres.
-#' @return Character vector of hex-encoded cell IDs.
+#' @return List with b1..b8 raw vectors.
 #' @noRd
 #' @keywords internal
 a5_spherical_cap_rs <- function(cell, radius) .Call(wrap__a5_spherical_cap_rs, cell, radius)

@@ -11,7 +11,8 @@ a5_cell_area(resolution, units = "m^2")
 
 \item{units}{Character scalar specifying the output area unit (default
 \code{"m^2"}). Any unit convertible from \code{m^2} via \code{\link[units:units]{units::set_units()}} is
-accepted (e.g. \code{"km^2"}, \code{"ha"}, \code{"acre"}).}
+accepted (e.g. \code{"km^2"}, \code{"ha"}, \code{"acre"}).  If NULL, the area is
+returned as a numeric vector in m^2.}
 }
 \value{
 A \link[units:units]{units::units} vector of areas.

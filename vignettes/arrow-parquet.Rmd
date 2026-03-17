@@ -1,0 +1,129 @@
+---
+title: "Working with Arrow and Parquet"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Working with Arrow and Parquet}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## The uint64 problem
+
+A5 cell IDs are 64-bit unsigned integers. R has no native `uint64` type,
+and its `double` can only represent integers exactly up to 2^53. Nearly
+half of all A5 cell IDs exceed this threshold, so converting them to
+`double` silently corrupts the data.
+
+This is a problem when reading Parquet files that store A5 cell IDs as
+`uint64` columns — the standard format used by DuckDB, Python, and
+[geoparquet.io](https://geoparquet.io/). By default, `arrow::read_parquet()`
+converts `uint64` to R's `double`, losing precision:
+
+```{r naive, eval = requireNamespace("arrow", quietly = TRUE)}
+library(arrow)
+
+# Simulate: two uint64 values, one below and one above 2^53
+below <- 576460752303423494   # fits exactly in double
+above <- 576460752303423494 + 576460752303423494  # exceeds 2^53
+
+cat("2^53:    ", format(2^53, scientific = FALSE), "\n")
+cat("'above': ", format(above, scientific = FALSE), "\n")
+cat("Same as 'above + 1'?", above == above + 1, "\n")
+# TRUE — precision has already been lost
+```
+
+## The solution: `a5_cell_from_arrow()` and `a5_cell_to_arrow()`
+
+a5R provides two functions that bypass the lossy `double` conversion
+entirely, using Arrow's zero-copy `View()` to reinterpret the raw bytes:
+
+```{r bridge, eval = requireNamespace("arrow", quietly = TRUE)}
+library(a5R)
+library(tibble)
+
+# Six cities across the globe — some will have bit 63 set (origin >= 6)
+cities <- tibble(
+  name = c("Edinburgh", "Tokyo", "São Paulo", "Nairobi", "Anchorage", "Sydney"),
+  lon  = c(   -3.19,     139.69,     -46.63,     36.82,    -149.90,    151.21),
+  lat  = c(   55.95,      35.69,     -23.55,     -1.29,      61.22,    -33.87)
+)
+
+cities$cell <- a5_lonlat_to_cell(cities$lon, cities$lat, resolution = 10)
+cities
+```
+
+These cells work seamlessly in tibbles. Now let's enrich the data with
+some A5 operations — cell area, resolution, and distance from Edinburgh:
+
+```{r enrich, eval = requireNamespace("arrow", quietly = TRUE)}
+edinburgh <- cities$cell[1]
+
+cities$area_km2 <- as.numeric(a5_cell_area(10)) / 1e6
+cities$resolution <- a5_get_resolution(cities$cell)
+cities$dist_from_edinburgh_km <- as.numeric(
+  a5_cell_distance(cities$cell, rep(edinburgh, nrow(cities)))
+) / 1000
+
+cities
+```
+
+## Writing and reading Parquet
+
+Convert to an Arrow table and write to Parquet. The cell column is stored
+as native `uint64` — the same binary format used by DuckDB, Python, and
+geoparquet.io:
+
+```{r parquet_write, eval = requireNamespace("arrow", quietly = TRUE)}
+tf <- tempfile(fileext = ".parquet")
+
+arrow_tbl <- arrow::arrow_table(
+  name = cities$name,
+  cell_id = a5_cell_to_arrow(cities$cell),
+  area_km2 = cities$area_km2,
+  dist_from_edinburgh_km = cities$dist_from_edinburgh_km
+)
+arrow_tbl$schema
+arrow::write_parquet(arrow_tbl, tf)
+```
+
+Read it back — `a5_cell_from_arrow()` recovers the exact cell IDs
+without any precision loss:
+
+```{r parquet_read, eval = requireNamespace("arrow", quietly = TRUE)}
+pq <- arrow::read_parquet(tf, as_data_frame = FALSE)
+
+# Recover cells from the uint64 column, bind with the rest of the data
+recovered_cells <- a5_cell_from_arrow(pq$column(1))
+result <- as.data.frame(pq)
+result$cell <- recovered_cells
+result <- tibble::as_tibble(result[c("name", "cell", "area_km2", "dist_from_edinburgh_km")])
+result
+```
+
+Verify the round-trip is lossless:
+
+```{r verify, eval = requireNamespace("arrow", quietly = TRUE)}
+identical(format(cities$cell), format(result$cell))
+```
+
+## How it works under the hood
+
+1. **`a5_cell_to_arrow()`**: packs the eight raw-byte fields into 8-byte
+   little-endian blobs (one per cell), creates an Arrow
+   `fixed_size_binary(8)` array, then uses `View(uint64)` to
+   reinterpret the bytes as unsigned 64-bit integers — zero-copy.
+
+2. **`a5_cell_from_arrow()`**: does the reverse — `View(fixed_size_binary(8))`
+   on the `uint64` array to get the raw bytes, then unpacks each 8-byte
+   blob into the eight raw-byte fields used by `a5_cell`.
+
+The raw bytes never pass through `double`, so there is no precision loss
+at any step. See `vignette("internal-cell-representation")` for details
+on the raw-byte representation.

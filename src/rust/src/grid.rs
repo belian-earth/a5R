@@ -4,7 +4,8 @@ use rayon::prelude::*;
 use std::str::FromStr;
 
 use crate::boundary::{BOUNDARY_OPTS_CLOSED, BOUNDARY_OPTS_OPEN};
-use crate::threading::{get_num_threads, map_cells, maybe_par};
+use crate::cell_raw::{map_cells, u64s_to_raw8_list};
+use crate::threading::{get_num_threads, maybe_par};
 
 struct BBox {
     xmin: f64,
@@ -30,7 +31,6 @@ fn cell_bbox(boundary: &[a5::LonLat]) -> BBox {
 }
 
 /// Buffer distance in degrees, adjusted for latitude.
-/// Returns a large sentinel (90°) near poles to skip filtering.
 fn buffer_distance(resolution: i32, max_abs_lat: f64) -> f64 {
     let area_m2 = a5::cell_area(resolution);
     let diameter_m = area_m2.sqrt();
@@ -56,21 +56,19 @@ fn cell_to_geo_polygon(cell_id: u64) -> Option<geo::Polygon<f64>> {
 
 /// Generate a grid of A5 cells covering a bounding box.
 ///
-/// Uses hierarchical descent with bbox filtering entirely in Rust.
-///
 /// @param xmin,ymin,xmax,ymax Bounding box coordinates.
 /// @param resolution Target resolution (0--30).
-/// @return Character vector of hex-encoded cell IDs.
+/// @return List with b1..b8 raw vectors.
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_grid_bbox_rs(xmin: f64, ymin: f64, xmax: f64, ymax: f64, resolution: i32) -> Strings {
+fn a5_grid_bbox_rs(xmin: f64, ymin: f64, xmax: f64, ymax: f64, resolution: i32) -> List {
     let target = BBox { xmin, ymin, xmax, ymax };
     let max_abs_lat = ymin.abs().max(ymax.abs());
 
     let mut cells = match a5::get_res0_cells() {
         Ok(c) => c,
-        Err(_) => return Strings::new(0),
+        Err(_) => return u64s_to_raw8_list(vec![]),
     };
     let mut current_res: i32 = 0;
     let step: i32 = 3;
@@ -80,7 +78,7 @@ fn a5_grid_bbox_rs(xmin: f64, ymin: f64, xmax: f64, ymax: f64, resolution: i32) 
         let next_res = (current_res + step).min(resolution);
         cells = match a5::uncompact(&cells, next_res) {
             Ok(c) => c,
-            Err(_) => return Strings::new(0),
+            Err(_) => return u64s_to_raw8_list(vec![]),
         };
         current_res = next_res;
 
@@ -120,41 +118,36 @@ fn a5_grid_bbox_rs(xmin: f64, ymin: f64, xmax: f64, ymax: f64, resolution: i32) 
         }
     }
 
-    cells
-        .iter()
-        .map(|c| Rstr::from(a5::u64_to_hex(*c)))
-        .collect::<Strings>()
+    let results: Vec<Option<u64>> = cells.into_iter().map(|c| Some(c)).collect();
+    u64s_to_raw8_list(results)
 }
 
 /// Filter cell IDs to those whose boundary polygons intersect a target geometry.
 ///
-/// @param cells Character vector of hex-encoded cell IDs.
+/// @param cells List with b1..b8 raw vectors.
 /// @param target_wkt WKT string of the target geometry.
-/// @return Character vector of cell IDs that intersect the target.
+/// @return List with b1..b8 raw vectors (filtered).
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_grid_intersects_rs(cells: Strings, target_wkt: &str) -> Strings {
+fn a5_grid_intersects_rs(cells: List, target_wkt: &str) -> List {
     let wkt_obj = match wkt::Wkt::<f64>::from_str(target_wkt) {
         Ok(w) => w,
-        Err(_) => return Strings::new(0),
+        Err(_) => return u64s_to_raw8_list(vec![]),
     };
     let target: geo::Geometry<f64> = match geo::Geometry::try_from(wkt_obj) {
         Ok(g) => g,
-        Err(_) => return Strings::new(0),
+        Err(_) => return u64s_to_raw8_list(vec![]),
     };
 
-    let results = map_cells(&cells, |s| {
-        let id = a5::hex_to_u64(s).ok()?;
+    let results = map_cells(&cells, |id| {
         let poly = cell_to_geo_polygon(id)?;
-        if target.intersects(&poly) { Some(s.to_string()) } else { None }
+        if target.intersects(&poly) { Some(id) } else { None }
     });
 
-    results
-        .into_iter()
-        .flatten()
-        .map(|s| Rstr::from(s))
-        .collect::<Strings>()
+    // Filter out non-intersecting cells (None values)
+    let filtered: Vec<Option<u64>> = results.into_iter().flatten().map(|id| Some(id)).collect();
+    u64s_to_raw8_list(filtered)
 }
 
 extendr_module! {

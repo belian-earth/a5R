@@ -38,7 +38,7 @@ exprs <- rlang::exprs(
     cell_to_lonlat       = a5_cell_to_lonlat(cells),
     cell_to_parent       = a5_cell_to_parent(cells),
     get_resolution       = a5_get_resolution(cells),
-    is_valid_cell        = a5_is_cell(cells)
+    is_valid_cell        = a5_is_valid(cells)
 )
 
 results <- data.frame()

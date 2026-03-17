@@ -1,16 +1,12 @@
 use extendr_api::prelude::*;
 use geo::{Distance, Geodesic, Haversine, Point, Rhumb};
 
-use crate::threading::map_cell_pairs;
+use crate::cell_raw::map_cell_pairs;
 
 /// Distance between two cell centroids using the specified method.
-///
-/// Uses `cell_to_lonlat` (which applies the authalic→geodetic latitude
-/// correction) rather than raw spherical coordinates, so results match
-/// sf/s2.
-fn cell_distance(from: &str, to: &str, method: &str) -> Option<f64> {
-    let from_ll = a5::cell_to_lonlat(a5::hex_to_u64(from).ok()?).ok()?;
-    let to_ll = a5::cell_to_lonlat(a5::hex_to_u64(to).ok()?).ok()?;
+fn cell_distance(from: u64, to: u64, method: &str) -> Option<f64> {
+    let from_ll = a5::cell_to_lonlat(from).ok()?;
+    let to_ll = a5::cell_to_lonlat(to).ok()?;
     let p1 = Point::new(from_ll.longitude(), from_ll.latitude());
     let p2 = Point::new(to_ll.longitude(), to_ll.latitude());
     Some(match method {
@@ -22,15 +18,17 @@ fn cell_distance(from: &str, to: &str, method: &str) -> Option<f64> {
 
 /// Distance between pairs of cell centroids.
 ///
-/// @param from Character vector of hex-encoded cell IDs.
-/// @param to Character vector of hex-encoded cell IDs (same length).
+/// @param from_cells List with b1..b8 raw vectors for `from` cells.
+/// @param to_cells List with b1..b8 raw vectors for `to` cells.
 /// @param method Distance method: "haversine", "geodesic", or "rhumb".
 /// @return Numeric vector of distances in metres.
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_cell_distance_rs(from: Strings, to: Strings, method: &str) -> Doubles {
-    let results = map_cell_pairs(&from, &to, |f, t| cell_distance(f, t, method));
+fn a5_cell_distance_rs(from_cells: List, to_cells: List, method: &str) -> Doubles {
+    let results = map_cell_pairs(&from_cells, &to_cells, |f, t| {
+        cell_distance(f, t, method)
+    });
 
     let mut out = Doubles::new(results.len());
     for (i, r) in results.into_iter().enumerate() {

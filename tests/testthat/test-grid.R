@@ -37,7 +37,9 @@ test_that("result cells intersect the target (bbox path)", {
     bbox[1], bbox[2], bbox[3], bbox[2], bbox[3], bbox[4],
     bbox[1], bbox[4], bbox[1], bbox[2]
   )
-  filtered <- a5_grid_intersects_rs(vctrs::vec_data(cells), target_wkt)
+  filtered <- cells_from_rs(a5_grid_intersects_rs(
+    cell_data(cells), target_wkt
+  ))
   expect_equal(length(filtered), length(cells))
 })
 
@@ -50,7 +52,7 @@ test_that("geometry input filters cells by intersection", {
   bbox_cells <- a5_grid(c(-3.3, 55.9, -3.1, 56.0), resolution = 8)
   expect_true(length(tri_cells) < length(bbox_cells))
   # All triangle cells should be a subset of the bbox cells
-  expect_true(all(vctrs::vec_data(tri_cells) %in% vctrs::vec_data(bbox_cells)))
+  expect_true(all(format(tri_cells) %in% format(bbox_cells)))
 })
 
 test_that("interior point is covered by a returned cell", {
@@ -58,12 +60,12 @@ test_that("interior point is covered by a returned cell", {
   cells <- a5_grid(bbox, resolution = 5)
   # the centroid of the bbox should fall inside one of the cells
   centre <- a5_lonlat_to_cell(-3.2, 55.95, resolution = 5)
-  expect_true(any(vctrs::vec_data(cells) == vctrs::vec_data(centre)))
+  expect_true(any(format(cells) == format(centre)))
 })
 
 test_that("no duplicate cells", {
   cells <- a5_grid(c(-3.3, 55.9, -3.1, 56.0), resolution = 5)
-  expect_equal(length(cells), length(unique(vctrs::vec_data(cells))))
+  expect_equal(length(cells), length(unique(format(cells))))
 })
 
 # -- input types ---------------------------------------------------------------
@@ -114,4 +116,30 @@ test_that("near-pole bbox returns cells", {
   cells <- a5_grid(c(0, 89.999, 0.001, 90), resolution = 5)
   expect_s3_class(cells, "a5_cell")
   expect_true(length(cells) >= 1L)
+})
+
+test_that("a5_grid accepts multiple geometries (GEOMETRYCOLLECTION path)", {
+  # Two small polygons far apart — should return cells near both
+  polys <- wk::wkt(c(
+    "POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))",
+    "POLYGON ((135 -33, 136 -33, 136 -32, 135 -32, 135 -33))"
+  ))
+  cells <- a5_grid(polys, resolution = 5)
+  expect_s3_class(cells, "a5_cell")
+  expect_true(length(cells) > 0)
+  centres <- a5_cell_to_lonlat(cells)
+  lons <- wk::wk_coords(centres)$x
+  # Cells near both polygons
+  expect_true(any(lons < 0))
+  expect_true(any(lons > 100))
+})
+
+test_that("a5_grid coerces double resolution to integer", {
+  cells <- a5_grid(c(-3.3, 55.9, -3.1, 56.0), resolution = 5.0)
+  expect_s3_class(cells, "a5_cell")
+  expect_true(all(a5_get_resolution(cells) == 5L))
+})
+
+test_that("a5_grid rejects vector resolution", {
+  expect_error(a5_grid(c(0, 0, 1, 1), resolution = c(3, 5)), "size 1")
 })

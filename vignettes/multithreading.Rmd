@@ -71,7 +71,7 @@ independently:
 | `a5_cell_to_lonlat()` | Moderate (reverse projection) | Medium |
 | `a5_cell_to_parent()` | Light (bit ops + hex) | Low |
 | `a5_get_resolution()` | Light (bit ops) | Low |
-| `a5_is_cell()` | Light (hex parse) | Low |
+| `a5_is_valid()` | Light (hex parse) | Low |
 
 Scalar and bulk operations (`a5_cell_to_children()`, `a5_compact()`,
 `a5_cell_area()`, etc.) are unaffected --- they are already fast or delegate

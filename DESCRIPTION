@@ -1,6 +1,6 @@
 Package: a5R
 Title: 'A5' Discrete Global Grid System
-Version: 0.2.0
+Version: 0.3.0
 Authors@R: c(
     person("Hugh", "Graham", role = c("aut", "cre"),
            email = "hugh@belian.earth"),
@@ -25,6 +25,7 @@ Imports:
     vctrs (>= 0.6.0),
     wk (>= 0.9.0)
 Suggests:
+    arrow,
     knitr,
     pillar,
     rmarkdown,

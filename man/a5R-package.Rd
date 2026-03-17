@@ -9,12 +9,22 @@
 R bindings for the \href{https://a5geo.org/}{A5} pentagonal geospatial index /
 discrete global grid system, powered by the a5 Rust crate via extendr.
 }
+\section{Cell type}{
+
+\itemize{
+\item \code{\link[=a5_cell]{a5_cell()}} --- construct cell ID vectors
+\item \link[=a5_cell]{is_a5_cell()} / \link[=a5_cell]{a5_is_valid()} --- type test and
+validation
+\item \code{\link[=a5_u64_to_hex]{a5_u64_to_hex()}} / \link[=a5_u64_to_hex]{a5_hex_to_u64()} --- hex string
+conversion
+}
+}
+
 \section{Indexing}{
 
 \itemize{
 \item \code{\link[=a5_lonlat_to_cell]{a5_lonlat_to_cell()}} --- coordinates to cell IDs
 \item \code{\link[=a5_cell_to_lonlat]{a5_cell_to_lonlat()}} --- cell IDs to centre coordinates
-\item \code{\link[=a5_is_cell]{a5_is_cell()}} --- validate cell IDs
 }
 }
 
@@ -55,6 +65,14 @@ discrete global grid system, powered by the a5 Rust crate via extendr.
 }
 }
 
+\section{Arrow & Parquet}{
+
+\itemize{
+\item \code{\link[=a5_cell_from_arrow]{a5_cell_from_arrow()}} / \link[=a5_cell_from_arrow]{a5_cell_to_arrow()} ---
+lossless conversion to/from Arrow \code{uint64}
+}
+}
+
 \section{Configuration}{
 
 \itemize{
@@ -67,6 +85,8 @@ discrete global grid system, powered by the a5 Rust crate via extendr.
 \itemize{
 \item \code{vignette("a5R")} --- getting started
 \item \code{vignette("multithreading")} --- parallel processing
+\item \code{vignette("internal-cell-representation")} --- how cell IDs are stored
+\item \code{vignette("arrow-parquet")} --- Arrow and Parquet interop
 }
 }
 

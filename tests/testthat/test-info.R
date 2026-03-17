@@ -26,6 +26,16 @@ test_that("get_num_children is consistent with get_num_cells", {
   expect_equal(a5_get_num_children(parent, child), ratio)
 })
 
+# -- a5_cell_area --------------------------------------------------------------
+
+test_that("cell_area with units = NULL returns plain numeric in m^2", {
+  a_null <- a5_cell_area(5, units = NULL)
+  a_m2 <- a5_cell_area(5, units = "m^2")
+  expect_type(a_null, "double")
+  expect_false(inherits(a_null, "units"))
+  expect_equal(a_null, as.numeric(a_m2))
+})
+
 test_that("get_num_children validates resolution", {
   expect_error(a5_get_num_children(-1, 5), "resolution")
   expect_error(a5_get_num_children(5, 31), "resolution")

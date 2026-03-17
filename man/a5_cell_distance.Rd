@@ -16,7 +16,8 @@ a5_cell_distance(
 
 \item{units}{Character scalar specifying the distance unit (default
 \code{"m"}). Any unit convertible from metres via \code{\link[units:units]{units::set_units()}} is
-accepted (e.g. \code{"km"}, \code{"mi"}).}
+accepted (e.g. \code{"km"}, \code{"mi"}). If NULL, the distance is returned as a
+numeric vector in metres.}
 
 \item{method}{Distance calculation method. One of \code{"haversine"}
 (great-circle, default), \code{"geodesic"} (WGS84 ellipsoid via Karney

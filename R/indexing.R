@@ -19,8 +19,7 @@ a5_lonlat_to_cell <- function(lon, lat, resolution) {
     resolution = vctrs::vec_cast(resolution, integer())
   )
   check_resolution(args$resolution)
-  out <- a5_lonlat_to_cell_rs(args$lon, args$lat, args$resolution)
-  new_a5_cell(out)
+  cells_from_rs(a5_lonlat_to_cell_rs(args$lon, args$lat, args$resolution))
 }
 
 #' Convert A5 cell indices to coordinates
@@ -47,7 +46,7 @@ a5_lonlat_to_cell <- function(lon, lat, resolution) {
 #' a5_cell_to_lonlat(cell2, normalise = FALSE)
 a5_cell_to_lonlat <- function(cell, normalise = TRUE) {
   cell <- as_a5_cell(cell)
-  ll <- a5_cell_to_lonlat_rs(vctrs::vec_data(cell), normalise)
+  ll <- a5_cell_to_lonlat_rs(cell_data(cell), normalise)
   if (normalise) {
     wk::xy(ll$lon, ll$lat, crs = wk::wk_crs_longlat())
   } else {

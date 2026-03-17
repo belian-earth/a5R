@@ -4,10 +4,16 @@
 #' R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index /
 #' discrete global grid system, powered by the a5 Rust crate via extendr.
 #'
+#' @section Cell type:
+#' - [a5_cell()] --- construct cell ID vectors
+#' - [is_a5_cell()][a5_cell] / [a5_is_valid()][a5_cell] --- type test and
+#'   validation
+#' - [a5_u64_to_hex()] / [a5_hex_to_u64()][a5_u64_to_hex] --- hex string
+#'   conversion
+#'
 #' @section Indexing:
 #' - [a5_lonlat_to_cell()] --- coordinates to cell IDs
 #' - [a5_cell_to_lonlat()] --- cell IDs to centre coordinates
-#' - [a5_is_cell()] --- validate cell IDs
 #'
 #' @section Geometry:
 #' - [a5_cell_to_boundary()] --- cell boundary polygons (WKB or WKT)
@@ -30,12 +36,18 @@
 #' @section Grid generation:
 #' - [a5_grid()] --- fill a bbox or geometry with cells
 #'
+#' @section Arrow & Parquet:
+#' - [a5_cell_from_arrow()] / [a5_cell_to_arrow()][a5_cell_from_arrow] ---
+#'   lossless conversion to/from Arrow `uint64`
+#'
 #' @section Configuration:
 #' - [a5_set_threads()] / [a5_get_threads()] --- multi-threading control
 #'
 #' @section Vignettes:
 #' - `vignette("a5R")` --- getting started
 #' - `vignette("multithreading")` --- parallel processing
+#' - `vignette("internal-cell-representation")` --- how cell IDs are stored
+#' - `vignette("arrow-parquet")` --- Arrow and Parquet interop
 #'
 #' @keywords internal
 "_PACKAGE"

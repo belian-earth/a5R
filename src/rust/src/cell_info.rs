@@ -1,6 +1,6 @@
 use extendr_api::prelude::*;
 
-use crate::threading::map_cells;
+use crate::cell_raw::CellSlices;
 
 /// Get the area (in square metres) of cells at a given resolution.
 ///
@@ -46,22 +46,42 @@ fn a5_get_num_children_rs(parent_resolution: i32, child_resolution: i32) -> f64 
     a5::get_num_children(parent_resolution, child_resolution) as f64
 }
 
-/// Validate hex cell IDs.
+/// Validate cell IDs stored as raw bytes.
+///
+/// @param cells List with b1..b8 raw vectors.
+/// @return Logical vector indicating validity.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn a5_is_valid_cell_rs(cells: List) -> Logicals {
+    let cs = CellSlices::from_list(&cells);
+    let n = cs.len;
+    let mut out = Logicals::new(n);
+    for i in 0..n {
+        match cs.get(i) {
+            Some(_) => out.set_elt(i, Rbool::from(true)),
+            None => out.set_elt(i, Rbool::na()),
+        }
+    }
+    out
+}
+
+/// Validate hex cell ID strings (for use before conversion to rcrd).
 ///
 /// @param cell Character vector of hex strings to validate.
 /// @return Logical vector indicating validity.
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_is_valid_cell_rs(cell: Strings) -> Logicals {
-    let results = map_cells(&cell, |s| Some(a5::hex_to_u64(s).is_ok()));
-
+fn a5_is_valid_hex_rs(cell: Strings) -> Logicals {
     let n = cell.len();
     let mut out = Logicals::new(n);
-    for (i, r) in results.into_iter().enumerate() {
-        match r {
-            Some(v) => out.set_elt(i, Rbool::from(v)),
-            None => out.set_elt(i, Rbool::na()),
+    for i in 0..n {
+        let s = &cell[i];
+        if s.is_na() {
+            out.set_elt(i, Rbool::na());
+        } else {
+            out.set_elt(i, Rbool::from(a5::hex_to_u64(s.as_str()).is_ok()));
         }
     }
     out
@@ -73,4 +93,5 @@ extendr_module! {
     fn a5_get_num_cells_rs;
     fn a5_get_num_children_rs;
     fn a5_is_valid_cell_rs;
+    fn a5_is_valid_hex_rs;
 }
