@@ -1,0 +1,212 @@
+# a5R
+
+a5R provides R bindings for the [A5](https://a5geo.org/) pentagonal
+geospatial index, powered by the [a5 Rust
+crate](https://github.com/felixpalmer/a5-rs) via
+[extendr](https://extendr.rs/extendr/extendr_api/).
+
+A5 partitions the Earth’s surface into pentagonal cells across 31
+resolution levels. Cells are equal-area, encoded as 64-bit integers, and
+achieve millimetre-level precision at the finest resolution.
+
+## Installation
+
+``` r
+install.packages("a5R")
+```
+
+Or install the development version from GitHub:
+
+``` r
+# install.packages("pak")
+pak::pak("belian-earth/a5R")
+```
+
+You will need a working [Rust toolchain](https://rustup.rs/) (`cargo`
+and `rustc`).
+
+## Quick example
+
+``` r
+library(a5R)
+
+# Index a point to a cell
+cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
+cell
+#> <a5_cell[1]>
+#> [1] 6344be8000000000
+
+# Get the boundary polygon
+a5_cell_to_boundary(cell)
+#> <wk_wkb[1] with CRS=OGC:CRS84>
+#> [1] <POLYGON ((-3.175718 55.93546, -3.145905 55.97569, -3.151641 56.01921, -3.219413 56.00818, -3.226037 55.96443, -3.175718 55.93546...>
+
+# Navigate the hierarchy
+a5_cell_to_parent(cell)
+#> <a5_cell[1]>
+#> [1] 6344be0000000000
+a5_cell_to_children(cell)
+#> <a5_cell[4]>
+#> [1] 6344be2000000000 6344be6000000000 6344bea000000000 6344bee000000000
+```
+
+``` r
+# Create a collection of cells whose centres fall within a great-circle distance of 100km from the origin cell
+cells <- a5_spherical_cap(cell, radius = 100000) |> 
+  a5_uncompact(resolution = 10)
+plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
+```
+
+![A5 grid plot showing a collection of cells around a
+point](reference/figures/README-grid-plot-1.png)
+
+See
+[`vignette("a5R")`](https://belian-earth.github.io/a5R/dev/articles/a5R.md)
+for a full walkthrough of indexing, boundaries, hierarchy, traversal,
+and grid generation.
+
+## Features
+
+- **Vectorised Rust core** — all operations implemented in Rust and
+  called from R via extendr.
+  [Benchmarks](https://github.com/belian-earth/a5R/blob/main/benchmarks/RESULTS.md)
+  confirm identical results to the Python, JavaScript, and DuckDB A5
+  implementations.
+- **vctrs + wk integration** — cell indices use an `a5_cell` type with
+  tibble support; geometries return as `wk_wkb`/`wk_wkt` vectors
+  compatible with sf and terra.
+- **Grid generation** —
+  [`a5_grid()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid.md)
+  fills any bounding box or geometry with cells at a target resolution
+  using hierarchical flood-fill.
+- **Traversal** —
+  [`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md)
+  and
+  [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md)
+  select neighbours by hop count or great-circle distance.
+- **Multi-threading** — opt-in parallel processing via rayon for
+  vectorised operations. See
+  [`vignette("multithreading")`](https://belian-earth.github.io/a5R/dev/articles/multithreading.md).
+
+## Acknowledgements
+
+A5 was created by [Felix Palmer](https://github.com/felixpalmer). This
+package is a thin R wrapper around his work and would not exist without
+it. The [Query-farm](https://github.com/Query-farm/a5) team maintain the
+DuckDB A5 extension, which wraps the same Rust crate and provided a
+valuable reference for this project.
+
+# Package index
+
+## Indexing
+
+Convert between coordinates and A5 cell indices.
+
+- [`a5_lonlat_to_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_lonlat_to_cell.md)
+  : Convert coordinates to A5 cell indices
+- [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_lonlat.md)
+  : Convert A5 cell indices to coordinates
+
+## Cell type
+
+The `a5_cell` vector type and helpers.
+
+- [`a5_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell.md)
+  [`is_a5_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell.md)
+  [`as_a5_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell.md)
+  [`a5_is_valid()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell.md)
+  : A5 Cell Index Vector
+- [`a5_u64_to_hex()`](https://belian-earth.github.io/a5R/dev/reference/a5_u64_to_hex.md)
+  [`a5_hex_to_u64()`](https://belian-earth.github.io/a5R/dev/reference/a5_u64_to_hex.md)
+  : Coerce between hex strings and A5 cell vectors
+
+## Arrow & Parquet
+
+Lossless conversion between `a5_cell` and Arrow `uint64` arrays.
+
+- [`a5_cell_from_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_from_arrow.md)
+  [`a5_cell_to_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_from_arrow.md)
+  : Convert between a5_cell and Arrow uint64 arrays
+
+## Hierarchy
+
+Navigate the cell hierarchy across resolutions.
+
+- [`a5_get_resolution()`](https://belian-earth.github.io/a5R/dev/reference/a5_get_resolution.md)
+  : Get the resolution of A5 cell indices
+- [`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_parent.md)
+  : Navigate to parent cell(s)
+- [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_children.md)
+  : Get child cells
+- [`a5_get_res0_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_get_res0_cells.md)
+  : Get all resolution-0 root cells
+
+## Geometry & info
+
+Cell boundaries, areas, counts, and distances.
+
+- [`a5_cell_to_boundary()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_boundary.md)
+  : Get cell boundary polygons
+- [`a5_cell_distance()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_distance.md)
+  : Distance between cell centroids
+- [`a5_cell_area()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_area.md)
+  : Cell area at a given resolution
+- [`a5_get_num_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_get_num_cells.md)
+  : Total number of cells at a given resolution
+- [`a5_get_num_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_get_num_children.md)
+  : Number of children between two resolutions
+
+## Traversal
+
+Neighbourhood and distance-based cell selection.
+
+- [`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md)
+  : Cells within k hops of a cell
+- [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md)
+  : Cells within a great-circle radius
+
+## Compact & uncompact
+
+Compress and expand sets of cells.
+
+- [`a5_compact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compact.md)
+  : Compact a set of A5 cells
+- [`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_uncompact.md)
+  : Uncompact a set of A5 cells to a target resolution
+
+## Grid generation
+
+Generate grids of cells covering an area.
+
+- [`a5_grid()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid.md)
+  : Generate a grid of A5 cells covering an area
+
+## Configuration
+
+Thread control for parallel processing.
+
+- [`a5_set_threads()`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md)
+  [`a5_get_threads()`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md)
+  : Set the number of threads used by a5R
+
+## wk integration
+
+Methods for the wk geometry framework.
+
+- [`wk_handle(`*`<a5_cell>`*`)`](https://belian-earth.github.io/a5R/dev/reference/wk_methods.md)
+  [`wk_crs(`*`<a5_cell>`*`)`](https://belian-earth.github.io/a5R/dev/reference/wk_methods.md)
+  : wk methods for a5_cell
+
+# Articles
+
+### All vignettes
+
+- [Getting started with
+  a5R](https://belian-earth.github.io/a5R/dev/articles/a5R.md):
+- [Working with Arrow and
+  Parquet](https://belian-earth.github.io/a5R/dev/articles/arrow-parquet.md):
+- [How a5R stores cell IDs without
+  strings](https://belian-earth.github.io/a5R/dev/articles/internal-cell-representation.md):
+- [Multi-threading](https://belian-earth.github.io/a5R/dev/articles/multithreading.md):
+- [Traversal and
+  distance](https://belian-earth.github.io/a5R/dev/articles/traversal-and-distance.md):
