@@ -26,17 +26,30 @@ This is a problem when reading Parquet files that store A5 cell IDs as
 [geoparquet.io](https://geoparquet.io/). By default, `arrow::read_parquet()`
 converts `uint64` to R's `double`, losing precision:
 
-```{r naive, eval = requireNamespace("arrow", quietly = TRUE)}
+```{r naive, eval = requireNamespace("arrow", quietly = TRUE), message = FALSE}
 library(arrow)
+library(tibble)
+library(a5R)
 
-# Simulate: two uint64 values, one below and one above 2^53
-below <- 576460752303423494   # fits exactly in double
-above <- 576460752303423494 + 576460752303423494  # exceeds 2^53
+# A real A5 cell — Edinburgh at resolution 20
+cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 20)
+a5_u64_to_hex(cell)
 
-cat("2^53:    ", format(2^53, scientific = FALSE), "\n")
-cat("'above': ", format(above, scientific = FALSE), "\n")
-cat("Same as 'above + 1'?", above == above + 1, "\n")
-# TRUE — precision has already been lost
+# Write to Parquet as uint64 (the standard interchange format)
+tf <- tempfile(fileext = ".parquet")
+arrow::write_parquet(
+  arrow::arrow_table(cell_id = a5_cell_to_arrow(cell)),
+  tf
+)
+
+# Read it back naively — arrow silently converts uint64 to double
+(naive <- tibble(arrow::read_parquet(tf)))
+
+cell_as_dbl <- naive$cell_id
+
+# The double can't distinguish this cell from nearby IDs
+cell_as_dbl == cell_as_dbl + 1   # TRUE — silent corruption
+cell_as_dbl == cell_as_dbl + 100 # still TRUE
 ```
 
 ## The solution: `a5_cell_from_arrow()` and `a5_cell_to_arrow()`
@@ -60,16 +73,15 @@ cities
 ```
 
 These cells work seamlessly in tibbles. Now let's enrich the data with
-some A5 operations — cell area, resolution, and distance from Edinburgh:
+some A5 operations — cell resolution and distance from Edinburgh:
 
 ```{r enrich, eval = requireNamespace("arrow", quietly = TRUE)}
 edinburgh <- cities$cell[1]
 
-cities$area_km2 <- as.numeric(a5_cell_area(10)) / 1e6
 cities$resolution <- a5_get_resolution(cities$cell)
 cities$dist_from_edinburgh_km <- as.numeric(
-  a5_cell_distance(cities$cell, rep(edinburgh, nrow(cities)))
-) / 1000
+  a5_cell_distance(cities$cell, rep(edinburgh, nrow(cities)), units = "km")
+)
 
 cities
 ```
@@ -86,7 +98,7 @@ tf <- tempfile(fileext = ".parquet")
 arrow_tbl <- arrow::arrow_table(
   name = cities$name,
   cell_id = a5_cell_to_arrow(cities$cell),
-  area_km2 = cities$area_km2,
+  cell_res = cities$resolution,
   dist_from_edinburgh_km = cities$dist_from_edinburgh_km
 )
 arrow_tbl$schema
@@ -103,7 +115,7 @@ pq <- arrow::read_parquet(tf, as_data_frame = FALSE)
 recovered_cells <- a5_cell_from_arrow(pq$column(1))
 result <- as.data.frame(pq)
 result$cell <- recovered_cells
-result <- tibble::as_tibble(result[c("name", "cell", "area_km2", "dist_from_edinburgh_km")])
+result <- tibble::as_tibble(result[c("name", "cell", "cell_res", "dist_from_edinburgh_km")])
 result
 ```
 
