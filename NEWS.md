@@ -1,4 +1,4 @@
-# a5R (development version)
+# a5R 0.3.1
 
 # a5R 0.3.0
 
