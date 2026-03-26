@@ -32,7 +32,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.3.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.3.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,12 +86,11 @@
 <p>An A5 cell ID is a 64-bit unsigned integer (<code>u64</code>). R has
 no native <code>u64</code> type — its integers are 32-bit signed
 (<code>-2^31</code> to <code>2^31 - 1</code>), and its doubles are
-64-bit IEEE 754 floating point. A <code>double</code> can only represent
-integers exactly up to 2^53, while a <code>u64</code> can go up to 2^64
-- 1.</p>
+64-bit floating point. A <code>double</code> can only represent integers
+exactly up to 2^53, while a <code>u64</code> can go up to 2^64 - 1.</p>
 <p>The obvious workaround is to store cell IDs as hex strings
 (<code>"0800000000000006"</code>). This works, but every trip across the
-R ↔︎ Rust boundary requires hex parsing and formatting — O(n) string
+R–Rust boundary requires hex parsing and formatting — O(n) string
 allocation that dominates the cost of lightweight operations like
 <code><a href="../reference/a5_get_resolution.html">a5_get_resolution()</a></code> or
 <code><a href="../reference/a5_cell_to_parent.html">a5_cell_to_parent()</a></code>.</p>
@@ -111,7 +110,9 @@ little-endian bytes:
 original <code>u64</code>, just stored across eight contiguous
 <code>raw</code> vectors. No precision loss, no special-case handling.
 On the Rust side, reconstructing the <code>u64</code> from the eight
-byte slices is a single <code>u64::from_le_bytes()</code> call.</p>
+byte slices is a single <code>u64::from_le_bytes()</code> call. This
+also avoids pointers, so there is no need to think about serialization
+when saving an <code>a5_cell</code> object to disk.</p>
 </div>
 <div class="section level2">
 <h2 id="r-side-a-vctrs-record-type">R-side: a vctrs record type<a class="anchor" aria-label="anchor" href="#r-side-a-vctrs-record-type"></a>
@@ -166,10 +167,6 @@ propagation are all handled automatically by vctrs.</p>
 <span><span class="va">hex</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_u64_to_hex.html">a5_u64_to_hex</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/object.size.html" class="external-link">object.size</a></span><span class="op">(</span><span class="va">hex</span><span class="op">)</span>, units <span class="op">=</span> <span class="st">"MB"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "81 Mb"</span></span></code></pre></div>
-<p>Operations that were previously bottlenecked by hex parsing — like
-<code><a href="../reference/a5_cell_to_parent.html">a5_cell_to_parent()</a></code> or <code><a href="../reference/a5_compact.html">a5_compact()</a></code> — now run
-at near-native speed because the <code>u64</code> cell ID is
-reconstructed from raw bytes with no parsing.</p>
 </div>
 <div class="section level2">
 <h2 id="na-handling">NA handling<a class="anchor" aria-label="anchor" href="#na-handling"></a>
@@ -209,7 +206,7 @@ we use <code>0xFC00000000000000</code> as a sentinel value for
 <td>~7.6 MB</td>
 </tr>
 <tr class="odd">
-<td>R ↔︎ Rust crossing</td>
+<td>R-Rust crossing</td>
 <td>O(n) hex parse/format</td>
 <td>Zero-copy byte access</td>
 </tr>

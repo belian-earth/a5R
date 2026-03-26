@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.3.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.3.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -49,13 +49,26 @@
 <h2 class="pkg-version" data-toc-text="development version" id="a5r-development-version">a5R (development version)<a class="anchor" aria-label="anchor" href="#a5r-development-version"></a></h2>
 </div>
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.1" id="a5r-031">a5R 0.3.1<a class="anchor" aria-label="anchor" href="#a5r-031"></a></h2>
+<ul><li>
+<code><a href="../reference/a5_cell.html">a5_cell()</a></code> now requires hex strings to be exactly 16 characters, preventing silent construction of wrong cells from truncated input.</li>
+<li>Improved vignettes covering the new <code>a5_cell</code> representation and Arrow integration.</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.0" id="a5r-030">a5R 0.3.0<a class="anchor" aria-label="anchor" href="#a5r-030"></a></h2>
-<ul><li>Replaced internal cell representation: cell IDs are now stored as 8 parallel raw byte vectors instead of hex strings, reducing memory usage from ~80 bytes/cell to 8 bytes/cell.</li>
-<li>Added lossless Arrow <code>uint64</code> conversion for zero-copy Parquet I/O.</li>
-<li>Added <code>vec_proxy_compare()</code> and <code>vec_proxy_order()</code> methods for <code>a5_cell</code>, enabling <code><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort()</a></code>, <code><a href="https://rdrr.io/r/base/order.html" class="external-link">order()</a></code>, <code><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique()</a></code>, <code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated()</a></code>, <code><a href="https://rdrr.io/r/base/match.html" class="external-link">match()</a></code>, and <code>%in%</code>.</li>
-<li>Added <code><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na()</a></code> method for <code>a5_cell</code>.</li>
+<ul><li>
+<code>a5_cell</code> internal representation now uses 8 parallel raw byte vectors instead of hex strings, reducing memory from ~80 bytes/cell to 8 bytes/cell (<a href="https://github.com/belian-earth/a5R/issues/12" class="external-link">#12</a>).</li>
 <li>
-<code><a href="../reference/a5_cell_distance.html">a5_cell_distance()</a></code> and <code><a href="../reference/a5_cell_area.html">a5_cell_area()</a></code> gain <code>units = NULL</code> option to return plain numeric vectors (in metres / m²) without <code>units</code> class overhead.</li>
+<code>a5_cell</code> gains <code>vec_proxy_compare()</code> and <code>vec_proxy_order()</code> methods, enabling <code><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort()</a></code>, <code><a href="https://rdrr.io/r/base/order.html" class="external-link">order()</a></code>, <code><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique()</a></code>, <code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated()</a></code>, <code><a href="https://rdrr.io/r/base/match.html" class="external-link">match()</a></code>, and <code>%in%</code> (<a href="https://github.com/belian-earth/a5R/issues/12" class="external-link">#12</a>).</li>
+<li>
+<code>a5_cell</code> gains an <code><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na()</a></code> method (<a href="https://github.com/belian-earth/a5R/issues/12" class="external-link">#12</a>).</li>
+<li>New <code><a href="../reference/a5_cell_from_arrow.html">a5_cell_from_arrow()</a></code> and <code><a href="../reference/a5_cell_from_arrow.html">a5_cell_to_arrow()</a></code> for lossless conversion between <code>a5_cell</code> and Arrow <code>uint64</code> arrays, enabling zero-copy Parquet I/O (<a href="https://github.com/belian-earth/a5R/issues/12" class="external-link">#12</a>).</li>
+<li>New <code><a href="../reference/a5_u64_to_hex.html">a5_u64_to_hex()</a></code> and <code><a href="../reference/a5_u64_to_hex.html">a5_hex_to_u64()</a></code> for explicit conversion between <code>a5_cell</code> vectors and hex strings.</li>
+<li>
+<code>a5_is_cell()</code> has been renamed to <code><a href="../reference/a5_cell.html">a5_is_valid()</a></code> and now accepts both <code>a5_cell</code> vectors and character hex strings.</li>
+<li>
+<code><a href="../reference/a5_cell_distance.html">a5_cell_distance()</a></code> and <code><a href="../reference/a5_cell_area.html">a5_cell_area()</a></code> gain a <code>units = NULL</code> option to return plain numeric vectors without <code>units</code> class overhead.</li>
+<li>New vignettes: <code><a href="../articles/internal-cell-representation.html">vignette("internal-cell-representation")</a></code> and <code><a href="../articles/arrow-parquet.html">vignette("arrow-parquet")</a></code>.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.0" id="a5r-020">a5R 0.2.0<a class="anchor" aria-label="anchor" href="#a5r-020"></a></h2><p class="text-muted">CRAN release: 2026-03-16</p>

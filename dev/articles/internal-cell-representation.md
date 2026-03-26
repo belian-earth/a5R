@@ -4,12 +4,11 @@
 
 An A5 cell ID is a 64-bit unsigned integer (`u64`). R has no native
 `u64` type — its integers are 32-bit signed (`-2^31` to `2^31 - 1`), and
-its doubles are 64-bit IEEE 754 floating point. A `double` can only
-represent integers exactly up to 2^53, while a `u64` can go up to 2^64 -
-1.
+its doubles are 64-bit floating point. A `double` can only represent
+integers exactly up to 2^53, while a `u64` can go up to 2^64 - 1.
 
 The obvious workaround is to store cell IDs as hex strings
-(`"0800000000000006"`). This works, but every trip across the R ↔︎ Rust
+(`"0800000000000006"`). This works, but every trip across the R–Rust
 boundary requires hex parsing and formatting — O(n) string allocation
 that dominates the cost of lightweight operations like
 [`a5_get_resolution()`](https://belian-earth.github.io/a5R/dev/reference/a5_get_resolution.md)
@@ -31,7 +30,9 @@ This is lossless — the eight bytes are the exact same bits as the
 original `u64`, just stored across eight contiguous `raw` vectors. No
 precision loss, no special-case handling. On the Rust side,
 reconstructing the `u64` from the eight byte slices is a single
-`u64::from_le_bytes()` call.
+`u64::from_le_bytes()` call. This also avoids pointers, so there is no
+need to think about serialization when saving an `a5_cell` object to
+disk.
 
 ## R-side: a vctrs record type
 
@@ -93,13 +94,6 @@ format(object.size(hex), units = "MB")
 #> [1] "81 Mb"
 ```
 
-Operations that were previously bottlenecked by hex parsing — like
-[`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_parent.md)
-or
-[`a5_compact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compact.md)
-— now run at near-native speed because the `u64` cell ID is
-reconstructed from raw bytes with no parsing.
-
 ## NA handling
 
 A5 cell IDs use 60 “quintants” (values 0–59) in their top 6 bits.
@@ -123,6 +117,6 @@ is.na(cells_with_na)
 |-------------------|-----------------------|------------------------------------------------------------------------------------------------------|
 | R type            | `character` vector    | `vctrs_rcrd` (eight `raw` fields)                                                                    |
 | Memory (1M cells) | ~81 MB                | ~7.6 MB                                                                                              |
-| R ↔︎ Rust crossing | O(n) hex parse/format | Zero-copy byte access                                                                                |
+| R-Rust crossing   | O(n) hex parse/format | Zero-copy byte access                                                                                |
 | Human-readable    | Always                | On [`format()`](https://rdrr.io/r/base/format.html) / [`print()`](https://rdrr.io/r/base/print.html) |
 | Lossless          | Yes                   | Yes (exact byte representation)                                                                      |
