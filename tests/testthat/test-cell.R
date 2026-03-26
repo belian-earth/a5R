@@ -14,8 +14,19 @@ test_that("a5_cell coercion with character", {
 })
 
 test_that("is_a5_cell works", {
-  expect_true(is_a5_cell(a5_cell("abc")))
-  expect_false(is_a5_cell("abc"))
+  expect_true(is_a5_cell(a5_cell("0000000000000abc")))
+  expect_false(is_a5_cell("0000000000000abc"))
+})
+
+test_that("a5_cell rejects hex strings not exactly 16 characters", {
+  expect_error(a5_cell("12346"), "exactly 16 characters")
+  expect_error(a5_cell("0800000000000006f"), "exactly 16 characters")
+  expect_error(a5_cell(c("0800000000000006", "abc")), "exactly 16 characters")
+  # NA and valid 16-char hex pass
+
+  expect_length(a5_cell(c("0800000000000006", NA)), 2L)
+  # vec_cast path also validates
+  expect_error(vctrs::vec_cast("short", a5_cell()), "exactly 16 characters")
 })
 
 test_that("a5_is_valid validates", {

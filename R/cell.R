@@ -16,15 +16,32 @@
 #' cells
 a5_cell <- function(x = character()) {
   x <- vctrs::vec_cast(x, character())
+  check_hex16(x)
   rs <- hex_to_raw8_rs(x)
   cells_from_rs(rs)
 }
 
-new_a5_cell <- function(b1 = raw(), b2 = raw(), b3 = raw(), b4 = raw(),
-                        b5 = raw(), b6 = raw(), b7 = raw(), b8 = raw()) {
+new_a5_cell <- function(
+  b1 = raw(),
+  b2 = raw(),
+  b3 = raw(),
+  b4 = raw(),
+  b5 = raw(),
+  b6 = raw(),
+  b7 = raw(),
+  b8 = raw()
+) {
   vctrs::new_rcrd(
-    list(b1 = b1, b2 = b2, b3 = b3, b4 = b4,
-         b5 = b5, b6 = b6, b7 = b7, b8 = b8),
+    list(
+      b1 = b1,
+      b2 = b2,
+      b3 = b3,
+      b4 = b4,
+      b5 = b5,
+      b6 = b6,
+      b7 = b7,
+      b8 = b8
+    ),
     class = "a5_cell"
   )
 }
@@ -33,9 +50,28 @@ new_a5_cell <- function(b1 = raw(), b2 = raw(), b3 = raw(), b4 = raw(),
 #' @noRd
 cells_from_rs <- function(x) {
   new_a5_cell(
-    b1 = x$b1, b2 = x$b2, b3 = x$b3, b4 = x$b4,
-    b5 = x$b5, b6 = x$b6, b7 = x$b7, b8 = x$b8
+    b1 = x$b1,
+    b2 = x$b2,
+    b3 = x$b3,
+    b4 = x$b4,
+    b5 = x$b5,
+    b6 = x$b6,
+    b7 = x$b7,
+    b8 = x$b8
   )
+}
+
+#' Check that all non-NA hex strings are exactly 16 characters
+#' @noRd
+check_hex16 <- function(x) {
+  non_na <- !is.na(x)
+  bad <- non_na & nchar(x) != 16L
+  if (any(bad)) {
+    first <- x[which(bad)[1L]]
+    cli::cli_abort(
+      "Cell hex strings must be exactly 16 characters, not {nchar(first)}. {.val {first}} is invalid."
+    )
+  }
 }
 
 #' Pass cell fields to Rust as a named list
@@ -191,6 +227,7 @@ vec_cast.a5_cell.a5_cell <- function(x, to, ...) x
 #' @noRd
 #' @keywords internal
 vec_cast.a5_cell.character <- function(x, to, ...) {
+  check_hex16(x)
   rs <- hex_to_raw8_rs(x)
   cells_from_rs(rs)
 }
