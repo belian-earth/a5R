@@ -15,23 +15,35 @@ converts `uint64` to R’s `double`, losing precision:
 
 ``` r
 library(arrow)
-#> 
-#> Attaching package: 'arrow'
-#> The following object is masked from 'package:utils':
-#> 
-#>     timestamp
+library(tibble)
+library(a5R)
 
-# Simulate: two uint64 values, one below and one above 2^53
-below <- 576460752303423494   # fits exactly in double
-above <- 576460752303423494 + 576460752303423494  # exceeds 2^53
+# A real A5 cell — Edinburgh at resolution 20
+cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 20)
+a5_u64_to_hex(cell)
+#> [1] "6344bba17af80000"
 
-cat("2^53:    ", format(2^53, scientific = FALSE), "\n")
-#> 2^53:     9007199254740992
-cat("'above': ", format(above, scientific = FALSE), "\n")
-#> 'above':  1152921504606846976
-cat("Same as 'above + 1'?", above == above + 1, "\n")
-#> Same as 'above + 1'? TRUE
-# TRUE — precision has already been lost
+# Write to Parquet as uint64 (the standard interchange format)
+tf <- tempfile(fileext = ".parquet")
+arrow::write_parquet(
+  arrow::arrow_table(cell_id = a5_cell_to_arrow(cell)),
+  tf
+)
+
+# Read it back naively — arrow silently converts uint64 to double
+(naive <- tibble(arrow::read_parquet(tf)))
+#> # A tibble: 1 × 1
+#>   cell_id
+#>     <dbl>
+#> 1 7.15e18
+
+cell_as_dbl <- naive$cell_id
+
+# The double can't distinguish this cell from nearby IDs
+cell_as_dbl == cell_as_dbl + 1   # TRUE — silent corruption
+#> [1] TRUE
+cell_as_dbl == cell_as_dbl + 100 # still TRUE
+#> [1] TRUE
 ```
 
 ## The solution: `a5_cell_from_arrow()` and `a5_cell_to_arrow()`
@@ -66,28 +78,26 @@ cities
 ```
 
 These cells work seamlessly in tibbles. Now let’s enrich the data with
-some A5 operations — cell area, resolution, and distance from Edinburgh:
+some A5 operations — cell resolution and distance from Edinburgh:
 
 ``` r
 edinburgh <- cities$cell[1]
 
-cities$area_km2 <- as.numeric(a5_cell_area(10)) / 1e6
 cities$resolution <- a5_get_resolution(cities$cell)
 cities$dist_from_edinburgh_km <- as.numeric(
-  a5_cell_distance(cities$cell, rep(edinburgh, nrow(cities)))
-) / 1000
+  a5_cell_distance(cities$cell, rep(edinburgh, nrow(cities)), units = "km")
+)
 
 cities
-#> # A tibble: 6 × 7
-#>   name          lon    lat cell             area_km2 resolution
-#>   <chr>       <dbl>  <dbl> <a5_cell>           <dbl>      <int>
-#> 1 Edinburgh   -3.19  56.0  6344be8000000000     32.4         10
-#> 2 Tokyo      140.    35.7  872f8a8000000000     32.4         10
-#> 3 São Paulo  -46.6  -23.6  377f908000000000     32.4         10
-#> 4 Nairobi     36.8   -1.29 6fad538000000000     32.4         10
-#> 5 Anchorage -150.    61.2  00d1c38000000000     32.4         10
-#> 6 Sydney     151.   -33.9  8f7ec58000000000     32.4         10
-#> # ℹ 1 more variable: dist_from_edinburgh_km <dbl>
+#> # A tibble: 6 × 6
+#>   name          lon    lat cell             resolution dist_from_edinburgh_km
+#>   <chr>       <dbl>  <dbl> <a5_cell>             <int>                  <dbl>
+#> 1 Edinburgh   -3.19  56.0  6344be8000000000         10                     0 
+#> 2 Tokyo      140.    35.7  872f8a8000000000         10                  9233.
+#> 3 São Paulo  -46.6  -23.6  377f908000000000         10                  9743.
+#> 4 Nairobi     36.8   -1.29 6fad538000000000         10                  7317.
+#> 5 Anchorage -150.    61.2  00d1c38000000000         10                  6662.
+#> 6 Sydney     151.   -33.9  8f7ec58000000000         10                 16872.
 ```
 
 ## Writing and reading Parquet
@@ -102,14 +112,14 @@ tf <- tempfile(fileext = ".parquet")
 arrow_tbl <- arrow::arrow_table(
   name = cities$name,
   cell_id = a5_cell_to_arrow(cities$cell),
-  area_km2 = cities$area_km2,
+  cell_res = cities$resolution,
   dist_from_edinburgh_km = cities$dist_from_edinburgh_km
 )
 arrow_tbl$schema
 #> Schema
 #> name: string
 #> cell_id: uint64
-#> area_km2: double
+#> cell_res: int32
 #> dist_from_edinburgh_km: double
 arrow::write_parquet(arrow_tbl, tf)
 ```
@@ -125,17 +135,17 @@ pq <- arrow::read_parquet(tf, as_data_frame = FALSE)
 recovered_cells <- a5_cell_from_arrow(pq$column(1))
 result <- as.data.frame(pq)
 result$cell <- recovered_cells
-result <- tibble::as_tibble(result[c("name", "cell", "area_km2", "dist_from_edinburgh_km")])
+result <- tibble::as_tibble(result[c("name", "cell", "cell_res", "dist_from_edinburgh_km")])
 result
 #> # A tibble: 6 × 4
-#>   name      cell             area_km2 dist_from_edinburgh_km
-#>   <chr>     <a5_cell>           <dbl>                  <dbl>
-#> 1 Edinburgh 6344be8000000000     32.4                     0 
-#> 2 Tokyo     872f8a8000000000     32.4                  9233.
-#> 3 São Paulo 377f908000000000     32.4                  9743.
-#> 4 Nairobi   6fad538000000000     32.4                  7317.
-#> 5 Anchorage 00d1c38000000000     32.4                  6662.
-#> 6 Sydney    8f7ec58000000000     32.4                 16872.
+#>   name      cell             cell_res dist_from_edinburgh_km
+#>   <chr>     <a5_cell>           <int>                  <dbl>
+#> 1 Edinburgh 6344be8000000000       10                     0 
+#> 2 Tokyo     872f8a8000000000       10                  9233.
+#> 3 São Paulo 377f908000000000       10                  9743.
+#> 4 Nairobi   6fad538000000000       10                  7317.
+#> 5 Anchorage 00d1c38000000000       10                  6662.
+#> 6 Sydney    8f7ec58000000000       10                 16872.
 ```
 
 Verify the round-trip is lossless:

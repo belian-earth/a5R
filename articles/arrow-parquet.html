@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -94,23 +94,35 @@ default, <code><a href="https://arrow.apache.org/docs/r/reference/read_parquet.h
 to R’s <code>double</code>, losing precision:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/apache/arrow/" class="external-link">arrow</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: 'arrow'</span></span>
-<span><span class="co">#&gt; The following object is masked from 'package:utils':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     timestamp</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tibble.tidyverse.org/" class="external-link">tibble</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/belian-earth/a5R" class="external-link">a5R</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Simulate: two uint64 values, one below and one above 2^53</span></span>
-<span><span class="va">below</span> <span class="op">&lt;-</span> <span class="fl">576460752303423494</span>   <span class="co"># fits exactly in double</span></span>
-<span><span class="va">above</span> <span class="op">&lt;-</span> <span class="fl">576460752303423494</span> <span class="op">+</span> <span class="fl">576460752303423494</span>  <span class="co"># exceeds 2^53</span></span>
+<span><span class="co"># A real A5 cell — Edinburgh at resolution 20</span></span>
+<span><span class="va">cell</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_lonlat_to_cell.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">55.95</span>, resolution <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/a5_u64_to_hex.html">a5_u64_to_hex</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "6344bba17af80000"</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"2^53:    "</span>, <span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="fl">2</span><span class="op">^</span><span class="fl">53</span>, scientific <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 2^53:     9007199254740992</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"'above': "</span>, <span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="va">above</span>, scientific <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 'above':  1152921504606846976</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Same as 'above + 1'?"</span>, <span class="va">above</span> <span class="op">==</span> <span class="va">above</span> <span class="op">+</span> <span class="fl">1</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Same as 'above + 1'? TRUE</span></span>
-<span><span class="co"># TRUE — precision has already been lost</span></span></code></pre></div>
+<span><span class="co"># Write to Parquet as uint64 (the standard interchange format)</span></span>
+<span><span class="va">tf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
+<span><span class="fu">arrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/docs/r/reference/write_parquet.html" class="external-link">write_parquet</a></span><span class="op">(</span></span>
+<span>  <span class="fu">arrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/docs/r/reference/table.html" class="external-link">arrow_table</a></span><span class="op">(</span>cell_id <span class="op">=</span> <span class="fu"><a href="../reference/a5_cell_from_arrow.html">a5_cell_to_arrow</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  <span class="va">tf</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Read it back naively — arrow silently converts uint64 to double</span></span>
+<span><span class="op">(</span><span class="va">naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span><span class="fu">arrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/docs/r/reference/read_parquet.html" class="external-link">read_parquet</a></span><span class="op">(</span><span class="va">tf</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 1</span></span></span>
+<span><span class="co">#&gt;   cell_id</span></span>
+<span><span class="co">#&gt;     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 7.15<span style="color: #949494;">e</span>18</span></span>
+<span></span>
+<span><span class="va">cell_as_dbl</span> <span class="op">&lt;-</span> <span class="va">naive</span><span class="op">$</span><span class="va">cell_id</span></span>
+<span></span>
+<span><span class="co"># The double can't distinguish this cell from nearby IDs</span></span>
+<span><span class="va">cell_as_dbl</span> <span class="op">==</span> <span class="va">cell_as_dbl</span> <span class="op">+</span> <span class="fl">1</span>   <span class="co"># TRUE — silent corruption</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="va">cell_as_dbl</span> <span class="op">==</span> <span class="va">cell_as_dbl</span> <span class="op">+</span> <span class="fl">100</span> <span class="co"># still TRUE</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="the-solution-a5_cell_from_arrow-and-a5_cell_to_arrow">The solution: <code>a5_cell_from_arrow()</code> and
@@ -142,28 +154,26 @@ reinterpret the raw bytes:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Anchorage -<span style="color: #BB0000;">150.</span>    61.2  00d1c38000000000</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Sydney     151.   -<span style="color: #BB0000;">33.9</span>  8f7ec58000000000</span></span></code></pre></div>
 <p>These cells work seamlessly in tibbles. Now let’s enrich the data
-with some A5 operations — cell area, resolution, and distance from
+with some A5 operations — cell resolution and distance from
 Edinburgh:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">edinburgh</span> <span class="op">&lt;-</span> <span class="va">cities</span><span class="op">$</span><span class="va">cell</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span></span>
-<span><span class="va">cities</span><span class="op">$</span><span class="va">area_km2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_area.html">a5_cell_area</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="fl">1e6</span></span>
 <span><span class="va">cities</span><span class="op">$</span><span class="va">resolution</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_get_resolution.html">a5_get_resolution</a></span><span class="op">(</span><span class="va">cities</span><span class="op">$</span><span class="va">cell</span><span class="op">)</span></span>
 <span><span class="va">cities</span><span class="op">$</span><span class="va">dist_from_edinburgh_km</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="../reference/a5_cell_distance.html">a5_cell_distance</a></span><span class="op">(</span><span class="va">cities</span><span class="op">$</span><span class="va">cell</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">edinburgh</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">cities</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">)</span> <span class="op">/</span> <span class="fl">1000</span></span>
+<span>  <span class="fu"><a href="../reference/a5_cell_distance.html">a5_cell_distance</a></span><span class="op">(</span><span class="va">cities</span><span class="op">$</span><span class="va">cell</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">edinburgh</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">cities</span><span class="op">)</span><span class="op">)</span>, units <span class="op">=</span> <span class="st">"km"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">cities</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 7</span></span></span>
-<span><span class="co">#&gt;   name          lon    lat cell             area_km2 resolution</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;a5_cell&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Edinburgh   -<span style="color: #BB0000;">3.19</span>  56.0  6344be8000000000     32.4         10</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Tokyo      140.    35.7  872f8a8000000000     32.4         10</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> São Paulo  -<span style="color: #BB0000;">46.6</span>  -<span style="color: #BB0000;">23.6</span>  377f908000000000     32.4         10</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Nairobi     36.8   -<span style="color: #BB0000;">1.29</span> 6fad538000000000     32.4         10</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Anchorage -<span style="color: #BB0000;">150.</span>    61.2  00d1c38000000000     32.4         10</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Sydney     151.   -<span style="color: #BB0000;">33.9</span>  8f7ec58000000000     32.4         10</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: dist_from_edinburgh_km &lt;dbl&gt;</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
+<span><span class="co">#&gt;   name          lon    lat cell             resolution dist_from_edinburgh_km</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;a5_cell&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Edinburgh   -<span style="color: #BB0000;">3.19</span>  56.0  6344be8000000000         10                     0 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Tokyo      140.    35.7  872f8a8000000000         10                  <span style="text-decoration: underline;">9</span>233.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> São Paulo  -<span style="color: #BB0000;">46.6</span>  -<span style="color: #BB0000;">23.6</span>  377f908000000000         10                  <span style="text-decoration: underline;">9</span>743.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Nairobi     36.8   -<span style="color: #BB0000;">1.29</span> 6fad538000000000         10                  <span style="text-decoration: underline;">7</span>317.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Anchorage -<span style="color: #BB0000;">150.</span>    61.2  00d1c38000000000         10                  <span style="text-decoration: underline;">6</span>662.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Sydney     151.   -<span style="color: #BB0000;">33.9</span>  8f7ec58000000000         10                 <span style="text-decoration: underline;">16</span>872.</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="writing-and-reading-parquet">Writing and reading Parquet<a class="anchor" aria-label="anchor" href="#writing-and-reading-parquet"></a>
@@ -177,14 +187,14 @@ DuckDB, Python, and geoparquet.io:</p>
 <span><span class="va">arrow_tbl</span> <span class="op">&lt;-</span> <span class="fu">arrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/docs/r/reference/table.html" class="external-link">arrow_table</a></span><span class="op">(</span></span>
 <span>  name <span class="op">=</span> <span class="va">cities</span><span class="op">$</span><span class="va">name</span>,</span>
 <span>  cell_id <span class="op">=</span> <span class="fu"><a href="../reference/a5_cell_from_arrow.html">a5_cell_to_arrow</a></span><span class="op">(</span><span class="va">cities</span><span class="op">$</span><span class="va">cell</span><span class="op">)</span>,</span>
-<span>  area_km2 <span class="op">=</span> <span class="va">cities</span><span class="op">$</span><span class="va">area_km2</span>,</span>
+<span>  cell_res <span class="op">=</span> <span class="va">cities</span><span class="op">$</span><span class="va">resolution</span>,</span>
 <span>  dist_from_edinburgh_km <span class="op">=</span> <span class="va">cities</span><span class="op">$</span><span class="va">dist_from_edinburgh_km</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">arrow_tbl</span><span class="op">$</span><span class="va">schema</span></span>
 <span><span class="co">#&gt; Schema</span></span>
 <span><span class="co">#&gt; name: string</span></span>
 <span><span class="co">#&gt; cell_id: uint64</span></span>
-<span><span class="co">#&gt; area_km2: double</span></span>
+<span><span class="co">#&gt; cell_res: int32</span></span>
 <span><span class="co">#&gt; dist_from_edinburgh_km: double</span></span>
 <span><span class="fu">arrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/docs/r/reference/write_parquet.html" class="external-link">write_parquet</a></span><span class="op">(</span><span class="va">arrow_tbl</span>, <span class="va">tf</span><span class="op">)</span></span></code></pre></div>
 <p>Read it back — <code><a href="../reference/a5_cell_from_arrow.html">a5_cell_from_arrow()</a></code> recovers the exact
@@ -196,17 +206,17 @@ cell IDs without any precision loss:</p>
 <span><span class="va">recovered_cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_cell_from_arrow.html">a5_cell_from_arrow</a></span><span class="op">(</span><span class="va">pq</span><span class="op">$</span><span class="fu">column</span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">pq</span><span class="op">)</span></span>
 <span><span class="va">result</span><span class="op">$</span><span class="va">cell</span> <span class="op">&lt;-</span> <span class="va">recovered_cells</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="va">result</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"name"</span>, <span class="st">"cell"</span>, <span class="st">"area_km2"</span>, <span class="st">"dist_from_edinburgh_km"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="va">result</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"name"</span>, <span class="st">"cell"</span>, <span class="st">"cell_res"</span>, <span class="st">"dist_from_edinburgh_km"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="va">result</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 4</span></span></span>
-<span><span class="co">#&gt;   name      cell             area_km2 dist_from_edinburgh_km</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;a5_cell&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Edinburgh 6344be8000000000     32.4                     0 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Tokyo     872f8a8000000000     32.4                  <span style="text-decoration: underline;">9</span>233.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> São Paulo 377f908000000000     32.4                  <span style="text-decoration: underline;">9</span>743.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Nairobi   6fad538000000000     32.4                  <span style="text-decoration: underline;">7</span>317.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Anchorage 00d1c38000000000     32.4                  <span style="text-decoration: underline;">6</span>662.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Sydney    8f7ec58000000000     32.4                 <span style="text-decoration: underline;">16</span>872.</span></span></code></pre></div>
+<span><span class="co">#&gt;   name      cell             cell_res dist_from_edinburgh_km</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;a5_cell&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Edinburgh 6344be8000000000       10                     0 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Tokyo     872f8a8000000000       10                  <span style="text-decoration: underline;">9</span>233.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> São Paulo 377f908000000000       10                  <span style="text-decoration: underline;">9</span>743.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Nairobi   6fad538000000000       10                  <span style="text-decoration: underline;">7</span>317.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Anchorage 00d1c38000000000       10                  <span style="text-decoration: underline;">6</span>662.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Sydney    8f7ec58000000000       10                 <span style="text-decoration: underline;">16</span>872.</span></span></code></pre></div>
 <p>Verify the round-trip is lossless:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="va">cities</span><span class="op">$</span><span class="va">cell</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">cell</span><span class="op">)</span><span class="op">)</span></span>

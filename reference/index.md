@@ -16,8 +16,19 @@ The `a5_cell` vector type and helpers.
 - [`a5_cell()`](https://belian-earth.github.io/a5R/reference/a5_cell.md)
   [`is_a5_cell()`](https://belian-earth.github.io/a5R/reference/a5_cell.md)
   [`as_a5_cell()`](https://belian-earth.github.io/a5R/reference/a5_cell.md)
-  [`a5_is_cell()`](https://belian-earth.github.io/a5R/reference/a5_cell.md)
+  [`a5_is_valid()`](https://belian-earth.github.io/a5R/reference/a5_cell.md)
   : A5 Cell Index Vector
+- [`a5_u64_to_hex()`](https://belian-earth.github.io/a5R/reference/a5_u64_to_hex.md)
+  [`a5_hex_to_u64()`](https://belian-earth.github.io/a5R/reference/a5_u64_to_hex.md)
+  : Coerce between hex strings and A5 cell vectors
+
+## Arrow & Parquet
+
+Lossless conversion between `a5_cell` and Arrow `uint64` arrays.
+
+- [`a5_cell_from_arrow()`](https://belian-earth.github.io/a5R/reference/a5_cell_from_arrow.md)
+  [`a5_cell_to_arrow()`](https://belian-earth.github.io/a5R/reference/a5_cell_from_arrow.md)
+  : Convert between a5_cell and Arrow uint64 arrays
 
 ## Hierarchy
 
