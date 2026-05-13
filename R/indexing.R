@@ -27,12 +27,18 @@ a5_lonlat_to_cell <- function(lon, lat, resolution) {
 #' Returns the centre-point longitude and latitude of each cell.
 #'
 #' @param cell An [a5_cell] vector (or character coercible to one).
-#' @param normalise Logical scalar. If `TRUE` (default), longitudes are
-#'   wrapped to \eqn{[-180, 180]} and returned as a [wk::xy()] vector.
-#'   If `FALSE`, raw unwrapped coordinates are returned as a data frame
-#'   (`lon`, `lat`) — useful for calculations spanning the antimeridian.
-#' @returns A [wk::xy()] vector (if `normalise = TRUE`) or a data frame
+#' @param as_dataframe Logical scalar controlling the return container.
+#'   When `FALSE` (default), centroids are returned as a [wk::xy()] vector
+#'   with WGS 84 CRS — the geographic-typed form that plugs into wk/sf
+#'   pipelines. When `TRUE`, centroids are returned as a base `data.frame`
 #'   with columns `lon` and `lat`.
+#' @param normalise `r lifecycle::badge("deprecated")` Use `as_dataframe`
+#'   instead. `normalise = TRUE` maps to `as_dataframe = FALSE` and vice
+#'   versa. Upstream a5 (>= 0.7.3) always returns longitudes normalised to
+#'   \eqn{[-180, 180]}, so this flag's original purpose (unwrapped output)
+#'   no longer applies.
+#' @returns A [wk::xy()] vector (if `as_dataframe = FALSE`) or a
+#'   `data.frame` with columns `lon` and `lat` (if `as_dataframe = TRUE`).
 #'
 #' @seealso [a5_lonlat_to_cell()] for the inverse operation,
 #'   [a5_cell_to_boundary()] for full cell polygons.
@@ -41,15 +47,30 @@ a5_lonlat_to_cell <- function(lon, lat, resolution) {
 #' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
 #' a5_cell_to_lonlat(cell)
 #'
-#' # Raw unwrapped coordinates
+#' # Data frame output
 #' cell2 <- a5_lonlat_to_cell(114.8, 4.1, resolution = 5)
-#' a5_cell_to_lonlat(cell2, normalise = FALSE)
-a5_cell_to_lonlat <- function(cell, normalise = TRUE) {
+#' a5_cell_to_lonlat(cell2, as_dataframe = TRUE)
+a5_cell_to_lonlat <- function(cell,
+                              as_dataframe = FALSE,
+                              normalise = lifecycle::deprecated()) {
+  if (lifecycle::is_present(normalise)) {
+    lifecycle::deprecate_warn(
+      "0.4.0",
+      "a5_cell_to_lonlat(normalise = )",
+      "a5_cell_to_lonlat(as_dataframe = )",
+      details = paste(
+        "Pass `as_dataframe = TRUE` for a data.frame return.",
+        "`as_dataframe` is the inverse of the old `normalise` flag:",
+        "`normalise = TRUE` corresponds to `as_dataframe = FALSE`."
+      )
+    )
+    as_dataframe <- !isTRUE(normalise)
+  }
   cell <- as_a5_cell(cell)
-  ll <- a5_cell_to_lonlat_rs(cell_data(cell), normalise)
-  if (normalise) {
-    wk::xy(ll$lon, ll$lat, crs = wk::wk_crs_longlat())
-  } else {
+  ll <- a5_cell_to_lonlat_rs(cell_data(cell), TRUE)
+  if (as_dataframe) {
     data.frame(lon = ll$lon, lat = ll$lat)
+  } else {
+    wk::xy(ll$lon, ll$lat, crs = wk::wk_crs_longlat())
   }
 }

@@ -52,18 +52,32 @@ test_that("lonlat_to_cell rejects invalid resolution", {
   expect_error(a5_lonlat_to_cell(0, 0, resolution = -1), "resolution")
 })
 
-test_that("cell_to_lonlat normalise = FALSE returns raw data frame", {
+test_that("cell_to_lonlat as_dataframe = TRUE returns a data frame", {
   cell <- a5_lonlat_to_cell(114.8, 4.1, resolution = 5)
-  raw <- a5_cell_to_lonlat(cell, normalise = FALSE)
-  expect_s3_class(raw, "data.frame")
-  expect_named(raw, c("lon", "lat"))
-  # raw longitude should be outside [-180, 180] for this cell
-  expect_true(raw$lon < -180 || raw$lon > 180)
+  df <- a5_cell_to_lonlat(cell, as_dataframe = TRUE)
+  expect_s3_class(df, "data.frame")
+  expect_named(df, c("lon", "lat"))
+  expect_true(df$lon >= -180 && df$lon <= 180)
 })
 
-test_that("cell_to_lonlat normalise = TRUE wraps longitude", {
+test_that("cell_to_lonlat default wraps longitude to [-180, 180]", {
   cell <- a5_lonlat_to_cell(114.8, 4.1, resolution = 5)
-  pt <- a5_cell_to_lonlat(cell, normalise = TRUE)
+  pt <- a5_cell_to_lonlat(cell)
   lon <- wk::wk_coords(pt)$x
   expect_true(lon >= -180 && lon <= 180)
+})
+
+test_that("cell_to_lonlat deprecates `normalise` and maps it correctly", {
+  cell <- a5_lonlat_to_cell(114.8, 4.1, resolution = 5)
+  # The deprecation warning fires.
+  lifecycle::expect_deprecated(
+    a5_cell_to_lonlat(cell, normalise = TRUE)
+  )
+  # `normalise = TRUE` → wk::xy (the old default).
+  pt <- suppressWarnings(a5_cell_to_lonlat(cell, normalise = TRUE))
+  expect_s3_class(pt, "wk_xy")
+  # `normalise = FALSE` → data.frame.
+  df <- suppressWarnings(a5_cell_to_lonlat(cell, normalise = FALSE))
+  expect_s3_class(df, "data.frame")
+  expect_named(df, c("lon", "lat"))
 })
