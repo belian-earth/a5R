@@ -4,23 +4,18 @@
 \alias{a5_linestring_to_cells}
 \title{Cells traced by a great-circle linestring}
 \usage{
-a5_linestring_to_cells(x, resolution, handle_multigeom = FALSE)
+a5_linestring_to_cells(x, resolution)
 }
 \arguments{
-\item{x}{A single linestring. One of:
+\item{x}{A linestring-like geometry. One of:
 \itemize{
-\item Any geometry handleable by \code{\link[wk:wk_handle]{wk::wk_handle()}} containing a single
-\code{LINESTRING}.
+\item Any geometry handleable by \code{\link[wk:wk_handle]{wk::wk_handle()}} containing one or
+more \code{LINESTRING} / \code{MULTILINESTRING} features.
 \item A two-column numeric matrix (\code{cbind(lon, lat)}) of waypoints.
 \item A \code{data.frame} with columns \code{lon} and \code{lat}.
 }}
 
 \item{resolution}{Integer scalar target resolution (0--30).}
-
-\item{handle_multigeom}{If \code{FALSE} (default), \code{MULTILINESTRING} inputs
-and \code{sfc} of multiple linestrings raise an error. If \code{TRUE}, each
-linestring is traced independently and the per-feature cell sequences
-are concatenated in feature order with first-seen deduplication.}
 }
 \value{
 An \link{a5_cell} vector at \code{resolution}.
@@ -29,7 +24,9 @@ An \link{a5_cell} vector at \code{resolution}.
 Returns the A5 cells at \code{resolution} whose pentagons are intersected by
 the great-circle polyline connecting the supplied waypoints. Output is
 uncompacted, in discovery order along the path, with duplicates removed
-first-seen.
+first-seen. Multi-feature inputs (a \code{MULTILINESTRING} or an \code{sfc} of
+multiple linestrings) are handled natively: per-feature cell sequences
+are concatenated in feature order with first-seen deduplication.
 }
 \details{
 Consecutive waypoints are connected by great-circle arcs (not rhumb

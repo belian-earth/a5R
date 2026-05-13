@@ -4,45 +4,46 @@
 \alias{a5_polygon_to_cells}
 \title{Cells whose centres lie inside a polygon}
 \usage{
-a5_polygon_to_cells(x, resolution, handle_multigeom = FALSE)
+a5_polygon_to_cells(x, resolution)
 }
 \arguments{
-\item{x}{A single-ring polygon. One of:
+\item{x}{A polygon-like geometry. One of:
 \itemize{
 \item Any geometry handleable by \code{\link[wk:wk_handle]{wk::wk_handle()}} (e.g. \code{\link[wk:wkt]{wk::wkt()}},
-\code{\link[wk:wkb]{wk::wkb()}}, \code{sf}, \code{sfc}) containing a single \code{POLYGON} with one ring.
-\item A two-column numeric matrix (\code{cbind(lon, lat)}) of vertices.
-\item A \code{data.frame} with columns \code{lon} and \code{lat}.
+\code{\link[wk:wkb]{wk::wkb()}}, \code{\link[wk:rct]{wk::rct()}}, \code{sf}, \code{sfc}) containing one or more
+\code{POLYGON} / \code{MULTIPOLYGON} features.
+\item A two-column numeric matrix (\code{cbind(lon, lat)}) of vertices,
+interpreted as a single outer ring.
+\item A \code{data.frame} with columns \code{lon} and \code{lat}, interpreted as a
+single outer ring.
 }}
 
 \item{resolution}{Integer scalar target resolution (0--30).}
-
-\item{handle_multigeom}{If \code{FALSE} (default), inputs containing more than
-one ring/feature (e.g. a \code{POLYGON} with holes, a \code{MULTIPOLYGON}, or an
-\code{sfc} of multiple polygons) raise an error. If \code{TRUE}, every ring is
-converted independently and the results are merged: each ring is
-uncompacted to \code{resolution}, the union of cell IDs is taken, then
-recompacted once at the end. Holes are treated as \strong{additive} (their
-cells are unioned in, not subtracted) — pre-subtract holes yourself if
-you need them excluded.}
 }
 \value{
 An \link{a5_cell} vector at or coarser than \code{resolution}.
 }
 \description{
-Returns the A5 cells at \code{resolution} whose centres fall inside the given
-polygon. The result is sorted and compacted; use \code{\link[=a5_uncompact]{a5_uncompact()}} to
-expand to a uniform-resolution grid.
+Returns A5 cells at \code{resolution} whose centres fall inside the polygon.
+Multi-feature inputs (a \code{MULTIPOLYGON}, an \code{sfc} of multiple polygons,
+or a \code{POLYGON} with holes) are handled natively: per polygon part, the
+outer-ring cells are computed and any hole-ring cells are subtracted,
+then the results are unioned across parts. The final cell set is
+compacted; use \code{\link[=a5_uncompact]{a5_uncompact()}} to expand to a uniform-resolution grid.
 }
 \details{
 Membership is determined by \strong{centre-point containment}: a cell is
-included iff its centroid lies inside the polygon. This is distinct from
-\code{\link[=a5_grid]{a5_grid()}}'s boundary-intersection semantics; for the same polygon the
-two functions can return slightly different cell sets near the boundary.
+included iff its centroid lies inside the polygon, with hole rings
+properly subtracted. This is distinct from \code{\link[=a5_grid]{a5_grid()}}'s
+boundary-intersection semantics; for the same polygon the two
+functions can return slightly different cell sets near the boundary.
 
-Coordinates must be WGS 84 longitude/latitude in degrees. Polygons are
-closed automatically; do not repeat the first vertex at the end (a
-trailing duplicate is dropped if present).
+Coordinates must be WGS 84 longitude/latitude in degrees. Rings are
+closed automatically; a trailing duplicate vertex is dropped if
+present.
+
+Where no A5 cell centroids at the specified \code{resolution} fall within
+the geometry, an empty \code{a5_cell} vector is returned.
 }
 \examples{
 poly <- wk::wkt(
@@ -52,5 +53,5 @@ cells <- a5_polygon_to_cells(poly, resolution = 8)
 length(cells)
 }
 \seealso{
-\code{\link[=a5_linestring_to_cells]{a5_linestring_to_cells()}}, \code{\link[=a5_grid]{a5_grid()}}, \code{\link[=a5_uncompact]{a5_uncompact()}}.
+\code{\link[=a5_linestring_to_cells]{a5_linestring_to_cells()}}, \code{\link[=a5_uncompact]{a5_uncompact()}}.
 }

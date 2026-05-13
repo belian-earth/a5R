@@ -212,16 +212,22 @@ a5_grid_disk_rs <- function(cell, k, vertex) .Call(wrap__a5_grid_disk_rs, cell, 
 #' @keywords internal
 a5_spherical_cap_rs <- function(cell, radius) .Call(wrap__a5_spherical_cap_rs, cell, radius)
 
-#' Convert one or more polygon rings to A5 cells.
+#' Convert one or more polygon parts (with optional holes) to A5 cells.
 #'
-#' `lon`, `lat` are the flat coordinate vectors; `offsets` is cumulative
-#' (length n_rings + 1). Single-ring inputs return the upstream compacted
-#' result unchanged; multi-ring inputs uncompact each ring to `resolution`,
-#' take the union, then compact once at the end.
+#' `lon`, `lat` are flat coordinate vectors; `offsets` is cumulative
+#' (length `n_rings + 1`) so ring `i` is `lon[offsets[i]..offsets[i+1]]`.
+#' `part_id` (length `n_rings`) groups rings by polygon part. `is_outer`
+#' (length `n_rings`, 1 = outer / 0 = hole) classifies each ring.
+#'
+#' For each polygon part, the outer ring is converted to cells, the
+#' uncompacted cells inside any hole rings are subtracted, and the
+#' remaining cells are unioned across parts. The result is recompacted
+#' at the end. A single-outer-no-holes input takes a fast path that
+#' passes the upstream compacted result through unchanged.
 #'
 #' @noRd
 #' @keywords internal
-a5_polygon_to_cells_rs <- function(lon, lat, offsets, resolution) .Call(wrap__a5_polygon_to_cells_rs, lon, lat, offsets, resolution)
+a5_polygon_to_cells_rs <- function(lon, lat, offsets, part_id, is_outer, resolution) .Call(wrap__a5_polygon_to_cells_rs, lon, lat, offsets, part_id, is_outer, resolution)
 
 #' Convert one or more linestring waypoint sequences to A5 cells.
 #'

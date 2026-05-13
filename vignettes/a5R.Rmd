@@ -62,7 +62,7 @@ children <- a5_cell_to_children(cell)
 children
 ```
 
-We can visualise the relationship - the parent (dark outline) contains
+We can visualise the relationship: the parent (dark outline) contains
 our cell (blue fill), which in turn contains its 4 children (orange):
 
 ```{r hierarchy-plot, fig.width = 8, fig.height = 8}
@@ -76,7 +76,7 @@ plot(a5_cell_to_boundary(cell), col = "#206ead40", border = "#206ead",
 plot(a5_cell_to_boundary(parent), border = "#333333", lwd = 2, add = TRUE)
 ```
 
-Cell area decreases geometrically --- each level is roughly 4x smaller:
+Cell area decreases geometrically: each level is roughly 4x smaller.
 
 ```{r}
 a5_cell_area(0:5)
@@ -98,7 +98,7 @@ a5_uncompact(a5_compact(children), resolution = 11)
 ```
 
 Many a5R functions return compacted output automatically. For example,
-`a5_grid_disk()` and `a5_spherical_cap()` compact their results --- use
+`a5_grid_disk()` and `a5_spherical_cap()` compact their results; use
 `a5_uncompact()` when you need a uniform-resolution grid (see
 [Traversal](#traversal) below).
 
@@ -116,7 +116,7 @@ plot(a5_cell_to_boundary(cap), col = "#6ead2020", border = "#6ead20", asp = 1)
 plot(a5_cell_to_boundary(disk), col = "#206ead20", border = "#206ead", asp = 1)
 ```
 
-Both functions return a **compacted** cell vector --- sibling groups are
+Both functions return a **compacted** cell vector: sibling groups are
 merged into coarser parent cells to save space. To recover a uniform grid
 at the original resolution, pass the result through `a5_uncompact()`:
 
@@ -153,17 +153,15 @@ length(cells_uncom)
 plot(a5_cell_to_boundary(cells_uncom), col = "#206ead20", border = "#206ead", asp = 1)
 ```
 
-Multi-part inputs (a `POLYGON` with holes, a `MULTIPOLYGON`, or an
-`sfc` of several polygons) are rejected by default. Opt in with
-`handle_multigeom = TRUE` and each part is converted independently and
-the results are unioned. Only outer rings contribute meaningfully:
-holes are not subtracted, so cells inside any hole remain in the
-output.
+Multi-part inputs are handled natively: a `MULTIPOLYGON` or an `sfc`
+of multiple polygons returns the union of cells across all parts, and
+a `POLYGON` with holes returns the outer ring's cells with the hole
+cells properly subtracted.
 
 ```{r, eval = requireNamespace("sf", quietly = TRUE)}
 library(sf)
 demo(nc, ask = FALSE, echo = FALSE)
-nca5 <- a5_polygon_to_cells(nc, resolution = 9, handle_multigeom = TRUE) |>
+nca5 <- a5_polygon_to_cells(nc, resolution = 9) |>
   a5_uncompact(9)
 plot(a5_cell_to_boundary(nca5), col = "#03030320", border = "#6d20adff", asp = 1)
 ```
@@ -175,10 +173,9 @@ crossed by a great-circle polyline. Output is in discovery order along
 the path. Consecutive waypoints are connected by great-circle arcs, so
 antimeridian-crossing routes work transparently.
 
-Multi-part inputs (`MULTILINESTRING`, or an `sfc` of several linestrings)
-follow the same rule as `a5_polygon_to_cells()`: rejected by default,
-allowed via `handle_multigeom = TRUE`, with per-feature outputs
-concatenated and deduplicated first-seen.
+Multi-part inputs (`MULTILINESTRING` or an `sfc` of several linestrings)
+are handled natively: per-feature outputs are concatenated in feature
+order with first-seen deduplication.
 
 To show what cell-by-cell tracing looks like, we can write a short
 phrase as a `MULTILINESTRING` (one stroke per letter) and ask A5 to
@@ -193,8 +190,7 @@ a5R_strokes <- wk::wkt(
   )"
 )
 
-cells <- a5_linestring_to_cells(a5R_strokes, resolution = 9,
-                                handle_multigeom = TRUE)
+cells <- a5_linestring_to_cells(a5R_strokes, resolution = 9)
 length(cells)
 
 plot(a5_cell_to_boundary(cells),
