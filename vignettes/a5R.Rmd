@@ -127,29 +127,81 @@ plot(a5_cell_to_boundary(disk_grid), col = "#206ead20", border = "#206ead", asp 
 ```
 
 
-## Grid generation
+## Converting geometries to a5 cells
 
-`a5_grid()` is a convenience function provided by a5R (not part of the
-underlying a5 Rust crate) that returns all cells at a target resolution
-covering a given area --- handy for binning, zonal statistics, and other
-spatial analysis workflows common in R.
+`a5_polygon_to_cells()` returns the cells whose centres lie inside a
+polygon. It accepts any geometry that wk can handle: a `wk::rct()`
+bounding box, a WKT or WKB polygon, or an `sf` / `sfc` feature.
 
-
-Pass a bounding box as a numeric vector:
 ```{r grid-plot, fig.width = 7}
-cells <- a5_grid(c(-3.3, 55.9, -3.1, 56.0), resolution = 12)
+cells <- a5_polygon_to_cells(wk::rct(-3.3, 55.9, -3.1, 56.0), resolution = 12)
 length(cells)
 
 plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
 ```
 
-Any geometry that wk can handle works too --- polygons, sf objects, or even
-`a5_cell` vectors:
+The returned vector is sorted and compacted: whenever four sibling
+cells all sit inside the polygon, they are merged into their parent so
+the result uses fewer slots without losing coverage. Call
+`a5_uncompact()` to expand back to a uniform grid at the target
+resolution:
+
+```{r}
+cells_uncom <- a5_uncompact(cells, 12)
+length(cells_uncom)
+
+plot(a5_cell_to_boundary(cells_uncom), col = "#206ead20", border = "#206ead", asp = 1)
+```
+
+Multi-part inputs (a `POLYGON` with holes, a `MULTIPOLYGON`, or an
+`sfc` of several polygons) are rejected by default. Opt in with
+`handle_multigeom = TRUE` and each part is converted independently and
+the results are unioned. Only outer rings contribute meaningfully:
+holes are not subtracted, so cells inside any hole remain in the
+output.
 
 ```{r, eval = requireNamespace("sf", quietly = TRUE)}
 library(sf)
 demo(nc, ask = FALSE, echo = FALSE)
-nca5 <- a5_grid(nc, resolution = 9)
-plot(a5_cell_to_boundary(nca5), col = "#6d20ad20", border = "#6d20adff", asp = 1)
-
+nca5 <- a5_polygon_to_cells(nc, resolution = 9, handle_multigeom = TRUE) |>
+  a5_uncompact(9)
+plot(a5_cell_to_boundary(nca5), col = "#03030320", border = "#6d20adff", asp = 1)
 ```
+
+## Tracing a line
+
+`a5_linestring_to_cells()` returns the cells whose pentagons are
+crossed by a great-circle polyline. Output is in discovery order along
+the path. Consecutive waypoints are connected by great-circle arcs, so
+antimeridian-crossing routes work transparently.
+
+Multi-part inputs (`MULTILINESTRING`, or an `sfc` of several linestrings)
+follow the same rule as `a5_polygon_to_cells()`: rejected by default,
+allowed via `handle_multigeom = TRUE`, with per-feature outputs
+concatenated and deduplicated first-seen.
+
+To show what cell-by-cell tracing looks like, we can write a short
+phrase as a `MULTILINESTRING` (one stroke per letter) and ask A5 to
+fill in the cells:
+
+```{r linestring-a5R, fig.width = 7, fig.height = 3}
+a5R_strokes <- wk::wkt(
+  "MULTILINESTRING (
+    (1.8 52.5, 1.2 52.8, 0.6 52.5, 0.4 52, 0.6 51.5, 1.2 51.2, 1.8 51.5, 2 52, 1.8 52.5, 2 51.2),
+    (5 53, 3.5 53, 3.5 52.2, 4 52.2, 4.7 52, 5 51.6, 4.7 51.2, 4 51, 3.5 51.1),
+    (6.5 51, 6.5 53, 7.5 53, 8 52.8, 8.2 52.5, 8 52.2, 7.5 52, 6.5 52, 8.2 51)
+  )"
+)
+
+cells <- a5_linestring_to_cells(a5R_strokes, resolution = 9,
+                                handle_multigeom = TRUE)
+length(cells)
+
+plot(a5_cell_to_boundary(cells),
+     col = "#206ead80", border = "#37af6d", asp = 1)
+```
+
+Each stroke is one continuous linestring; the function walks the
+great-circle path, expanding cell neighbours along the way, and
+returns the union across all strokes.
+

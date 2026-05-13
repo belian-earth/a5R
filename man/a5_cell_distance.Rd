@@ -15,7 +15,7 @@ a5_cell_distance(
 \item{from, to}{\link{a5_cell} vectors (recycled to common length).}
 
 \item{units}{Character scalar specifying the distance unit (default
-\code{"m"}). Any unit convertible from metres via \code{\link[units:units]{units::set_units()}} is
+\code{"m"}). Any unit convertible from metres via \code{\link[units:set_units]{units::set_units()}} is
 accepted (e.g. \code{"km"}, \code{"mi"}). If NULL, the distance is returned as a
 numeric vector in metres.}
 

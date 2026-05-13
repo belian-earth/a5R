@@ -58,10 +58,11 @@ conversion
 }
 }
 
-\section{Grid generation}{
+\section{Geometry indexing}{
 
 \itemize{
-\item \code{\link[=a5_grid]{a5_grid()}} --- fill a bbox or geometry with cells
+\item \code{\link[=a5_polygon_to_cells]{a5_polygon_to_cells()}} --- cells whose centres lie inside a polygon
+\item \code{\link[=a5_linestring_to_cells]{a5_linestring_to_cells()}} --- cells crossed by a great-circle polyline
 }
 }
 
@@ -101,6 +102,11 @@ Useful links:
 }
 \author{
 \strong{Maintainer}: Hugh Graham \email{hugh@belian.earth}
+
+Authors:
+\itemize{
+  \item Hugh Graham \email{hugh@belian.earth}
+}
 
 Other contributors:
 \itemize{

@@ -61,10 +61,11 @@ reference:
   contents:
   - a5_compact
   - a5_uncompact
-- title: Grid generation
-  desc: Generate grids of cells covering an area.
+- title: Geometry indexing
+  desc: Convert polygons and linestrings to cells covering them.
   contents:
-  - a5_grid
+  - a5_polygon_to_cells
+  - a5_linestring_to_cells
 - title: Configuration
   desc: Thread control for parallel processing.
   contents:
