@@ -2,7 +2,7 @@
 % Please edit documentation in R/grid.R
 \name{a5_grid}
 \alias{a5_grid}
-\title{Generate a grid of A5 cells covering an area}
+\title{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}}
 \usage{
 a5_grid(x, resolution)
 }
@@ -21,12 +21,14 @@ as a WGS 84 bounding box.
 An \link{a5_cell} vector of cells at \code{resolution} that intersect \code{x}.
 }
 \description{
+Generate a grid of A5 cells covering an area
+}
+\details{
 Returns all cells at the target resolution that intersect the given
 geometry. Uses hierarchical flood-fill: starting from the 12 resolution-0
 root cells, the algorithm repeatedly expands and prunes by spatial
 intersection until the target resolution is reached.
-}
-\details{
+
 Grid generation runs entirely in Rust via hierarchical flood-fill with
 bounding-box pruning. For non-bbox geometry inputs, an exact intersection
 filter removes cells that fall outside the target shape. No cell count

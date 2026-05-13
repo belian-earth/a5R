@@ -1,3 +1,5 @@
+#' `r lifecycle::badge('deprecated')`
+#'
 #' Generate a grid of A5 cells covering an area
 #'
 #' Returns all cells at the target resolution that intersect the given
@@ -43,6 +45,22 @@
 #' poly <- wk::wkt("POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))")
 #' cells <- a5_grid(poly, resolution = 5)
 a5_grid <- function(x, resolution) {
+  lifecycle::deprecate_warn(
+    when = "0.4.0",
+    what = "a5_grid()",
+    with = "a5_polygon_to_cells()",
+    details = c(
+      i = paste0(
+        "`a5_polygon_to_cells()` uses centre-in-polygon containment, ",
+        "whereas `a5_grid()` uses boundary intersection. ",
+        "Results can differ for cells crossed by the polygon edge."
+      ),
+      i = paste0(
+        "For a bounding box, build a closed polygon first, e.g. ",
+        "`a5_polygon_to_cells(wk::rct(xmin, ymin, xmax, ymax), res)`."
+      )
+    )
+  )
   resolution <- vctrs::vec_cast(resolution, integer())
   check_resolution(resolution)
   vctrs::vec_assert(resolution, size = 1L)
@@ -56,8 +74,20 @@ a5_grid <- function(x, resolution) {
   # Get bbox for Rust grid generation
   if (is_bbox && x[[1]] > x[[3]]) {
     # Antimeridian-crossing: two halves
-    cells1 <- cells_from_rs(a5_grid_bbox_rs(x[[1]], x[[2]], 180, x[[4]], resolution))
-    cells2 <- cells_from_rs(a5_grid_bbox_rs(-180, x[[2]], x[[3]], x[[4]], resolution))
+    cells1 <- cells_from_rs(a5_grid_bbox_rs(
+      x[[1]],
+      x[[2]],
+      180,
+      x[[4]],
+      resolution
+    ))
+    cells2 <- cells_from_rs(a5_grid_bbox_rs(
+      -180,
+      x[[2]],
+      x[[3]],
+      x[[4]],
+      resolution
+    ))
     cells <- vctrs::vec_c(cells1, cells2)
   } else {
     if (is_bbox) {

@@ -73,4 +73,7 @@ reference:
 - title: wk integration
   desc: Methods for the wk geometry framework.
   contents: wk_methods
-
+- title: Deprecated
+  desc: Functions superseded by other parts of the API.
+  contents:
+  - a5_grid
