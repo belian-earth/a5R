@@ -17,14 +17,14 @@ knitr::opts_chunk$set(
 ## The problem
 
 An A5 cell ID is a 64-bit unsigned integer (`u64`).
-R has no native `u64` type — its integers are 32-bit signed (`-2^31` to
+R has no native `u64` type: its integers are 32-bit signed (`-2^31` to
 `2^31 - 1`), and its doubles are 64-bit floating point. A `double`
 can only represent integers exactly up to 2^53, while a `u64` can go up to
 2^64 - 1.
 
 The obvious workaround is to store cell IDs as hex strings
-(`"0800000000000006"`). This works, but every trip across the R--Rust
-boundary requires hex parsing and formatting — O(n) string allocation that
+(`"0800000000000006"`). This works, but every trip across the R / Rust
+boundary requires hex parsing and formatting: O(n) string allocation that
 dominates the cost of lightweight operations like `a5_get_resolution()` or
 `a5_cell_to_parent()`.
 
@@ -41,7 +41,7 @@ little-endian bytes:
   b5 = 0x00, b6 = 0x00, b7 = 0x00, b8 = 0x08
 ```
 
-This is lossless — the eight bytes are the exact same bits as the original
+This is lossless: the eight bytes are the exact same bits as the original
 `u64`, just stored across eight contiguous `raw` vectors. No precision loss,
 no special-case handling. On the Rust side, reconstructing the `u64` from
 the eight byte slices is a single `u64::from_le_bytes()` call. This also
@@ -60,7 +60,7 @@ vctrs::field(cell, "b1")
 vctrs::field(cell, "b8")
 ```
 
-Each field is a plain `raw` vector — a contiguous block of memory with
+Each field is a plain `raw` vector: a contiguous block of memory with
 no per-element overhead. Subsetting, combining, and NA propagation are all
 handled automatically by vctrs.
 

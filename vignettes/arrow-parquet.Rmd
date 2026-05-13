@@ -22,7 +22,7 @@ half of all A5 cell IDs exceed this threshold, so converting them to
 `double` silently corrupts the data.
 
 This is a problem when reading Parquet files that store A5 cell IDs as
-`uint64` columns — the standard format used by DuckDB, Python, and
+`uint64` columns: the standard format used by DuckDB, Python, and
 [geoparquet.io](https://geoparquet.io/). By default, `arrow::read_parquet()`
 converts `uint64` to R's `double`, losing precision:
 
@@ -31,7 +31,7 @@ library(arrow)
 library(tibble)
 library(a5R)
 
-# A real A5 cell — Edinburgh at resolution 20
+# A real A5 cell: Edinburgh at resolution 20
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 20)
 a5_u64_to_hex(cell)
 
@@ -42,13 +42,13 @@ arrow::write_parquet(
   tf
 )
 
-# Read it back naively — arrow silently converts uint64 to double
+# Read it back naively: arrow silently converts uint64 to double
 (naive <- tibble(arrow::read_parquet(tf)))
 
 cell_as_dbl <- naive$cell_id
 
 # The double can't distinguish this cell from nearby IDs
-cell_as_dbl == cell_as_dbl + 1   # TRUE — silent corruption
+cell_as_dbl == cell_as_dbl + 1   # TRUE: silent corruption
 cell_as_dbl == cell_as_dbl + 100 # still TRUE
 ```
 
@@ -61,7 +61,7 @@ entirely, using Arrow's zero-copy `View()` to reinterpret the raw bytes:
 library(a5R)
 library(tibble)
 
-# Six cities across the globe — some will have bit 63 set (origin >= 6)
+# Six cities across the globe; some will have bit 63 set (origin >= 6)
 cities <- tibble(
   name = c("Edinburgh", "Tokyo", "São Paulo", "Nairobi", "Anchorage", "Sydney"),
   lon  = c(   -3.19,     139.69,     -46.63,     36.82,    -149.90,    151.21),
@@ -73,7 +73,7 @@ cities
 ```
 
 These cells work seamlessly in tibbles. Now let's enrich the data with
-some A5 operations — cell resolution and distance from Edinburgh:
+some A5 operations: cell resolution and distance from Edinburgh.
 
 ```{r enrich, eval = requireNamespace("arrow", quietly = TRUE)}
 edinburgh <- cities$cell[1]
@@ -89,7 +89,7 @@ cities
 ## Writing and reading Parquet
 
 Convert to an Arrow table and write to Parquet. The cell column is stored
-as native `uint64` — the same binary format used by DuckDB, Python, and
+as native `uint64`, the same binary format used by DuckDB, Python, and
 geoparquet.io:
 
 ```{r parquet_write, eval = requireNamespace("arrow", quietly = TRUE)}
@@ -105,7 +105,7 @@ arrow_tbl$schema
 arrow::write_parquet(arrow_tbl, tf)
 ```
 
-Read it back — `a5_cell_from_arrow()` recovers the exact cell IDs
+Read it back. `a5_cell_from_arrow()` recovers the exact cell IDs
 without any precision loss:
 
 ```{r parquet_read, eval = requireNamespace("arrow", quietly = TRUE)}
@@ -130,11 +130,12 @@ identical(format(cities$cell), format(result$cell))
 1. **`a5_cell_to_arrow()`**: packs the eight raw-byte fields into 8-byte
    little-endian blobs (one per cell), creates an Arrow
    `fixed_size_binary(8)` array, then uses `View(uint64)` to
-   reinterpret the bytes as unsigned 64-bit integers — zero-copy.
+   reinterpret the bytes as unsigned 64-bit integers. Zero-copy.
 
-2. **`a5_cell_from_arrow()`**: does the reverse — `View(fixed_size_binary(8))`
-   on the `uint64` array to get the raw bytes, then unpacks each 8-byte
-   blob into the eight raw-byte fields used by `a5_cell`.
+2. **`a5_cell_from_arrow()`**: does the reverse, applying
+   `View(fixed_size_binary(8))` on the `uint64` array to get the raw
+   bytes, then unpacks each 8-byte blob into the eight raw-byte fields
+   used by `a5_cell`.
 
 The raw bytes never pass through `double`, so there is no precision loss
 at any step. See `vignette("internal-cell-representation")` for details
