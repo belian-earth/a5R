@@ -67,17 +67,10 @@ test_that("cell_to_lonlat default wraps longitude to [-180, 180]", {
   expect_true(lon >= -180 && lon <= 180)
 })
 
-test_that("cell_to_lonlat deprecates `normalise` and maps it correctly", {
+test_that("cell_to_lonlat rejects the removed `normalise` argument", {
   cell <- a5_lonlat_to_cell(114.8, 4.1, resolution = 5)
-  # The deprecation warning fires.
-  lifecycle::expect_deprecated(
-    a5_cell_to_lonlat(cell, normalise = TRUE)
+  expect_error(
+    a5_cell_to_lonlat(cell, normalise = TRUE),
+    "unused argument"
   )
-  # `normalise = TRUE` → wk::xy (the old default).
-  pt <- suppressWarnings(a5_cell_to_lonlat(cell, normalise = TRUE))
-  expect_s3_class(pt, "wk_xy")
-  # `normalise = FALSE` → data.frame.
-  df <- suppressWarnings(a5_cell_to_lonlat(cell, normalise = FALSE))
-  expect_s3_class(df, "data.frame")
-  expect_named(df, c("lon", "lat"))
 })

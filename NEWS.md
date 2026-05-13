@@ -27,16 +27,16 @@
   longitude normalisation in `cell_to_lonlat` (a5 0.7.3), faster
   `cell_to_parent`, and a polar-region spiral fix in `grid_disk` and
   `spherical_cap`.
-* `a5_cell_to_lonlat()` gains an `as_dataframe` argument (default
-  `FALSE`) controlling whether centroids are returned as a `wk::xy()`
-  vector (the default — geographic-typed with WGS 84 CRS) or as a
-  `data.frame` with `lon`/`lat` columns. The previous `normalise`
-  argument is soft-deprecated via `lifecycle::deprecate_warn()` and
-  maps to the inverse of `as_dataframe`: `normalise = TRUE` →
-  `as_dataframe = FALSE`. The rename reflects the new reality of the
-  underlying a5 crate, where centroid longitudes are always normalised
-  to \eqn{[-180, 180]} since a5 v0.7.3; the flag was misnamed for its
-  actual job, which is selecting the return container.
+* **Breaking:** `a5_cell_to_lonlat()` replaces its `normalise` argument
+  with `as_dataframe` (default `FALSE`). When `FALSE`, centroids are
+  returned as a `wk::xy()` vector with WGS 84 CRS; when `TRUE`, as a
+  base `data.frame` with `lon`/`lat` columns. The previous `normalise`
+  argument toggled longitude normalisation, but upstream a5 (>= 0.7.3)
+  always returns normalised longitudes, so the flag's effective job
+  collapsed to "what container?". `as_dataframe` makes that explicit.
+  Defaults are unchanged for users who never set `normalise` (still
+  returns `wk::xy`); explicit `normalise = TRUE`/`FALSE` calls now
+  error and must be updated.
 * New `lifecycle` dependency added to `Imports`.
 
 # a5R 0.3.1

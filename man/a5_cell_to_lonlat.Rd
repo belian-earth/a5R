@@ -4,26 +4,16 @@
 \alias{a5_cell_to_lonlat}
 \title{Convert A5 cell indices to coordinates}
 \usage{
-a5_cell_to_lonlat(
-  cell,
-  as_dataframe = FALSE,
-  normalise = lifecycle::deprecated()
-)
+a5_cell_to_lonlat(cell, as_dataframe = FALSE)
 }
 \arguments{
 \item{cell}{An \link{a5_cell} vector (or character coercible to one).}
 
 \item{as_dataframe}{Logical scalar controlling the return container.
 When \code{FALSE} (default), centroids are returned as a \code{\link[wk:xy]{wk::xy()}} vector
-with WGS 84 CRS — the geographic-typed form that plugs into wk/sf
+with WGS 84 CRS, the geographic-typed form that plugs into wk/sf
 pipelines. When \code{TRUE}, centroids are returned as a base \code{data.frame}
 with columns \code{lon} and \code{lat}.}
-
-\item{normalise}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{as_dataframe}
-instead. \code{normalise = TRUE} maps to \code{as_dataframe = FALSE} and vice
-versa. Upstream a5 (>= 0.7.3) always returns longitudes normalised to
-\eqn{[-180, 180]}, so this flag's original purpose (unwrapped output)
-no longer applies.}
 }
 \value{
 A \code{\link[wk:xy]{wk::xy()}} vector (if \code{as_dataframe = FALSE}) or a

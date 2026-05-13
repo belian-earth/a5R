@@ -29,14 +29,9 @@ a5_lonlat_to_cell <- function(lon, lat, resolution) {
 #' @param cell An [a5_cell] vector (or character coercible to one).
 #' @param as_dataframe Logical scalar controlling the return container.
 #'   When `FALSE` (default), centroids are returned as a [wk::xy()] vector
-#'   with WGS 84 CRS — the geographic-typed form that plugs into wk/sf
+#'   with WGS 84 CRS, the geographic-typed form that plugs into wk/sf
 #'   pipelines. When `TRUE`, centroids are returned as a base `data.frame`
 #'   with columns `lon` and `lat`.
-#' @param normalise `r lifecycle::badge("deprecated")` Use `as_dataframe`
-#'   instead. `normalise = TRUE` maps to `as_dataframe = FALSE` and vice
-#'   versa. Upstream a5 (>= 0.7.3) always returns longitudes normalised to
-#'   \eqn{[-180, 180]}, so this flag's original purpose (unwrapped output)
-#'   no longer applies.
 #' @returns A [wk::xy()] vector (if `as_dataframe = FALSE`) or a
 #'   `data.frame` with columns `lon` and `lat` (if `as_dataframe = TRUE`).
 #'
@@ -50,22 +45,7 @@ a5_lonlat_to_cell <- function(lon, lat, resolution) {
 #' # Data frame output
 #' cell2 <- a5_lonlat_to_cell(114.8, 4.1, resolution = 5)
 #' a5_cell_to_lonlat(cell2, as_dataframe = TRUE)
-a5_cell_to_lonlat <- function(cell,
-                              as_dataframe = FALSE,
-                              normalise = lifecycle::deprecated()) {
-  if (lifecycle::is_present(normalise)) {
-    lifecycle::deprecate_warn(
-      "0.4.0",
-      "a5_cell_to_lonlat(normalise = )",
-      "a5_cell_to_lonlat(as_dataframe = )",
-      details = paste(
-        "Pass `as_dataframe = TRUE` for a data.frame return.",
-        "`as_dataframe` is the inverse of the old `normalise` flag:",
-        "`normalise = TRUE` corresponds to `as_dataframe = FALSE`."
-      )
-    )
-    as_dataframe <- !isTRUE(normalise)
-  }
+a5_cell_to_lonlat <- function(cell, as_dataframe = FALSE) {
   cell <- as_a5_cell(cell)
   ll <- a5_cell_to_lonlat_rs(cell_data(cell), TRUE)
   if (as_dataframe) {
