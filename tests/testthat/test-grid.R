@@ -1,6 +1,16 @@
+# -- deprecation ---------------------------------------------------------------
+
+test_that("a5_grid is soft-deprecated in favour of a5_polygon_to_cells", {
+  lifecycle::expect_deprecated(
+    a5_grid(c(-3.3, 55.9, -3.1, 56.0), resolution = 5),
+    "a5_polygon_to_cells"
+  )
+})
+
 # -- input validation -----------------------------------------------------------
 
 test_that("a5_grid rejects bad bbox", {
+  local_quiet_lifecycle()
   expect_error(a5_grid(c(1, 2, 3), resolution = 3), "length 4")
   expect_error(a5_grid(c(1, 2, NA, 4), resolution = 3), "NA")
   expect_error(a5_grid(c(0, 10, 1, 5), resolution = 3), "ymin")
@@ -9,6 +19,7 @@ test_that("a5_grid rejects bad bbox", {
 })
 
 test_that("a5_grid rejects invalid resolution", {
+  local_quiet_lifecycle()
   expect_error(a5_grid(c(0, 0, 1, 1), resolution = -1))
   expect_error(a5_grid(c(0, 0, 1, 1), resolution = 31))
 })
@@ -16,6 +27,7 @@ test_that("a5_grid rejects invalid resolution", {
 # -- return type ---------------------------------------------------------------
 
 test_that("a5_grid returns a5_cell at correct resolution", {
+  local_quiet_lifecycle()
   cells <- a5_grid(c(-3.3, 55.9, -3.1, 56.0), resolution = 5)
   expect_s3_class(cells, "a5_cell")
   expect_true(length(cells) > 0)
@@ -25,11 +37,13 @@ test_that("a5_grid returns a5_cell at correct resolution", {
 # -- correctness ---------------------------------------------------------------
 
 test_that("res 0 with global bbox returns 12 cells", {
+  local_quiet_lifecycle()
   cells <- a5_grid(c(-180, -90, 180, 90), resolution = 0)
   expect_length(cells, 12L)
 })
 
 test_that("result cells intersect the target (bbox path)", {
+  local_quiet_lifecycle()
   bbox <- c(-3.3, 55.9, -3.1, 56.0)
   cells <- a5_grid(bbox, resolution = 5)
   target_wkt <- sprintf(
@@ -44,6 +58,7 @@ test_that("result cells intersect the target (bbox path)", {
 })
 
 test_that("geometry input filters cells by intersection", {
+  local_quiet_lifecycle()
   # Triangle is strictly smaller than its bounding box, so the exact
 
   # intersection filter should return fewer cells than a bbox grid
@@ -56,6 +71,7 @@ test_that("geometry input filters cells by intersection", {
 })
 
 test_that("interior point is covered by a returned cell", {
+  local_quiet_lifecycle()
   bbox <- c(-3.3, 55.9, -3.1, 56.0)
   cells <- a5_grid(bbox, resolution = 5)
   # the centroid of the bbox should fall inside one of the cells
@@ -64,6 +80,7 @@ test_that("interior point is covered by a returned cell", {
 })
 
 test_that("no duplicate cells", {
+  local_quiet_lifecycle()
   cells <- a5_grid(c(-3.3, 55.9, -3.1, 56.0), resolution = 5)
   expect_equal(length(cells), length(unique(format(cells))))
 })
@@ -71,6 +88,7 @@ test_that("no duplicate cells", {
 # -- input types ---------------------------------------------------------------
 
 test_that("a5_grid accepts wkt polygon", {
+  local_quiet_lifecycle()
   poly <- wk::wkt("POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))")
   cells <- a5_grid(poly, resolution = 5)
   expect_s3_class(cells, "a5_cell")
@@ -78,6 +96,7 @@ test_that("a5_grid accepts wkt polygon", {
 })
 
 test_that("a5_grid accepts a5_cell as area", {
+  local_quiet_lifecycle()
   cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 3)
   children <- a5_grid(cell, resolution = 5)
   expect_s3_class(children, "a5_cell")
@@ -88,17 +107,20 @@ test_that("a5_grid accepts a5_cell as area", {
 # -- edge cases ----------------------------------------------------------------
 
 test_that("res 1 works (below filter threshold)", {
+  local_quiet_lifecycle()
   cells <- a5_grid(c(-180, -90, 180, 90), resolution = 1)
   expect_s3_class(cells, "a5_cell")
   expect_true(all(a5_get_resolution(cells) == 1L))
 })
 
 test_that("tiny bbox returns at least 1 cell", {
+  local_quiet_lifecycle()
   cells <- a5_grid(c(-3.19, 55.95, -3.189, 55.951), resolution = 8)
   expect_true(length(cells) >= 1L)
 })
 
 test_that("antimeridian-crossing bbox works", {
+  local_quiet_lifecycle()
   # Fiji: bbox straddles the antimeridian (xmin > xmax)
   cells <- a5_grid(c(177, -19, -178, -17), resolution = 5)
   expect_s3_class(cells, "a5_cell")
@@ -112,6 +134,7 @@ test_that("antimeridian-crossing bbox works", {
 })
 
 test_that("near-pole bbox returns cells", {
+  local_quiet_lifecycle()
   # Rust bbox grid skips filtering near poles (buf >= 45) to avoid false negatives
   cells <- a5_grid(c(0, 89.999, 0.001, 90), resolution = 5)
   expect_s3_class(cells, "a5_cell")
@@ -119,6 +142,7 @@ test_that("near-pole bbox returns cells", {
 })
 
 test_that("a5_grid accepts multiple geometries (GEOMETRYCOLLECTION path)", {
+  local_quiet_lifecycle()
   # Two small polygons far apart — should return cells near both
   polys <- wk::wkt(c(
     "POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))",
@@ -135,11 +159,13 @@ test_that("a5_grid accepts multiple geometries (GEOMETRYCOLLECTION path)", {
 })
 
 test_that("a5_grid coerces double resolution to integer", {
+  local_quiet_lifecycle()
   cells <- a5_grid(c(-3.3, 55.9, -3.1, 56.0), resolution = 5.0)
   expect_s3_class(cells, "a5_cell")
   expect_true(all(a5_get_resolution(cells) == 5L))
 })
 
 test_that("a5_grid rejects vector resolution", {
+  local_quiet_lifecycle()
   expect_error(a5_grid(c(0, 0, 1, 1), resolution = c(3, 5)), "size 1")
 })

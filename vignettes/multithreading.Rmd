@@ -38,7 +38,7 @@ a5_set_threads(1)
 ```
 
 You can also set threads at package load time via an R option or environment
-variable - useful for scripts and batch jobs:
+variable, useful for scripts and batch jobs:
 
 ```r
 # In .Rprofile or at the top of a script
@@ -65,7 +65,8 @@ independently:
 | Function | Per-element cost | Benefit |
 |---|---|---|
 | `a5_cell_to_boundary()` | Heavy (boundary + WKT/WKB) | High |
-| `a5_grid()` | Heavy (boundary filtering) | High |
+| `a5_polygon_to_cells()` | Heavy (per-part flood-fill, hole subtraction) | High |
+| `a5_linestring_to_cells()` | Heavy (per-feature tracing) | High |
 | `a5_lonlat_to_cell()` | Moderate (projection) | High |
 | `a5_cell_distance()` | Moderate (2x projection + distance) | Medium |
 | `a5_cell_to_lonlat()` | Moderate (reverse projection) | Medium |
@@ -74,7 +75,7 @@ independently:
 | `a5_is_valid()` | Light (hex parse) | Low |
 
 Scalar and bulk operations (`a5_cell_to_children()`, `a5_compact()`,
-`a5_cell_area()`, etc.) are unaffected --- they are already fast or delegate
+`a5_cell_area()`, etc.) are unaffected: they are already fast or delegate
 to algorithms that don't parallelise element-wise.
 
 ## When is it worthwhile?
@@ -90,7 +91,7 @@ the benefit. As a rule of thumb:
 Here's a quick comparison on 100k cells:
 
 ```{r, eval = FALSE}
-cells <- a5_grid(c(-10, 50, 10, 60), resolution = 12)
+cells <- a5_polygon_to_cells(wk::rct(-10, 50, 10, 60), resolution = 12)
 length(cells)
 #> [1] 704259
 
@@ -106,7 +107,7 @@ system.time(a5_cell_to_boundary(cells, format = "wkt"))
 ```
 
 Note that `user` time increases (total CPU work across all threads) while
-`elapsed` (wall-clock) time decreases --- that's the parallelism at work.
+`elapsed` (wall-clock) time decreases: that is the parallelism at work.
 
 ## Thread safety
 
@@ -116,5 +117,5 @@ carefully about this nested parallelism as it can, if overloaded, degrade
 performance.
 
 The thread pool is rebuilt each time you call `a5_set_threads()`, so
-changing the count mid-session is fine (and cheap) but not free - ideally, just
+changing the count mid-session is fine (and cheap) but not free: ideally,
 do it once at the start of your workflow rather than toggling per-call.

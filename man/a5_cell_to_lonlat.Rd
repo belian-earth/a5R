@@ -4,19 +4,20 @@
 \alias{a5_cell_to_lonlat}
 \title{Convert A5 cell indices to coordinates}
 \usage{
-a5_cell_to_lonlat(cell, normalise = TRUE)
+a5_cell_to_lonlat(cell, as_dataframe = FALSE)
 }
 \arguments{
 \item{cell}{An \link{a5_cell} vector (or character coercible to one).}
 
-\item{normalise}{Logical scalar. If \code{TRUE} (default), longitudes are
-wrapped to \eqn{[-180, 180]} and returned as a \code{\link[wk:xy]{wk::xy()}} vector.
-If \code{FALSE}, raw unwrapped coordinates are returned as a data frame
-(\code{lon}, \code{lat}) — useful for calculations spanning the antimeridian.}
+\item{as_dataframe}{Logical scalar controlling the return container.
+When \code{FALSE} (default), centroids are returned as a \code{\link[wk:xy]{wk::xy()}} vector
+with WGS 84 CRS, the geographic-typed form that plugs into wk/sf
+pipelines. When \code{TRUE}, centroids are returned as a base \code{data.frame}
+with columns \code{lon} and \code{lat}.}
 }
 \value{
-A \code{\link[wk:xy]{wk::xy()}} vector (if \code{normalise = TRUE}) or a data frame
-with columns \code{lon} and \code{lat}.
+A \code{\link[wk:xy]{wk::xy()}} vector (if \code{as_dataframe = FALSE}) or a
+\code{data.frame} with columns \code{lon} and \code{lat} (if \code{as_dataframe = TRUE}).
 }
 \description{
 Returns the centre-point longitude and latitude of each cell.
@@ -25,9 +26,9 @@ Returns the centre-point longitude and latitude of each cell.
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
 a5_cell_to_lonlat(cell)
 
-# Raw unwrapped coordinates
+# Data frame output
 cell2 <- a5_lonlat_to_cell(114.8, 4.1, resolution = 5)
-a5_cell_to_lonlat(cell2, normalise = FALSE)
+a5_cell_to_lonlat(cell2, as_dataframe = TRUE)
 }
 \seealso{
 \code{\link[=a5_lonlat_to_cell]{a5_lonlat_to_cell()}} for the inverse operation,

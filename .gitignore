@@ -20,3 +20,4 @@ docs
 /Meta/
 scratch/
 /.quarto/
+vignettes/*_files/

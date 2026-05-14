@@ -72,8 +72,9 @@ for (info in list(
 par(oldpar)
 ```
 
-Distance radiates smoothly from the centre — cells near the origin are dark,
-cells at the rim are bright. The origin cell is shown with a white border for reference.
+Distance radiates smoothly from the centre. Cells near the origin are
+dark, cells at the rim are bright. The origin cell is shown with a
+white border for reference.
 
 ## Distance methods
 

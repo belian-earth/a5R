@@ -80,7 +80,7 @@ plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
 <img src="man/figures/README-grid-plot-1.png" alt="A5 grid plot showing a collection of cells around a point" width="100%" />
 
 See `vignette("a5R")` for a full walkthrough of indexing, boundaries,
-hierarchy, traversal, and grid generation.
+hierarchy, traversal, and geometry-to-cell conversion.
 
 ## Features
 
@@ -92,8 +92,9 @@ hierarchy, traversal, and grid generation.
 - **vctrs + wk integration** — cell indices use an `a5_cell` type with
   tibble support; geometries return as `wk_wkb`/`wk_wkt` vectors
   compatible with sf and terra.
-- **Grid generation** — `a5_grid()` fills any bounding box or geometry
-  with cells at a target resolution using hierarchical flood-fill.
+- **Geometry indexing** — `a5_polygon_to_cells()` and
+  `a5_linestring_to_cells()` map polygons and great-circle lines to the
+  cells that cover them.
 - **Traversal** — `a5_grid_disk()` and `a5_spherical_cap()` select
   neighbours by hop count or great-circle distance.
 - **Multi-threading** — opt-in parallel processing via rayon for
