@@ -8,17 +8,18 @@ half of all A5 cell IDs exceed this threshold, so converting them to
 `double` silently corrupts the data.
 
 This is a problem when reading Parquet files that store A5 cell IDs as
-`uint64` columns — the standard format used by DuckDB, Python, and
+`uint64` columns: the standard format used by DuckDB, Python, and
 [geoparquet.io](https://geoparquet.io/). By default,
 [`arrow::read_parquet()`](https://arrow.apache.org/docs/r/reference/read_parquet.html)
 converts `uint64` to R’s `double`, losing precision:
 
 ``` r
+
 library(arrow)
 library(tibble)
 library(a5R)
 
-# A real A5 cell — Edinburgh at resolution 20
+# A real A5 cell: Edinburgh at resolution 20
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 20)
 a5_u64_to_hex(cell)
 #> [1] "6344bba17af80000"
@@ -30,7 +31,7 @@ arrow::write_parquet(
   tf
 )
 
-# Read it back naively — arrow silently converts uint64 to double
+# Read it back naively: arrow silently converts uint64 to double
 (naive <- tibble(arrow::read_parquet(tf)))
 #> # A tibble: 1 × 1
 #>   cell_id
@@ -40,7 +41,7 @@ arrow::write_parquet(
 cell_as_dbl <- naive$cell_id
 
 # The double can't distinguish this cell from nearby IDs
-cell_as_dbl == cell_as_dbl + 1   # TRUE — silent corruption
+cell_as_dbl == cell_as_dbl + 1   # TRUE: silent corruption
 #> [1] TRUE
 cell_as_dbl == cell_as_dbl + 100 # still TRUE
 #> [1] TRUE
@@ -54,10 +55,11 @@ entirely, using Arrow’s zero-copy
 bytes:
 
 ``` r
+
 library(a5R)
 library(tibble)
 
-# Six cities across the globe — some will have bit 63 set (origin >= 6)
+# Six cities across the globe; some will have bit 63 set (origin >= 6)
 cities <- tibble(
   name = c("Edinburgh", "Tokyo", "São Paulo", "Nairobi", "Anchorage", "Sydney"),
   lon  = c(   -3.19,     139.69,     -46.63,     36.82,    -149.90,    151.21),
@@ -78,9 +80,10 @@ cities
 ```
 
 These cells work seamlessly in tibbles. Now let’s enrich the data with
-some A5 operations — cell resolution and distance from Edinburgh:
+some A5 operations: cell resolution and distance from Edinburgh.
 
 ``` r
+
 edinburgh <- cities$cell[1]
 
 cities$resolution <- a5_get_resolution(cities$cell)
@@ -103,10 +106,11 @@ cities
 ## Writing and reading Parquet
 
 Convert to an Arrow table and write to Parquet. The cell column is
-stored as native `uint64` — the same binary format used by DuckDB,
+stored as native `uint64`, the same binary format used by DuckDB,
 Python, and geoparquet.io:
 
 ``` r
+
 tf <- tempfile(fileext = ".parquet")
 
 arrow_tbl <- arrow::arrow_table(
@@ -124,11 +128,12 @@ arrow_tbl$schema
 arrow::write_parquet(arrow_tbl, tf)
 ```
 
-Read it back —
+Read it back.
 [`a5_cell_from_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_from_arrow.md)
 recovers the exact cell IDs without any precision loss:
 
 ``` r
+
 pq <- arrow::read_parquet(tf, as_data_frame = FALSE)
 
 # Recover cells from the uint64 column, bind with the rest of the data
@@ -151,6 +156,7 @@ result
 Verify the round-trip is lossless:
 
 ``` r
+
 identical(format(cities$cell), format(result$cell))
 #> [1] TRUE
 ```
@@ -160,13 +166,13 @@ identical(format(cities$cell), format(result$cell))
 1.  **[`a5_cell_to_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_from_arrow.md)**:
     packs the eight raw-byte fields into 8-byte little-endian blobs (one
     per cell), creates an Arrow `fixed_size_binary(8)` array, then uses
-    `View(uint64)` to reinterpret the bytes as unsigned 64-bit integers
-    — zero-copy.
+    `View(uint64)` to reinterpret the bytes as unsigned 64-bit integers.
+    Zero-copy.
 
 2.  **[`a5_cell_from_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_from_arrow.md)**:
-    does the reverse — `View(fixed_size_binary(8))` on the `uint64`
-    array to get the raw bytes, then unpacks each 8-byte blob into the
-    eight raw-byte fields used by `a5_cell`.
+    does the reverse, applying `View(fixed_size_binary(8))` on the
+    `uint64` array to get the raw bytes, then unpacks each 8-byte blob
+    into the eight raw-byte fields used by `a5_cell`.
 
 The raw bytes never pass through `double`, so there is no precision loss
 at any step. See

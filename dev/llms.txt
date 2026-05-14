@@ -12,12 +12,14 @@ achieve millimetre-level precision at the finest resolution.
 ## Installation
 
 ``` r
+
 install.packages("a5R")
 ```
 
 Or install the development version from GitHub:
 
 ``` r
+
 # install.packages("pak")
 pak::pak("belian-earth/a5R")
 ```
@@ -28,6 +30,7 @@ and `rustc`).
 ## Quick example
 
 ``` r
+
 library(a5R)
 
 # Index a point to a cell
@@ -51,6 +54,7 @@ a5_cell_to_children(cell)
 ```
 
 ``` r
+
 # Create a collection of cells whose centres fall within a great-circle distance of 100km from the origin cell
 cells <- a5_spherical_cap(cell, radius = 100000) |> 
   a5_uncompact(resolution = 10)
@@ -63,7 +67,7 @@ point](reference/figures/README-grid-plot-1.png)
 See
 [`vignette("a5R")`](https://belian-earth.github.io/a5R/dev/articles/a5R.md)
 for a full walkthrough of indexing, boundaries, hierarchy, traversal,
-and grid generation.
+and geometry-to-cell conversion.
 
 ## Features
 
@@ -75,10 +79,11 @@ and grid generation.
 - **vctrs + wk integration** — cell indices use an `a5_cell` type with
   tibble support; geometries return as `wk_wkb`/`wk_wkt` vectors
   compatible with sf and terra.
-- **Grid generation** —
-  [`a5_grid()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid.md)
-  fills any bounding box or geometry with cells at a target resolution
-  using hierarchical flood-fill.
+- **Geometry indexing** —
+  [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md)
+  and
+  [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_linestring_to_cells.md)
+  map polygons and great-circle lines to the cells that cover them.
 - **Traversal** —
   [`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md)
   and
@@ -174,12 +179,14 @@ Compress and expand sets of cells.
 - [`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_uncompact.md)
   : Uncompact a set of A5 cells to a target resolution
 
-## Grid generation
+## Geometry indexing
 
-Generate grids of cells covering an area.
+Convert polygons and linestrings to cells covering them.
 
-- [`a5_grid()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid.md)
-  : Generate a grid of A5 cells covering an area
+- [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md)
+  : Cells whose centres lie inside a polygon
+- [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_linestring_to_cells.md)
+  : Cells traced by a great-circle linestring
 
 ## Configuration
 
@@ -196,6 +203,15 @@ Methods for the wk geometry framework.
 - [`wk_handle(`*`<a5_cell>`*`)`](https://belian-earth.github.io/a5R/dev/reference/wk_methods.md)
   [`wk_crs(`*`<a5_cell>`*`)`](https://belian-earth.github.io/a5R/dev/reference/wk_methods.md)
   : wk methods for a5_cell
+
+## Deprecated
+
+Functions superseded by other parts of the API.
+
+- [`a5_grid()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid.md)
+  :
+
+  **\[deprecated\]**
 
 # Articles
 

@@ -70,10 +70,13 @@ R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 - [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md)
   — neighbours by great-circle distance
 
-## Grid generation
+## Geometry indexing
 
-- [`a5_grid()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid.md)
-  — fill a bbox or geometry with cells
+- [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md)
+  — cells whose centres lie inside a polygon
+
+- [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_linestring_to_cells.md)
+  — cells crossed by a great-circle polyline
 
 ## Arrow & Parquet
 
@@ -116,6 +119,10 @@ Useful links:
 ## Author
 
 **Maintainer**: Hugh Graham <hugh@belian.earth>
+
+Authors:
+
+- Hugh Graham <hugh@belian.earth>
 
 Other contributors:
 

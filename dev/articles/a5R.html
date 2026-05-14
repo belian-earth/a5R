@@ -32,7 +32,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.3.1.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -130,8 +130,8 @@ finer resolution.</p>
 <span><span class="va">children</span></span>
 <span><span class="co">#&gt; &lt;a5_cell[4]&gt;</span></span>
 <span><span class="co">#&gt; [1] 6344be2000000000 6344be6000000000 6344bea000000000 6344bee000000000</span></span></code></pre></div>
-<p>We can visualise the relationship - the parent (dark outline)
-contains our cell (blue fill), which in turn contains its 4 children
+<p>We can visualise the relationship: the parent (dark outline) contains
+our cell (blue fill), which in turn contains its 4 children
 (orange):</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="cn">NULL</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.23</span>, <span class="op">-</span><span class="fl">3</span><span class="op">)</span>,  ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">55.98</span>, <span class="fl">55.99</span><span class="op">)</span>,               </span>
@@ -143,8 +143,8 @@ contains our cell (blue fill), which in turn contains its 4 children
 <span>     lwd <span class="op">=</span> <span class="fl">2</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">parent</span><span class="op">)</span>, border <span class="op">=</span> <span class="st">"#333333"</span>, lwd <span class="op">=</span> <span class="fl">2</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p><img src="a5R_files/figure-html/hierarchy-plot-1.png" class="r-plt" alt="" width="768"></p>
-<p>Cell area decreases geometrically — each level is roughly 4x
-smaller:</p>
+<p>Cell area decreases geometrically: each level is roughly 4x
+smaller.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/a5_cell_area.html">a5_cell_area</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Units: [m^2]</span></span>
@@ -171,7 +171,7 @@ of large cell sets without losing coverage.</p>
 <span><span class="co">#&gt; [1] 6344be2000000000 6344be6000000000 6344bea000000000 6344bee000000000</span></span></code></pre></div>
 <p>Many a5R functions return compacted output automatically. For
 example, <code><a href="../reference/a5_grid_disk.html">a5_grid_disk()</a></code> and <code><a href="../reference/a5_spherical_cap.html">a5_spherical_cap()</a></code>
-compact their results — use <code><a href="../reference/a5_uncompact.html">a5_uncompact()</a></code> when you need a
+compact their results; use <code><a href="../reference/a5_uncompact.html">a5_uncompact()</a></code> when you need a
 uniform-resolution grid (see <a href="#traversal">Traversal</a>
 below).</p>
 </div>
@@ -191,7 +191,7 @@ below).</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">disk</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#206ead20"</span>, border <span class="op">=</span> <span class="st">"#206ead"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p><img src="a5R_files/figure-html/traversal-2.png" class="r-plt" alt="" width="672"></p>
-<p>Both functions return a <strong>compacted</strong> cell vector —
+<p>Both functions return a <strong>compacted</strong> cell vector:
 sibling groups are merged into coarser parent cells to save space. To
 recover a uniform grid at the original resolution, pass the result
 through <code><a href="../reference/a5_uncompact.html">a5_uncompact()</a></code>:</p>
@@ -202,29 +202,79 @@ through <code><a href="../reference/a5_uncompact.html">a5_uncompact()</a></code>
 <p><img src="a5R_files/figure-html/traversal-uncompact-1.png" class="r-plt" alt="" width="672"></p>
 </div>
 <div class="section level2">
-<h2 id="grid-generation">Grid generation<a class="anchor" aria-label="anchor" href="#grid-generation"></a>
+<h2 id="converting-geometries-to-a5-cells">Converting geometries to a5 cells<a class="anchor" aria-label="anchor" href="#converting-geometries-to-a5-cells"></a>
 </h2>
-<p><code><a href="../reference/a5_grid.html">a5_grid()</a></code> is a convenience function provided by a5R (not
-part of the underlying a5 Rust crate) that returns all cells at a target
-resolution covering a given area — handy for binning, zonal statistics,
-and other spatial analysis workflows common in R.</p>
-<p>Pass a bounding box as a numeric vector:</p>
+<p><code><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code> returns the cells whose centres
+lie inside a polygon. It accepts any geometry that wk can handle (a
+<code><a href="https://paleolimbot.github.io/wk/reference/rct.html" class="external-link">wk::rct()</a></code> bounding box, a WKT or WKB polygon, an
+<code>sf</code> / <code>sfc</code> feature) and also terra
+<code>SpatVector</code> polygons.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_grid.html">a5_grid</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.3</span>, <span class="fl">55.9</span>, <span class="op">-</span><span class="fl">3.1</span>, <span class="fl">56.0</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells</a></span><span class="op">(</span><span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/rct.html" class="external-link">rct</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.3</span>, <span class="fl">55.9</span>, <span class="op">-</span><span class="fl">3.1</span>, <span class="fl">56.0</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 90</span></span>
+<span><span class="co">#&gt; [1] 36</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#206ead20"</span>, border <span class="op">=</span> <span class="st">"#206ead"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p><img src="a5R_files/figure-html/grid-plot-1.png" class="r-plt" alt="" width="672"></p>
-<p>Any geometry that wk can handle works too — polygons, sf objects, or
-even <code>a5_cell</code> vectors:</p>
+<p>The returned vector is sorted and compacted: whenever four sibling
+cells all sit inside the polygon, they are merged into their parent so
+the result uses fewer slots without losing coverage. Call
+<code><a href="../reference/a5_uncompact.html">a5_uncompact()</a></code> to expand back to a uniform grid at the
+target resolution:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cells_uncom</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_uncompact.html">a5_uncompact</a></span><span class="op">(</span><span class="va">cells</span>, <span class="fl">12</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">cells_uncom</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 69</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cells_uncom</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#206ead20"</span>, border <span class="op">=</span> <span class="st">"#206ead"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="a5R_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="700"></p>
+<p>Multi-part inputs are handled natively: a <code>MULTIPOLYGON</code>
+or an <code>sfc</code> of multiple polygons returns the union of cells
+across all parts, and a <code>POLYGON</code> with holes returns the
+outer ring’s cells with the hole cells properly subtracted.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Linking to GEOS 3.12.1, GDAL 3.8.4, PROJ 9.4.0; sf_use_s2() is TRUE</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/demo.html" class="external-link">demo</a></span><span class="op">(</span><span class="va">nc</span>, ask <span class="op">=</span> <span class="cn">FALSE</span>, echo <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">nca5</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_grid.html">a5_grid</a></span><span class="op">(</span><span class="va">nc</span>, resolution <span class="op">=</span> <span class="fl">9</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">nca5</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#6d20ad20"</span>, border <span class="op">=</span> <span class="st">"#6d20adff"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
-<p><img src="a5R_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="700"></p>
+<span><span class="va">nca5</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells</a></span><span class="op">(</span><span class="va">nc</span>, resolution <span class="op">=</span> <span class="fl">9</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/a5_uncompact.html">a5_uncompact</a></span><span class="op">(</span><span class="fl">9</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">nca5</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#03030320"</span>, border <span class="op">=</span> <span class="st">"#6d20adff"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="a5R_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" alt="" width="700"></p>
+</div>
+<div class="section level2">
+<h2 id="tracing-a-line">Tracing a line<a class="anchor" aria-label="anchor" href="#tracing-a-line"></a>
+</h2>
+<p><code><a href="../reference/a5_linestring_to_cells.html">a5_linestring_to_cells()</a></code> returns the cells whose
+pentagons are crossed by a great-circle polyline. Output is in discovery
+order along the path. Consecutive waypoints are connected by
+great-circle arcs, so antimeridian-crossing routes work
+transparently.</p>
+<p>Multi-part inputs (<code>MULTILINESTRING</code> or an
+<code>sfc</code> of several linestrings) are handled natively:
+per-feature outputs are concatenated in feature order with first-seen
+deduplication.</p>
+<p>To show what cell-by-cell tracing looks like, we can write a short
+phrase as a <code>MULTILINESTRING</code> (one stroke per letter) and ask
+A5 to fill in the cells:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">a5R_strokes</span> <span class="op">&lt;-</span> <span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wkt.html" class="external-link">wkt</a></span><span class="op">(</span></span>
+<span>  <span class="st">"MULTILINESTRING (</span></span>
+<span><span class="st">    (1.8 52.5, 1.2 52.8, 0.6 52.5, 0.4 52, 0.6 51.5, 1.2 51.2, 1.8 51.5, 2 52, 1.8 52.5, 2 51.2),</span></span>
+<span><span class="st">    (5 53, 3.5 53, 3.5 52.2, 4 52.2, 4.7 52, 5 51.6, 4.7 51.2, 4 51, 3.5 51.1),</span></span>
+<span><span class="st">    (6.5 51, 6.5 53, 7.5 53, 8 52.8, 8.2 52.5, 8 52.2, 7.5 52, 6.5 52, 8.2 51)</span></span>
+<span><span class="st">  )"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_linestring_to_cells.html">a5_linestring_to_cells</a></span><span class="op">(</span><span class="va">a5R_strokes</span>, resolution <span class="op">=</span> <span class="fl">9</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 182</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span>,</span>
+<span>     col <span class="op">=</span> <span class="st">"#206ead80"</span>, border <span class="op">=</span> <span class="st">"#37af6d"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="a5R_files/figure-html/linestring-a5R-1.png" class="r-plt" alt="" width="672"></p>
+<p>Each stroke is one continuous linestring; the function walks the
+great-circle path, expanding cell neighbours along the way, and returns
+the union across all strokes.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

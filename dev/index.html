@@ -35,7 +35,7 @@
 
     <a class="navbar-brand me-2" href="index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.3.1.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -120,7 +120,7 @@
 <span>  <span class="fu"><a href="reference/a5_uncompact.html">a5_uncompact</a></span><span class="op">(</span>resolution <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#206ead20"</span>, border <span class="op">=</span> <span class="st">"#206ead"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-grid-plot-1.png" alt="A5 grid plot showing a collection of cells around a point" width="100%"></p>
-<p>See <code><a href="articles/a5R.html">vignette("a5R")</a></code> for a full walkthrough of indexing, boundaries, hierarchy, traversal, and grid generation.</p>
+<p>See <code><a href="articles/a5R.html">vignette("a5R")</a></code> for a full walkthrough of indexing, boundaries, hierarchy, traversal, and geometry-to-cell conversion.</p>
 </div>
 <div class="section level2">
 <h2 id="features">Features<a class="anchor" aria-label="anchor" href="#features"></a>
@@ -131,7 +131,7 @@
 <li>
 <strong>vctrs + wk integration</strong> — cell indices use an <code>a5_cell</code> type with tibble support; geometries return as <code>wk_wkb</code>/<code>wk_wkt</code> vectors compatible with sf and terra.</li>
 <li>
-<strong>Grid generation</strong> — <code><a href="reference/a5_grid.html">a5_grid()</a></code> fills any bounding box or geometry with cells at a target resolution using hierarchical flood-fill.</li>
+<strong>Geometry indexing</strong> — <code><a href="reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code> and <code><a href="reference/a5_linestring_to_cells.html">a5_linestring_to_cells()</a></code> map polygons and great-circle lines to the cells that cover them.</li>
 <li>
 <strong>Traversal</strong> — <code><a href="reference/a5_grid_disk.html">a5_grid_disk()</a></code> and <code><a href="reference/a5_spherical_cap.html">a5_spherical_cap()</a></code> select neighbours by hop count or great-circle distance.</li>
 <li>

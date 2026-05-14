@@ -25,7 +25,9 @@
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_get_resolution.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_grid.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.html</loc></url>
+<url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_linestring_to_cells.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_lonlat_to_cell.html</loc></url>
+<url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_threads.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_u64_to_hex.html</loc></url>

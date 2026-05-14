@@ -1,9 +1,6 @@
-# Generate a grid of A5 cells covering an area
+# **\[deprecated\]**
 
-Returns all cells at the target resolution that intersect the given
-geometry. Uses hierarchical flood-fill: starting from the 12
-resolution-0 root cells, the algorithm repeatedly expands and prunes by
-spatial intersection until the target resolution is reached.
+Generate a grid of A5 cells covering an area
 
 ## Usage
 
@@ -40,6 +37,11 @@ vector of cells at `resolution` that intersect `x`.
 
 ## Details
 
+Returns all cells at the target resolution that intersect the given
+geometry. Uses hierarchical flood-fill: starting from the 12
+resolution-0 root cells, the algorithm repeatedly expands and prunes by
+spatial intersection until the target resolution is reached.
+
 Grid generation runs entirely in Rust via hierarchical flood-fill with
 bounding-box pruning. For non-bbox geometry inputs, an exact
 intersection filter removes cells that fall outside the target shape. No
@@ -67,6 +69,13 @@ to convert result cells to geometries.
 ``` r
 # Grid from a bounding box
 cells <- a5_grid(c(-3.3, 55.9, -3.1, 56.0), resolution = 5)
+#> Warning: `a5_grid()` was deprecated in a5R 0.4.0.
+#> ℹ Please use `a5_polygon_to_cells()` instead.
+#> ℹ `a5_polygon_to_cells()` uses centre-in-polygon containment, whereas
+#>   `a5_grid()` uses boundary intersection. Results can differ for cells crossed
+#>   by the polygon edge.
+#> ℹ For a bounding box, build a closed polygon first, e.g.
+#>   `a5_polygon_to_cells(wk::rct(xmin, ymin, xmax, ymax), res)`.
 cells
 #> <a5_cell[1]>
 #> [1] 633e000000000000

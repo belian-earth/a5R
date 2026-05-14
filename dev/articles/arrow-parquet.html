@@ -32,7 +32,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.3.1.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -89,7 +89,7 @@ integers exactly up to 2^53. Nearly half of all A5 cell IDs exceed this
 threshold, so converting them to <code>double</code> silently corrupts
 the data.</p>
 <p>This is a problem when reading Parquet files that store A5 cell IDs
-as <code>uint64</code> columns — the standard format used by DuckDB,
+as <code>uint64</code> columns: the standard format used by DuckDB,
 Python, and <a href="https://geoparquet.io/" class="external-link">geoparquet.io</a>. By
 default, <code><a href="https://arrow.apache.org/docs/r/reference/read_parquet.html" class="external-link">arrow::read_parquet()</a></code> converts <code>uint64</code>
 to R’s <code>double</code>, losing precision:</p>
@@ -98,7 +98,7 @@ to R’s <code>double</code>, losing precision:</p>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tibble.tidyverse.org/" class="external-link">tibble</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/belian-earth/a5R" class="external-link">a5R</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># A real A5 cell — Edinburgh at resolution 20</span></span>
+<span><span class="co"># A real A5 cell: Edinburgh at resolution 20</span></span>
 <span><span class="va">cell</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_lonlat_to_cell.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">55.95</span>, resolution <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/a5_u64_to_hex.html">a5_u64_to_hex</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "6344bba17af80000"</span></span>
@@ -110,7 +110,7 @@ to R’s <code>double</code>, losing precision:</p>
 <span>  <span class="va">tf</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Read it back naively — arrow silently converts uint64 to double</span></span>
+<span><span class="co"># Read it back naively: arrow silently converts uint64 to double</span></span>
 <span><span class="op">(</span><span class="va">naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span><span class="fu">arrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/docs/r/reference/read_parquet.html" class="external-link">read_parquet</a></span><span class="op">(</span><span class="va">tf</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 1</span></span></span>
 <span><span class="co">#&gt;   cell_id</span></span>
@@ -120,7 +120,7 @@ to R’s <code>double</code>, losing precision:</p>
 <span><span class="va">cell_as_dbl</span> <span class="op">&lt;-</span> <span class="va">naive</span><span class="op">$</span><span class="va">cell_id</span></span>
 <span></span>
 <span><span class="co"># The double can't distinguish this cell from nearby IDs</span></span>
-<span><span class="va">cell_as_dbl</span> <span class="op">==</span> <span class="va">cell_as_dbl</span> <span class="op">+</span> <span class="fl">1</span>   <span class="co"># TRUE — silent corruption</span></span>
+<span><span class="va">cell_as_dbl</span> <span class="op">==</span> <span class="va">cell_as_dbl</span> <span class="op">+</span> <span class="fl">1</span>   <span class="co"># TRUE: silent corruption</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span>
 <span><span class="va">cell_as_dbl</span> <span class="op">==</span> <span class="va">cell_as_dbl</span> <span class="op">+</span> <span class="fl">100</span> <span class="co"># still TRUE</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
@@ -136,7 +136,7 @@ reinterpret the raw bytes:</p>
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/belian-earth/a5R" class="external-link">a5R</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tibble.tidyverse.org/" class="external-link">tibble</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Six cities across the globe — some will have bit 63 set (origin &gt;= 6)</span></span>
+<span><span class="co"># Six cities across the globe; some will have bit 63 set (origin &gt;= 6)</span></span>
 <span><span class="va">cities</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
 <span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Edinburgh"</span>, <span class="st">"Tokyo"</span>, <span class="st">"São Paulo"</span>, <span class="st">"Nairobi"</span>, <span class="st">"Anchorage"</span>, <span class="st">"Sydney"</span><span class="op">)</span>,</span>
 <span>  lon  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>   <span class="op">-</span><span class="fl">3.19</span>,     <span class="fl">139.69</span>,     <span class="op">-</span><span class="fl">46.63</span>,     <span class="fl">36.82</span>,    <span class="op">-</span><span class="fl">149.90</span>,    <span class="fl">151.21</span><span class="op">)</span>,</span>
@@ -155,8 +155,8 @@ reinterpret the raw bytes:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Anchorage -<span style="color: #BB0000;">150.</span>    61.2  00d1c38000000000</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Sydney     151.   -<span style="color: #BB0000;">33.9</span>  8f7ec58000000000</span></span></code></pre></div>
 <p>These cells work seamlessly in tibbles. Now let’s enrich the data
-with some A5 operations — cell resolution and distance from
-Edinburgh:</p>
+with some A5 operations: cell resolution and distance from
+Edinburgh.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">edinburgh</span> <span class="op">&lt;-</span> <span class="va">cities</span><span class="op">$</span><span class="va">cell</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span></span>
@@ -180,7 +180,7 @@ Edinburgh:</p>
 <h2 id="writing-and-reading-parquet">Writing and reading Parquet<a class="anchor" aria-label="anchor" href="#writing-and-reading-parquet"></a>
 </h2>
 <p>Convert to an Arrow table and write to Parquet. The cell column is
-stored as native <code>uint64</code> — the same binary format used by
+stored as native <code>uint64</code>, the same binary format used by
 DuckDB, Python, and geoparquet.io:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
@@ -198,7 +198,7 @@ DuckDB, Python, and geoparquet.io:</p>
 <span><span class="co">#&gt; cell_res: int32</span></span>
 <span><span class="co">#&gt; dist_from_edinburgh_km: double</span></span>
 <span><span class="fu">arrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/docs/r/reference/write_parquet.html" class="external-link">write_parquet</a></span><span class="op">(</span><span class="va">arrow_tbl</span>, <span class="va">tf</span><span class="op">)</span></span></code></pre></div>
-<p>Read it back — <code><a href="../reference/a5_cell_from_arrow.html">a5_cell_from_arrow()</a></code> recovers the exact
+<p>Read it back. <code><a href="../reference/a5_cell_from_arrow.html">a5_cell_from_arrow()</a></code> recovers the exact
 cell IDs without any precision loss:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pq</span> <span class="op">&lt;-</span> <span class="fu">arrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/docs/r/reference/read_parquet.html" class="external-link">read_parquet</a></span><span class="op">(</span><span class="va">tf</span>, as_data_frame <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -231,9 +231,9 @@ cell IDs without any precision loss:</p>
 raw-byte fields into 8-byte little-endian blobs (one per cell), creates
 an Arrow <code>fixed_size_binary(8)</code> array, then uses
 <code>View(uint64)</code> to reinterpret the bytes as unsigned 64-bit
-integers — zero-copy.</p></li>
+integers. Zero-copy.</p></li>
 <li><p><strong><code><a href="../reference/a5_cell_from_arrow.html">a5_cell_from_arrow()</a></code></strong>: does the
-reverse — <code>View(fixed_size_binary(8))</code> on the
+reverse, applying <code>View(fixed_size_binary(8))</code> on the
 <code>uint64</code> array to get the raw bytes, then unpacks each 8-byte
 blob into the eight raw-byte fields used by
 <code>a5_cell</code>.</p></li>
