@@ -61,6 +61,45 @@ test_that("a5_polygon_to_cells accepts wk::rct", {
   expect_setequal(format(rect_cells), format(wkt_cells))
 })
 
+test_that("a5_polygon_to_cells accepts a terra SpatVector", {
+  skip_if_not_installed("terra")
+  sv <- terra::vect(square_wkt(-3.5, 55.5, -2.5, 56.5))
+  cells_terra <- a5_polygon_to_cells(sv, resolution = 10)
+  cells_w <- a5_polygon_to_cells(
+    wk::wkt(square_wkt(-3.5, 55.5, -2.5, 56.5)),
+    resolution = 10
+  )
+  expect_setequal(format(cells_terra), format(cells_w))
+})
+
+test_that("a5_polygon_to_cells handles a multi-polygon SpatVector", {
+  skip_if_not_installed("terra")
+  sv <- terra::vect(c(
+    square_wkt(-3.5, 55.5, -2.5, 56.5),
+    square_wkt(1, 1, 2, 2)
+  ))
+  cells_terra <- a5_polygon_to_cells(sv, resolution = 8)
+  cells_w <- a5_polygon_to_cells(
+    wk::wkt(c(
+      square_wkt(-3.5, 55.5, -2.5, 56.5),
+      square_wkt(1, 1, 2, 2)
+    )),
+    resolution = 8
+  )
+  expect_setequal(format(cells_terra), format(cells_w))
+})
+
+test_that("a5_linestring_to_cells accepts a terra SpatVector", {
+  skip_if_not_installed("terra")
+  sv <- terra::vect("LINESTRING (2.35 48.86, -0.13 51.51)")
+  cells_terra <- a5_linestring_to_cells(sv, resolution = 5)
+  cells_w <- a5_linestring_to_cells(
+    wk::wkt("LINESTRING (2.35 48.86, -0.13 51.51)"),
+    resolution = 5
+  )
+  expect_identical(format(cells_terra), format(cells_w))
+})
+
 test_that("a5_polygon_to_cells accepts an sfc polygon", {
   skip_if_not_installed("sf")
   sfc <- sf::st_sfc(

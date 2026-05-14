@@ -12,6 +12,8 @@ a5_polygon_to_cells(x, resolution)
 \item Any geometry handleable by \code{\link[wk:wk_handle]{wk::wk_handle()}} (e.g. \code{\link[wk:wkt]{wk::wkt()}},
 \code{\link[wk:wkb]{wk::wkb()}}, \code{\link[wk:rct]{wk::rct()}}, \code{sf}, \code{sfc}) containing one or more
 \code{POLYGON} / \code{MULTIPOLYGON} features.
+\item A \code{terra::SpatVector} of polygons (converted via
+\code{terra::geom(x, wkt = TRUE)}; requires the \code{terra} package).
 \item A two-column numeric matrix (\code{cbind(lon, lat)}) of vertices,
 interpreted as a single outer ring.
 \item A \code{data.frame} with columns \code{lon} and \code{lat}, interpreted as a

@@ -11,11 +11,13 @@
 #'   - Any geometry handleable by [wk::wk_handle()] (e.g. [wk::wkt()],
 #'     [wk::wkb()], [wk::rct()], `sf`, `sfc`) containing one or more
 #'     `POLYGON` / `MULTIPOLYGON` features.
+#'   - A `terra::SpatVector` of polygons (converted via
+#'     `terra::geom(x, wkt = TRUE)`; requires the `terra` package).
 #'   - A two-column numeric matrix (`cbind(lon, lat)`) of vertices,
 #'     interpreted as a single outer ring.
 #'   - A `data.frame` with columns `lon` and `lat`, interpreted as a
 #'     single outer ring.
-#' @param resolution Integer scalar target resolution (0--30).
+#' @param resolution Integer scalar target resolution (0-30).
 #'
 #' @returns An [a5_cell] vector at or coarser than `resolution`.
 #'
@@ -70,6 +72,8 @@ a5_polygon_to_cells <- function(x, resolution) {
 #' @param x A linestring-like geometry. One of:
 #'   - Any geometry handleable by [wk::wk_handle()] containing one or
 #'     more `LINESTRING` / `MULTILINESTRING` features.
+#'   - A `terra::SpatVector` of linestrings (converted via
+#'     `terra::geom(x, wkt = TRUE)`; requires the `terra` package).
 #'   - A two-column numeric matrix (`cbind(lon, lat)`) of waypoints.
 #'   - A `data.frame` with columns `lon` and `lat`.
 #' @param resolution Integer scalar target resolution (0--30).
@@ -112,6 +116,7 @@ a5_linestring_to_cells <- function(x, resolution) {
 #' an outer ring and `0L` for a hole ring.
 #' @noRd
 prepare_polygon_input <- function(x, call = rlang::caller_env()) {
+  x <- maybe_coerce_spatvector(x, call = call)
   bundle <- if (is.matrix(x)) {
     coords_from_matrix(x, call = call)
   } else if (is.data.frame(x) && !inherits(x, "sf")) {
@@ -136,6 +141,7 @@ prepare_polygon_input <- function(x, call = rlang::caller_env()) {
 #' Flatten linestring input to (lon, lat, offsets)
 #' @noRd
 prepare_linestring_input <- function(x, call = rlang::caller_env()) {
+  x <- maybe_coerce_spatvector(x, call = call)
   bundle <- if (is.matrix(x)) {
     coords_from_matrix(x, call = call)
   } else if (is.data.frame(x) && !inherits(x, "sf")) {
@@ -321,6 +327,21 @@ coords_from_wk_linestrings <- function(x, call = rlang::caller_env()) {
     lat = as.numeric(coords$y),
     offsets = as.integer(offsets)
   )
+}
+
+#' Coerce a terra `SpatVector` to a wk-handleable WKT vector
+#'
+#' terra does not register `wk_handle()` methods, so we route SpatVector
+#' inputs through `terra::geom(x, wkt = TRUE)` and wrap the result in a
+#' `wk_wkt` vector. `terra` is in `Suggests`; this path errors with a
+#' clear install hint if the package is missing.
+#' @noRd
+maybe_coerce_spatvector <- function(x, call = rlang::caller_env()) {
+  if (!inherits(x, "SpatVector")) {
+    return(x)
+  }
+  rlang::check_installed("terra", reason = "to convert terra SpatVector input.")
+  wk::wkt(terra::geom(x, wkt = TRUE))
 }
 
 #' @noRd

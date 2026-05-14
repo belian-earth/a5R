@@ -11,6 +11,8 @@ a5_linestring_to_cells(x, resolution)
 \itemize{
 \item Any geometry handleable by \code{\link[wk:wk_handle]{wk::wk_handle()}} containing one or
 more \code{LINESTRING} / \code{MULTILINESTRING} features.
+\item A \code{terra::SpatVector} of linestrings (converted via
+\code{terra::geom(x, wkt = TRUE)}; requires the \code{terra} package).
 \item A two-column numeric matrix (\code{cbind(lon, lat)}) of waypoints.
 \item A \code{data.frame} with columns \code{lon} and \code{lat}.
 }}
