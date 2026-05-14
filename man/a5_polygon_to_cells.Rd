@@ -12,15 +12,14 @@ a5_polygon_to_cells(x, resolution)
 \item Any geometry handleable by \code{\link[wk:wk_handle]{wk::wk_handle()}} (e.g. \code{\link[wk:wkt]{wk::wkt()}},
 \code{\link[wk:wkb]{wk::wkb()}}, \code{\link[wk:rct]{wk::rct()}}, \code{sf}, \code{sfc}) containing one or more
 \code{POLYGON} / \code{MULTIPOLYGON} features.
-\item A \code{terra::SpatVector} of polygons (converted via
-\code{terra::geom(x, wkt = TRUE)}; requires the \code{terra} package).
+\item A \code{SpatVector} of polygons (requires the \code{terra} package).
 \item A two-column numeric matrix (\code{cbind(lon, lat)}) of vertices,
 interpreted as a single outer ring.
 \item A \code{data.frame} with columns \code{lon} and \code{lat}, interpreted as a
 single outer ring.
 }}
 
-\item{resolution}{Integer scalar target resolution (0--30).}
+\item{resolution}{Integer scalar target resolution (0-30).}
 }
 \value{
 An \link{a5_cell} vector at or coarser than \code{resolution}.
@@ -46,6 +45,10 @@ present.
 
 Where no A5 cell centroids at the specified \code{resolution} fall within
 the geometry, an empty \code{a5_cell} vector is returned.
+
+Matrix and \code{data.frame} inputs are treated as a single ring; for
+multi-feature data or polygons with holes, pass an \code{sf}, \code{sfc}, wk,
+or \code{SpatVector} geometry instead.
 }
 \examples{
 poly <- wk::wkt(

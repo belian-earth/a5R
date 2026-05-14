@@ -132,7 +132,7 @@ plot(a5_cell_to_boundary(disk_grid), col = "#206ead20", border = "#206ead", asp 
 `a5_polygon_to_cells()` returns the cells whose centres lie inside a
 polygon. It accepts any geometry that wk can handle (a `wk::rct()`
 bounding box, a WKT or WKB polygon, an `sf` / `sfc` feature) and also
-`terra::SpatVector` polygons.
+terra `SpatVector` polygons.
 
 ```{r grid-plot, fig.width = 7}
 cells <- a5_polygon_to_cells(wk::rct(-3.3, 55.9, -3.1, 56.0), resolution = 12)

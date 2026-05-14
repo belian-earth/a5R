@@ -11,8 +11,7 @@ a5_linestring_to_cells(x, resolution)
 \itemize{
 \item Any geometry handleable by \code{\link[wk:wk_handle]{wk::wk_handle()}} containing one or
 more \code{LINESTRING} / \code{MULTILINESTRING} features.
-\item A \code{terra::SpatVector} of linestrings (converted via
-\code{terra::geom(x, wkt = TRUE)}; requires the \code{terra} package).
+\item A \code{SpatVector} of linestrings (requires the \code{terra} package).
 \item A two-column numeric matrix (\code{cbind(lon, lat)}) of waypoints.
 \item A \code{data.frame} with columns \code{lon} and \code{lat}.
 }}
@@ -34,6 +33,10 @@ are concatenated in feature order with first-seen deduplication.
 Consecutive waypoints are connected by great-circle arcs (not rhumb
 lines or planar segments), so antimeridian-crossing paths work
 transparently when written in unwrapped lon/lat.
+
+Matrix and \code{data.frame} inputs are treated as a single linestring;
+for multi-feature data, pass an \code{sf}, \code{sfc}, wk, or \code{SpatVector}
+geometry instead.
 }
 \examples{
 line <- wk::wkt("LINESTRING (2.35 48.86, -0.13 51.51)")

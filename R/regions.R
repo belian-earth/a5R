@@ -11,8 +11,7 @@
 #'   - Any geometry handleable by [wk::wk_handle()] (e.g. [wk::wkt()],
 #'     [wk::wkb()], [wk::rct()], `sf`, `sfc`) containing one or more
 #'     `POLYGON` / `MULTIPOLYGON` features.
-#'   - A `terra::SpatVector` of polygons (converted via
-#'     `terra::geom(x, wkt = TRUE)`; requires the `terra` package).
+#'   - A `SpatVector` of polygons (requires the `terra` package).
 #'   - A two-column numeric matrix (`cbind(lon, lat)`) of vertices,
 #'     interpreted as a single outer ring.
 #'   - A `data.frame` with columns `lon` and `lat`, interpreted as a
@@ -34,6 +33,10 @@
 #'
 #' Where no A5 cell centroids at the specified `resolution` fall within
 #' the geometry, an empty `a5_cell` vector is returned.
+#'
+#' Matrix and `data.frame` inputs are treated as a single ring; for
+#' multi-feature data or polygons with holes, pass an `sf`, `sfc`, wk,
+#' or `SpatVector` geometry instead.
 #'
 #' @seealso [a5_linestring_to_cells()], [a5_uncompact()].
 #' @export
@@ -72,8 +75,7 @@ a5_polygon_to_cells <- function(x, resolution) {
 #' @param x A linestring-like geometry. One of:
 #'   - Any geometry handleable by [wk::wk_handle()] containing one or
 #'     more `LINESTRING` / `MULTILINESTRING` features.
-#'   - A `terra::SpatVector` of linestrings (converted via
-#'     `terra::geom(x, wkt = TRUE)`; requires the `terra` package).
+#'   - A `SpatVector` of linestrings (requires the `terra` package).
 #'   - A two-column numeric matrix (`cbind(lon, lat)`) of waypoints.
 #'   - A `data.frame` with columns `lon` and `lat`.
 #' @param resolution Integer scalar target resolution (0--30).
@@ -84,6 +86,10 @@ a5_polygon_to_cells <- function(x, resolution) {
 #' Consecutive waypoints are connected by great-circle arcs (not rhumb
 #' lines or planar segments), so antimeridian-crossing paths work
 #' transparently when written in unwrapped lon/lat.
+#'
+#' Matrix and `data.frame` inputs are treated as a single linestring;
+#' for multi-feature data, pass an `sf`, `sfc`, wk, or `SpatVector`
+#' geometry instead.
 #'
 #' @seealso [a5_polygon_to_cells()], [a5_grid_disk()].
 #' @export

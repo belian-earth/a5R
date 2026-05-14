@@ -11,7 +11,7 @@
 * New `a5_polygon_to_cells()` returns the A5 cells whose centres lie
   inside a polygon. Distinct from `a5_grid()`, which uses
   boundary-intersection semantics. Accepts wk-handleable geometries
-  (including `MULTIPOLYGON` and `sfc` of several polygons), `terra`
+  (including `MULTIPOLYGON` and `sfc` of several polygons), terra
   `SpatVector` objects, numeric matrices, or `data.frame(lon, lat)`.
   Multi-part inputs are handled natively: per polygon part the outer
   ring's cells are computed and any hole-ring cells are subtracted,
@@ -20,7 +20,7 @@
   are intersected by a great-circle polyline, in discovery order along
   the path. Accepts the same input shapes as `a5_polygon_to_cells()`,
   including `MULTILINESTRING`, `sfc`s of multiple linestrings, and
-  `terra` `SpatVector` objects; per-feature outputs are concatenated
+  terra `SpatVector` objects; per-feature outputs are concatenated
   with first-seen deduplication.
 * Bumped the embedded `a5` Rust crate from 0.7.0 to 0.8.0. Transparent
   improvements inherited from upstream: resolution-30 (de)serialisation

@@ -15,7 +15,7 @@ Duration: 42.8s
   `POLYGON`, `MULTIPOLYGON`, and `sfc` inputs natively, with hole rings
   properly subtracted from their outer ring's cells. `a5_linestring_to_cells()`
   traces great-circle polylines and accepts `LINESTRING`, `MULTILINESTRING`,
-  and `sfc` inputs. Both functions also accept `terra::SpatVector` inputs
+  and `sfc` inputs. Both functions also accept terra `SpatVector` inputs
   via an optional internal coercion (`terra` added to Suggests).
 * `a5_grid()` is soft-deprecated in favour of `a5_polygon_to_cells()` via
   `lifecycle::deprecate_warn()`. It still works; the warning points users
