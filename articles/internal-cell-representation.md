@@ -3,13 +3,13 @@
 ## The problem
 
 An A5 cell ID is a 64-bit unsigned integer (`u64`). R has no native
-`u64` type — its integers are 32-bit signed (`-2^31` to `2^31 - 1`), and
+`u64` type: its integers are 32-bit signed (`-2^31` to `2^31 - 1`), and
 its doubles are 64-bit floating point. A `double` can only represent
 integers exactly up to 2^53, while a `u64` can go up to 2^64 - 1.
 
 The obvious workaround is to store cell IDs as hex strings
-(`"0800000000000006"`). This works, but every trip across the R–Rust
-boundary requires hex parsing and formatting — O(n) string allocation
+(`"0800000000000006"`). This works, but every trip across the R / Rust
+boundary requires hex parsing and formatting: O(n) string allocation
 that dominates the cost of lightweight operations like
 [`a5_get_resolution()`](https://belian-earth.github.io/a5R/reference/a5_get_resolution.md)
 or
@@ -26,7 +26,7 @@ representation as a separate `raw` vector field in a vctrs record type:
       b1 = 0x06, b2 = 0x00, b3 = 0x00, b4 = 0x00,
       b5 = 0x00, b6 = 0x00, b7 = 0x00, b8 = 0x08
 
-This is lossless — the eight bytes are the exact same bits as the
+This is lossless: the eight bytes are the exact same bits as the
 original `u64`, just stored across eight contiguous `raw` vectors. No
 precision loss, no special-case handling. On the Rust side,
 reconstructing the `u64` from the eight byte slices is a single
@@ -41,6 +41,7 @@ On the R side, `a5_cell` is a **vctrs record**
 with eight fields (`b1` through `b8`):
 
 ``` r
+
 library(a5R)
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
 vctrs::field(cell, "b1")
@@ -49,13 +50,14 @@ vctrs::field(cell, "b8")
 #> [1] 63
 ```
 
-Each field is a plain `raw` vector — a contiguous block of memory with
-no per-element overhead. Subsetting, combining, and NA propagation are
-all handled automatically by vctrs.
+Each field is a plain `raw` vector: a contiguous block of memory with no
+per-element overhead. Subsetting, combining, and NA propagation are all
+handled automatically by vctrs.
 
 Hex strings are only produced on demand:
 
 ``` r
+
 # Display calls format(), which converts to hex for readability
 cell
 #> <a5_cell[1]>
@@ -76,6 +78,7 @@ a5_cell("0800000000000006")
 Compare memory for one million cells:
 
 ``` r
+
 set.seed(42)
 cells <- a5_lonlat_to_cell(
   runif(1e6, -180, 180),
@@ -106,6 +109,7 @@ On the Rust side, the sentinel is detected and mapped to `None`.
 Standard R idioms work as expected:
 
 ``` r
+
 cells_with_na <- a5_cell(c("0800000000000006", NA))
 is.na(cells_with_na)
 #> [1] FALSE  TRUE
@@ -113,10 +117,10 @@ is.na(cells_with_na)
 
 ## Summary
 
-| Aspect            | Hex strings           | Raw bytes                                                                                            |
-|-------------------|-----------------------|------------------------------------------------------------------------------------------------------|
-| R type            | `character` vector    | `vctrs_rcrd` (eight `raw` fields)                                                                    |
-| Memory (1M cells) | ~81 MB                | ~7.6 MB                                                                                              |
-| R-Rust crossing   | O(n) hex parse/format | Zero-copy byte access                                                                                |
-| Human-readable    | Always                | On [`format()`](https://rdrr.io/r/base/format.html) / [`print()`](https://rdrr.io/r/base/print.html) |
-| Lossless          | Yes                   | Yes (exact byte representation)                                                                      |
+| Aspect | Hex strings | Raw bytes |
+|----|----|----|
+| R type | `character` vector | `vctrs_rcrd` (eight `raw` fields) |
+| Memory (1M cells) | ~81 MB | ~7.6 MB |
+| R-Rust crossing | O(n) hex parse/format | Zero-copy byte access |
+| Human-readable | Always | On [`format()`](https://rdrr.io/r/base/format.html) / [`print()`](https://rdrr.io/r/base/print.html) |
+| Lossless | Yes | Yes (exact byte representation) |

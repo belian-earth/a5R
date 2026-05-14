@@ -1,6 +1,7 @@
 # Traversal and distance
 
 ``` r
+
 library(a5R)
 ```
 
@@ -14,6 +15,7 @@ radius. The result is compacted, so pass it through
 for a uniform-resolution grid.
 
 ``` r
+
 origin <- a5_lonlat_to_cell(35, 55, resolution = 14)
 
 disk <- a5_grid_disk(origin, k = 20, vertex = FALSE)
@@ -35,6 +37,7 @@ Compute the distance from the origin to every cell in the cap (or disk)
 and visualise it as a colour gradient.
 
 ``` r
+
 dcap <- a5_cell_distance(origin, cap, units = "km")
 dcap_compact <- a5_cell_distance(origin, cap_compact, units = "km")
 ddisk <- a5_cell_distance(origin, disk, units = "km")
@@ -60,7 +63,7 @@ for (info in list(
 
 ![](traversal-and-distance_files/figure-html/heatmap-1.png)
 
-Distance radiates smoothly from the centre — cells near the origin are
+Distance radiates smoothly from the centre. Cells near the origin are
 dark, cells at the rim are bright. The origin cell is shown with a white
 border for reference.
 
@@ -72,6 +75,7 @@ a5R supports three distance methods: **haversine** (great-circle),
 differences grow with distance.
 
 ``` r
+
 wide_origin <- a5_lonlat_to_cell(35, 55, resolution = 8)
 wide_cap <- a5_uncompact(
   a5_spherical_cap(wide_origin, radius = 500000),

@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,7 +46,18 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.3.1" id="a5r-031">a5R 0.3.1<a class="anchor" aria-label="anchor" href="#a5r-031"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.4.0" id="a5r-040">a5R 0.4.0<a class="anchor" aria-label="anchor" href="#a5r-040"></a></h2>
+<ul><li>
+<code><a href="../reference/a5_grid.html">a5_grid()</a></code> is soft-deprecated in favour of <code><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code>. Calling it now emits a <code><a href="https://lifecycle.r-lib.org/reference/deprecate_soft.html" class="external-link">lifecycle::deprecate_warn()</a></code> with guidance: use <code><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code> for geometry inputs (centre-in-polygon containment), or pass a <code><a href="https://paleolimbot.github.io/wk/reference/rct.html" class="external-link">wk::rct()</a></code> bounding box for the bbox use case. Note that the two functions are not semantically identical: <code><a href="../reference/a5_grid.html">a5_grid()</a></code> uses boundary intersection (any cell touched by the geometry), whereas <code><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code> uses centre-point containment (cells whose centroid lies inside).</li>
+<li>New <code><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code> returns the A5 cells whose centres lie inside a polygon. Distinct from <code><a href="../reference/a5_grid.html">a5_grid()</a></code>, which uses boundary-intersection semantics. Accepts wk-handleable geometries (including <code>MULTIPOLYGON</code> and <code>sfc</code> of several polygons), terra <code>SpatVector</code> objects, numeric matrices, or <code>data.frame(lon, lat)</code>. Multi-part inputs are handled natively: per polygon part the outer ring’s cells are computed and any hole-ring cells are subtracted, then the results are unioned across parts and recompacted.</li>
+<li>New <code><a href="../reference/a5_linestring_to_cells.html">a5_linestring_to_cells()</a></code> returns the A5 cells whose pentagons are intersected by a great-circle polyline, in discovery order along the path. Accepts the same input shapes as <code><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code>, including <code>MULTILINESTRING</code>, <code>sfc</code>s of multiple linestrings, and terra <code>SpatVector</code> objects; per-feature outputs are concatenated with first-seen deduplication.</li>
+<li>Bumped the embedded <code>a5</code> Rust crate from 0.7.0 to 0.8.0. Transparent improvements inherited from upstream: resolution-30 (de)serialisation (a5 0.7.1), neighbour functions at resolutions 0 and 1 (a5 0.7.2), longitude normalisation in <code>cell_to_lonlat</code> (a5 0.7.3), faster <code>cell_to_parent</code>, and a polar-region spiral fix in <code>grid_disk</code> and <code>spherical_cap</code>.</li>
+<li>
+<strong>Breaking:</strong> <code><a href="../reference/a5_cell_to_lonlat.html">a5_cell_to_lonlat()</a></code> replaces its <code>normalise</code> argument with <code>as_dataframe</code> (default <code>FALSE</code>). When <code>FALSE</code>, centroids are returned as a <code><a href="https://paleolimbot.github.io/wk/reference/xy.html" class="external-link">wk::xy()</a></code> vector with WGS 84 CRS; when <code>TRUE</code>, as a base <code>data.frame</code> with <code>lon</code>/<code>lat</code> columns. The previous <code>normalise</code> argument toggled longitude normalisation, but upstream a5 (&gt;= 0.7.3) always returns normalised longitudes, so the flag’s effective job collapsed to “what container?”. <code>as_dataframe</code> makes that explicit. Defaults are unchanged for users who never set <code>normalise</code> (still returns <code><a href="https://paleolimbot.github.io/wk/reference/xy.html" class="external-link">wk::xy</a></code>); explicit <code>normalise = TRUE</code>/<code>FALSE</code> calls now error and must be updated.</li>
+<li>New <code>lifecycle</code> dependency added to <code>Imports</code>.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.1" id="a5r-031">a5R 0.3.1<a class="anchor" aria-label="anchor" href="#a5r-031"></a></h2><p class="text-muted">CRAN release: 2026-03-26</p>
 <ul><li>
 <code><a href="../reference/a5_cell.html">a5_cell()</a></code> now requires hex strings to be exactly 16 characters, preventing silent construction of wrong cells from truncated input.</li>
 <li>Improved vignettes covering the new <code>a5_cell</code> representation and Arrow integration.</li>

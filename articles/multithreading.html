@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -98,7 +98,7 @@ need it.</p>
 <span><span class="fu"><a href="../reference/a5_threads.html">a5_get_threads</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 4</span></span></code></pre></div>
 <p>You can also set threads at package load time via an R option or
-environment variable - useful for scripts and batch jobs:</p>
+environment variable, useful for scripts and batch jobs:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># In .Rprofile or at the top of a script</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>a5R.threads <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
@@ -118,6 +118,11 @@ making temporary changes easy:</p>
 <p>Threading applies to <strong>vectorised</strong> functions that
 process each element independently:</p>
 <table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
 <thead><tr class="header">
 <th>Function</th>
 <th>Per-element cost</th>
@@ -130,36 +135,41 @@ process each element independently:</p>
 <td>High</td>
 </tr>
 <tr class="even">
-<td><code><a href="../reference/a5_grid.html">a5_grid()</a></code></td>
-<td>Heavy (boundary filtering)</td>
+<td><code><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code></td>
+<td>Heavy (per-part flood-fill, hole subtraction)</td>
 <td>High</td>
 </tr>
 <tr class="odd">
+<td><code><a href="../reference/a5_linestring_to_cells.html">a5_linestring_to_cells()</a></code></td>
+<td>Heavy (per-feature tracing)</td>
+<td>High</td>
+</tr>
+<tr class="even">
 <td><code><a href="../reference/a5_lonlat_to_cell.html">a5_lonlat_to_cell()</a></code></td>
 <td>Moderate (projection)</td>
 <td>High</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code><a href="../reference/a5_cell_distance.html">a5_cell_distance()</a></code></td>
 <td>Moderate (2x projection + distance)</td>
 <td>Medium</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code><a href="../reference/a5_cell_to_lonlat.html">a5_cell_to_lonlat()</a></code></td>
 <td>Moderate (reverse projection)</td>
 <td>Medium</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code><a href="../reference/a5_cell_to_parent.html">a5_cell_to_parent()</a></code></td>
 <td>Light (bit ops + hex)</td>
 <td>Low</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code><a href="../reference/a5_get_resolution.html">a5_get_resolution()</a></code></td>
 <td>Light (bit ops)</td>
 <td>Low</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code><a href="../reference/a5_cell.html">a5_is_valid()</a></code></td>
 <td>Light (hex parse)</td>
 <td>Low</td>
@@ -168,7 +178,7 @@ process each element independently:</p>
 </table>
 <p>Scalar and bulk operations (<code><a href="../reference/a5_cell_to_children.html">a5_cell_to_children()</a></code>,
 <code><a href="../reference/a5_compact.html">a5_compact()</a></code>, <code><a href="../reference/a5_cell_area.html">a5_cell_area()</a></code>, etc.) are
-unaffected — they are already fast or delegate to algorithms that don’t
+unaffected: they are already fast or delegate to algorithms that don’t
 parallelise element-wise.</p>
 </div>
 <div class="section level2">
@@ -189,7 +199,7 @@ cores</li>
 </ul>
 <p>Here’s a quick comparison on 100k cells:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_grid.html">a5_grid</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">10</span>, <span class="fl">50</span>, <span class="fl">10</span>, <span class="fl">60</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells</a></span><span class="op">(</span><span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/rct.html" class="external-link">rct</a></span><span class="op">(</span><span class="op">-</span><span class="fl">10</span>, <span class="fl">50</span>, <span class="fl">10</span>, <span class="fl">60</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 704259</span></span>
 <span></span>
@@ -203,7 +213,7 @@ cores</li>
 <span><span class="co">#&gt;   user  system elapsed</span></span>
 <span><span class="co">#&gt; 6.195   1.289   1.667 </span></span></code></pre></div>
 <p>Note that <code>user</code> time increases (total CPU work across all
-threads) while <code>elapsed</code> (wall-clock) time decreases — that’s
+threads) while <code>elapsed</code> (wall-clock) time decreases: that is
 the parallelism at work.</p>
 </div>
 <div class="section level2">
@@ -215,7 +225,7 @@ parallelism. It is safe to use alongside <code>future</code>,
 parallelism as it can, if overloaded, degrade performance.</p>
 <p>The thread pool is rebuilt each time you call
 <code><a href="../reference/a5_threads.html">a5_set_threads()</a></code>, so changing the count mid-session is fine
-(and cheap) but not free - ideally, just do it once at the start of your
+(and cheap) but not free: ideally, do it once at the start of your
 workflow rather than toggling per-call.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

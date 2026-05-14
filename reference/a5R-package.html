@@ -15,7 +15,7 @@ discrete global grid system, powered by the a5 Rust crate via extendr."><meta pr
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,10 +99,11 @@ conversion</p></li>
 <li><p><code><a href="a5_spherical_cap.html">a5_spherical_cap()</a></code> — neighbours by great-circle distance</p></li>
 </ul></div>
     <div class="section level2">
-    <h2 id="grid-generation">Grid generation<a class="anchor" aria-label="anchor" href="#grid-generation"></a></h2>
+    <h2 id="geometry-indexing">Geometry indexing<a class="anchor" aria-label="anchor" href="#geometry-indexing"></a></h2>
 
 
-<ul><li><p><code><a href="a5_grid.html">a5_grid()</a></code> — fill a bbox or geometry with cells</p></li>
+<ul><li><p><code><a href="a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code> — cells whose centres lie inside a polygon</p></li>
+<li><p><code><a href="a5_linestring_to_cells.html">a5_linestring_to_cells()</a></code> — cells crossed by a great-circle polyline</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="arrow-amp-parquet">Arrow &amp; Parquet<a class="anchor" aria-label="anchor" href="#arrow-amp-parquet"></a></h2>
@@ -136,7 +137,8 @@ lossless conversion to/from Arrow <code>uint64</code></p></li>
     <div class="section level2">
     <h2 id="author">Author<a class="anchor" aria-label="anchor" href="#author"></a></h2>
     <p><strong>Maintainer</strong>: Hugh Graham <a href="mailto:hugh@belian.earth">hugh@belian.earth</a></p>
-<p>Other contributors:</p><ul><li><p>belian.earth [copyright holder]</p></li>
+<p>Authors:</p><ul><li><p>Hugh Graham <a href="mailto:hugh@belian.earth">hugh@belian.earth</a></p></li>
+</ul><p>Other contributors:</p><ul><li><p>belian.earth [copyright holder]</p></li>
 </ul></div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

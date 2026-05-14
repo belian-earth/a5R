@@ -1,6 +1,7 @@
 # Multi-threading
 
 ``` r
+
 library(a5R)
 ```
 
@@ -11,6 +12,7 @@ there is zero overhead. You opt in to parallelism when you need it.
 ## Setting the thread count
 
 ``` r
+
 # Check the current setting (default: 1)
 a5_get_threads()
 #> [1] 1
@@ -22,9 +24,10 @@ a5_get_threads()
 ```
 
 You can also set threads at package load time via an R option or
-environment variable - useful for scripts and batch jobs:
+environment variable, useful for scripts and batch jobs:
 
 ``` r
+
 # In .Rprofile or at the top of a script
 options(a5R.threads = 4)
 
@@ -36,6 +39,7 @@ options(a5R.threads = 4)
 invisibly returns the previous value, making temporary changes easy:
 
 ``` r
+
 old <- a5_set_threads(4)
 # ... parallel work ...
 a5_set_threads(old)
@@ -46,22 +50,23 @@ a5_set_threads(old)
 Threading applies to **vectorised** functions that process each element
 independently:
 
-| Function                                                                                       | Per-element cost                    | Benefit |
-|------------------------------------------------------------------------------------------------|-------------------------------------|---------|
-| [`a5_cell_to_boundary()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_boundary.md) | Heavy (boundary + WKT/WKB)          | High    |
-| [`a5_grid()`](https://belian-earth.github.io/a5R/reference/a5_grid.md)                         | Heavy (boundary filtering)          | High    |
-| [`a5_lonlat_to_cell()`](https://belian-earth.github.io/a5R/reference/a5_lonlat_to_cell.md)     | Moderate (projection)               | High    |
-| [`a5_cell_distance()`](https://belian-earth.github.io/a5R/reference/a5_cell_distance.md)       | Moderate (2x projection + distance) | Medium  |
-| [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_lonlat.md)     | Moderate (reverse projection)       | Medium  |
-| [`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_parent.md)     | Light (bit ops + hex)               | Low     |
-| [`a5_get_resolution()`](https://belian-earth.github.io/a5R/reference/a5_get_resolution.md)     | Light (bit ops)                     | Low     |
-| [`a5_is_valid()`](https://belian-earth.github.io/a5R/reference/a5_cell.md)                     | Light (hex parse)                   | Low     |
+| Function | Per-element cost | Benefit |
+|----|----|----|
+| [`a5_cell_to_boundary()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_boundary.md) | Heavy (boundary + WKT/WKB) | High |
+| [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_polygon_to_cells.md) | Heavy (per-part flood-fill, hole subtraction) | High |
+| [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_linestring_to_cells.md) | Heavy (per-feature tracing) | High |
+| [`a5_lonlat_to_cell()`](https://belian-earth.github.io/a5R/reference/a5_lonlat_to_cell.md) | Moderate (projection) | High |
+| [`a5_cell_distance()`](https://belian-earth.github.io/a5R/reference/a5_cell_distance.md) | Moderate (2x projection + distance) | Medium |
+| [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_lonlat.md) | Moderate (reverse projection) | Medium |
+| [`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_parent.md) | Light (bit ops + hex) | Low |
+| [`a5_get_resolution()`](https://belian-earth.github.io/a5R/reference/a5_get_resolution.md) | Light (bit ops) | Low |
+| [`a5_is_valid()`](https://belian-earth.github.io/a5R/reference/a5_cell.md) | Light (hex parse) | Low |
 
 Scalar and bulk operations
 ([`a5_cell_to_children()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_children.md),
 [`a5_compact()`](https://belian-earth.github.io/a5R/reference/a5_compact.md),
 [`a5_cell_area()`](https://belian-earth.github.io/a5R/reference/a5_cell_area.md),
-etc.) are unaffected — they are already fast or delegate to algorithms
+etc.) are unaffected: they are already fast or delegate to algorithms
 that don’t parallelise element-wise.
 
 ## When is it worthwhile?
@@ -77,7 +82,8 @@ outweigh the benefit. As a rule of thumb:
 Here’s a quick comparison on 100k cells:
 
 ``` r
-cells <- a5_grid(c(-10, 50, 10, 60), resolution = 12)
+
+cells <- a5_polygon_to_cells(wk::rct(-10, 50, 10, 60), resolution = 12)
 length(cells)
 #> [1] 704259
 
@@ -93,7 +99,7 @@ system.time(a5_cell_to_boundary(cells, format = "wkt"))
 ```
 
 Note that `user` time increases (total CPU work across all threads)
-while `elapsed` (wall-clock) time decreases — that’s the parallelism at
+while `elapsed` (wall-clock) time decreases: that is the parallelism at
 work.
 
 ## Thread safety
@@ -105,6 +111,6 @@ degrade performance.
 
 The thread pool is rebuilt each time you call
 [`a5_set_threads()`](https://belian-earth.github.io/a5R/reference/a5_threads.md),
-so changing the count mid-session is fine (and cheap) but not free -
-ideally, just do it once at the start of your workflow rather than
-toggling per-call.
+so changing the count mid-session is fine (and cheap) but not free:
+ideally, do it once at the start of your workflow rather than toggling
+per-call.

@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -234,9 +234,9 @@
         </dt>
         <dd>Uncompact a set of A5 cells to a target resolution</dd>
       </dl></div><div class="section level2">
-      <h2 id="grid-generation">Grid generation<a class="anchor" aria-label="anchor" href="#grid-generation"></a></h2>
+      <h2 id="geometry-indexing">Geometry indexing<a class="anchor" aria-label="anchor" href="#geometry-indexing"></a></h2>
 
-      <div class="section-desc"><p>Generate grids of cells covering an area.</p></div>
+      <div class="section-desc"><p>Convert polygons and linestrings to cells covering them.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -245,10 +245,17 @@
 
       <dl><dt>
 
-          <code><a href="a5_grid.html">a5_grid()</a></code>
+          <code><a href="a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code>
 
         </dt>
-        <dd>Generate a grid of A5 cells covering an area</dd>
+        <dd>Cells whose centres lie inside a polygon</dd>
+
+        <dt>
+
+          <code><a href="a5_linestring_to_cells.html">a5_linestring_to_cells()</a></code>
+
+        </dt>
+        <dd>Cells traced by a great-circle linestring</dd>
       </dl></div><div class="section level2">
       <h2 id="configuration">Configuration<a class="anchor" aria-label="anchor" href="#configuration"></a></h2>
 
@@ -281,6 +288,22 @@
 
         </dt>
         <dd>wk methods for a5_cell</dd>
+      </dl></div><div class="section level2">
+      <h2 id="deprecated">Deprecated<a class="anchor" aria-label="anchor" href="#deprecated"></a></h2>
+
+      <div class="section-desc"><p>Functions superseded by other parts of the API.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="a5_grid.html">a5_grid()</a></code>
+
+        </dt>
+        <dd><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated" class="external-link"><img src="figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a></dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

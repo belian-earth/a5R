@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,13 +83,13 @@
 <h2 id="the-problem">The problem<a class="anchor" aria-label="anchor" href="#the-problem"></a>
 </h2>
 <p>An A5 cell ID is a 64-bit unsigned integer (<code>u64</code>). R has
-no native <code>u64</code> type — its integers are 32-bit signed
+no native <code>u64</code> type: its integers are 32-bit signed
 (<code>-2^31</code> to <code>2^31 - 1</code>), and its doubles are
 64-bit floating point. A <code>double</code> can only represent integers
 exactly up to 2^53, while a <code>u64</code> can go up to 2^64 - 1.</p>
 <p>The obvious workaround is to store cell IDs as hex strings
 (<code>"0800000000000006"</code>). This works, but every trip across the
-R–Rust boundary requires hex parsing and formatting — O(n) string
+R / Rust boundary requires hex parsing and formatting: O(n) string
 allocation that dominates the cost of lightweight operations like
 <code><a href="../reference/a5_get_resolution.html">a5_get_resolution()</a></code> or
 <code><a href="../reference/a5_cell_to_parent.html">a5_cell_to_parent()</a></code>.</p>
@@ -105,7 +105,7 @@ in a vctrs record type:</p>
 little-endian bytes:
   b1 = 0x06, b2 = 0x00, b3 = 0x00, b4 = 0x00,
   b5 = 0x00, b6 = 0x00, b7 = 0x00, b8 = 0x08</code></pre>
-<p>This is lossless — the eight bytes are the exact same bits as the
+<p>This is lossless: the eight bytes are the exact same bits as the
 original <code>u64</code>, just stored across eight contiguous
 <code>raw</code> vectors. No precision loss, no special-case handling.
 On the Rust side, reconstructing the <code>u64</code> from the eight
@@ -126,7 +126,7 @@ record</strong> (<code><a href="https://vctrs.r-lib.org/reference/new_rcrd.html"
 <span><span class="co">#&gt; [1] 00</span></span>
 <span><span class="fu">vctrs</span><span class="fu">::</span><span class="fu"><a href="https://vctrs.r-lib.org/reference/fields.html" class="external-link">field</a></span><span class="op">(</span><span class="va">cell</span>, <span class="st">"b8"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 63</span></span></code></pre></div>
-<p>Each field is a plain <code>raw</code> vector — a contiguous block of
+<p>Each field is a plain <code>raw</code> vector: a contiguous block of
 memory with no per-element overhead. Subsetting, combining, and NA
 propagation are all handled automatically by vctrs.</p>
 <p>Hex strings are only produced on demand:</p>

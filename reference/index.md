@@ -76,12 +76,14 @@ Compress and expand sets of cells.
 - [`a5_uncompact()`](https://belian-earth.github.io/a5R/reference/a5_uncompact.md)
   : Uncompact a set of A5 cells to a target resolution
 
-## Grid generation
+## Geometry indexing
 
-Generate grids of cells covering an area.
+Convert polygons and linestrings to cells covering them.
 
-- [`a5_grid()`](https://belian-earth.github.io/a5R/reference/a5_grid.md)
-  : Generate a grid of A5 cells covering an area
+- [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_polygon_to_cells.md)
+  : Cells whose centres lie inside a polygon
+- [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_linestring_to_cells.md)
+  : Cells traced by a great-circle linestring
 
 ## Configuration
 
@@ -98,3 +100,12 @@ Methods for the wk geometry framework.
 - [`wk_handle(`*`<a5_cell>`*`)`](https://belian-earth.github.io/a5R/reference/wk_methods.md)
   [`wk_crs(`*`<a5_cell>`*`)`](https://belian-earth.github.io/a5R/reference/wk_methods.md)
   : wk methods for a5_cell
+
+## Deprecated
+
+Functions superseded by other parts of the API.
+
+- [`a5_grid()`](https://belian-earth.github.io/a5R/reference/a5_grid.md)
+  :
+
+  **\[deprecated\]**
