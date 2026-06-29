@@ -1,5 +1,13 @@
 # a5R (development version)
 
+* Updated the bundled 'A5' Rust crate to 0.9.0, bringing a faster
+  polyhedral projection and an `EqualAreaProjection` refactor.
+* `a5_polygon_to_cells()` now delegates hole handling to the upstream
+  crate, which excludes hole interiors natively rather than subtracting
+  hole-ring cells in R. Results are unchanged; the implementation is
+  simpler and avoids an uncompact/recompact round-trip for single-part
+  polygons.
+
 # a5R 0.4.0
 
 * `a5_grid()` is soft-deprecated in favour of `a5_polygon_to_cells()`.

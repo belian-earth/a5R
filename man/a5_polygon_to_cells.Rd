@@ -28,9 +28,9 @@ An \link{a5_cell} vector at or coarser than \code{resolution}.
 Returns A5 cells at \code{resolution} whose centres fall inside the polygon.
 Multi-feature inputs (a \code{MULTIPOLYGON}, an \code{sfc} of multiple polygons,
 or a \code{POLYGON} with holes) are handled natively: per polygon part, the
-outer-ring cells are computed and any hole-ring cells are subtracted,
-then the results are unioned across parts. The final cell set is
-compacted; use \code{\link[=a5_uncompact]{a5_uncompact()}} to expand to a uniform-resolution grid.
+outer ring and its holes are converted together with hole interiors
+excluded, then the results are unioned across parts. The final cell set
+is compacted; use \code{\link[=a5_uncompact]{a5_uncompact()}} to expand to a uniform-resolution grid.
 }
 \details{
 Membership is determined by \strong{centre-point containment}: a cell is

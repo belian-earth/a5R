@@ -22,7 +22,44 @@ fn split_rings(lon: &Doubles, lat: &Doubles, offsets: &Integers) -> Vec<Vec<a5::
     out
 }
 
-/// Per-part processing: outer cells minus union of hole cells, all at `resolution`.
+/// Gather one polygon part's rings as `[outer, holes...]`.
+///
+/// Returns an empty vec if the part has no outer ring. The ordering matches
+/// what `a5::polygon_to_cells` expects: index 0 is the outer ring, the rest
+/// are holes.
+fn collect_part_rings(
+    p: i32,
+    rings: &[Vec<a5::LonLat>],
+    part_id: &[i32],
+    is_outer: &[i32],
+) -> Vec<Vec<a5::LonLat>> {
+    let mut outer: Option<&Vec<a5::LonLat>> = None;
+    let mut holes: Vec<&Vec<a5::LonLat>> = Vec::new();
+    for (i, &pid) in part_id.iter().enumerate() {
+        if pid != p {
+            continue;
+        }
+        if is_outer[i] != 0 {
+            outer = Some(&rings[i]);
+        } else {
+            holes.push(&rings[i]);
+        }
+    }
+    let outer = match outer {
+        Some(o) => o,
+        None => return Vec::new(),
+    };
+    let mut out = Vec::with_capacity(1 + holes.len());
+    out.push(outer.clone());
+    out.extend(holes.into_iter().cloned());
+    out
+}
+
+/// Per-part processing: cells of the outer ring with hole interiors excluded.
+///
+/// Hole subtraction is handled natively by `a5::polygon_to_cells`. The result
+/// is uncompacted to `resolution` so parts can be unioned and recompacted at a
+/// common resolution by the caller.
 fn process_part(
     p: i32,
     rings: &[Vec<a5::LonLat>],
@@ -30,36 +67,12 @@ fn process_part(
     is_outer: &[i32],
     resolution: i32,
 ) -> StdResult<Vec<u64>, String> {
-    let mut outer_ring_idx: Option<usize> = None;
-    let mut hole_ring_indices: Vec<usize> = Vec::new();
-    for (i, &pid) in part_id.iter().enumerate() {
-        if pid != p {
-            continue;
-        }
-        if is_outer[i] != 0 {
-            outer_ring_idx = Some(i);
-        } else {
-            hole_ring_indices.push(i);
-        }
+    let part_rings = collect_part_rings(p, rings, part_id, is_outer);
+    if part_rings.is_empty() {
+        return Ok(Vec::new());
     }
-    let oi = match outer_ring_idx {
-        Some(i) => i,
-        None => return Ok(Vec::new()),
-    };
-
-    let outer_compacted = a5::polygon_to_cells(&rings[oi], resolution)?;
-    let outer_uncompacted = a5::uncompact(&outer_compacted, resolution)?;
-    let mut cells: HashSet<u64> = outer_uncompacted.into_iter().collect();
-
-    for &hi in &hole_ring_indices {
-        let hole_compacted = a5::polygon_to_cells(&rings[hi], resolution)?;
-        let hole_uncompacted = a5::uncompact(&hole_compacted, resolution)?;
-        for h in hole_uncompacted {
-            cells.remove(&h);
-        }
-    }
-
-    Ok(cells.into_iter().collect())
+    let compacted = a5::polygon_to_cells(&part_rings, resolution)?;
+    a5::uncompact(&compacted, resolution)
 }
 
 /// Convert one or more polygon parts (with optional holes) to A5 cells.
@@ -69,11 +82,11 @@ fn process_part(
 /// `part_id` (length `n_rings`) groups rings by polygon part. `is_outer`
 /// (length `n_rings`, 1 = outer / 0 = hole) classifies each ring.
 ///
-/// For each polygon part, the outer ring is converted to cells, the
-/// uncompacted cells inside any hole rings are subtracted, and the
-/// remaining cells are unioned across parts. The result is recompacted
-/// at the end. A single-outer-no-holes input takes a fast path that
-/// passes the upstream compacted result through unchanged.
+/// For each polygon part, the outer ring and its holes are passed to
+/// `a5::polygon_to_cells`, which excludes hole interiors natively, and the
+/// resulting cells are unioned across parts. The result is recompacted at
+/// the end. A single-part input (with or without holes) takes a fast path
+/// that passes the upstream compacted result through unchanged.
 ///
 /// @noRd
 /// @keywords internal
@@ -101,11 +114,16 @@ fn a5_polygon_to_cells_rs(
         return u64s_to_raw8_list(vec![]);
     }
 
-    // Fast path: a single outer ring with no holes (the common case for
-    // matrix / data.frame input and for an `sfc` of one POLYGON).
-    let total_outer = is_outer_vec.iter().filter(|&&v| v != 0).count();
-    if max_part == 1 && n_rings == 1 && total_outer == 1 {
-        return match a5::polygon_to_cells(&rings[0], resolution) {
+    // Fast path: a single polygon part (outer ring plus any holes) — the
+    // common case for matrix / data.frame input and for an `sfc` of one
+    // POLYGON. `polygon_to_cells` handles holes natively and already returns
+    // a compacted result, so no uncompact/recompact round-trip is needed.
+    if max_part == 1 {
+        let part_rings = collect_part_rings(1, &rings, &part_id_vec, &is_outer_vec);
+        if part_rings.is_empty() {
+            return u64s_to_raw8_list(vec![]);
+        }
+        return match a5::polygon_to_cells(&part_rings, resolution) {
             Ok(cells) => {
                 let out: Vec<Option<u64>> = cells.into_iter().map(Some).collect();
                 u64s_to_raw8_list(out)

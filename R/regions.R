@@ -3,9 +3,9 @@
 #' Returns A5 cells at `resolution` whose centres fall inside the polygon.
 #' Multi-feature inputs (a `MULTIPOLYGON`, an `sfc` of multiple polygons,
 #' or a `POLYGON` with holes) are handled natively: per polygon part, the
-#' outer-ring cells are computed and any hole-ring cells are subtracted,
-#' then the results are unioned across parts. The final cell set is
-#' compacted; use [a5_uncompact()] to expand to a uniform-resolution grid.
+#' outer ring and its holes are converted together with hole interiors
+#' excluded, then the results are unioned across parts. The final cell set
+#' is compacted; use [a5_uncompact()] to expand to a uniform-resolution grid.
 #'
 #' @param x A polygon-like geometry. One of:
 #'   - Any geometry handleable by [wk::wk_handle()] (e.g. [wk::wkt()],
@@ -262,33 +262,11 @@ coords_from_wk_polygons <- function(x, call = rlang::caller_env()) {
   # the first occurrence of each part_id marks the outer ring.
   ring_is_outer <- as.integer(!duplicated(ring_part_id))
 
-  lon <- coords$x
-  lat <- coords$y
-
-  # Drop trailing duplicate vertex per ring (WKT/WKB rings are closed).
-  keep <- rep(TRUE, length(lon))
-  for (i in seq_along(ring_starts)) {
-    a <- offsets[i] + 1L
-    b <- offsets[i + 1L]
-    if (
-      b - a >= 1L &&
-        isTRUE(lon[a] == lon[b]) &&
-        isTRUE(lat[a] == lat[b])
-    ) {
-      keep[b] <- FALSE
-    }
-  }
-  if (!all(keep)) {
-    lon <- lon[keep]
-    lat <- lat[keep]
-    kept_groups <- ring_group[keep]
-    rle_rings <- rle(kept_groups)
-    offsets <- c(0L, cumsum(rle_rings$lengths))
-  }
-
+  # Closed rings (trailing duplicate vertex) are passed through as-is;
+  # `a5::polygon_to_cells` strips the closing vertex natively.
   list(
-    lon = as.numeric(lon),
-    lat = as.numeric(lat),
+    lon = as.numeric(coords$x),
+    lat = as.numeric(coords$y),
     offsets = as.integer(offsets),
     part_id = as.integer(ring_part_id),
     is_outer = as.integer(ring_is_outer)
