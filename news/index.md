@@ -1,9 +1,37 @@
 # Changelog
 
+## a5R 0.5.0
+
+- Removed `a5_grid()`, deprecated since 0.4.0. Use
+  [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_polygon_to_cells.md)
+  instead. Note the semantics differ: `a5_grid()` selected every cell a
+  geometry touched (boundary intersection), whereas
+  [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_polygon_to_cells.md)
+  selects cells whose centre lies inside the geometry. For a bounding
+  box, pass a closed polygon, e.g.
+  `a5_polygon_to_cells(wk::rct(xmin, ymin, xmax, ymax), res)`.
+- Dropped the `lifecycle` R dependency and the `wkt` Rust dependency,
+  both of which were only needed by `a5_grid()`.
+- Replaced the heavy `geo` Rust dependency with the lightweight
+  `geographiclib-rs` crate for
+  [`a5_cell_distance()`](https://belian-earth.github.io/a5R/reference/a5_cell_distance.md).
+  The haversine and rhumb methods are now computed directly; the
+  geodesic method continues to use Karney’s algorithm. Distance results
+  are unchanged. This removes 33 transitive crates and shrinks the
+  vendored sources substantially.
+- Updated the bundled ‘A5’ Rust crate to 0.9.0, bringing a faster
+  polyhedral projection and an `EqualAreaProjection` refactor.
+- [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_polygon_to_cells.md)
+  now delegates hole handling to the upstream crate, which excludes hole
+  interiors natively rather than subtracting hole-ring cells in R.
+  Results are unchanged; the implementation is simpler and avoids an
+  uncompact/recompact round-trip for single-part polygons.
+
 ## a5R 0.4.0
 
-- [`a5_grid()`](https://belian-earth.github.io/a5R/reference/a5_grid.md)
-  is soft-deprecated in favour of
+CRAN release: 2026-05-14
+
+- `a5_grid()` is soft-deprecated in favour of
   [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_polygon_to_cells.md).
   Calling it now emits a
   [`lifecycle::deprecate_warn()`](https://lifecycle.r-lib.org/reference/deprecate_soft.html)
@@ -12,18 +40,16 @@
   for geometry inputs (centre-in-polygon containment), or pass a
   [`wk::rct()`](https://paleolimbot.github.io/wk/reference/rct.html)
   bounding box for the bbox use case. Note that the two functions are
-  not semantically identical:
-  [`a5_grid()`](https://belian-earth.github.io/a5R/reference/a5_grid.md)
-  uses boundary intersection (any cell touched by the geometry), whereas
+  not semantically identical: `a5_grid()` uses boundary intersection
+  (any cell touched by the geometry), whereas
   [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_polygon_to_cells.md)
   uses centre-point containment (cells whose centroid lies inside).
 - New
   [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_polygon_to_cells.md)
   returns the A5 cells whose centres lie inside a polygon. Distinct from
-  [`a5_grid()`](https://belian-earth.github.io/a5R/reference/a5_grid.md),
-  which uses boundary-intersection semantics. Accepts wk-handleable
-  geometries (including `MULTIPOLYGON` and `sfc` of several polygons),
-  terra `SpatVector` objects, numeric matrices, or
+  `a5_grid()`, which uses boundary-intersection semantics. Accepts
+  wk-handleable geometries (including `MULTIPOLYGON` and `sfc` of
+  several polygons), terra `SpatVector` objects, numeric matrices, or
   `data.frame(lon, lat)`. Multi-part inputs are handled natively: per
   polygon part the outer ring’s cells are computed and any hole-ring
   cells are subtracted, then the results are unioned across parts and

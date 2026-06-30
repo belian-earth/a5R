@@ -3,9 +3,9 @@
 Returns A5 cells at `resolution` whose centres fall inside the polygon.
 Multi-feature inputs (a `MULTIPOLYGON`, an `sfc` of multiple polygons,
 or a `POLYGON` with holes) are handled natively: per polygon part, the
-outer-ring cells are computed and any hole-ring cells are subtracted,
-then the results are unioned across parts. The final cell set is
-compacted; use
+outer ring and its holes are converted together with hole interiors
+excluded, then the results are unioned across parts. The final cell set
+is compacted; use
 [`a5_uncompact()`](https://belian-earth.github.io/a5R/reference/a5_uncompact.md)
 to expand to a uniform-resolution grid.
 
@@ -50,11 +50,8 @@ vector at or coarser than `resolution`.
 ## Details
 
 Membership is determined by **centre-point containment**: a cell is
-included iff its centroid lies inside the polygon, with hole rings
-properly subtracted. This is distinct from
-[`a5_grid()`](https://belian-earth.github.io/a5R/reference/a5_grid.md)'s
-boundary-intersection semantics; for the same polygon the two functions
-can return slightly different cell sets near the boundary.
+included if its centroid lies inside the polygon, with hole interiors
+excluded.
 
 Coordinates must be WGS 84 longitude/latitude in degrees. Rings are
 closed automatically; a trailing duplicate vertex is dropped if present.

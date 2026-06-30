@@ -100,12 +100,3 @@ Methods for the wk geometry framework.
 - [`wk_handle(`*`<a5_cell>`*`)`](https://belian-earth.github.io/a5R/reference/wk_methods.md)
   [`wk_crs(`*`<a5_cell>`*`)`](https://belian-earth.github.io/a5R/reference/wk_methods.md)
   : wk methods for a5_cell
-
-## Deprecated
-
-Functions superseded by other parts of the API.
-
-- [`a5_grid()`](https://belian-earth.github.io/a5R/reference/a5_grid.md)
-  :
-
-  **\[deprecated\]**
