@@ -8,6 +8,11 @@
   `a5_polygon_to_cells(wk::rct(xmin, ymin, xmax, ymax), res)`.
 * Dropped the `lifecycle` R dependency and the `wkt` Rust dependency, both
   of which were only needed by `a5_grid()`.
+* Replaced the heavy `geo` Rust dependency with the lightweight
+  `geographiclib-rs` crate for `a5_cell_distance()`. The haversine and
+  rhumb methods are now computed directly; the geodesic method continues to
+  use Karney's algorithm. Distance results are unchanged. This removes 33
+  transitive crates and shrinks the vendored sources substantially.
 * Updated the bundled 'A5' Rust crate to 0.9.0, bringing a faster
   polyhedral projection and an `EqualAreaProjection` refactor.
 * `a5_polygon_to_cells()` now delegates hole handling to the upstream
