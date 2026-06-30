@@ -7,7 +7,6 @@ mod boundary;
 mod cell_info;
 mod distance;
 mod hierarchy;
-mod grid;
 mod traversal;
 mod regions;
 
@@ -20,7 +19,6 @@ extendr_module! {
     use cell_info;
     use distance;
     use hierarchy;
-    use grid;
     use traversal;
     use regions;
 }

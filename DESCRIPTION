@@ -20,7 +20,6 @@ Depends:
     R (>= 4.2)
 Imports:
     cli,
-    lifecycle,
     rlang (>= 1.1.0),
     units,
     vctrs (>= 0.6.0),

@@ -1,5 +1,13 @@
 # a5R (development version)
 
+* Removed `a5_grid()`, deprecated since 0.4.0. Use `a5_polygon_to_cells()`
+  instead. Note the semantics differ: `a5_grid()` selected every cell a
+  geometry touched (boundary intersection), whereas `a5_polygon_to_cells()`
+  selects cells whose centre lies inside the geometry. For a bounding box,
+  pass a closed polygon, e.g.
+  `a5_polygon_to_cells(wk::rct(xmin, ymin, xmax, ymax), res)`.
+* Dropped the `lifecycle` R dependency and the `wkt` Rust dependency, both
+  of which were only needed by `a5_grid()`.
 * Updated the bundled 'A5' Rust crate to 0.9.0, bringing a faster
   polyhedral projection and an `EqualAreaProjection` refactor.
 * `a5_polygon_to_cells()` now delegates hole handling to the upstream
