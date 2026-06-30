@@ -34,10 +34,8 @@ is compacted; use \code{\link[=a5_uncompact]{a5_uncompact()}} to expand to a uni
 }
 \details{
 Membership is determined by \strong{centre-point containment}: a cell is
-included iff its centroid lies inside the polygon, with hole rings
-properly subtracted. This is distinct from \code{\link[=a5_grid]{a5_grid()}}'s
-boundary-intersection semantics; for the same polygon the two
-functions can return slightly different cell sets near the boundary.
+included if its centroid lies inside the polygon, with hole interiors
+excluded.
 
 Coordinates must be WGS 84 longitude/latitude in degrees. Rings are
 closed automatically; a trailing duplicate vertex is dropped if

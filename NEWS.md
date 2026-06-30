@@ -1,5 +1,18 @@
-# a5R (development version)
+# a5R 0.5.0
 
+* Removed `a5_grid()`, deprecated since 0.4.0. Use `a5_polygon_to_cells()`
+  instead. Note the semantics differ: `a5_grid()` selected every cell a
+  geometry touched (boundary intersection), whereas `a5_polygon_to_cells()`
+  selects cells whose centre lies inside the geometry. For a bounding box,
+  pass a closed polygon, e.g.
+  `a5_polygon_to_cells(wk::rct(xmin, ymin, xmax, ymax), res)`.
+* Dropped the `lifecycle` R dependency and the `wkt` Rust dependency, both
+  of which were only needed by `a5_grid()`.
+* Replaced the heavy `geo` Rust dependency with the lightweight
+  `geographiclib-rs` crate for `a5_cell_distance()`. The haversine and
+  rhumb methods are now computed directly; the geodesic method continues to
+  use Karney's algorithm. Distance results are unchanged. This removes 33
+  transitive crates and shrinks the vendored sources substantially.
 * Updated the bundled 'A5' Rust crate to 0.9.0, bringing a faster
   polyhedral projection and an `EqualAreaProjection` refactor.
 * `a5_polygon_to_cells()` now delegates hole handling to the upstream

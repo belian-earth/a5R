@@ -175,24 +175,6 @@ a5_compact_rs <- function(cells) .Call(wrap__a5_compact_rs, cells)
 #' @keywords internal
 a5_uncompact_rs <- function(cells, target_resolution) .Call(wrap__a5_uncompact_rs, cells, target_resolution)
 
-#' Generate a grid of A5 cells covering a bounding box.
-#'
-#' @param xmin,ymin,xmax,ymax Bounding box coordinates.
-#' @param resolution Target resolution (0--30).
-#' @return List with b1..b8 raw vectors.
-#' @noRd
-#' @keywords internal
-a5_grid_bbox_rs <- function(xmin, ymin, xmax, ymax, resolution) .Call(wrap__a5_grid_bbox_rs, xmin, ymin, xmax, ymax, resolution)
-
-#' Filter cell IDs to those whose boundary polygons intersect a target geometry.
-#'
-#' @param cells List with b1..b8 raw vectors.
-#' @param target_wkt WKT string of the target geometry.
-#' @return List with b1..b8 raw vectors (filtered).
-#' @noRd
-#' @keywords internal
-a5_grid_intersects_rs <- function(cells, target_wkt) .Call(wrap__a5_grid_intersects_rs, cells, target_wkt)
-
 #' Get all cells within k hops of a centre cell.
 #'
 #' @param cell List with b1..b8 raw vectors (length 1).
@@ -219,11 +201,11 @@ a5_spherical_cap_rs <- function(cell, radius) .Call(wrap__a5_spherical_cap_rs, c
 #' `part_id` (length `n_rings`) groups rings by polygon part. `is_outer`
 #' (length `n_rings`, 1 = outer / 0 = hole) classifies each ring.
 #'
-#' For each polygon part, the outer ring is converted to cells, the
-#' uncompacted cells inside any hole rings are subtracted, and the
-#' remaining cells are unioned across parts. The result is recompacted
-#' at the end. A single-outer-no-holes input takes a fast path that
-#' passes the upstream compacted result through unchanged.
+#' For each polygon part, the outer ring and its holes are passed to
+#' `a5::polygon_to_cells`, which excludes hole interiors natively, and the
+#' resulting cells are unioned across parts. The result is recompacted at
+#' the end. A single-part input (with or without holes) takes a fast path
+#' that passes the upstream compacted result through unchanged.
 #'
 #' @noRd
 #' @keywords internal
