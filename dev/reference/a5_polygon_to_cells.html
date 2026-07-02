@@ -23,7 +23,7 @@ is compacted; use a5_uncompact() to expand to a uniform-resolution grid."><meta 
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.4.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.5.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -97,10 +97,8 @@ single outer ring.</p></li>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Membership is determined by <strong>centre-point containment</strong>: a cell is
-included iff its centroid lies inside the polygon, with hole rings
-properly subtracted. This is distinct from <code><a href="a5_grid.html">a5_grid()</a></code>'s
-boundary-intersection semantics; for the same polygon the two
-functions can return slightly different cell sets near the boundary.</p>
+included if its centroid lies inside the polygon, with hole interiors
+excluded.</p>
 <p>Coordinates must be WGS 84 longitude/latitude in degrees. Rings are
 closed automatically; a trailing duplicate vertex is dropped if
 present.</p>
