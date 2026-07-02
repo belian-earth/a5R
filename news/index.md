@@ -2,6 +2,8 @@
 
 ## a5R 0.5.0
 
+CRAN release: 2026-07-02
+
 - Removed `a5_grid()`, deprecated since 0.4.0. Use
   [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_polygon_to_cells.md)
   instead. Note the semantics differ: `a5_grid()` selected every cell a

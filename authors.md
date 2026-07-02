@@ -9,7 +9,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/belian-earth/a5R/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/belian-earth/a5R/blob/v0.5.0/DESCRIPTION)
 
 Graham H (2026). *a5R: 'A5' Discrete Global Grid System*. R package
 version 0.5.0, <https://github.com/belian-earth/a5R>.
