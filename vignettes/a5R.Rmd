@@ -76,10 +76,13 @@ plot(a5_cell_to_boundary(cell), col = "#206ead40", border = "#206ead",
 plot(a5_cell_to_boundary(parent), border = "#333333", lwd = 2, add = TRUE)
 ```
 
-Cell area decreases geometrically: each level is roughly 4x smaller.
+Cell area decreases geometrically: each level is roughly 4x smaller, so
+the average edge length roughly halves per level. `a5_cell_edge_length_avg()`
+gives a quick sense of cell size when choosing a resolution.
 
 ```{r}
 a5_cell_area(0:5)
+a5_cell_edge_length_avg(0:5, units = "km")
 ```
 
 ### Compact and uncompact
@@ -152,6 +155,24 @@ cells_uncom <- a5_uncompact(cells, 12)
 length(cells_uncom)
 
 plot(a5_cell_to_boundary(cells_uncom), col = "#206ead20", border = "#206ead", asp = 1)
+```
+
+By default only cells whose centre lies inside the polygon are returned,
+so cells straddling the boundary are dropped and the union of the cells
+does not fully cover the polygon. Pass `containment = "overlapping"` to
+also keep every cell that touches the boundary, giving gap-free coverage.
+The overlapping set is always a superset of the centre set.
+
+```{r containment-plot, fig.width = 7}
+covering <- a5_polygon_to_cells(wk::rct(-3.3, 55.9, -3.1, 56.0),
+                                resolution = 12, containment = "overlapping")
+length(covering)
+
+plot(a5_cell_to_boundary(a5_uncompact(covering, 12)),
+     col = "#ad6e2020", border = "#ad6e20", asp = 1)
+plot(a5_cell_to_boundary(cells_uncom),
+     col = "#206ead40", border = "#206ead", add = TRUE)
+plot(wk::rct(-3.3, 55.9, -3.1, 56.0), border = "#333333", lwd = 2, add = TRUE)
 ```
 
 Multi-part inputs are handled natively: a `MULTIPOLYGON` or an `sfc`

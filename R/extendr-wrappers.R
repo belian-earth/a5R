@@ -80,6 +80,17 @@ a5_cell_to_boundary_wkb_rs <- function(cells, closed_ring, segments) .Call(wrap_
 #' @keywords internal
 a5_cell_area_rs <- function(resolution) .Call(wrap__a5_cell_area_rs, resolution)
 
+#' Get the average edge length (in metres) of cells at a given resolution.
+#'
+#' Individual edge lengths vary from the average by roughly +/-10%
+#' depending on the cell's shape and position on the globe.
+#'
+#' @param resolution Integer vector of resolutions (0--30).
+#' @return Numeric vector of average edge lengths in metres.
+#' @noRd
+#' @keywords internal
+a5_cell_edge_length_avg_rs <- function(resolution) .Call(wrap__a5_cell_edge_length_avg_rs, resolution)
+
 #' Get total number of cells at a given resolution.
 #'
 #' @param resolution Integer scalar (0--30).
@@ -200,6 +211,8 @@ a5_spherical_cap_rs <- function(cell, radius) .Call(wrap__a5_spherical_cap_rs, c
 #' (length `n_rings + 1`) so ring `i` is `lon[offsets[i]..offsets[i+1]]`.
 #' `part_id` (length `n_rings`) groups rings by polygon part. `is_outer`
 #' (length `n_rings`, 1 = outer / 0 = hole) classifies each ring.
+#' `containment` is `"centre"` (cell centre inside the polygon) or
+#' `"overlapping"` (any cell touching the polygon).
 #'
 #' For each polygon part, the outer ring and its holes are passed to
 #' `a5::polygon_to_cells`, which excludes hole interiors natively, and the
@@ -209,7 +222,7 @@ a5_spherical_cap_rs <- function(cell, radius) .Call(wrap__a5_spherical_cap_rs, c
 #'
 #' @noRd
 #' @keywords internal
-a5_polygon_to_cells_rs <- function(lon, lat, offsets, part_id, is_outer, resolution) .Call(wrap__a5_polygon_to_cells_rs, lon, lat, offsets, part_id, is_outer, resolution)
+a5_polygon_to_cells_rs <- function(lon, lat, offsets, part_id, is_outer, resolution, containment) .Call(wrap__a5_polygon_to_cells_rs, lon, lat, offsets, part_id, is_outer, resolution, containment)
 
 #' Convert one or more linestring waypoint sequences to A5 cells.
 #'

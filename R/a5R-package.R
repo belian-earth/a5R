@@ -18,6 +18,7 @@
 #' @section Geometry:
 #' - [a5_cell_to_boundary()] --- cell boundary polygons (WKB or WKT)
 #' - [a5_cell_area()] --- cell area at a given resolution
+#' - [a5_cell_edge_length_avg()] --- average cell edge length at a resolution
 #' - [a5_cell_distance()] --- distance between cell centroids
 #' - [a5_get_num_cells()] --- total cell count at a resolution
 #' - [a5_get_num_children()] --- child count between resolutions
@@ -34,7 +35,7 @@
 #' - [a5_spherical_cap()] --- neighbours by great-circle distance
 #'
 #' @section Geometry indexing:
-#' - [a5_polygon_to_cells()] --- cells whose centres lie inside a polygon
+#' - [a5_polygon_to_cells()] --- cells inside (or overlapping) a polygon
 #' - [a5_linestring_to_cells()] --- cells crossed by a great-circle polyline
 #'
 #' @section Arrow & Parquet:

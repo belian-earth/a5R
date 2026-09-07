@@ -1,6 +1,9 @@
-#' Cells whose centres lie inside a polygon
+#' Cells inside or overlapping a polygon
 #'
-#' Returns A5 cells at `resolution` whose centres fall inside the polygon.
+#' Returns A5 cells at `resolution` that fall inside the polygon. By
+#' default a cell is included when its centre lies inside the polygon;
+#' set `containment = "overlapping"` to also include every cell that
+#' touches the polygon boundary, giving gap-free coverage.
 #' Multi-feature inputs (a `MULTIPOLYGON`, an `sfc` of multiple polygons,
 #' or a `POLYGON` with holes) are handled natively: per polygon part, the
 #' outer ring and its holes are converted together with hole interiors
@@ -17,12 +20,25 @@
 #'   - A `data.frame` with columns `lon` and `lat`, interpreted as a
 #'     single outer ring.
 #' @param resolution Integer scalar target resolution (0-30).
+#' @param containment Character scalar selecting which cells to include.
+#'   `"centre"` (the default) includes a cell when its centre lies inside
+#'   the polygon. `"overlapping"` additionally includes every cell that
+#'   overlaps the polygon boundary, so the result fully covers the polygon.
+#'   The overlapping set is a superset of the centre set.
 #'
 #' @returns An [a5_cell] vector at or coarser than `resolution`.
 #'
 #' @details
-#' Membership is determined by **centre-point containment**: a cell is
-#' included if its centroid lies inside the polygon, with hole interiors
+#' With `containment = "centre"`, membership is determined by
+#' **centre-point containment**: a cell is included if its centroid lies
+#' inside the polygon, with hole interiors excluded. Cells straddling the
+#' boundary whose centre falls outside are dropped, so the union of the
+#' cells does not fully cover the polygon.
+#'
+#' With `containment = "overlapping"`, every cell that contains any point
+#' of the polygon boundary is kept as well, so the returned cells cover
+#' the polygon without gaps. Hole boundaries count as boundary, so cells
+#' straddling a hole edge are included while the hole interior is still
 #' excluded.
 #'
 #' Coordinates must be WGS 84 longitude/latitude in degrees. Rings are
@@ -44,10 +60,17 @@
 #' )
 #' cells <- a5_polygon_to_cells(poly, resolution = 8)
 #' length(cells)
-a5_polygon_to_cells <- function(x, resolution) {
+#'
+#' # Gap-free coverage: every cell touching the polygon
+#' covering <- a5_polygon_to_cells(poly, resolution = 8,
+#'                                 containment = "overlapping")
+#' length(covering)
+a5_polygon_to_cells <- function(x, resolution,
+                                containment = c("centre", "overlapping")) {
   resolution <- vctrs::vec_cast(resolution, integer())
   check_resolution(resolution)
   vctrs::vec_assert(resolution, size = 1L)
+  containment <- rlang::arg_match(containment)
 
   bundle <- prepare_polygon_input(x)
 
@@ -57,7 +80,8 @@ a5_polygon_to_cells <- function(x, resolution) {
     bundle$offsets,
     bundle$part_id,
     bundle$is_outer,
-    resolution
+    resolution,
+    containment
   ))
 }
 

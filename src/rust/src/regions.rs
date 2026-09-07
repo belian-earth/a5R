@@ -3,8 +3,30 @@ use rayon::prelude::*;
 use std::collections::HashSet;
 use std::result::Result as StdResult;
 
+// `Containment` / `PolygonToCellsOptions` are not re-exported from the crate
+// root in a5 0.10.0 (the `regions` module is `pub` but `#[doc(hidden)]`), so
+// reach them through the module path. Revisit once upstream re-exports them.
+use a5::regions::polygon::{Containment, PolygonToCellsOptions};
+
 use crate::cell_raw::u64s_to_raw8_list;
 use crate::threading::{get_num_threads, maybe_par};
+
+/// Map the R-side containment string to the upstream option struct.
+///
+/// Accepts `"centre"` (cell centre inside the polygon; the default) or
+/// `"overlapping"` (every cell touching the polygon, a superset of the
+/// centre result). Any other value is an R error.
+fn containment_options(containment: &str) -> PolygonToCellsOptions {
+    let containment = match containment {
+        "centre" => Containment::Center,
+        "overlapping" => Containment::Overlapping,
+        other => throw_r_error(format!(
+            "unknown containment mode {:?}; expected \"centre\" or \"overlapping\"",
+            other
+        )),
+    };
+    PolygonToCellsOptions { containment }
+}
 
 /// Build per-ring `Vec<a5::LonLat>`s from flat coordinate slices and offsets.
 fn split_rings(lon: &Doubles, lat: &Doubles, offsets: &Integers) -> Vec<Vec<a5::LonLat>> {
@@ -66,12 +88,13 @@ fn process_part(
     part_id: &[i32],
     is_outer: &[i32],
     resolution: i32,
+    options: PolygonToCellsOptions,
 ) -> StdResult<Vec<u64>, String> {
     let part_rings = collect_part_rings(p, rings, part_id, is_outer);
     if part_rings.is_empty() {
         return Ok(Vec::new());
     }
-    let compacted = a5::polygon_to_cells(&part_rings, resolution)?;
+    let compacted = a5::polygon_to_cells(&part_rings, resolution, Some(options))?;
     a5::uncompact(&compacted, resolution)
 }
 
@@ -81,6 +104,8 @@ fn process_part(
 /// (length `n_rings + 1`) so ring `i` is `lon[offsets[i]..offsets[i+1]]`.
 /// `part_id` (length `n_rings`) groups rings by polygon part. `is_outer`
 /// (length `n_rings`, 1 = outer / 0 = hole) classifies each ring.
+/// `containment` is `"centre"` (cell centre inside the polygon) or
+/// `"overlapping"` (any cell touching the polygon).
 ///
 /// For each polygon part, the outer ring and its holes are passed to
 /// `a5::polygon_to_cells`, which excludes hole interiors natively, and the
@@ -98,7 +123,9 @@ fn a5_polygon_to_cells_rs(
     part_id: Integers,
     is_outer: Integers,
     resolution: i32,
+    containment: &str,
 ) -> List {
+    let options = containment_options(containment);
     let rings = split_rings(&lon, &lat, &offsets);
     let n_rings = rings.len();
 
@@ -123,7 +150,7 @@ fn a5_polygon_to_cells_rs(
         if part_rings.is_empty() {
             return u64s_to_raw8_list(vec![]);
         }
-        return match a5::polygon_to_cells(&part_rings, resolution) {
+        return match a5::polygon_to_cells(&part_rings, resolution, Some(options)) {
             Ok(cells) => {
                 let out: Vec<Option<u64>> = cells.into_iter().map(Some).collect();
                 u64s_to_raw8_list(out)
@@ -136,13 +163,17 @@ fn a5_polygon_to_cells_rs(
     let per_part: Vec<StdResult<Vec<u64>, String>> = if get_num_threads() <= 1 {
         parts
             .iter()
-            .map(|&p| process_part(p, &rings, &part_id_vec, &is_outer_vec, resolution))
+            .map(|&p| {
+                process_part(p, &rings, &part_id_vec, &is_outer_vec, resolution, options)
+            })
             .collect()
     } else {
         maybe_par(|| {
             parts
                 .par_iter()
-                .map(|&p| process_part(p, &rings, &part_id_vec, &is_outer_vec, resolution))
+                .map(|&p| {
+                    process_part(p, &rings, &part_id_vec, &is_outer_vec, resolution, options)
+                })
                 .collect()
         })
     };

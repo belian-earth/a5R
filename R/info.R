@@ -33,6 +33,45 @@ a5_cell_area <- function(resolution, units = "m^2") {
     units::set_units(units, mode = "standard")
 }
 
+#' Average cell edge length at a given resolution
+#'
+#' Returns the average length of a cell edge at the given resolution(s).
+#' Individual edge lengths vary from this average by roughly +/-10%,
+#' depending on the cell's shape and its position on the globe. Use this
+#' for a quick estimate of cell size when choosing a resolution; use
+#' [a5_cell_to_boundary()] to measure a specific cell.
+#'
+#' @param resolution Integer vector of resolutions (0--30).
+#' @param units Character scalar specifying the output length unit
+#'   (default `"m"`). Any unit convertible from `m` via
+#'   [units::set_units()] is accepted (e.g. `"km"`, `"mi"`). If NULL, the
+#'   length is returned as a numeric vector in metres.
+#' @returns A [units::units] vector of average edge lengths, or a numeric
+#'   vector if `units = NULL`.
+#'
+#' @seealso [a5_cell_area()]
+#' @export
+#' @examples
+#' a5_cell_edge_length_avg(0:5)
+#' a5_cell_edge_length_avg(10, units = "km")
+a5_cell_edge_length_avg <- function(resolution, units = "m") {
+  resolution <- vctrs::vec_cast(resolution, integer())
+  check_resolution(resolution)
+  if (!is.null(units) && !units::ud_are_convertible("m", units)) {
+    cli::cli_abort(
+      "{.arg units} must be a length unit convertible from m (or NULL), not {.val {units}}."
+    )
+  }
+  r <- a5_cell_edge_length_avg_rs(resolution)
+
+  if (is.null(units)) {
+    return(r)
+  }
+
+  units::set_units(r, "m", mode = "standard") |>
+    units::set_units(units, mode = "standard")
+}
+
 #' Total number of cells at a given resolution
 #'
 #' @param resolution Integer scalar resolution (0--30).

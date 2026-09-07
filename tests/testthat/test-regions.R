@@ -548,3 +548,91 @@ test_that("resolution must be scalar", {
   expect_error(a5_polygon_to_cells(poly, resolution = c(5, 6)), "size 1")
   expect_error(a5_linestring_to_cells(line, resolution = c(5, 6)), "size 1")
 })
+
+# -- containment ---------------------------------------------------------------
+
+test_that("containment = 'overlapping' is a superset of the centre result", {
+  poly <- wk::wkt(square_wkt(-3.3, 55.9, -3.1, 56.0))
+  centre <- a5_uncompact(a5_polygon_to_cells(poly, 10), 10)
+  overlap <- a5_uncompact(
+    a5_polygon_to_cells(poly, 10, containment = "overlapping"), 10
+  )
+  expect_s3_class(overlap, "a5_cell")
+  expect_true(length(overlap) > length(centre))
+  expect_true(all(format(centre) %in% format(overlap)))
+})
+
+test_that("containment = 'overlapping' includes cells straddling the boundary", {
+  poly <- wk::wkt(square_wkt(-3.3, 55.9, -3.1, 56.0))
+  overlap <- a5_uncompact(
+    a5_polygon_to_cells(poly, 12, containment = "overlapping"), 12
+  )
+  # Every polygon vertex lies on the boundary, so its cell must be present.
+  corner_cells <- a5_lonlat_to_cell(
+    c(-3.3, -3.1, -3.1, -3.3), c(55.9, 55.9, 56.0, 56.0), 12
+  )
+  expect_true(all(format(corner_cells) %in% format(overlap)))
+})
+
+test_that("containment = 'overlapping' still excludes hole interiors", {
+  outer <- "(-3.4 55.8, -3.0 55.8, -3.0 56.1, -3.4 56.1, -3.4 55.8)"
+  hole <- "(-3.25 55.9, -3.15 55.9, -3.15 56.0, -3.25 56.0, -3.25 55.9)"
+  poly <- wk::wkt(sprintf("POLYGON (%s, %s)", outer, hole))
+  overlap <- a5_uncompact(
+    a5_polygon_to_cells(poly, 12, containment = "overlapping"), 12
+  )
+  hole_centre <- a5_lonlat_to_cell(-3.2, 55.95, 12)
+  expect_false(format(hole_centre) %in% format(overlap))
+  # but a cell on the hole edge is kept
+  hole_edge <- a5_lonlat_to_cell(-3.25, 55.95, 12)
+  expect_true(format(hole_edge) %in% format(overlap))
+})
+
+test_that("containment = 'overlapping' works for multi-part input", {
+  skip_if_not_installed("sf")
+  sq1 <- sf::st_polygon(list(rbind(
+    c(-3.5, 55.5), c(-3.0, 55.5), c(-3.0, 56.0), c(-3.5, 56.0), c(-3.5, 55.5)
+  )))
+  sq2 <- sf::st_polygon(list(rbind(
+    c(-2.5, 55.5), c(-2.0, 55.5), c(-2.0, 56.0), c(-2.5, 56.0), c(-2.5, 55.5)
+  )))
+  multi <- sf::st_sfc(sq1, sq2, crs = 4326)
+  each <- unique(c(
+    format(a5_uncompact(a5_polygon_to_cells(sf::st_sfc(sq1, crs = 4326), 10,
+                                            containment = "overlapping"), 10)),
+    format(a5_uncompact(a5_polygon_to_cells(sf::st_sfc(sq2, crs = 4326), 10,
+                                            containment = "overlapping"), 10))
+  ))
+  both <- format(a5_uncompact(
+    a5_polygon_to_cells(multi, 10, containment = "overlapping"), 10
+  ))
+  expect_setequal(both, each)
+})
+
+test_that("containment defaults to 'centre'", {
+  poly <- wk::wkt(square_wkt(-3.3, 55.9, -3.1, 56.0))
+  expect_identical(
+    format(a5_polygon_to_cells(poly, 10, containment = "centre")),
+    format(a5_polygon_to_cells(poly, 10))
+  )
+})
+
+test_that("containment rejects invalid values", {
+  poly <- wk::wkt(square_wkt(-3.3, 55.9, -3.1, 56.0))
+  expect_error(
+    a5_polygon_to_cells(poly, 10, containment = "bogus"),
+    "containment"
+  )
+  expect_error(
+    a5_polygon_to_cells(poly, 10, containment = "center"),
+    "centre"
+  )
+  expect_error(
+    a5_polygon_to_cells(poly, 10, containment = 1),
+    "containment"
+  )
+  expect_error(
+    a5_polygon_to_cells(poly, 10, containment = c("centre", "centre")),
+    "containment"
+  )
+})
