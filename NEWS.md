@@ -1,3 +1,5 @@
+# a5R (development version)
+
 # a5R 0.6.0
 
 * Updated the bundled 'A5' Rust crate to 0.10.0. The lattice curve is now
