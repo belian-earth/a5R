@@ -23,6 +23,30 @@ fn a5_cell_area_rs(resolution: Integers) -> Doubles {
     out
 }
 
+/// Get the average edge length (in metres) of cells at a given resolution.
+///
+/// Individual edge lengths vary from the average by roughly +/-10%
+/// depending on the cell's shape and position on the globe.
+///
+/// @param resolution Integer vector of resolutions (0--30).
+/// @return Numeric vector of average edge lengths in metres.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn a5_cell_edge_length_avg_rs(resolution: Integers) -> Doubles {
+    let n = resolution.len();
+    let mut out = Doubles::new(n);
+    for i in 0..n {
+        let r = resolution[i];
+        if r.is_na() {
+            out.set_elt(i, Rfloat::na());
+        } else {
+            out.set_elt(i, Rfloat::from(a5::cell_edge_length_avg(r.inner())));
+        }
+    }
+    out
+}
+
 /// Get total number of cells at a given resolution.
 ///
 /// @param resolution Integer scalar (0--30).
@@ -90,6 +114,7 @@ fn a5_is_valid_hex_rs(cell: Strings) -> Logicals {
 extendr_module! {
     mod cell_info;
     fn a5_cell_area_rs;
+    fn a5_cell_edge_length_avg_rs;
     fn a5_get_num_cells_rs;
     fn a5_get_num_children_rs;
     fn a5_is_valid_cell_rs;

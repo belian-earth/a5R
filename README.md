@@ -12,8 +12,6 @@ coverage](https://codecov.io/gh/belian-earth/a5R/graph/badge.svg)](https://app.c
 [![Lifecycle:
 stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![License:Apache](https://img.shields.io/github/license/belian-earth/a5R)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Github
-stars](https://img.shields.io/github/stars/belian-earth/a5R?style=social)](https://github.com/belian-earth/a5R/stargazers)
 [![GitHub
 Issues](https://img.shields.io/github/issues/belian-earth/a5R)](https://github.com/belian-earth/a5R/issues)
 [![CRAN

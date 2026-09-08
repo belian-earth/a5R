@@ -33,6 +33,7 @@ conversion
 \itemize{
 \item \code{\link[=a5_cell_to_boundary]{a5_cell_to_boundary()}} --- cell boundary polygons (WKB or WKT)
 \item \code{\link[=a5_cell_area]{a5_cell_area()}} --- cell area at a given resolution
+\item \code{\link[=a5_cell_edge_length_avg]{a5_cell_edge_length_avg()}} --- average cell edge length at a resolution
 \item \code{\link[=a5_cell_distance]{a5_cell_distance()}} --- distance between cell centroids
 \item \code{\link[=a5_get_num_cells]{a5_get_num_cells()}} --- total cell count at a resolution
 \item \code{\link[=a5_get_num_children]{a5_get_num_children()}} --- child count between resolutions
@@ -61,7 +62,7 @@ conversion
 \section{Geometry indexing}{
 
 \itemize{
-\item \code{\link[=a5_polygon_to_cells]{a5_polygon_to_cells()}} --- cells whose centres lie inside a polygon
+\item \code{\link[=a5_polygon_to_cells]{a5_polygon_to_cells()}} --- cells inside (or overlapping) a polygon
 \item \code{\link[=a5_linestring_to_cells]{a5_linestring_to_cells()}} --- cells crossed by a great-circle polyline
 }
 }

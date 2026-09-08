@@ -1,11 +1,3 @@
-## R CMD check results
-
-0 errors | 0 warnings | 1 note
-
-* checking compilation flags used ... NOTE
-  Compilation used the following non-portable flag(s):
-    '-mno-omit-leaf-frame-pointer'
-
 ## revdepcheck results
 
 We checked 1 reverse dependencies, comparing R CMD check results across CRAN and dev versions of this package.

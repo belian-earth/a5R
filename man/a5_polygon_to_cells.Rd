@@ -2,9 +2,9 @@
 % Please edit documentation in R/regions.R
 \name{a5_polygon_to_cells}
 \alias{a5_polygon_to_cells}
-\title{Cells whose centres lie inside a polygon}
+\title{Cells inside or overlapping a polygon}
 \usage{
-a5_polygon_to_cells(x, resolution)
+a5_polygon_to_cells(x, resolution, containment = c("centre", "overlapping"))
 }
 \arguments{
 \item{x}{A polygon-like geometry. One of:
@@ -20,12 +20,21 @@ single outer ring.
 }}
 
 \item{resolution}{Integer scalar target resolution (0-30).}
+
+\item{containment}{Character scalar selecting which cells to include.
+\code{"centre"} (the default) includes a cell when its centre lies inside
+the polygon. \code{"overlapping"} additionally includes every cell that
+overlaps the polygon boundary, so the result fully covers the polygon.
+The overlapping set is a superset of the centre set.}
 }
 \value{
 An \link{a5_cell} vector at or coarser than \code{resolution}.
 }
 \description{
-Returns A5 cells at \code{resolution} whose centres fall inside the polygon.
+Returns A5 cells at \code{resolution} that fall inside the polygon. By
+default a cell is included when its centre lies inside the polygon;
+set \code{containment = "overlapping"} to also include every cell that
+touches the polygon boundary, giving gap-free coverage.
 Multi-feature inputs (a \code{MULTIPOLYGON}, an \code{sfc} of multiple polygons,
 or a \code{POLYGON} with holes) are handled natively: per polygon part, the
 outer ring and its holes are converted together with hole interiors
@@ -33,8 +42,16 @@ excluded, then the results are unioned across parts. The final cell set
 is compacted; use \code{\link[=a5_uncompact]{a5_uncompact()}} to expand to a uniform-resolution grid.
 }
 \details{
-Membership is determined by \strong{centre-point containment}: a cell is
-included if its centroid lies inside the polygon, with hole interiors
+With \code{containment = "centre"}, membership is determined by
+\strong{centre-point containment}: a cell is included if its centroid lies
+inside the polygon, with hole interiors excluded. Cells straddling the
+boundary whose centre falls outside are dropped, so the union of the
+cells does not fully cover the polygon.
+
+With \code{containment = "overlapping"}, every cell that contains any point
+of the polygon boundary is kept as well, so the returned cells cover
+the polygon without gaps. Hole boundaries count as boundary, so cells
+straddling a hole edge are included while the hole interior is still
 excluded.
 
 Coordinates must be WGS 84 longitude/latitude in degrees. Rings are
@@ -54,6 +71,11 @@ poly <- wk::wkt(
 )
 cells <- a5_polygon_to_cells(poly, resolution = 8)
 length(cells)
+
+# Gap-free coverage: every cell touching the polygon
+covering <- a5_polygon_to_cells(poly, resolution = 8,
+                                containment = "overlapping")
+length(covering)
 }
 \seealso{
 \code{\link[=a5_linestring_to_cells]{a5_linestring_to_cells()}}, \code{\link[=a5_uncompact]{a5_uncompact()}}.
