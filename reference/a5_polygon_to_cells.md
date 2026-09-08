@@ -1,18 +1,20 @@
-# Cells whose centres lie inside a polygon
+# Cells inside or overlapping a polygon
 
-Returns A5 cells at `resolution` whose centres fall inside the polygon.
-Multi-feature inputs (a `MULTIPOLYGON`, an `sfc` of multiple polygons,
-or a `POLYGON` with holes) are handled natively: per polygon part, the
-outer ring and its holes are converted together with hole interiors
-excluded, then the results are unioned across parts. The final cell set
-is compacted; use
+Returns A5 cells at `resolution` that fall inside the polygon. By
+default a cell is included when its centre lies inside the polygon; set
+`containment = "overlapping"` to also include every cell that touches
+the polygon boundary, giving gap-free coverage. Multi-feature inputs (a
+`MULTIPOLYGON`, an `sfc` of multiple polygons, or a `POLYGON` with
+holes) are handled natively: per polygon part, the outer ring and its
+holes are converted together with hole interiors excluded, then the
+results are unioned across parts. The final cell set is compacted; use
 [`a5_uncompact()`](https://belian-earth.github.io/a5R/reference/a5_uncompact.md)
 to expand to a uniform-resolution grid.
 
 ## Usage
 
 ``` r
-a5_polygon_to_cells(x, resolution)
+a5_polygon_to_cells(x, resolution, containment = c("centre", "overlapping"))
 ```
 
 ## Arguments
@@ -42,6 +44,14 @@ a5_polygon_to_cells(x, resolution)
 
   Integer scalar target resolution (0-30).
 
+- containment:
+
+  Character scalar selecting which cells to include. `"centre"` (the
+  default) includes a cell when its centre lies inside the polygon.
+  `"overlapping"` additionally includes every cell that overlaps the
+  polygon boundary, so the result fully covers the polygon. The
+  overlapping set is a superset of the centre set.
+
 ## Value
 
 An [a5_cell](https://belian-earth.github.io/a5R/reference/a5_cell.md)
@@ -49,8 +59,16 @@ vector at or coarser than `resolution`.
 
 ## Details
 
-Membership is determined by **centre-point containment**: a cell is
-included if its centroid lies inside the polygon, with hole interiors
+With `containment = "centre"`, membership is determined by
+**centre-point containment**: a cell is included if its centroid lies
+inside the polygon, with hole interiors excluded. Cells straddling the
+boundary whose centre falls outside are dropped, so the union of the
+cells does not fully cover the polygon.
+
+With `containment = "overlapping"`, every cell that contains any point
+of the polygon boundary is kept as well, so the returned cells cover the
+polygon without gaps. Hole boundaries count as boundary, so cells
+straddling a hole edge are included while the hole interior is still
 excluded.
 
 Coordinates must be WGS 84 longitude/latitude in degrees. Rings are
@@ -77,4 +95,10 @@ poly <- wk::wkt(
 cells <- a5_polygon_to_cells(poly, resolution = 8)
 length(cells)
 #> [1] 0
+
+# Gap-free coverage: every cell touching the polygon
+covering <- a5_polygon_to_cells(poly, resolution = 8,
+                                containment = "overlapping")
+length(covering)
+#> [1] 2
 ```

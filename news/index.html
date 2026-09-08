@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,9 +42,16 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/belian-earth/a5R/blob/v0.5.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/belian-earth/a5R/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.0" id="a5r-060">a5R 0.6.0<a class="anchor" aria-label="anchor" href="#a5r-060"></a></h2>
+<ul><li>Updated the bundled ‘A5’ Rust crate to 0.10.0. The lattice curve is now laid out with an L-system and the equal-area projection is more efficient; upstream reports large speed-ups for <code><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code>, <code><a href="../reference/a5_grid_disk.html">a5_grid_disk()</a></code>, <code><a href="../reference/a5_spherical_cap.html">a5_spherical_cap()</a></code> and <code><a href="../reference/a5_cell_to_lonlat.html">a5_cell_to_lonlat()</a></code>. Cell identifiers are unchanged: all existing results and snapshots are bit-for-bit identical.</li>
+<li>
+<code><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code> gains a <code>containment</code> argument. The default, <code>"centre"</code>, keeps the existing centre-in-polygon behaviour. The new <code>"overlapping"</code> mode additionally returns every cell that touches the polygon boundary, giving gap-free coverage; the result is a superset of the centre set. Hole interiors are still excluded in both modes. This restores the boundary-intersection use case previously served by the removed <code>a5_grid()</code>.</li>
+<li>New <code><a href="../reference/a5_cell_edge_length_avg.html">a5_cell_edge_length_avg()</a></code> returns the average edge length of a cell at a given resolution, as a <code>units</code> vector (metres by default). Individual edges vary from the average by roughly +/-10%.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0" id="a5r-050">a5R 0.5.0<a class="anchor" aria-label="anchor" href="#a5r-050"></a></h2><p class="text-muted">CRAN release: 2026-07-02</p>
 <ul><li>Removed <code>a5_grid()</code>, deprecated since 0.4.0. Use <code><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code> instead. Note the semantics differ: <code>a5_grid()</code> selected every cell a geometry touched (boundary intersection), whereas <code><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code> selects cells whose centre lies inside the geometry. For a bounding box, pass a closed polygon, e.g. <code>a5_polygon_to_cells(wk::rct(xmin, ymin, xmax, ymax), res)</code>.</li>
@@ -100,7 +107,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>
