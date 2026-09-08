@@ -2,6 +2,32 @@
 
 ## a5R (development version)
 
+## a5R 0.6.0
+
+- Updated the bundled ‘A5’ Rust crate to 0.10.0. The lattice curve is
+  now laid out with an L-system and the equal-area projection is more
+  efficient; upstream reports large speed-ups for
+  [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md),
+  [`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md),
+  [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md)
+  and
+  [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_lonlat.md).
+  Cell identifiers are unchanged: all existing results and snapshots are
+  bit-for-bit identical.
+- [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md)
+  gains a `containment` argument. The default, `"centre"`, keeps the
+  existing centre-in-polygon behaviour. The new `"overlapping"` mode
+  additionally returns every cell that touches the polygon boundary,
+  giving gap-free coverage; the result is a superset of the centre set.
+  Hole interiors are still excluded in both modes. This restores the
+  boundary-intersection use case previously served by the removed
+  `a5_grid()`.
+- New
+  [`a5_cell_edge_length_avg()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_edge_length_avg.md)
+  returns the average edge length of a cell at a given resolution, as a
+  `units` vector (metres by default). Individual edges vary from the
+  average by roughly +/-10%.
+
 ## a5R 0.5.0
 
 CRAN release: 2026-07-02

@@ -156,6 +156,8 @@ Cell boundaries, areas, counts, and distances.
   : Distance between cell centroids
 - [`a5_cell_area()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_area.md)
   : Cell area at a given resolution
+- [`a5_cell_edge_length_avg()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_edge_length_avg.md)
+  : Average cell edge length at a given resolution
 - [`a5_get_num_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_get_num_cells.md)
   : Total number of cells at a given resolution
 - [`a5_get_num_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_get_num_children.md)
@@ -184,7 +186,7 @@ Compress and expand sets of cells.
 Convert polygons and linestrings to cells covering them.
 
 - [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md)
-  : Cells whose centres lie inside a polygon
+  : Cells inside or overlapping a polygon
 - [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_linestring_to_cells.md)
   : Cells traced by a great-circle linestring
 

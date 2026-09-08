@@ -82,7 +82,10 @@ plot(a5_cell_to_boundary(parent), border = "#333333", lwd = 2, add = TRUE)
 
 ![](a5R_files/figure-html/hierarchy-plot-1.png)
 
-Cell area decreases geometrically: each level is roughly 4x smaller.
+Cell area decreases geometrically: each level is roughly 4x smaller, so
+the average edge length roughly halves per level.
+[`a5_cell_edge_length_avg()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_edge_length_avg.md)
+gives a quick sense of cell size when choosing a resolution.
 
 ``` r
 
@@ -90,6 +93,9 @@ a5_cell_area(0:5)
 #> Units: [m^2]
 #> [1] 4.250547e+13 8.501094e+12 2.125273e+12 5.313184e+11 1.328296e+11
 #> [6] 3.320740e+10
+a5_cell_edge_length_avg(0:5, units = "km")
+#> Units: [km]
+#> [1] 4649.1423 4320.4302 1190.1738  597.5652  299.1471  149.6100
 ```
 
 ### Compact and uncompact
@@ -199,6 +205,28 @@ plot(a5_cell_to_boundary(cells_uncom), col = "#206ead20", border = "#206ead", as
 ```
 
 ![](a5R_files/figure-html/unnamed-chunk-7-1.png)
+
+By default only cells whose centre lies inside the polygon are returned,
+so cells straddling the boundary are dropped and the union of the cells
+does not fully cover the polygon. Pass `containment = "overlapping"` to
+also keep every cell that touches the boundary, giving gap-free
+coverage. The overlapping set is always a superset of the centre set.
+
+``` r
+
+covering <- a5_polygon_to_cells(wk::rct(-3.3, 55.9, -3.1, 56.0),
+                                resolution = 12, containment = "overlapping")
+length(covering)
+#> [1] 36
+
+plot(a5_cell_to_boundary(a5_uncompact(covering, 12)),
+     col = "#ad6e2020", border = "#ad6e20", asp = 1)
+plot(a5_cell_to_boundary(cells_uncom),
+     col = "#206ead40", border = "#206ead", add = TRUE)
+plot(wk::rct(-3.3, 55.9, -3.1, 56.0), border = "#333333", lwd = 2, add = TRUE)
+```
+
+![](a5R_files/figure-html/containment-plot-1.png)
 
 Multi-part inputs are handled natively: a `MULTIPOLYGON` or an `sfc` of
 multiple polygons returns the union of cells across all parts, and a

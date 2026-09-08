@@ -34,6 +34,9 @@ R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 - [`a5_cell_area()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_area.md)
   — cell area at a given resolution
 
+- [`a5_cell_edge_length_avg()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_edge_length_avg.md)
+  — average cell edge length at a resolution
+
 - [`a5_cell_distance()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_distance.md)
   — distance between cell centroids
 
@@ -73,7 +76,7 @@ R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 ## Geometry indexing
 
 - [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md)
-  — cells whose centres lie inside a polygon
+  — cells inside (or overlapping) a polygon
 
 - [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_linestring_to_cells.md)
   — cells crossed by a great-circle polyline

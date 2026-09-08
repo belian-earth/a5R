@@ -32,7 +32,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.5.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.6.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -143,13 +143,18 @@ our cell (blue fill), which in turn contains its 4 children
 <span>     lwd <span class="op">=</span> <span class="fl">2</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">parent</span><span class="op">)</span>, border <span class="op">=</span> <span class="st">"#333333"</span>, lwd <span class="op">=</span> <span class="fl">2</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p><img src="a5R_files/figure-html/hierarchy-plot-1.png" class="r-plt" alt="" width="768"></p>
-<p>Cell area decreases geometrically: each level is roughly 4x
-smaller.</p>
+<p>Cell area decreases geometrically: each level is roughly 4x smaller,
+so the average edge length roughly halves per level.
+<code><a href="../reference/a5_cell_edge_length_avg.html">a5_cell_edge_length_avg()</a></code> gives a quick sense of cell size
+when choosing a resolution.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/a5_cell_area.html">a5_cell_area</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Units: [m^2]</span></span>
 <span><span class="co">#&gt; [1] 4.250547e+13 8.501094e+12 2.125273e+12 5.313184e+11 1.328296e+11</span></span>
-<span><span class="co">#&gt; [6] 3.320740e+10</span></span></code></pre></div>
+<span><span class="co">#&gt; [6] 3.320740e+10</span></span>
+<span><span class="fu"><a href="../reference/a5_cell_edge_length_avg.html">a5_cell_edge_length_avg</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">5</span>, units <span class="op">=</span> <span class="st">"km"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Units: [km]</span></span>
+<span><span class="co">#&gt; [1] 4649.1423 4320.4302 1190.1738  597.5652  299.1471  149.6100</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="compact-and-uncompact">Compact and uncompact<a class="anchor" aria-label="anchor" href="#compact-and-uncompact"></a>
 </h3>
@@ -228,11 +233,29 @@ target resolution:</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cells_uncom</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#206ead20"</span>, border <span class="op">=</span> <span class="st">"#206ead"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p><img src="a5R_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="700"></p>
+<p>By default only cells whose centre lies inside the polygon are
+returned, so cells straddling the boundary are dropped and the union of
+the cells does not fully cover the polygon. Pass
+<code>containment = "overlapping"</code> to also keep every cell that
+touches the boundary, giving gap-free coverage. The overlapping set is
+always a superset of the centre set.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">covering</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells</a></span><span class="op">(</span><span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/rct.html" class="external-link">rct</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.3</span>, <span class="fl">55.9</span>, <span class="op">-</span><span class="fl">3.1</span>, <span class="fl">56.0</span><span class="op">)</span>,</span>
+<span>                                resolution <span class="op">=</span> <span class="fl">12</span>, containment <span class="op">=</span> <span class="st">"overlapping"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">covering</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 36</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_uncompact.html">a5_uncompact</a></span><span class="op">(</span><span class="va">covering</span>, <span class="fl">12</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>     col <span class="op">=</span> <span class="st">"#ad6e2020"</span>, border <span class="op">=</span> <span class="st">"#ad6e20"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cells_uncom</span><span class="op">)</span>,</span>
+<span>     col <span class="op">=</span> <span class="st">"#206ead40"</span>, border <span class="op">=</span> <span class="st">"#206ead"</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/rct.html" class="external-link">rct</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.3</span>, <span class="fl">55.9</span>, <span class="op">-</span><span class="fl">3.1</span>, <span class="fl">56.0</span><span class="op">)</span>, border <span class="op">=</span> <span class="st">"#333333"</span>, lwd <span class="op">=</span> <span class="fl">2</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="a5R_files/figure-html/containment-plot-1.png" class="r-plt" alt="" width="672"></p>
 <p>Multi-part inputs are handled natively: a <code>MULTIPOLYGON</code>
 or an <code>sfc</code> of multiple polygons returns the union of cells
 across all parts, and a <code>POLYGON</code> with holes returns the
 outer ring’s cells with the hole cells properly subtracted.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Linking to GEOS 3.12.1, GDAL 3.8.4, PROJ 9.4.0; sf_use_s2() is TRUE</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/demo.html" class="external-link">demo</a></span><span class="op">(</span><span class="va">nc</span>, ask <span class="op">=</span> <span class="cn">FALSE</span>, echo <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -256,7 +279,7 @@ deduplication.</p>
 <p>To show what cell-by-cell tracing looks like, we can write a short
 phrase as a <code>MULTILINESTRING</code> (one stroke per letter) and ask
 A5 to fill in the cells:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">a5R_strokes</span> <span class="op">&lt;-</span> <span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wkt.html" class="external-link">wkt</a></span><span class="op">(</span></span>
 <span>  <span class="st">"MULTILINESTRING (</span></span>
 <span><span class="st">    (1.8 52.5, 1.2 52.8, 0.6 52.5, 0.4 52, 0.6 51.5, 1.2 51.2, 1.8 51.5, 2 52, 1.8 52.5, 2 51.2),</span></span>
