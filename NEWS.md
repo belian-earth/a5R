@@ -1,5 +1,11 @@
 # a5R (development version)
 
+* Reduced per-call overhead of every function that returns an `a5_cell`
+  vector. Rust output is wrapped without re-validation, and
+  `a5_lonlat_to_cell()` casts and recycles common inputs without vctrs.
+  A scalar `a5_lonlat_to_cell()` call is about four times faster; results,
+  recycling rules and error messages are unchanged.
+
 # a5R 0.6.0
 
 * Updated the bundled 'A5' Rust crate to 0.10.0. The lattice curve is now

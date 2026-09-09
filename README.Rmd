@@ -82,7 +82,7 @@ hierarchy, traversal, and geometry-to-cell conversion.
 - **Vectorised Rust core** --- all operations implemented in Rust and called
   from R via extendr. [Benchmarks](https://github.com/belian-earth/a5R/blob/main/benchmarks/RESULTS.md)
   confirm identical results to the Python, JavaScript, and DuckDB A5
-  implementations.
+  implementations, and compare speed against H3 and earlier a5R releases.
 - **vctrs + wk integration** --- cell indices use an `a5_cell` type with
   tibble support; geometries return as `wk_wkb`/`wk_wkt` vectors compatible
   with sf and terra.

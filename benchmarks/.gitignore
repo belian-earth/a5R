@@ -6,3 +6,6 @@ __pycache__/
 
 # Intermediate benchmark output
 results_*.json
+
+# Archived a5R versions installed by bench_versions.R
+lib/

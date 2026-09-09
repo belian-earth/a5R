@@ -13,13 +13,43 @@
 #' @examples
 #' a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
 a5_lonlat_to_cell <- function(lon, lat, resolution) {
-  args <- vctrs::vec_recycle_common(
+  args <- recycle_lonlat_resolution(lon, lat, resolution)
+  check_resolution(args$resolution)
+  cells_from_rs(a5_lonlat_to_cell_rs(args$lon, args$lat, args$resolution))
+}
+
+#' Cast and recycle lon/lat/resolution for the Rust entry point
+#'
+#' The common case (plain double coordinates of equal length, a whole-number
+#' resolution of length 1 or n) is handled with base R checks, which cost a
+#' fraction of a microsecond. Everything else falls through to vctrs so that
+#' casting errors and recycling rules are unchanged.
+#' @noRd
+recycle_lonlat_resolution <- function(lon, lat, resolution) {
+  n <- length(lon)
+  nr <- length(resolution)
+  if (
+    n > 0L && length(lat) == n && (nr == n || nr == 1L) &&
+      is.double(lon) && is.double(lat) && is.numeric(resolution) &&
+      !is.object(lon) && !is.object(lat) && !is.object(resolution)
+  ) {
+    if (is.integer(resolution)) {
+      res <- resolution
+    } else if (all(is.na(resolution) | (is.finite(resolution) & resolution == trunc(resolution)))) {
+      res <- as.integer(resolution)
+    } else {
+      res <- NULL
+    }
+    if (!is.null(res)) {
+      if (nr == 1L && n > 1L) res <- rep_len(res, n)
+      return(list(lon = lon, lat = lat, resolution = res))
+    }
+  }
+  vctrs::vec_recycle_common(
     lon = vctrs::vec_cast(lon, double()),
     lat = vctrs::vec_cast(lat, double()),
     resolution = vctrs::vec_cast(resolution, integer())
   )
-  check_resolution(args$resolution)
-  cells_from_rs(a5_lonlat_to_cell_rs(args$lon, args$lat, args$resolution))
 }
 
 #' Convert A5 cell indices to coordinates
