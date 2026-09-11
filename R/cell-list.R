@@ -20,7 +20,6 @@
 #' @param x An `a5_cell_list`, or for `as_a5_cell_list()` a list of
 #'   [a5_cell] vectors.
 #' @param recursive,use.names Ignored.
-#' @param ... Unused.
 #' @returns `unlist()` returns an [a5_cell] vector.
 #' @name a5_cell_list
 #' @examples

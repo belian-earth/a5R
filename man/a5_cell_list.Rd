@@ -15,8 +15,6 @@ as_a5_cell_list(x)
 \link{a5_cell} vectors.}
 
 \item{recursive, use.names}{Ignored.}
-
-\item{...}{Unused.}
 }
 \value{
 \code{unlist()} returns an \link{a5_cell} vector.
