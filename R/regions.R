@@ -70,7 +70,7 @@ a5_polygon_to_cells <- function(x, resolution,
   resolution <- vctrs::vec_cast(resolution, integer())
   check_resolution(resolution)
   check_size1(resolution)
-  containment <- if (missing(containment)) "centre" else rlang::arg_match(containment)
+  containment <- rlang::arg_match(containment)
 
   bundle <- prepare_polygon_input(x)
 
