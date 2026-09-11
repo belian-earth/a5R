@@ -146,6 +146,16 @@ process each element independently:</p>
 <td>High</td>
 </tr>
 <tr class="even">
+<td><code><a href="../reference/a5_spherical_cap.html">a5_spherical_cap()</a></code></td>
+<td>Heavy (per-cell search)</td>
+<td>High</td>
+</tr>
+<tr class="odd">
+<td><code><a href="../reference/a5_grid_disk.html">a5_grid_disk()</a></code></td>
+<td>Heavy (per-cell traversal)</td>
+<td>High</td>
+</tr>
+<tr class="even">
 <td><code><a href="../reference/a5_lonlat_to_cell.html">a5_lonlat_to_cell()</a></code></td>
 <td>Moderate (projection)</td>
 <td>High</td>
@@ -161,26 +171,37 @@ process each element independently:</p>
 <td>Medium</td>
 </tr>
 <tr class="odd">
+<td><code><a href="../reference/a5_cell_to_children.html">a5_cell_to_children()</a></code></td>
+<td>Light (bit ops per child)</td>
+<td>Low</td>
+</tr>
+<tr class="even">
 <td><code><a href="../reference/a5_cell_to_parent.html">a5_cell_to_parent()</a></code></td>
 <td>Light (bit ops + hex)</td>
 <td>Low</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code><a href="../reference/a5_get_resolution.html">a5_get_resolution()</a></code></td>
 <td>Light (bit ops)</td>
 <td>Low</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code><a href="../reference/a5_cell.html">a5_is_valid()</a></code></td>
 <td>Light (hex parse)</td>
 <td>Low</td>
 </tr>
 </tbody>
 </table>
-<p>Scalar and bulk operations (<code><a href="../reference/a5_cell_to_children.html">a5_cell_to_children()</a></code>,
-<code><a href="../reference/a5_compact.html">a5_compact()</a></code>, <code><a href="../reference/a5_cell_area.html">a5_cell_area()</a></code>, etc.) are
-unaffected: they are already fast or delegate to algorithms that don’t
-parallelise element-wise.</p>
+<p>For the one-to-many functions (<code><a href="../reference/a5_grid_disk.html">a5_grid_disk()</a></code>,
+<code><a href="../reference/a5_spherical_cap.html">a5_spherical_cap()</a></code>, <code><a href="../reference/a5_cell_to_children.html">a5_cell_to_children()</a></code>) the
+per-cell work is parallelised; assembling the result, especially the
+<code>simplify = FALSE</code> list, is sequential, so the list form
+gains less than the flat form.</p>
+<p>Scalar and bulk operations (<code><a href="../reference/a5_compact.html">a5_compact()</a></code>,
+<code><a href="../reference/a5_cell_area.html">a5_cell_area()</a></code>, <code><a href="../reference/a5_cell_child.html">a5_cell_child()</a></code>,
+<code><a href="../reference/a5_cell_children_range.html">a5_cell_children_range()</a></code>, etc.) are unaffected: they are
+already fast or delegate to algorithms that don’t parallelise
+element-wise.</p>
 </div>
 <div class="section level2">
 <h2 id="when-is-it-worthwhile">When is it worthwhile?<a class="anchor" aria-label="anchor" href="#when-is-it-worthwhile"></a>

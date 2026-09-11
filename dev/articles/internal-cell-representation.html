@@ -184,6 +184,63 @@ we use <code>0xFC00000000000000</code> as a sentinel value for
 <span><span class="co">#&gt; [1] FALSE  TRUE</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="working-with-base-r">Working with base R<a class="anchor" aria-label="anchor" href="#working-with-base-r"></a>
+</h2>
+<p>Because an <code>a5_cell</code> is a list of eight raw fields
+underneath, base functions that look at that structure directly rather
+than dispatching on the class need some care. a5R covers the common
+cases; the rest have a vctrs form that is both correct and fast.</p>
+<p><strong>Works as expected.</strong> Subsetting, <code><a href="https://rdrr.io/r/base/c.html" class="external-link">c()</a></code>,
+<code><a href="https://rdrr.io/r/base/rev.html" class="external-link">rev()</a></code>, <code><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique()</a></code>, <code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated()</a></code>,
+<code><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort()</a></code>, <code><a href="https://rdrr.io/r/base/order.html" class="external-link">order()</a></code>, <code><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na()</a></code>,
+<code><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample()</a></code>, <code>==</code>, comparison operators,
+<code>split(cells, f)</code> with a factor <code>f</code>, data frame
+and tibble columns, and <code><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind()</a></code> of data frames with
+<code>a5_cell</code> columns. Assigning past the end
+(<code>x[length(x) + 1] &lt;- cell</code>) and
+<code>length(x) &lt;- n</code> grow the vector with <code>NA</code>, as
+they do for base vectors.</p>
+<p><strong>Fast.</strong> <code><a href="https://rdrr.io/r/base/match.html" class="external-link">match()</a></code> and <code>%in%</code> use
+an exact <code><a href="https://rdrr.io/r/base/mtfrm.html" class="external-link">mtfrm()</a></code> key rather than hex strings, so they cost
+about the same as <code><a href="https://vctrs.r-lib.org/reference/vec_match.html" class="external-link">vctrs::vec_match()</a></code> and
+<code><a href="https://vctrs.r-lib.org/reference/vec_match.html" class="external-link">vctrs::vec_in()</a></code>.</p>
+<p><strong>Use the vctrs form instead.</strong> Two base functions
+inspect the record’s fields and cannot be intercepted by a method:</p>
+<ul>
+<li>
+<code>split(x, cells)</code> and <code>tapply(x, cells, f)</code>
+with an <code>a5_cell</code> <em>grouping</em> vector see a list of
+eight raw vectors and group on their interaction, giving one group or an
+error. Use <code>vctrs::vec_split(x, cells)</code> or
+<code>vctrs::vec_group_id(cells)</code>, or group with
+<code>factor(cells)</code>.</li>
+<li>
+<code><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist()</a></code> on a plain list of <code>a5_cell</code>
+vectors, such as <code><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply()</a></code> output, descends into the fields
+and returns a meaningless <code>raw</code> vector. Use
+<code><a href="https://vctrs.r-lib.org/reference/list_unchop.html" class="external-link">vctrs::list_unchop()</a></code>, <code>do.call(c, x)</code>, or wrap
+the list with <code><a href="../reference/a5_cell_list.html">as_a5_cell_list()</a></code>, after which
+<code><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist()</a></code> works. Lists returned by
+<code><a href="../reference/a5_cell_to_children.html">a5_cell_to_children()</a></code> and friends with
+<code>simplify = FALSE</code> are already <code>a5_cell_list</code>
+objects.</li>
+</ul>
+<p>Adding rows to a data frame by index
+(<code>df[nrow(df) + 1, ] &lt;- ...</code>) is not supported for any
+record-backed column, because base R strips the class before growing the
+column. Use <code><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind()</a></code> or <code><a href="https://vctrs.r-lib.org/reference/vec_bind.html" class="external-link">vctrs::vec_rbind()</a></code>.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_lonlat_to_cell.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">10</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">10</span>, <span class="fl">0</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Grouping by cell: use vctrs</span></span>
+<span><span class="fu">vctrs</span><span class="fu">::</span><span class="fu"><a href="https://vctrs.r-lib.org/reference/vec_split.html" class="external-link">vec_split</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="va">cells</span><span class="op">)</span><span class="op">$</span><span class="va">val</span></span>
+<span><span class="co">#&gt; [[1]] 1 3   [[2]] 2</span></span>
+<span></span>
+<span><span class="co"># Flattening lapply() output</span></span>
+<span><span class="va">parts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu"><a href="../reference/a5_cell_to_children.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cells</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_list.html">as_a5_cell_list</a></span><span class="op">(</span><span class="va">parts</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
 </h2>
 <table class="table">

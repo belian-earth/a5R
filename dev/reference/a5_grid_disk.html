@@ -55,7 +55,7 @@ including the centre cell itself.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">a5_grid_disk</span><span class="op">(</span><span class="va">cell</span>, <span class="va">k</span>, vertex <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">a5_grid_disk</span><span class="op">(</span><span class="va">cell</span>, <span class="va">k</span>, vertex <span class="op">=</span> <span class="cn">FALSE</span>, simplify <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -63,7 +63,7 @@ including the centre cell itself.</p>
 
 
 <dl><dt id="arg-cell">cell<a class="anchor" aria-label="anchor" href="#arg-cell"></a></dt>
-<dd><p>A single <a href="a5_cell.html">a5_cell</a> value.</p></dd>
+<dd><p>An <a href="a5_cell.html">a5_cell</a> vector of centre cells.</p></dd>
 
 
 <dt id="arg-k">k<a class="anchor" aria-label="anchor" href="#arg-k"></a></dt>
@@ -75,10 +75,19 @@ including the centre cell itself.</p>
 neighbours (4-connected) are traversed. If <code>TRUE</code>, vertex-sharing
 neighbours are included (8-connected).</p></dd>
 
+
+<dt id="arg-simplify">simplify<a class="anchor" aria-label="anchor" href="#arg-simplify"></a></dt>
+<dd><p>Logical scalar. If <code>TRUE</code> (default), return one flat
+<a href="a5_cell.html">a5_cell</a> vector with the disks of every input concatenated in input
+order; cells shared by several disks appear once per disk. If <code>FALSE</code>,
+return an <a href="a5_cell_list.html">a5_cell_list</a>: a <code><a href="https://vctrs.r-lib.org/reference/list_of.html" class="external-link">vctrs::list_of()</a></code> of <a href="a5_cell.html">a5_cell</a> vectors with
+one element per input, suitable for a list column.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A compacted <a href="a5_cell.html">a5_cell</a> vector.</p>
+    <p>An <a href="a5_cell.html">a5_cell</a> vector, or an <a href="a5_cell_list.html">a5_cell_list</a> when <code>simplify = FALSE</code>.
+An <code>NA</code> input contributes no cells (an empty element in the list form).</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -92,6 +101,24 @@ neighbours are included (8-connected).</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[6]&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 633df80000000000 6341380000000000 6341480000000000 6344980000000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [5] 6344a80000000000 6344b80000000000</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="a5_lonlat_to_cell.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">55.95</span>, <span class="fl">0</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">a5_grid_disk</span><span class="op">(</span><span class="va">cells</span>, k <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>                   <span class="co"># both disks, one vector</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[9]&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0c42000000000000 0caa000000000000 6336000000000000 633e000000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] 6342000000000000 6346000000000000 4f08000000000000 4f22000000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [9] 56fa000000000000</span>
+<span class="r-in"><span><span class="fu">a5_grid_disk</span><span class="op">(</span><span class="va">cells</span>, k <span class="op">=</span> <span class="fl">1</span>, simplify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="co"># list of 2</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell_list[2]&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[6]&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0c42000000000000 0caa000000000000 6336000000000000 633e000000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] 6342000000000000 6346000000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[3]&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4f08000000000000 4f22000000000000 56fa000000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

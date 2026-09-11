@@ -5,9 +5,9 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Get child cells — a5_cell_to_children"><meta name="description" content="Returns the child cells of a single cell. By default returns the 4
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Get child cells — a5_cell_to_children"><meta name="description" content="Returns the child cells of each input cell. By default returns the 4
 immediate children (one resolution finer). Optionally target a specific
-finer resolution."><meta property="og:description" content="Returns the child cells of a single cell. By default returns the 4
+finer resolution."><meta property="og:description" content="Returns the child cells of each input cell. By default returns the 4
 immediate children (one resolution finer). Optionally target a specific
 finer resolution."><meta property="og:image" content="https://belian-earth.github.io/a5R/logo.png"><meta name="robots" content="noindex"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -51,14 +51,14 @@ finer resolution."><meta property="og:image" content="https://belian-earth.githu
     </div>
 
     <div class="ref-description section level2">
-    <p>Returns the child cells of a single cell. By default returns the 4
+    <p>Returns the child cells of each input cell. By default returns the 4
 immediate children (one resolution finer). Optionally target a specific
 finer resolution.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">a5_cell_to_children</span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">a5_cell_to_children</span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="cn">NULL</span>, simplify <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -66,21 +66,32 @@ finer resolution.</p>
 
 
 <dl><dt id="arg-cell">cell<a class="anchor" aria-label="anchor" href="#arg-cell"></a></dt>
-<dd><p>A single <a href="a5_cell.html">a5_cell</a> value.</p></dd>
+<dd><p>An <a href="a5_cell.html">a5_cell</a> vector.</p></dd>
 
 
 <dt id="arg-resolution">resolution<a class="anchor" aria-label="anchor" href="#arg-resolution"></a></dt>
 <dd><p>Integer scalar target child resolution, or <code>NULL</code> for
 immediate children.</p></dd>
 
+
+<dt id="arg-simplify">simplify<a class="anchor" aria-label="anchor" href="#arg-simplify"></a></dt>
+<dd><p>Logical scalar. If <code>TRUE</code> (default), return one flat
+<a href="a5_cell.html">a5_cell</a> vector with the children of every input concatenated in input
+order; which child came from which parent is not recorded. If <code>FALSE</code>,
+return an <a href="a5_cell_list.html">a5_cell_list</a>: a <code><a href="https://vctrs.r-lib.org/reference/list_of.html" class="external-link">vctrs::list_of()</a></code> of <a href="a5_cell.html">a5_cell</a> vectors with
+one element per input, suitable for a list column.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An <a href="a5_cell.html">a5_cell</a> vector of child cells.</p>
+    <p>An <a href="a5_cell.html">a5_cell</a> vector, or an <a href="a5_cell_list.html">a5_cell_list</a> when <code>simplify = FALSE</code>.
+An <code>NA</code> input contributes no cells (an empty element in the list form).</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="a5_cell_to_parent.html">a5_cell_to_parent()</a></code>, <code><a href="a5_get_resolution.html">a5_get_resolution()</a></code></p></div>
+    <div class="dont-index"><p><code><a href="a5_cell_to_parent.html">a5_cell_to_parent()</a></code>, <code><a href="a5_get_resolution.html">a5_get_resolution()</a></code>, <code><a href="a5_cell_child.html">a5_cell_child()</a></code>
+for one child at a time, <code><a href="a5_cell_children_range.html">a5_cell_children_range()</a></code> for the id range of
+all descendants.</p></div>
     </div>
 
     <div class="section level2">
@@ -89,6 +100,34 @@ immediate children.</p></dd>
 <span class="r-in"><span><span class="fu">a5_cell_to_children</span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[4]&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 633c800000000000 633d800000000000 633e800000000000 633f800000000000</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="a5_lonlat_to_cell.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">55.95</span>, <span class="fl">0</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">a5_cell_to_children</span><span class="op">(</span><span class="va">cells</span>, resolution <span class="op">=</span> <span class="fl">7</span><span class="op">)</span>                  <span class="co"># 32 cells</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[32]&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 633c200000000000 633c600000000000 633ca00000000000 633ce00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] 633d200000000000 633d600000000000 633da00000000000 633de00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] 633e200000000000 633e600000000000 633ea00000000000 633ee00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13] 633f200000000000 633f600000000000 633fa00000000000 633fe00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [17] 4f04200000000000 4f04600000000000 4f04a00000000000 4f04e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [21] 4f05200000000000 4f05600000000000 4f05a00000000000 4f05e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [25] 4f06200000000000 4f06600000000000 4f06a00000000000 4f06e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [29] 4f07200000000000 4f07600000000000 4f07a00000000000 4f07e00000000000</span>
+<span class="r-in"><span><span class="fu">a5_cell_to_children</span><span class="op">(</span><span class="va">cells</span>, resolution <span class="op">=</span> <span class="fl">7</span>, simplify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="co"># list of 2</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell_list[2]&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[16]&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 633c200000000000 633c600000000000 633ca00000000000 633ce00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] 633d200000000000 633d600000000000 633da00000000000 633de00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] 633e200000000000 633e600000000000 633ea00000000000 633ee00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13] 633f200000000000 633f600000000000 633fa00000000000 633fe00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[16]&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 4f04200000000000 4f04600000000000 4f04a00000000000 4f04e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] 4f05200000000000 4f05600000000000 4f05a00000000000 4f05e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] 4f06200000000000 4f06600000000000 4f06a00000000000 4f06e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13] 4f07200000000000 4f07600000000000 4f07a00000000000 4f07e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

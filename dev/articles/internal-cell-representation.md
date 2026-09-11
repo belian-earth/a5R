@@ -115,6 +115,75 @@ is.na(cells_with_na)
 #> [1] FALSE  TRUE
 ```
 
+## Working with base R
+
+Because an `a5_cell` is a list of eight raw fields underneath, base
+functions that look at that structure directly rather than dispatching
+on the class need some care. a5R covers the common cases; the rest have
+a vctrs form that is both correct and fast.
+
+**Works as expected.** Subsetting,
+[`c()`](https://rdrr.io/r/base/c.html),
+[`rev()`](https://rdrr.io/r/base/rev.html),
+[`unique()`](https://rdrr.io/r/base/unique.html),
+[`duplicated()`](https://rdrr.io/r/base/duplicated.html),
+[`sort()`](https://rdrr.io/r/base/sort.html),
+[`order()`](https://rdrr.io/r/base/order.html),
+[`is.na()`](https://rdrr.io/r/base/NA.html),
+[`sample()`](https://rdrr.io/r/base/sample.html), `==`, comparison
+operators, `split(cells, f)` with a factor `f`, data frame and tibble
+columns, and [`rbind()`](https://rdrr.io/r/base/cbind.html) of data
+frames with `a5_cell` columns. Assigning past the end
+(`x[length(x) + 1] <- cell`) and `length(x) <- n` grow the vector with
+`NA`, as they do for base vectors.
+
+**Fast.** [`match()`](https://rdrr.io/r/base/match.html) and `%in%` use
+an exact [`mtfrm()`](https://rdrr.io/r/base/mtfrm.html) key rather than
+hex strings, so they cost about the same as
+[`vctrs::vec_match()`](https://vctrs.r-lib.org/reference/vec_match.html)
+and
+[`vctrs::vec_in()`](https://vctrs.r-lib.org/reference/vec_match.html).
+
+**Use the vctrs form instead.** Two base functions inspect the record’s
+fields and cannot be intercepted by a method:
+
+- `split(x, cells)` and `tapply(x, cells, f)` with an `a5_cell`
+  *grouping* vector see a list of eight raw vectors and group on their
+  interaction, giving one group or an error. Use
+  `vctrs::vec_split(x, cells)` or `vctrs::vec_group_id(cells)`, or group
+  with `factor(cells)`.
+- [`unlist()`](https://rdrr.io/r/base/unlist.html) on a plain list of
+  `a5_cell` vectors, such as
+  [`lapply()`](https://rdrr.io/r/base/lapply.html) output, descends into
+  the fields and returns a meaningless `raw` vector. Use
+  [`vctrs::list_unchop()`](https://vctrs.r-lib.org/reference/list_unchop.html),
+  `do.call(c, x)`, or wrap the list with
+  [`as_a5_cell_list()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_list.md),
+  after which [`unlist()`](https://rdrr.io/r/base/unlist.html) works.
+  Lists returned by
+  [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_children.md)
+  and friends with `simplify = FALSE` are already `a5_cell_list`
+  objects.
+
+Adding rows to a data frame by index (`df[nrow(df) + 1, ] <- ...`) is
+not supported for any record-backed column, because base R strips the
+class before growing the column. Use
+[`rbind()`](https://rdrr.io/r/base/cbind.html) or
+[`vctrs::vec_rbind()`](https://vctrs.r-lib.org/reference/vec_bind.html).
+
+``` r
+
+cells <- a5_lonlat_to_cell(c(0, 10, 0), c(0, 10, 0), resolution = 5)
+
+# Grouping by cell: use vctrs
+vctrs::vec_split(1:3, cells)$val
+#> [[1]] 1 3   [[2]] 2
+
+# Flattening lapply() output
+parts <- lapply(1:3, function(i) a5_cell_to_children(cells[i]))
+unlist(as_a5_cell_list(parts))
+```
+
 ## Summary
 
 | Aspect | Hex strings | Raw bytes |

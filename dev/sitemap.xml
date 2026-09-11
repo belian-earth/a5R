@@ -12,9 +12,12 @@
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5R-package.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_cell.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_cell_area.html</loc></url>
+<url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_cell_child.html</loc></url>
+<url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_cell_children_range.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_cell_distance.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_cell_edge_length_avg.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_cell_from_arrow.html</loc></url>
+<url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_cell_list.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_boundary.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_children.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_lonlat.html</loc></url>

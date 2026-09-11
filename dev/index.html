@@ -127,7 +127,7 @@
 </h2>
 <ul>
 <li>
-<strong>Vectorised Rust core</strong> — all operations implemented in Rust and called from R via extendr. <a href="https://github.com/belian-earth/a5R/blob/main/benchmarks/RESULTS.md" class="external-link">Benchmarks</a> confirm identical results to the Python, JavaScript, and DuckDB A5 implementations.</li>
+<strong>Vectorised Rust core</strong> — all operations implemented in Rust and called from R via extendr. A <a href="https://github.com/belian-earth/a5R/tree/main/benchmarks" class="external-link">benchmark suite</a> mirroring the TypeScript, Python and Rust ports runs on every pull request and fails on regressions above 15%.</li>
 <li>
 <strong>vctrs + wk integration</strong> — cell indices use an <code>a5_cell</code> type with tibble support; geometries return as <code>wk_wkb</code>/<code>wk_wkt</code> vectors compatible with sf and terra.</li>
 <li>

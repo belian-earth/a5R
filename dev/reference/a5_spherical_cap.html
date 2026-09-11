@@ -6,8 +6,8 @@
     }
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Cells within a great-circle radius — a5_spherical_cap"><meta name="description" content="Returns all cells whose centres fall within a great-circle distance
-of a given cell's centre."><meta property="og:description" content="Returns all cells whose centres fall within a great-circle distance
-of a given cell's centre."><meta property="og:image" content="https://belian-earth.github.io/a5R/logo.png"><meta name="robots" content="noindex"></head><body>
+of each input cell's centre."><meta property="og:description" content="Returns all cells whose centres fall within a great-circle distance
+of each input cell's centre."><meta property="og:image" content="https://belian-earth.github.io/a5R/logo.png"><meta name="robots" content="noindex"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -50,12 +50,12 @@ of a given cell's centre."><meta property="og:image" content="https://belian-ear
 
     <div class="ref-description section level2">
     <p>Returns all cells whose centres fall within a great-circle distance
-of a given cell's centre.</p>
+of each input cell's centre.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">a5_spherical_cap</span><span class="op">(</span><span class="va">cell</span>, <span class="va">radius</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">a5_spherical_cap</span><span class="op">(</span><span class="va">cell</span>, <span class="va">radius</span>, simplify <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -63,16 +63,25 @@ of a given cell's centre.</p>
 
 
 <dl><dt id="arg-cell">cell<a class="anchor" aria-label="anchor" href="#arg-cell"></a></dt>
-<dd><p>A single <a href="a5_cell.html">a5_cell</a> value.</p></dd>
+<dd><p>An <a href="a5_cell.html">a5_cell</a> vector of centre cells.</p></dd>
 
 
 <dt id="arg-radius">radius<a class="anchor" aria-label="anchor" href="#arg-radius"></a></dt>
 <dd><p>Numeric scalar, great-circle radius in metres.</p></dd>
 
+
+<dt id="arg-simplify">simplify<a class="anchor" aria-label="anchor" href="#arg-simplify"></a></dt>
+<dd><p>Logical scalar. If <code>TRUE</code> (default), return one flat
+<a href="a5_cell.html">a5_cell</a> vector with the caps of every input concatenated in input
+order; cells shared by several caps appear once per cap. If <code>FALSE</code>,
+return an <a href="a5_cell_list.html">a5_cell_list</a>: a <code><a href="https://vctrs.r-lib.org/reference/list_of.html" class="external-link">vctrs::list_of()</a></code> of <a href="a5_cell.html">a5_cell</a> vectors with
+one element per input, suitable for a list column.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A compacted <a href="a5_cell.html">a5_cell</a> vector.</p>
+    <p>An <a href="a5_cell.html">a5_cell</a> vector, or an <a href="a5_cell_list.html">a5_cell_list</a> when <code>simplify = FALSE</code>.
+An <code>NA</code> input contributes no cells (an empty element in the list form).</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -85,6 +94,18 @@ of a given cell's centre.</p>
 <span class="r-in"><span><span class="fu">a5_spherical_cap</span><span class="op">(</span><span class="va">cell</span>, radius <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[1]&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 6344b80000000000</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="a5_lonlat_to_cell.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">55.95</span>, <span class="fl">0</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">a5_spherical_cap</span><span class="op">(</span><span class="va">cells</span>, radius <span class="op">=</span> <span class="fl">1000</span>, simplify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="co"># list of 2</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell_list[2]&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[1]&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 6344b80000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[1]&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4f05d80000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

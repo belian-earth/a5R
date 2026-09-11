@@ -18,6 +18,9 @@ The `a5_cell` vector type and helpers.
   [`as_a5_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell.md)
   [`a5_is_valid()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell.md)
   : A5 Cell Index Vector
+- [`as_a5_cell_list()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_list.md)
+  [`unlist(`*`<a5_cell_list>`*`)`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_list.md)
+  : List of A5 cell vectors
 - [`a5_u64_to_hex()`](https://belian-earth.github.io/a5R/dev/reference/a5_u64_to_hex.md)
   [`a5_hex_to_u64()`](https://belian-earth.github.io/a5R/dev/reference/a5_u64_to_hex.md)
   : Coerce between hex strings and A5 cell vectors
@@ -40,6 +43,10 @@ Navigate the cell hierarchy across resolutions.
   : Navigate to parent cell(s)
 - [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_children.md)
   : Get child cells
+- [`a5_cell_child()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_child.md)
+  : The i-th child of each cell
+- [`a5_cell_children_range()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_children_range.md)
+  : Range of descendant cell ids
 - [`a5_get_res0_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_get_res0_cells.md)
   : Get all resolution-0 root cells
 

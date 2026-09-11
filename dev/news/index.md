@@ -2,7 +2,80 @@
 
 ## a5R (development version)
 
+- The benchmark suite now mirrors the TypeScript, Python and Rust A5
+  ports (same case names, same deterministic inputs) and runs in CI on
+  every pull request, failing on regressions above 15%. The old
+  cross-language comparison scripts are gone.
+
+- [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_children.md),
+  [`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md)
+  and
+  [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md)
+  are vectorised over their cell argument and gain a `simplify`
+  argument. The default `simplify = TRUE` returns one flat `a5_cell`
+  vector, so single-cell calls are unchanged; `simplify = FALSE` returns
+  a [`vctrs::list_of()`](https://vctrs.r-lib.org/reference/list_of.html)
+  with one element per input, for list columns. An `NA` cell now
+  contributes no cells instead of raising an error.
+
+- New `a5_cell_list` class for those lists, with an
+  [`unlist()`](https://rdrr.io/r/base/unlist.html) method that
+  concatenates the elements into one `a5_cell` vector. Base
+  [`unlist()`](https://rdrr.io/r/base/unlist.html) on a plain list of
+  `a5_cell` vectors returns a meaningless raw vector;
+  [`as_a5_cell_list()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_list.md)
+  wraps such a list so [`unlist()`](https://rdrr.io/r/base/unlist.html)
+  works.
+
+- Base R compatibility for `a5_cell` (reported by the ramet project):
+  [`match()`](https://rdrr.io/r/base/match.html) and `%in%` are about
+  ten times faster via an exact
+  [`mtfrm()`](https://rdrr.io/r/base/mtfrm.html) method instead of hex
+  conversion; `x[i] <- value` past the end and `length(x) <- n` grow the
+  vector with `NA`, so [`rbind()`](https://rdrr.io/r/base/cbind.html) on
+  data frames with `a5_cell` columns works.
+  [`split()`](https://rdrr.io/r/base/split.html) and
+  [`tapply()`](https://rdrr.io/r/base/tapply.html) with an `a5_cell`
+  grouping vector cannot be intercepted and give wrong results; use
+  [`vctrs::vec_split()`](https://vctrs.r-lib.org/reference/vec_split.html)
+  or
+  [`vctrs::vec_group_id()`](https://vctrs.r-lib.org/reference/vec_group.html),
+  as documented in
+  [`vignette("internal-cell-representation")`](https://belian-earth.github.io/a5R/dev/articles/internal-cell-representation.md).
+
+- New
+  [`a5_cell_child()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_child.md)
+  returns the i-th descendant of each cell at a finer resolution without
+  enumerating the others, for sampling from large cells.
+
+- New
+  [`a5_cell_children_range()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_children_range.md)
+  returns the smallest and largest descendant of each cell at a finer
+  resolution. Descendants occupy a contiguous id range among cells of
+  that resolution, so the pair is an exact `BETWEEN` filter on an
+  id-sorted store. Resolution 30 is refused because the guarantee does
+  not hold there.
+
+- Reduced per-call overhead across the package. Rust output is wrapped
+  without re-validation, cell fields are passed to Rust without building
+  a data frame and read there without R-level `$` calls, scalar
+  arguments are checked with a lightweight helper, default `format`,
+  `containment` and `method` arguments skip
+  [`rlang::arg_match()`](https://rlang.r-lib.org/reference/arg_match.html),
+  [`a5_lonlat_to_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_lonlat_to_cell.md)
+  casts and recycles common inputs without vctrs,
+  [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_lonlat.md)
+  uses low-level `wk` and data frame constructors, and
+  [`a5_cell_area()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_area.md),
+  [`a5_cell_edge_length_avg()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_edge_length_avg.md)
+  and
+  [`a5_cell_distance()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_distance.md)
+  cache the parsed base unit. Scalar calls are three to twenty times
+  faster; results, recycling rules and error messages are unchanged.
+
 ## a5R 0.6.0
+
+CRAN release: 2026-09-08
 
 - Updated the bundled ‘A5’ Rust crate to 0.10.0. The lattice curve is
   now laid out with an L-system and the equal-area projection is more
@@ -27,6 +100,10 @@
   returns the average edge length of a cell at a given resolution, as a
   `units` vector (metres by default). Individual edges vary from the
   average by roughly +/-10%.
+- Fixed the build on Windows ARM64 by bumping `extendr-api` to 0.8.2 and
+  passing the correct `--target` on Windows
+  ([\#22](https://github.com/belian-earth/a5R/issues/22),
+  [@jeroen](https://github.com/jeroen)).
 
 ## a5R 0.5.0
 
