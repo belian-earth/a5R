@@ -8,7 +8,16 @@
   cells instead of raising an error.
 * New `a5_cell_list` class for those lists, with an `unlist()` method that
   concatenates the elements into one `a5_cell` vector. Base `unlist()` on a
-  list of `a5_cell` vectors returns a meaningless raw vector.
+  plain list of `a5_cell` vectors returns a meaningless raw vector;
+  `as_a5_cell_list()` wraps such a list so `unlist()` works.
+* Base R compatibility for `a5_cell` (reported by the ramet project):
+  `match()` and `%in%` are about ten times faster via an exact `mtfrm()`
+  method instead of hex conversion; `x[i] <- value` past the end and
+  `length(x) <- n` grow the vector with `NA`, so `rbind()` on data frames
+  with `a5_cell` columns works. `split()` and `tapply()` with an `a5_cell`
+  grouping vector cannot be intercepted and give wrong results; use
+  `vctrs::vec_split()` or `vctrs::vec_group_id()`, as documented in
+  `vignette("internal-cell-representation")`.
 
 * New `a5_cell_child()` returns the i-th descendant of each cell at a finer
   resolution without enumerating the others, for sampling from large cells.

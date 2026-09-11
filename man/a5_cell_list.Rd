@@ -2,13 +2,17 @@
 % Please edit documentation in R/cell-list.R
 \name{a5_cell_list}
 \alias{a5_cell_list}
+\alias{as_a5_cell_list}
 \alias{unlist.a5_cell_list}
 \title{List of A5 cell vectors}
 \usage{
+as_a5_cell_list(x)
+
 \method{unlist}{a5_cell_list}(x, recursive = TRUE, use.names = TRUE)
 }
 \arguments{
-\item{x}{An \code{a5_cell_list}.}
+\item{x}{An \code{a5_cell_list}, or for \code{as_a5_cell_list()} a list of
+\link{a5_cell} vectors.}
 
 \item{recursive, use.names}{Ignored.}
 
@@ -31,10 +35,19 @@ equivalent to \code{\link[vctrs:list_unchop]{vctrs::list_unchop()}}. Without thi
 \code{unlist()} would descend into the raw byte fields of the record and return
 a meaningless raw vector. The \code{recursive} and \code{use.names} arguments are
 accepted for compatibility and ignored.
+
+\code{as_a5_cell_list()} wraps a plain list of \link{a5_cell} vectors (for example
+the output of \code{lapply()}) so that \code{unlist()} works on it. Elements that
+are hex strings are converted; \code{NULL} elements become empty.
 }
 \examples{
 cells <- a5_lonlat_to_cell(c(-3.19, 0), c(55.95, 0), resolution = 5)
 lst <- a5_cell_to_children(cells, simplify = FALSE)
 lengths(lst)
 unlist(lst)
+
+# lapply() produces a plain list, on which base unlist() would return raw
+# bytes; wrap it first.
+plain <- lapply(seq_along(cells), function(i) a5_cell_to_children(cells[i]))
+unlist(as_a5_cell_list(plain))
 }

@@ -13,7 +13,12 @@
 #' a meaningless raw vector. The `recursive` and `use.names` arguments are
 #' accepted for compatibility and ignored.
 #'
-#' @param x An `a5_cell_list`.
+#' `as_a5_cell_list()` wraps a plain list of [a5_cell] vectors (for example
+#' the output of `lapply()`) so that `unlist()` works on it. Elements that
+#' are hex strings are converted; `NULL` elements become empty.
+#'
+#' @param x An `a5_cell_list`, or for `as_a5_cell_list()` a list of
+#'   [a5_cell] vectors.
 #' @param recursive,use.names Ignored.
 #' @param ... Unused.
 #' @returns `unlist()` returns an [a5_cell] vector.
@@ -24,6 +29,26 @@
 #' lengths(lst)
 #' unlist(lst)
 NULL
+
+#' @rdname a5_cell_list
+#' @export
+#' @examples
+#'
+#' # lapply() produces a plain list, on which base unlist() would return raw
+#' # bytes; wrap it first.
+#' plain <- lapply(seq_along(cells), function(i) a5_cell_to_children(cells[i]))
+#' unlist(as_a5_cell_list(plain))
+as_a5_cell_list <- function(x) {
+  if (inherits(x, "a5_cell_list")) {
+    return(x)
+  }
+  if (!is.list(x) || inherits(x, "a5_cell")) {
+    cli::cli_abort("{.arg x} must be a list of {.cls a5_cell} vectors.")
+  }
+  new_a5_cell_list(lapply(x, function(el) {
+    if (is.null(el)) new_a5_cell() else as_a5_cell(el)
+  }))
+}
 
 #' @rdname a5_cell_list
 #' @exportS3Method base::unlist

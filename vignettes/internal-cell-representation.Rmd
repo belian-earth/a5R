@@ -113,6 +113,54 @@ cells_with_na <- a5_cell(c("0800000000000006", NA))
 is.na(cells_with_na)
 ```
 
+## Working with base R
+
+Because an `a5_cell` is a list of eight raw fields underneath, base
+functions that look at that structure directly rather than dispatching on
+the class need some care. a5R covers the common cases; the rest have a
+vctrs form that is both correct and fast.
+
+**Works as expected.** Subsetting, `c()`, `rev()`, `unique()`,
+`duplicated()`, `sort()`, `order()`, `is.na()`, `sample()`, `==`,
+comparison operators, `split(cells, f)` with a factor `f`, data frame and
+tibble columns, and `rbind()` of data frames with `a5_cell` columns.
+Assigning past the end (`x[length(x) + 1] <- cell`) and `length(x) <- n`
+grow the vector with `NA`, as they do for base vectors.
+
+**Fast.** `match()` and `%in%` use an exact `mtfrm()` key rather than hex
+strings, so they cost about the same as `vctrs::vec_match()` and
+`vctrs::vec_in()`.
+
+**Use the vctrs form instead.** Two base functions inspect the record's
+fields and cannot be intercepted by a method:
+
+- `split(x, cells)` and `tapply(x, cells, f)` with an `a5_cell` *grouping*
+  vector see a list of eight raw vectors and group on their interaction,
+  giving one group or an error. Use `vctrs::vec_split(x, cells)` or
+  `vctrs::vec_group_id(cells)`, or group with `factor(cells)`.
+- `unlist()` on a plain list of `a5_cell` vectors, such as `lapply()`
+  output, descends into the fields and returns a meaningless `raw` vector.
+  Use `vctrs::list_unchop()`, `do.call(c, x)`, or wrap the list with
+  `as_a5_cell_list()`, after which `unlist()` works. Lists returned by
+  `a5_cell_to_children()` and friends with `simplify = FALSE` are already
+  `a5_cell_list` objects.
+
+Adding rows to a data frame by index (`df[nrow(df) + 1, ] <- ...`) is not
+supported for any record-backed column, because base R strips the class
+before growing the column. Use `rbind()` or `vctrs::vec_rbind()`.
+
+```{r base-r, eval = FALSE}
+cells <- a5_lonlat_to_cell(c(0, 10, 0), c(0, 10, 0), resolution = 5)
+
+# Grouping by cell: use vctrs
+vctrs::vec_split(1:3, cells)$val
+#> [[1]] 1 3   [[2]] 2
+
+# Flattening lapply() output
+parts <- lapply(1:3, function(i) a5_cell_to_children(cells[i]))
+unlist(as_a5_cell_list(parts))
+```
+
 ## Summary
 
 | Aspect | Hex strings | Raw bytes |
