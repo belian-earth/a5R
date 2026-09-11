@@ -61,6 +61,8 @@
 * New `a5_cell_edge_length_avg()` returns the average edge length of a cell
   at a given resolution, as a `units` vector (metres by default). Individual
   edges vary from the average by roughly +/-10%.
+* Fixed the build on Windows ARM64 by bumping `extendr-api` to 0.8.2 and
+  passing the correct `--target` on Windows (#22, @jeroen).
 
 # a5R 0.5.0
 
