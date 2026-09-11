@@ -8,12 +8,12 @@
 #' @param simplify Logical scalar. If `TRUE` (default), return one flat
 #'   [a5_cell] vector with the disks of every input concatenated in input
 #'   order; cells shared by several disks appear once per disk. If `FALSE`,
-#'   return a [vctrs::list_of()] of [a5_cell] vectors with one element per
-#'   input, suitable for a list column.
+#'   return an [a5_cell_list]: a [vctrs::list_of()] of [a5_cell] vectors with
+#'   one element per input, suitable for a list column.
 #' @param vertex Logical scalar. If `FALSE` (default), only edge-sharing
 #'   neighbours (4-connected) are traversed. If `TRUE`, vertex-sharing
 #'   neighbours are included (8-connected).
-#' @returns An [a5_cell] vector, or a list of them when `simplify = FALSE`.
+#' @returns An [a5_cell] vector, or an [a5_cell_list] when `simplify = FALSE`.
 #'   An `NA` input contributes no cells (an empty element in the list form).
 #'
 #' @seealso [a5_spherical_cap()] for distance-based selection.
@@ -41,7 +41,7 @@ a5_grid_disk <- function(cell, k, vertex = FALSE, simplify = TRUE) {
 #'
 #' @param cell A single [a5_cell] value.
 #' @param radius Numeric scalar, great-circle radius in metres.
-#' @returns An [a5_cell] vector, or a list of them when `simplify = FALSE`.
+#' @returns An [a5_cell] vector, or an [a5_cell_list] when `simplify = FALSE`.
 #'   An `NA` input contributes no cells (an empty element in the list form).
 #'
 #' @seealso [a5_grid_disk()] for hop-based selection.

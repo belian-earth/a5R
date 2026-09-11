@@ -15,11 +15,11 @@ immediate children.}
 \item{simplify}{Logical scalar. If \code{TRUE} (default), return one flat
 \link{a5_cell} vector with the children of every input concatenated in input
 order; which child came from which parent is not recorded. If \code{FALSE},
-return a \code{\link[vctrs:list_of]{vctrs::list_of()}} of \link{a5_cell} vectors with one element per
-input, suitable for a list column.}
+return an \link{a5_cell_list}: a \code{\link[vctrs:list_of]{vctrs::list_of()}} of \link{a5_cell} vectors with
+one element per input, suitable for a list column.}
 }
 \value{
-An \link{a5_cell} vector, or a list of them when \code{simplify = FALSE}.
+An \link{a5_cell} vector, or an \link{a5_cell_list} when \code{simplify = FALSE}.
 An \code{NA} input contributes no cells (an empty element in the list form).
 }
 \description{

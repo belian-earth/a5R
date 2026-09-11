@@ -37,14 +37,7 @@ one_to_many <- function(rs, simplify) {
   if (simplify) {
     return(cells_from_rs(rs))
   }
-  # Identical to vctrs::new_list_of(rs, ptype = new_a5_cell()); the elements
-  # are already a5_cell objects, and building the prototype and validating
-  # the list cost about 45 µs per call.
-  structure(
-    rs,
-    ptype = a5_cell_ptype(),
-    class = c("vctrs_list_of", "vctrs_vctr", "list")
-  )
+  new_a5_cell_list(rs)
 }
 
 the_ptype_cache <- new.env(parent = emptyenv())

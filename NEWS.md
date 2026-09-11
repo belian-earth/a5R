@@ -6,6 +6,9 @@
   calls are unchanged; `simplify = FALSE` returns a `vctrs::list_of()` with
   one element per input, for list columns. An `NA` cell now contributes no
   cells instead of raising an error.
+* New `a5_cell_list` class for those lists, with an `unlist()` method that
+  concatenates the elements into one `a5_cell` vector. Base `unlist()` on a
+  list of `a5_cell` vectors returns a meaningless raw vector.
 
 * New `a5_cell_child()` returns the i-th descendant of each cell at a finer
   resolution without enumerating the others, for sampling from large cells.

@@ -11,6 +11,7 @@ ops <- list(
 test_that("list form matches the scalar call element-wise", {
   for (op in ops) {
     lst <- op(cells, simplify = FALSE)
+    expect_s3_class(lst, "a5_cell_list")
     expect_s3_class(lst, "vctrs_list_of")
     expect_length(lst, length(cells))
     for (i in seq_along(cells)) {
@@ -36,6 +37,34 @@ test_that("NA input contributes nothing", {
     expect_identical(lst[[3]], op(cells[3]))
     expect_identical(op(with_na), vctrs::vec_c(op(cells[1]), op(cells[3])))
   }
+})
+
+test_that("a5_cell_list unlists to an a5_cell vector and survives slicing", {
+  lst <- a5_cell_to_children(cells, resolution = 7, simplify = FALSE)
+  expect_identical(unlist(lst), vctrs::list_unchop(lst))
+  expect_identical(unlist(lst), a5_cell_to_children(cells, resolution = 7))
+  expect_s3_class(unlist(lst), "a5_cell")
+  expect_s3_class(lst[2:3], "a5_cell_list")
+  expect_identical(unlist(lst[2:3]), a5_cell_to_children(cells[2:3], resolution = 7))
+  expect_identical(vctrs::vec_ptype_abbr(lst), "list<a5_cell>")
+  expect_length(unlist(a5_grid_disk(a5_cell(NA), k = 1, simplify = FALSE)), 0L)
+})
+
+test_that("a5_cell_list unnests with tidyr", {
+  skip_if_not_installed("tidyr")
+  skip_if_not_installed("tibble")
+  df <- tibble::tibble(cell = cells)
+  df$children <- a5_cell_to_children(df$cell, resolution = 6, simplify = FALSE)
+  expect_match(format(vctrs::vec_ptype_abbr(df$children)), "list<a5_cell>")
+  long <- tidyr::unnest(df, "children")
+  expect_identical(nrow(long), 12L)
+  expect_s3_class(long$children, "a5_cell")
+  expect_identical(a5_cell_to_parent(long$children), long$cell)
+  disks <- tidyr::unnest(
+    tibble::tibble(cell = cells, disk = a5_grid_disk(cells, k = 1, simplify = FALSE)),
+    "disk"
+  )
+  expect_identical(nrow(disks), length(a5_grid_disk(cells, k = 1)))
 })
 
 test_that("simplify must be a flag", {

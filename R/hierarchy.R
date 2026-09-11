@@ -123,9 +123,9 @@ a5_cell_children_range <- function(cell, resolution) {
 #' @param simplify Logical scalar. If `TRUE` (default), return one flat
 #'   [a5_cell] vector with the children of every input concatenated in input
 #'   order; which child came from which parent is not recorded. If `FALSE`,
-#'   return a [vctrs::list_of()] of [a5_cell] vectors with one element per
-#'   input, suitable for a list column.
-#' @returns An [a5_cell] vector, or a list of them when `simplify = FALSE`.
+#'   return an [a5_cell_list]: a [vctrs::list_of()] of [a5_cell] vectors with
+#'   one element per input, suitable for a list column.
+#' @returns An [a5_cell] vector, or an [a5_cell_list] when `simplify = FALSE`.
 #'   An `NA` input contributes no cells (an empty element in the list form).
 #'
 #' @seealso [a5_cell_to_parent()], [a5_get_resolution()], [a5_cell_child()]

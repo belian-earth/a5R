@@ -12,7 +12,7 @@ a5_spherical_cap(cell, radius, simplify = TRUE)
 \item{radius}{Numeric scalar, great-circle radius in metres.}
 }
 \value{
-An \link{a5_cell} vector, or a list of them when \code{simplify = FALSE}.
+An \link{a5_cell} vector, or an \link{a5_cell_list} when \code{simplify = FALSE}.
 An \code{NA} input contributes no cells (an empty element in the list form).
 }
 \description{
