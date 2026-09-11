@@ -1,5 +1,10 @@
 # a5R (development version)
 
+* The benchmark suite now mirrors the TypeScript, Python and Rust A5 ports
+  (same case names, same deterministic inputs) and runs in CI on every pull
+  request, failing on regressions above 15%. The old cross-language
+  comparison scripts are gone.
+
 * `a5_cell_to_children()`, `a5_grid_disk()` and `a5_spherical_cap()` are
   vectorised over their cell argument and gain a `simplify` argument. The
   default `simplify = TRUE` returns one flat `a5_cell` vector, so single-cell
