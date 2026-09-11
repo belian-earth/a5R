@@ -21,3 +21,5 @@ docs
 scratch/
 /.quarto/
 vignettes/*_files/
+
+TODO.local.md

@@ -31,6 +31,7 @@ reference:
   desc: The `a5_cell` vector type and helpers.
   contents:
   - a5_cell
+  - a5_cell_list
   - a5_u64_to_hex
 - title: Arrow & Parquet
   desc: Lossless conversion between `a5_cell` and Arrow `uint64` arrays.
@@ -42,6 +43,8 @@ reference:
   - a5_get_resolution
   - a5_cell_to_parent
   - a5_cell_to_children
+  - a5_cell_child
+  - a5_cell_children_range
   - a5_get_res0_cells
 - title: Geometry & info
   desc: Cell boundaries, areas, counts, and distances.

@@ -47,18 +47,14 @@ new_a5_cell <- function(
 }
 
 #' Construct an a5_cell from Rust list(b1=, ..., b8=) output
+#'
+#' The Rust side always returns a named list of eight equal-length raw
+#' vectors, so the validation `vctrs::new_rcrd()` performs is redundant
+#' here and dominates the cost of scalar calls. The result is identical
+#' to `new_a5_cell()`.
 #' @noRd
 cells_from_rs <- function(x) {
-  new_a5_cell(
-    b1 = x$b1,
-    b2 = x$b2,
-    b3 = x$b3,
-    b4 = x$b4,
-    b5 = x$b5,
-    b6 = x$b6,
-    b7 = x$b7,
-    b8 = x$b8
-  )
+  structure(x, class = c("a5_cell", "vctrs_rcrd", "vctrs_vctr"))
 }
 
 #' Check that all non-NA hex strings are exactly 16 characters
@@ -77,7 +73,9 @@ check_hex16 <- function(x) {
 #' Pass cell fields to Rust as a named list
 #' @noRd
 cell_data <- function(x) {
-  vctrs::vec_data(x)
+  # The Rust side reads the eight raw fields by name; unclass() exposes them
+  # directly, whereas vctrs::vec_data() builds a data frame for each call.
+  unclass(x)
 }
 
 #' @export

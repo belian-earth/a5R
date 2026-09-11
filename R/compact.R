@@ -34,6 +34,6 @@ a5_uncompact <- function(cells, resolution) {
   cells <- as_a5_cell(cells)
   resolution <- vctrs::vec_cast(resolution, integer())
   check_resolution(resolution)
-  vctrs::vec_assert(resolution, size = 1L)
+  check_size1(resolution)
   cells_from_rs(a5_uncompact_rs(cell_data(cells), resolution))
 }

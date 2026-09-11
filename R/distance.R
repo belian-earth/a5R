@@ -31,18 +31,8 @@ a5_cell_distance <- function(
   from <- as_a5_cell(from)
   to <- as_a5_cell(to)
   args <- vctrs::vec_recycle_common(from = from, to = to)
-  method <- rlang::arg_match(method)
-  if (!is.null(units) && !units::ud_are_convertible("m", units)) {
-    cli::cli_abort(
-      "{.arg units} must be a distance unit convertible from m (or NULL), not {.val {units}}."
-    )
-  }
+  method <- arg_match_default(method, c("haversine", "geodesic", "rhumb"))
+  check_units(units, "m", "a distance unit")
   d <- a5_cell_distance_rs(cell_data(args$from), cell_data(args$to), method)
-
-  if (is.null(units)) {
-    return(d)
-  }
-
-  units::set_units(d, "m", mode = "standard") |>
-    units::set_units(units, mode = "standard")
+  with_units(d, "m", units)
 }

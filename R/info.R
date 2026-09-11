@@ -18,19 +18,8 @@
 a5_cell_area <- function(resolution, units = "m^2") {
   resolution <- vctrs::vec_cast(resolution, integer())
   check_resolution(resolution)
-  if (!is.null(units) && !units::ud_are_convertible("m^2", units)) {
-    cli::cli_abort(
-      "{.arg units} must be an area unit convertible from m^2 (or NULL), not {.val {units}}."
-    )
-  }
-  r <- a5_cell_area_rs(resolution)
-
-  if (is.null(units)) {
-    return(r)
-  }
-
-  units::set_units(r, "m^2", mode = "standard") |>
-    units::set_units(units, mode = "standard")
+  check_units(units, "m^2", "an area unit")
+  with_units(a5_cell_area_rs(resolution), "m^2", units)
 }
 
 #' Average cell edge length at a given resolution
@@ -57,19 +46,8 @@ a5_cell_area <- function(resolution, units = "m^2") {
 a5_cell_edge_length_avg <- function(resolution, units = "m") {
   resolution <- vctrs::vec_cast(resolution, integer())
   check_resolution(resolution)
-  if (!is.null(units) && !units::ud_are_convertible("m", units)) {
-    cli::cli_abort(
-      "{.arg units} must be a length unit convertible from m (or NULL), not {.val {units}}."
-    )
-  }
-  r <- a5_cell_edge_length_avg_rs(resolution)
-
-  if (is.null(units)) {
-    return(r)
-  }
-
-  units::set_units(r, "m", mode = "standard") |>
-    units::set_units(units, mode = "standard")
+  check_units(units, "m", "a length unit")
+  with_units(a5_cell_edge_length_avg_rs(resolution), "m", units)
 }
 
 #' Total number of cells at a given resolution
@@ -85,7 +63,7 @@ a5_cell_edge_length_avg <- function(resolution, units = "m") {
 a5_get_num_cells <- function(resolution) {
   resolution <- vctrs::vec_cast(resolution, integer())
   check_resolution(resolution)
-  vctrs::vec_assert(resolution, size = 1L)
+  check_size1(resolution)
   a5_get_num_cells_rs(resolution)
 }
 
@@ -111,8 +89,8 @@ a5_get_num_children <- function(parent_resolution, child_resolution) {
   child_resolution <- vctrs::vec_cast(child_resolution, integer())
   check_resolution(parent_resolution)
   check_resolution(child_resolution)
-  vctrs::vec_assert(parent_resolution, size = 1L)
-  vctrs::vec_assert(child_resolution, size = 1L)
+  check_size1(parent_resolution)
+  check_size1(child_resolution)
   a5_get_num_children_rs(parent_resolution, child_resolution)
 }
 

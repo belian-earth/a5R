@@ -27,13 +27,27 @@ impl<'a> CellSlices<'a> {
         // yields a pointer into the RAWSXP's data block, which is kept
         // alive by R's protection of the List for lifetime 'a. Dropping
         // the Robj wrapper does not free the underlying R allocation.
-        let names = ["b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8"];
-        let mut slices: [&'a [u8]; 8] = [&[]; 8];
-        for (j, name) in names.iter().enumerate() {
-            let robj = list.dollar(name).expect("missing field in cell list");
+        //
+        // Fields are looked up by iterating the list's names rather than via
+        // `dollar()`, which evaluates an R-level `$` call per field (about
+        // 1.5 µs each) and dominated the cost of scalar operations.
+        let mut slices: [Option<&'a [u8]>; 8] = [None; 8];
+        for (name, robj) in list.iter() {
+            let j = match name {
+                "b1" => 0,
+                "b2" => 1,
+                "b3" => 2,
+                "b4" => 3,
+                "b5" => 4,
+                "b6" => 5,
+                "b7" => 6,
+                "b8" => 7,
+                _ => continue,
+            };
             let slice = robj.as_raw_slice().expect("field is not raw");
-            slices[j] = unsafe { std::mem::transmute::<&[u8], &'a [u8]>(slice) };
+            slices[j] = Some(unsafe { std::mem::transmute::<&[u8], &'a [u8]>(slice) });
         }
+        let slices = slices.map(|s| s.expect("missing field in cell list"));
         let len = slices[0].len();
         CellSlices { slices, len }
     }
@@ -145,6 +159,45 @@ where
 }
 
 /// Collect u64 values from a cell List, skipping NAs.
+/// Apply a one-to-many function to every cell.
+///
+/// With `simplify` the results are concatenated in input order into one
+/// b1..b8 raw list. Otherwise each input becomes its own fully formed
+/// `a5_cell` (class attribute set here, so R only wraps the list), which is
+/// far cheaper than chopping the flat vector on the R side. An NA input
+/// contributes nothing (an empty element). Runs in parallel when threads are
+/// enabled; the first error aborts.
+pub(crate) fn one_to_many<F>(cells: &List, name: &str, simplify: bool, f: F) -> Robj
+where
+    F: Fn(u64) -> std::result::Result<Vec<u64>, String> + Send + Sync,
+{
+    let results = map_cells(cells, |id| Some(f(id)));
+    let unwrap = |r: Option<std::result::Result<Vec<u64>, String>>| -> Vec<Option<u64>> {
+        match r {
+            Some(Ok(v)) => v.into_iter().map(Some).collect(),
+            Some(Err(e)) => throw_r_error(format!("{} failed: {}", name, e)),
+            None => Vec::new(),
+        }
+    };
+    if simplify {
+        let mut flat: Vec<Option<u64>> = Vec::new();
+        for r in results {
+            flat.extend(unwrap(r));
+        }
+        return u64s_to_raw8_list(flat).into();
+    }
+    let elements: Vec<Robj> = results
+        .into_iter()
+        .map(|r| {
+            let mut cell: Robj = u64s_to_raw8_list(unwrap(r)).into();
+            cell.set_class(["a5_cell", "vctrs_rcrd", "vctrs_vctr"])
+                .expect("set class on a5_cell");
+            cell
+        })
+        .collect();
+    List::from_values(elements).into()
+}
+
 pub(crate) fn collect_ids(cells: &List) -> Vec<u64> {
     let cs = CellSlices::from_list(cells);
     (0..cs.len).filter_map(|i| cs.get(i)).collect()

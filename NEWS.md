@@ -1,5 +1,48 @@
 # a5R (development version)
 
+* The benchmark suite now mirrors the TypeScript, Python and Rust A5 ports
+  (same case names, same deterministic inputs) and runs in CI on every pull
+  request, failing on regressions above 15%. The old cross-language
+  comparison scripts are gone.
+
+* `a5_cell_to_children()`, `a5_grid_disk()` and `a5_spherical_cap()` are
+  vectorised over their cell argument and gain a `simplify` argument. The
+  default `simplify = TRUE` returns one flat `a5_cell` vector, so single-cell
+  calls are unchanged; `simplify = FALSE` returns a `vctrs::list_of()` with
+  one element per input, for list columns. An `NA` cell now contributes no
+  cells instead of raising an error.
+* New `a5_cell_list` class for those lists, with an `unlist()` method that
+  concatenates the elements into one `a5_cell` vector. Base `unlist()` on a
+  plain list of `a5_cell` vectors returns a meaningless raw vector;
+  `as_a5_cell_list()` wraps such a list so `unlist()` works.
+* Base R compatibility for `a5_cell` (reported by the ramet project):
+  `match()` and `%in%` are about ten times faster via an exact `mtfrm()`
+  method instead of hex conversion; `x[i] <- value` past the end and
+  `length(x) <- n` grow the vector with `NA`, so `rbind()` on data frames
+  with `a5_cell` columns works. `split()` and `tapply()` with an `a5_cell`
+  grouping vector cannot be intercepted and give wrong results; use
+  `vctrs::vec_split()` or `vctrs::vec_group_id()`, as documented in
+  `vignette("internal-cell-representation")`.
+
+* New `a5_cell_child()` returns the i-th descendant of each cell at a finer
+  resolution without enumerating the others, for sampling from large cells.
+* New `a5_cell_children_range()` returns the smallest and largest descendant
+  of each cell at a finer resolution. Descendants occupy a contiguous id range
+  among cells of that resolution, so the pair is an exact `BETWEEN` filter on
+  an id-sorted store. Resolution 30 is refused because the guarantee does not
+  hold there.
+
+* Reduced per-call overhead across the package. Rust output is wrapped
+  without re-validation, cell fields are passed to Rust without building a
+  data frame and read there without R-level `$` calls, scalar arguments are
+  checked with a lightweight helper, default `format`, `containment` and
+  `method` arguments skip `rlang::arg_match()`, `a5_lonlat_to_cell()` casts
+  and recycles common inputs without vctrs, `a5_cell_to_lonlat()` uses
+  low-level `wk` and data frame constructors, and `a5_cell_area()`,
+  `a5_cell_edge_length_avg()` and `a5_cell_distance()` cache the parsed base
+  unit. Scalar calls are three to twenty times faster; results, recycling
+  rules and error messages are unchanged.
+
 # a5R 0.6.0
 
 * Updated the bundled 'A5' Rust crate to 0.10.0. The lattice curve is now
@@ -18,6 +61,8 @@
 * New `a5_cell_edge_length_avg()` returns the average edge length of a cell
   at a given resolution, as a `units` vector (metres by default). Individual
   edges vary from the average by roughly +/-10%.
+* Fixed the build on Windows ARM64 by bumping `extendr-api` to 0.8.2 and
+  passing the correct `--target` on Windows (#22, @jeroen).
 
 # a5R 0.5.0
 

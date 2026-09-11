@@ -10,7 +10,7 @@
 #' @export
 a5_set_threads <- function(n = 1L) {
   n <- vctrs::vec_cast(n, integer())
-  vctrs::vec_assert(n, size = 1L)
+  check_size1(n)
   old <- a5_get_threads_rs()
   a5_set_threads_rs(n)
   invisible(old)

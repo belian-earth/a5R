@@ -152,15 +152,37 @@ a5_get_resolution_rs <- function(cells) .Call(wrap__a5_get_resolution_rs, cells)
 #' @keywords internal
 a5_cell_to_parent_rs <- function(cells, parent_resolution) .Call(wrap__a5_cell_to_parent_rs, cells, parent_resolution)
 
-#' Get child cells.
+#' Get child cells of every input cell.
 #'
-#' @param cell List with b1..b8 raw vectors (length 1).
+#' @param cells List with b1..b8 raw vectors.
 #' @param child_resolution Integer: target child resolution. NULL for
 #'   immediate children.
-#' @return List with b1..b8 raw vectors.
+#' @param simplify If TRUE one flat b1..b8 list, else a list of a5_cell
+#'   objects, one per input.
+#' @return See simplify.
 #' @noRd
 #' @keywords internal
-a5_cell_to_children_rs <- function(cell, child_resolution) .Call(wrap__a5_cell_to_children_rs, cell, child_resolution)
+a5_cell_to_children_rs <- function(cells, child_resolution, simplify) .Call(wrap__a5_cell_to_children_rs, cells, child_resolution, simplify)
+
+#' The i-th child of each cell at a resolution, without building the list.
+#'
+#' @param cells List with b1..b8 raw vectors.
+#' @param child_resolution Integer target resolution (scalar).
+#' @param i Integer vector of 1-based child positions, same length as cells.
+#' @return List with b1..b8 raw vectors. NA where the cell or i is NA;
+#'   an error if i is out of range.
+#' @noRd
+#' @keywords internal
+a5_cell_child_rs <- function(cells, child_resolution, i) .Call(wrap__a5_cell_child_rs, cells, child_resolution, i)
+
+#' Smallest and largest descendant of each cell at a resolution.
+#'
+#' @param cells List with b1..b8 raw vectors.
+#' @param child_resolution Integer target resolution (scalar).
+#' @return List of two cell lists: `lo` and `hi`. NA where the cell is NA.
+#' @noRd
+#' @keywords internal
+a5_cell_children_range_rs <- function(cells, child_resolution) .Call(wrap__a5_cell_children_range_rs, cells, child_resolution)
 
 #' Get all 12 resolution-0 root cells.
 #'
@@ -186,24 +208,28 @@ a5_compact_rs <- function(cells) .Call(wrap__a5_compact_rs, cells)
 #' @keywords internal
 a5_uncompact_rs <- function(cells, target_resolution) .Call(wrap__a5_uncompact_rs, cells, target_resolution)
 
-#' Get all cells within k hops of a centre cell.
+#' Get all cells within k hops of each centre cell.
 #'
-#' @param cell List with b1..b8 raw vectors (length 1).
+#' @param cells List with b1..b8 raw vectors.
 #' @param k Number of hops.
 #' @param vertex If TRUE, include vertex-sharing (8-connected) neighbours.
-#' @return List with b1..b8 raw vectors.
+#' @param simplify If TRUE one flat b1..b8 list, else a list of a5_cell
+#'   objects, one per input.
+#' @return See simplify.
 #' @noRd
 #' @keywords internal
-a5_grid_disk_rs <- function(cell, k, vertex) .Call(wrap__a5_grid_disk_rs, cell, k, vertex)
+a5_grid_disk_rs <- function(cells, k, vertex, simplify) .Call(wrap__a5_grid_disk_rs, cells, k, vertex, simplify)
 
-#' Get all cells within a great-circle radius of a centre cell.
+#' Get all cells within a great-circle radius of each centre cell.
 #'
-#' @param cell List with b1..b8 raw vectors (length 1).
-#' @param radius Great-circle radius in metres.
-#' @return List with b1..b8 raw vectors.
+#' @param cells List with b1..b8 raw vectors.
+#' @param radius Radius in metres.
+#' @param simplify If TRUE one flat b1..b8 list, else a list of a5_cell
+#'   objects, one per input.
+#' @return See simplify.
 #' @noRd
 #' @keywords internal
-a5_spherical_cap_rs <- function(cell, radius) .Call(wrap__a5_spherical_cap_rs, cell, radius)
+a5_spherical_cap_rs <- function(cells, radius, simplify) .Call(wrap__a5_spherical_cap_rs, cells, radius, simplify)
 
 #' Convert one or more polygon parts (with optional holes) to A5 cells.
 #'
