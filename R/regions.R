@@ -69,8 +69,8 @@ a5_polygon_to_cells <- function(x, resolution,
                                 containment = c("centre", "overlapping")) {
   resolution <- vctrs::vec_cast(resolution, integer())
   check_resolution(resolution)
-  vctrs::vec_assert(resolution, size = 1L)
-  containment <- rlang::arg_match(containment)
+  check_size1(resolution)
+  containment <- if (missing(containment)) "centre" else rlang::arg_match(containment)
 
   bundle <- prepare_polygon_input(x)
 
@@ -122,7 +122,7 @@ a5_polygon_to_cells <- function(x, resolution,
 a5_linestring_to_cells <- function(x, resolution) {
   resolution <- vctrs::vec_cast(resolution, integer())
   check_resolution(resolution)
-  vctrs::vec_assert(resolution, size = 1L)
+  check_size1(resolution)
 
   bundle <- prepare_linestring_input(x)
 

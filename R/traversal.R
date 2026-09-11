@@ -17,9 +17,9 @@
 #' a5_grid_disk(cell, k = 1)
 a5_grid_disk <- function(cell, k, vertex = FALSE) {
   cell <- as_a5_cell(cell)
-  vctrs::vec_assert(cell, size = 1L)
+  check_size1(cell)
   k <- vctrs::vec_cast(k, integer())
-  vctrs::vec_assert(k, size = 1L)
+  check_size1(k)
   cells_from_rs(a5_grid_disk_rs(cell_data(cell), k, vertex))
 }
 
@@ -39,8 +39,8 @@ a5_grid_disk <- function(cell, k, vertex = FALSE) {
 #' a5_spherical_cap(cell, radius = 1000)
 a5_spherical_cap <- function(cell, radius) {
   cell <- as_a5_cell(cell)
-  vctrs::vec_assert(cell, size = 1L)
+  check_size1(cell)
   radius <- vctrs::vec_cast(radius, double())
-  vctrs::vec_assert(radius, size = 1L)
+  check_size1(radius)
   cells_from_rs(a5_spherical_cap_rs(cell_data(cell), radius))
 }

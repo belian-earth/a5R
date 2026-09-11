@@ -73,7 +73,9 @@ check_hex16 <- function(x) {
 #' Pass cell fields to Rust as a named list
 #' @noRd
 cell_data <- function(x) {
-  vctrs::vec_data(x)
+  # The Rust side reads the eight raw fields by name; unclass() exposes them
+  # directly, whereas vctrs::vec_data() builds a data frame for each call.
+  unclass(x)
 }
 
 #' @export

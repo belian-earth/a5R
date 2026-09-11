@@ -26,12 +26,12 @@ a5_cell_to_boundary <- function(
   segments = NULL
 ) {
   cell <- as_a5_cell(cell)
-  format <- rlang::arg_match(format)
+  format <- if (missing(format)) "wkb" else rlang::arg_match(format)
   closed <- vctrs::vec_cast(closed, logical())
-  vctrs::vec_assert(closed, size = 1L)
+  check_size1(closed)
   if (!is.null(segments)) {
     segments <- vctrs::vec_cast(segments, integer())
-    vctrs::vec_assert(segments, size = 1L)
+    check_size1(segments)
   }
   cd <- cell_data(cell)
   if (format == "wkb") {

@@ -37,7 +37,7 @@ a5_cell_to_parent <- function(cell, resolution = NULL) {
   if (!is.null(resolution)) {
     resolution <- vctrs::vec_cast(resolution, integer())
     check_resolution(resolution)
-    vctrs::vec_assert(resolution, size = 1L)
+    check_size1(resolution)
   }
   cells_from_rs(a5_cell_to_parent_rs(cell_data(cell), resolution))
 }
@@ -60,11 +60,11 @@ a5_cell_to_parent <- function(cell, resolution = NULL) {
 #' a5_cell_to_children(cell)
 a5_cell_to_children <- function(cell, resolution = NULL) {
   cell <- as_a5_cell(cell)
-  vctrs::vec_assert(cell, size = 1L)
+  check_size1(cell)
   if (!is.null(resolution)) {
     resolution <- vctrs::vec_cast(resolution, integer())
     check_resolution(resolution)
-    vctrs::vec_assert(resolution, size = 1L)
+    check_size1(resolution)
   }
   cells_from_rs(a5_cell_to_children_rs(cell_data(cell), resolution))
 }

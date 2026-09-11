@@ -27,13 +27,27 @@ impl<'a> CellSlices<'a> {
         // yields a pointer into the RAWSXP's data block, which is kept
         // alive by R's protection of the List for lifetime 'a. Dropping
         // the Robj wrapper does not free the underlying R allocation.
-        let names = ["b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8"];
-        let mut slices: [&'a [u8]; 8] = [&[]; 8];
-        for (j, name) in names.iter().enumerate() {
-            let robj = list.dollar(name).expect("missing field in cell list");
+        //
+        // Fields are looked up by iterating the list's names rather than via
+        // `dollar()`, which evaluates an R-level `$` call per field (about
+        // 1.5 µs each) and dominated the cost of scalar operations.
+        let mut slices: [Option<&'a [u8]>; 8] = [None; 8];
+        for (name, robj) in list.iter() {
+            let j = match name {
+                "b1" => 0,
+                "b2" => 1,
+                "b3" => 2,
+                "b4" => 3,
+                "b5" => 4,
+                "b6" => 5,
+                "b7" => 6,
+                "b8" => 7,
+                _ => continue,
+            };
             let slice = robj.as_raw_slice().expect("field is not raw");
-            slices[j] = unsafe { std::mem::transmute::<&[u8], &'a [u8]>(slice) };
+            slices[j] = Some(unsafe { std::mem::transmute::<&[u8], &'a [u8]>(slice) });
         }
+        let slices = slices.map(|s| s.expect("missing field in cell list"));
         let len = slices[0].len();
         CellSlices { slices, len }
     }

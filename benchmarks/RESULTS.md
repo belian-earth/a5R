@@ -1,6 +1,6 @@
 # A5 Cross-Language Benchmark Results
 
-**2026-09-09 16:51** | 12th Gen Intel(R) Core(TM) i7-12700H | R version 4.6.1 (2026-06-24)
+**2026-09-11 09:43** | 12th Gen Intel(R) Core(TM) i7-12700H | R version 4.6.1 (2026-06-24)
 
 
 Two benchmark styles are reported. The **bulk** table is the original
@@ -31,9 +31,9 @@ Implementations: DuckDB: duckdb-a5 4916fb8 (duckdb 1.5.5); JavaScript: a5-js 0.1
 
 | Implementation | Language | lonlat_to_cell | grid_disk (k=10) | polygon_to_cells |
 |:--|:--|--:|--:|--:|
-| a5R 0.6.0.9000 (dev) | R | 7.83 | **385.73** | 698.65 |
+| a5R 0.6.0.9000 (dev) | R | 9.97 | **384.66** | 694.15 |
 | a5R 0.6.0 | R | 35.40 | 412.19 | 724.32 |
-| a5R 0.5.0 | R | 32.82 | 788.78 | 749.69 |
+| a5R 0.5.0 | R | 71.55 | 885.86 | 842.01 |
 | a5_fast 0.2.1 | Python | 1.60 | 666.13 | N/A |
 | pya5 0.10.0 | Python | 6.35 | 19,710.83 | 24,249.40 |
 | a5-js 0.10.0 | JavaScript | **1.06** | 4,779.92 | 4,138.03 |

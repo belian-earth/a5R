@@ -20,7 +20,7 @@ a5_lonlat_to_cell <- function(lon, lat, resolution) {
 
 #' Cast and recycle lon/lat/resolution for the Rust entry point
 #'
-#' The common case (plain double coordinates of equal length, a whole-number
+#' The common case (bare double coordinates of equal length, a whole-number
 #' resolution of length 1 or n) is handled with base R checks, which cost a
 #' fraction of a microsecond. Everything else falls through to vctrs so that
 #' casting errors and recycling rules are unchanged.
@@ -31,7 +31,7 @@ recycle_lonlat_resolution <- function(lon, lat, resolution) {
   if (
     n > 0L && length(lat) == n && (nr == n || nr == 1L) &&
       is.double(lon) && is.double(lat) && is.numeric(resolution) &&
-      !is.object(lon) && !is.object(lat) && !is.object(resolution)
+      is_bare_vector(lon) && is_bare_vector(lat) && is_bare_vector(resolution)
   ) {
     if (is.integer(resolution)) {
       res <- resolution
@@ -78,9 +78,21 @@ recycle_lonlat_resolution <- function(lon, lat, resolution) {
 a5_cell_to_lonlat <- function(cell, as_dataframe = FALSE) {
   cell <- as_a5_cell(cell)
   ll <- a5_cell_to_lonlat_rs(cell_data(cell), TRUE)
+  # Low-level constructors: the Rust output is already validated, and
+  # data.frame() / wk::xy() spend tens of microseconds re-checking it.
   if (as_dataframe) {
-    data.frame(lon = ll$lon, lat = ll$lat)
+    vctrs::new_data_frame(list(lon = ll$lon, lat = ll$lat))
   } else {
-    wk::xy(ll$lon, ll$lat, crs = wk::wk_crs_longlat())
+    wk::new_wk_xy(list(x = ll$lon, y = ll$lat), crs = wk::wk_crs_longlat())
   }
+}
+
+#' Is `x` a plain atomic vector with no class or dimensions?
+#'
+#' Classed inputs (units, difftime, ...) and matrices must go through vctrs,
+#' which converts or rejects them; names and other plain attributes are
+#' carried through vctrs unchanged and are ignored by the Rust side.
+#' @noRd
+is_bare_vector <- function(x) {
+  is.null(attr(x, "class")) && is.null(attr(x, "dim"))
 }
