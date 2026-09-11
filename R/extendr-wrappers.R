@@ -162,6 +162,26 @@ a5_cell_to_parent_rs <- function(cells, parent_resolution) .Call(wrap__a5_cell_t
 #' @keywords internal
 a5_cell_to_children_rs <- function(cell, child_resolution) .Call(wrap__a5_cell_to_children_rs, cell, child_resolution)
 
+#' The i-th child of each cell at a resolution, without building the list.
+#'
+#' @param cells List with b1..b8 raw vectors.
+#' @param child_resolution Integer target resolution (scalar).
+#' @param i Integer vector of 1-based child positions, same length as cells.
+#' @return List with b1..b8 raw vectors. NA where the cell or i is NA;
+#'   an error if i is out of range.
+#' @noRd
+#' @keywords internal
+a5_cell_child_rs <- function(cells, child_resolution, i) .Call(wrap__a5_cell_child_rs, cells, child_resolution, i)
+
+#' Smallest and largest descendant of each cell at a resolution.
+#'
+#' @param cells List with b1..b8 raw vectors.
+#' @param child_resolution Integer target resolution (scalar).
+#' @return List of two cell lists: `lo` and `hi`. NA where the cell is NA.
+#' @noRd
+#' @keywords internal
+a5_cell_children_range_rs <- function(cells, child_resolution) .Call(wrap__a5_cell_children_range_rs, cells, child_resolution)
+
 #' Get all 12 resolution-0 root cells.
 #'
 #' @return List with b1..b8 raw vectors.

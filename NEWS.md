@@ -1,5 +1,12 @@
 # a5R (development version)
 
+* New `a5_cell_child()` returns the i-th descendant of each cell at a finer
+  resolution without enumerating the others, for sampling from large cells.
+* New `a5_cell_children_range()` returns the smallest and largest descendant
+  of each cell at a finer resolution. Descendants occupy a contiguous id range
+  among cells of that resolution (up to resolution 29), so the pair is an
+  exact `BETWEEN` filter on an id-sorted store.
+
 * Reduced per-call overhead across the package. Rust output is wrapped
   without re-validation, cell fields are passed to Rust without building a
   data frame and read there without R-level `$` calls, scalar arguments are

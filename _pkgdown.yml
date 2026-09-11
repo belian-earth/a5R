@@ -42,6 +42,8 @@ reference:
   - a5_get_resolution
   - a5_cell_to_parent
   - a5_cell_to_children
+  - a5_cell_child
+  - a5_cell_children_range
   - a5_get_res0_cells
 - title: Geometry & info
   desc: Cell boundaries, areas, counts, and distances.

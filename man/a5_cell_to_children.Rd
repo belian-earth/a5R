@@ -25,5 +25,8 @@ cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
 a5_cell_to_children(cell)
 }
 \seealso{
-\code{\link[=a5_cell_to_parent]{a5_cell_to_parent()}}, \code{\link[=a5_get_resolution]{a5_get_resolution()}}
+\code{\link[=a5_cell_to_parent]{a5_cell_to_parent()}}, \code{\link[=a5_get_resolution]{a5_get_resolution()}}, \code{\link[=a5_cell_child]{a5_cell_child()}}
+for one child at a time, \code{\link[=a5_cell_children_range]{a5_cell_children_range()}} for the id range of
+all descendants, \code{\link[=a5_uncompact]{a5_uncompact()}} for the children of many cells as one
+flat vector.
 }
