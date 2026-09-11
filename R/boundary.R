@@ -26,7 +26,7 @@ a5_cell_to_boundary <- function(
   segments = NULL
 ) {
   cell <- as_a5_cell(cell)
-  format <- rlang::arg_match(format)
+  format <- arg_match_default(format, c("wkb", "wkt"))
   closed <- vctrs::vec_cast(closed, logical())
   check_size1(closed)
   if (!is.null(segments)) {

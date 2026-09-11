@@ -3,8 +3,9 @@
 * Reduced per-call overhead across the package. Rust output is wrapped
   without re-validation, cell fields are passed to Rust without building a
   data frame and read there without R-level `$` calls, scalar arguments are
-  checked with a lightweight helper, `a5_lonlat_to_cell()` casts and
-  recycles common inputs without vctrs, `a5_cell_to_lonlat()` uses
+  checked with a lightweight helper, default `format`, `containment` and
+  `method` arguments skip `rlang::arg_match()`, `a5_lonlat_to_cell()` casts
+  and recycles common inputs without vctrs, `a5_cell_to_lonlat()` uses
   low-level `wk` and data frame constructors, and `a5_cell_area()`,
   `a5_cell_edge_length_avg()` and `a5_cell_distance()` cache the parsed base
   unit. Scalar calls are three to twenty times faster; results, recycling

@@ -47,6 +47,24 @@ base_units_attr <- function(base) {
   cached
 }
 
+#' Match a choice argument, short-circuiting the default
+#'
+#' `rlang::arg_match()` costs about 30 µs, mostly building its error
+#' context. An untouched default is the full `choices` vector, which
+#' `arg_match()` maps to its first element; that case is detected with
+#' `identical()` instead. `missing()` cannot be used here because it does not
+#' see through to a caller's formal that has a default. Errors still name the
+#' caller's argument and call.
+#' @noRd
+arg_match_default <- function(arg, choices,
+                              error_arg = rlang::caller_arg(arg),
+                              error_call = rlang::caller_env()) {
+  if (identical(arg, choices)) {
+    return(choices[[1L]])
+  }
+  rlang::arg_match(arg, choices, error_arg = error_arg, error_call = error_call)
+}
+
 #' Validate a `units` argument against a base unit
 #' @noRd
 check_units <- function(units, base, what, call = rlang::caller_env()) {
