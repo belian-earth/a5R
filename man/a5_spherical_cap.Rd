@@ -4,7 +4,7 @@
 \alias{a5_spherical_cap}
 \title{Cells within a great-circle radius}
 \usage{
-a5_spherical_cap(cell, radius)
+a5_spherical_cap(cell, radius, simplify = TRUE)
 }
 \arguments{
 \item{cell}{A single \link{a5_cell} value.}
@@ -12,7 +12,8 @@ a5_spherical_cap(cell, radius)
 \item{radius}{Numeric scalar, great-circle radius in metres.}
 }
 \value{
-A compacted \link{a5_cell} vector.
+An \link{a5_cell} vector, or a list of them when \code{simplify = FALSE}.
+An \code{NA} input contributes no cells (an empty element in the list form).
 }
 \description{
 Returns all cells whose centres fall within a great-circle distance

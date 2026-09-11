@@ -37,7 +37,7 @@ test_that("lonlat_to_cell rejects what vctrs rejects", {
 })
 
 test_that("check_size1 reports like vctrs::vec_assert", {
-  expect_error(a5_grid_disk(a5_lonlat_to_cell(c(0, 1), c(0, 1), 5), k = 1), "size 1")
+  expect_error(a5_grid_disk(a5_lonlat_to_cell(0, 0, 5), k = 1:2), "size 1")
   expect_error(a5_cell_to_children(a5_lonlat_to_cell(0, 0, 5), resolution = c(6, 7)), "`resolution` must have size 1, not size 2")
   expect_error(a5_set_threads(1:2), "size 1")
 })

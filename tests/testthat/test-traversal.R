@@ -36,10 +36,12 @@ test_that("spherical_cap errors on invalid cell", {
   expect_error(a5_spherical_cap(a5_cell("zzzz"), radius = 100))
 })
 
-test_that("grid_disk errors on NA cell", {
-  expect_error(a5_grid_disk(a5_cell(NA), k = 1))
+test_that("grid_disk gives no cells for an NA cell", {
+  expect_length(a5_grid_disk(a5_cell(NA), k = 1), 0L)
+  expect_identical(lengths(a5_grid_disk(a5_cell(NA), k = 1, simplify = FALSE)), 0L)
 })
 
-test_that("spherical_cap errors on NA cell", {
-  expect_error(a5_spherical_cap(a5_cell(NA), radius = 100))
+test_that("spherical_cap gives no cells for an NA cell", {
+  expect_length(a5_spherical_cap(a5_cell(NA), radius = 100), 0L)
+  expect_identical(lengths(a5_spherical_cap(a5_cell(NA), radius = 100, simplify = FALSE)), 0L)
 })

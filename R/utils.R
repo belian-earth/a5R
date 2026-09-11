@@ -18,6 +18,33 @@ check_size1 <- function(x, arg = rlang::caller_arg(x), call = rlang::caller_env(
   invisible(x)
 }
 
+#' Assert that `x` is `TRUE` or `FALSE`
+#' @noRd
+check_flag <- function(x, arg = rlang::caller_arg(x), call = rlang::caller_env()) {
+  if (!is.logical(x) || length(x) != 1L || is.na(x)) {
+    cli::cli_abort("{.arg {arg}} must be `TRUE` or `FALSE`.", call = call)
+  }
+  invisible(x)
+}
+
+#' Shape the result of a one-to-many Rust call
+#'
+#' `rs` is `list(cells = <b1..b8>, lengths = <integer>)` from `one_to_many` on
+#' the Rust side. With `simplify = TRUE` the concatenated cells are returned
+#' as one `a5_cell` vector; otherwise they are chopped into a `list_of` with
+#' one element per input (empty for `NA` inputs).
+#' @noRd
+one_to_many <- function(rs, simplify) {
+  cells <- cells_from_rs(rs$cells)
+  if (simplify) {
+    return(cells)
+  }
+  vctrs::new_list_of(
+    vctrs::vec_chop(cells, sizes = rs$lengths),
+    ptype = new_a5_cell()
+  )
+}
+
 #' Attach units to a numeric vector
 #'
 #' `base` is the unit the Rust side reports in (`"m"` or `"m^2"`). The parsed

@@ -4,29 +4,39 @@
 \alias{a5_cell_to_children}
 \title{Get child cells}
 \usage{
-a5_cell_to_children(cell, resolution = NULL)
+a5_cell_to_children(cell, resolution = NULL, simplify = TRUE)
 }
 \arguments{
-\item{cell}{A single \link{a5_cell} value.}
+\item{cell}{An \link{a5_cell} vector.}
 
 \item{resolution}{Integer scalar target child resolution, or \code{NULL} for
 immediate children.}
+
+\item{simplify}{Logical scalar. If \code{TRUE} (default), return one flat
+\link{a5_cell} vector with the children of every input concatenated in input
+order; which child came from which parent is not recorded. If \code{FALSE},
+return a \code{\link[vctrs:list_of]{vctrs::list_of()}} of \link{a5_cell} vectors with one element per
+input, suitable for a list column.}
 }
 \value{
-An \link{a5_cell} vector of child cells.
+An \link{a5_cell} vector, or a list of them when \code{simplify = FALSE}.
+An \code{NA} input contributes no cells (an empty element in the list form).
 }
 \description{
-Returns the child cells of a single cell. By default returns the 4
+Returns the child cells of each input cell. By default returns the 4
 immediate children (one resolution finer). Optionally target a specific
 finer resolution.
 }
 \examples{
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
 a5_cell_to_children(cell)
+
+cells <- a5_lonlat_to_cell(c(-3.19, 0), c(55.95, 0), resolution = 5)
+a5_cell_to_children(cells, resolution = 7)                  # 32 cells
+a5_cell_to_children(cells, resolution = 7, simplify = FALSE) # list of 2
 }
 \seealso{
 \code{\link[=a5_cell_to_parent]{a5_cell_to_parent()}}, \code{\link[=a5_get_resolution]{a5_get_resolution()}}, \code{\link[=a5_cell_child]{a5_cell_child()}}
 for one child at a time, \code{\link[=a5_cell_children_range]{a5_cell_children_range()}} for the id range of
-all descendants, \code{\link[=a5_uncompact]{a5_uncompact()}} for the children of many cells as one
-flat vector.
+all descendants.
 }

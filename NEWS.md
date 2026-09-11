@@ -1,5 +1,12 @@
 # a5R (development version)
 
+* `a5_cell_to_children()`, `a5_grid_disk()` and `a5_spherical_cap()` are
+  vectorised over their cell argument and gain a `simplify` argument. The
+  default `simplify = TRUE` returns one flat `a5_cell` vector, so single-cell
+  calls are unchanged; `simplify = FALSE` returns a `vctrs::list_of()` with
+  one element per input, for list columns. An `NA` cell now contributes no
+  cells instead of raising an error.
+
 * New `a5_cell_child()` returns the i-th descendant of each cell at a finer
   resolution without enumerating the others, for sampling from large cells.
 * New `a5_cell_children_range()` returns the smallest and largest descendant

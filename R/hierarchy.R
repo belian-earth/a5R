@@ -113,30 +113,39 @@ a5_cell_children_range <- function(cell, resolution) {
 
 #' Get child cells
 #'
-#' Returns the child cells of a single cell. By default returns the 4
+#' Returns the child cells of each input cell. By default returns the 4
 #' immediate children (one resolution finer). Optionally target a specific
 #' finer resolution.
 #'
-#' @param cell A single [a5_cell] value.
+#' @param cell An [a5_cell] vector.
 #' @param resolution Integer scalar target child resolution, or `NULL` for
 #'   immediate children.
-#' @returns An [a5_cell] vector of child cells.
+#' @param simplify Logical scalar. If `TRUE` (default), return one flat
+#'   [a5_cell] vector with the children of every input concatenated in input
+#'   order; which child came from which parent is not recorded. If `FALSE`,
+#'   return a [vctrs::list_of()] of [a5_cell] vectors with one element per
+#'   input, suitable for a list column.
+#' @returns An [a5_cell] vector, or a list of them when `simplify = FALSE`.
+#'   An `NA` input contributes no cells (an empty element in the list form).
 #'
 #' @seealso [a5_cell_to_parent()], [a5_get_resolution()], [a5_cell_child()]
 #'   for one child at a time, [a5_cell_children_range()] for the id range of
-#'   all descendants, [a5_uncompact()] for the children of many cells as one
-#'   flat vector.
+#'   all descendants.
 #' @export
 #' @examples
 #' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
 #' a5_cell_to_children(cell)
-a5_cell_to_children <- function(cell, resolution = NULL) {
+#'
+#' cells <- a5_lonlat_to_cell(c(-3.19, 0), c(55.95, 0), resolution = 5)
+#' a5_cell_to_children(cells, resolution = 7)                  # 32 cells
+#' a5_cell_to_children(cells, resolution = 7, simplify = FALSE) # list of 2
+a5_cell_to_children <- function(cell, resolution = NULL, simplify = TRUE) {
   cell <- as_a5_cell(cell)
-  check_size1(cell)
   if (!is.null(resolution)) {
     resolution <- vctrs::vec_cast(resolution, integer())
     check_resolution(resolution)
     check_size1(resolution)
   }
-  cells_from_rs(a5_cell_to_children_rs(cell_data(cell), resolution))
+  check_flag(simplify)
+  one_to_many(a5_cell_to_children_rs(cell_data(cell), resolution), simplify)
 }

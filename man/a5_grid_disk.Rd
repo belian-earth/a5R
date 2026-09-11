@@ -4,19 +4,26 @@
 \alias{a5_grid_disk}
 \title{Cells within k hops of a cell}
 \usage{
-a5_grid_disk(cell, k, vertex = FALSE)
+a5_grid_disk(cell, k, vertex = FALSE, simplify = TRUE)
 }
 \arguments{
-\item{cell}{A single \link{a5_cell} value.}
+\item{cell}{An \link{a5_cell} vector of centre cells.}
 
 \item{k}{Integer scalar, number of hops.}
 
 \item{vertex}{Logical scalar. If \code{FALSE} (default), only edge-sharing
 neighbours (4-connected) are traversed. If \code{TRUE}, vertex-sharing
 neighbours are included (8-connected).}
+
+\item{simplify}{Logical scalar. If \code{TRUE} (default), return one flat
+\link{a5_cell} vector with the disks of every input concatenated in input
+order; cells shared by several disks appear once per disk. If \code{FALSE},
+return a \code{\link[vctrs:list_of]{vctrs::list_of()}} of \link{a5_cell} vectors with one element per
+input, suitable for a list column.}
 }
 \value{
-A compacted \link{a5_cell} vector.
+An \link{a5_cell} vector, or a list of them when \code{simplify = FALSE}.
+An \code{NA} input contributes no cells (an empty element in the list form).
 }
 \description{
 Returns all cells reachable within \code{k} edge hops of a centre cell,
@@ -25,6 +32,10 @@ including the centre cell itself.
 \examples{
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 8)
 a5_grid_disk(cell, k = 1)
+
+cells <- a5_lonlat_to_cell(c(-3.19, 0), c(55.95, 0), resolution = 5)
+a5_grid_disk(cells, k = 1)                   # both disks, one vector
+a5_grid_disk(cells, k = 1, simplify = FALSE) # list of 2
 }
 \seealso{
 \code{\link[=a5_spherical_cap]{a5_spherical_cap()}} for distance-based selection.

@@ -159,6 +159,32 @@ where
 }
 
 /// Collect u64 values from a cell List, skipping NAs.
+/// Apply a one-to-many function to every cell.
+///
+/// Returns `list(cells = <b1..b8 raw list>, lengths = <integer>)`: the results
+/// concatenated in input order plus the number contributed by each input. An
+/// NA input contributes nothing and has length 0. Runs in parallel when
+/// threads are enabled; the first error aborts.
+pub(crate) fn one_to_many<F>(cells: &List, name: &str, f: F) -> List
+where
+    F: Fn(u64) -> std::result::Result<Vec<u64>, String> + Send + Sync,
+{
+    let results = map_cells(cells, |id| Some(f(id)));
+    let mut lengths: Vec<i32> = Vec::with_capacity(results.len());
+    let mut flat: Vec<Option<u64>> = Vec::new();
+    for r in results {
+        match r {
+            Some(Ok(v)) => {
+                lengths.push(v.len() as i32);
+                flat.extend(v.into_iter().map(Some));
+            }
+            Some(Err(e)) => throw_r_error(format!("{} failed: {}", name, e)),
+            None => lengths.push(0),
+        }
+    }
+    list!(cells = u64s_to_raw8_list(flat), lengths = Integers::from_values(lengths))
+}
+
 pub(crate) fn collect_ids(cells: &List) -> Vec<u64> {
     let cs = CellSlices::from_list(cells);
     (0..cs.len).filter_map(|i| cs.get(i)).collect()

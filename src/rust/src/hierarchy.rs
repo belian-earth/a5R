@@ -1,7 +1,7 @@
 use extendr_api::prelude::*;
 use extendr_api::wrapper::Nullable;
 
-use crate::cell_raw::{collect_ids, map_cells, scalar_cell_from_list, u64s_to_raw8_list, CellSlices};
+use crate::cell_raw::{collect_ids, map_cells, one_to_many, u64s_to_raw8_list, CellSlices};
 use a5::core::serialization::{deserialize, serialize, FIRST_HILBERT_RESOLUTION};
 use a5::A5Cell;
 
@@ -143,31 +143,21 @@ fn a5_cell_to_parent_rs(cells: List, parent_resolution: Nullable<i32>) -> List {
     u64s_to_raw8_list(results)
 }
 
-/// Get child cells.
+/// Get child cells of every input cell.
 ///
-/// @param cell List with b1..b8 raw vectors (length 1).
+/// @param cells List with b1..b8 raw vectors.
 /// @param child_resolution Integer: target child resolution. NULL for
 ///   immediate children.
-/// @return List with b1..b8 raw vectors.
+/// @return list(cells = b1..b8 raw list, lengths = integer per input).
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_cell_to_children_rs(cell: List, child_resolution: Nullable<i32>) -> List {
+fn a5_cell_to_children_rs(cells: List, child_resolution: Nullable<i32>) -> List {
     let cres: Option<i32> = match child_resolution {
         Nullable::NotNull(v) => Some(v),
         Nullable::Null => None,
     };
-    let id = match scalar_cell_from_list(&cell) {
-        Some(id) => id,
-        None => throw_r_error("invalid cell ID: NA"),
-    };
-    match a5::cell_to_children(id, cres) {
-        Ok(children) => {
-            let results: Vec<Option<u64>> = children.into_iter().map(|c| Some(c)).collect();
-            u64s_to_raw8_list(results)
-        }
-        Err(e) => throw_r_error(format!("cell_to_children failed: {}", e)),
-    }
+    one_to_many(&cells, "cell_to_children", |id| a5::cell_to_children(id, cres))
 }
 
 /// The i-th child of each cell at a resolution, without building the list.
