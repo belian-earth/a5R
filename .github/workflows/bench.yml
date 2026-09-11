@@ -10,9 +10,15 @@ on:
 permissions:
   contents: read
 
+# A new push to the PR supersedes any run still in progress.
+concurrency:
+  group: bench-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   benchmark:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -58,6 +64,16 @@ jobs:
 
       - name: Restore PR library code
         run: git checkout HEAD -- R src NAMESPACE
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-results-${{ github.event.pull_request.number }}-${{ github.run_number }}
+          path: |
+            bench-current.json
+            bench-baseline.json
+          retention-days: 90
 
       - name: Compare (fail on >15% regression)
         shell: bash
