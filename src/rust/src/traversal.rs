@@ -7,13 +7,15 @@ use crate::cell_raw::one_to_many;
 /// @param cells List with b1..b8 raw vectors.
 /// @param k Number of hops.
 /// @param vertex If TRUE, include vertex-sharing (8-connected) neighbours.
-/// @return list(cells = b1..b8 raw list, lengths = integer per input).
+/// @param simplify If TRUE one flat b1..b8 list, else a list of a5_cell
+///   objects, one per input.
+/// @return See simplify.
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_grid_disk_rs(cells: List, k: i32, vertex: bool) -> List {
+fn a5_grid_disk_rs(cells: List, k: i32, vertex: bool, simplify: bool) -> Robj {
     let k = k as usize;
-    one_to_many(&cells, "grid_disk", |id| {
+    one_to_many(&cells, "grid_disk", simplify, |id| {
         if vertex {
             a5::grid_disk_vertex(id, k)
         } else {
@@ -26,12 +28,14 @@ fn a5_grid_disk_rs(cells: List, k: i32, vertex: bool) -> List {
 ///
 /// @param cells List with b1..b8 raw vectors.
 /// @param radius Radius in metres.
-/// @return list(cells = b1..b8 raw list, lengths = integer per input).
+/// @param simplify If TRUE one flat b1..b8 list, else a list of a5_cell
+///   objects, one per input.
+/// @return See simplify.
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_spherical_cap_rs(cells: List, radius: f64) -> List {
-    one_to_many(&cells, "spherical_cap", |id| a5::spherical_cap(id, radius))
+fn a5_spherical_cap_rs(cells: List, radius: f64, simplify: bool) -> Robj {
+    one_to_many(&cells, "spherical_cap", simplify, |id| a5::spherical_cap(id, radius))
 }
 
 extendr_module! {

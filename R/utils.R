@@ -29,20 +29,15 @@ check_flag <- function(x, arg = rlang::caller_arg(x), call = rlang::caller_env()
 
 #' Shape the result of a one-to-many Rust call
 #'
-#' `rs` is `list(cells = <b1..b8>, lengths = <integer>)` from `one_to_many` on
-#' the Rust side. With `simplify = TRUE` the concatenated cells are returned
-#' as one `a5_cell` vector; otherwise they are chopped into a `list_of` with
-#' one element per input (empty for `NA` inputs).
+#' With `simplify = TRUE` the Rust side returns one concatenated b1..b8 list;
+#' otherwise it returns a list of fully formed `a5_cell` objects, one per
+#' input (empty for `NA` inputs), which only needs the `list_of` wrapper.
 #' @noRd
 one_to_many <- function(rs, simplify) {
-  cells <- cells_from_rs(rs$cells)
   if (simplify) {
-    return(cells)
+    return(cells_from_rs(rs))
   }
-  vctrs::new_list_of(
-    vctrs::vec_chop(cells, sizes = rs$lengths),
-    ptype = new_a5_cell()
-  )
+  vctrs::new_list_of(rs, ptype = new_a5_cell())
 }
 
 #' Attach units to a numeric vector

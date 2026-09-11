@@ -157,10 +157,12 @@ a5_cell_to_parent_rs <- function(cells, parent_resolution) .Call(wrap__a5_cell_t
 #' @param cells List with b1..b8 raw vectors.
 #' @param child_resolution Integer: target child resolution. NULL for
 #'   immediate children.
-#' @return list(cells = b1..b8 raw list, lengths = integer per input).
+#' @param simplify If TRUE one flat b1..b8 list, else a list of a5_cell
+#'   objects, one per input.
+#' @return See simplify.
 #' @noRd
 #' @keywords internal
-a5_cell_to_children_rs <- function(cells, child_resolution) .Call(wrap__a5_cell_to_children_rs, cells, child_resolution)
+a5_cell_to_children_rs <- function(cells, child_resolution, simplify) .Call(wrap__a5_cell_to_children_rs, cells, child_resolution, simplify)
 
 #' The i-th child of each cell at a resolution, without building the list.
 #'
@@ -211,19 +213,23 @@ a5_uncompact_rs <- function(cells, target_resolution) .Call(wrap__a5_uncompact_r
 #' @param cells List with b1..b8 raw vectors.
 #' @param k Number of hops.
 #' @param vertex If TRUE, include vertex-sharing (8-connected) neighbours.
-#' @return list(cells = b1..b8 raw list, lengths = integer per input).
+#' @param simplify If TRUE one flat b1..b8 list, else a list of a5_cell
+#'   objects, one per input.
+#' @return See simplify.
 #' @noRd
 #' @keywords internal
-a5_grid_disk_rs <- function(cells, k, vertex) .Call(wrap__a5_grid_disk_rs, cells, k, vertex)
+a5_grid_disk_rs <- function(cells, k, vertex, simplify) .Call(wrap__a5_grid_disk_rs, cells, k, vertex, simplify)
 
 #' Get all cells within a great-circle radius of each centre cell.
 #'
 #' @param cells List with b1..b8 raw vectors.
 #' @param radius Radius in metres.
-#' @return list(cells = b1..b8 raw list, lengths = integer per input).
+#' @param simplify If TRUE one flat b1..b8 list, else a list of a5_cell
+#'   objects, one per input.
+#' @return See simplify.
 #' @noRd
 #' @keywords internal
-a5_spherical_cap_rs <- function(cells, radius) .Call(wrap__a5_spherical_cap_rs, cells, radius)
+a5_spherical_cap_rs <- function(cells, radius, simplify) .Call(wrap__a5_spherical_cap_rs, cells, radius, simplify)
 
 #' Convert one or more polygon parts (with optional holes) to A5 cells.
 #'

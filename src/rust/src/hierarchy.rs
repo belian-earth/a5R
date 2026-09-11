@@ -148,16 +148,18 @@ fn a5_cell_to_parent_rs(cells: List, parent_resolution: Nullable<i32>) -> List {
 /// @param cells List with b1..b8 raw vectors.
 /// @param child_resolution Integer: target child resolution. NULL for
 ///   immediate children.
-/// @return list(cells = b1..b8 raw list, lengths = integer per input).
+/// @param simplify If TRUE one flat b1..b8 list, else a list of a5_cell
+///   objects, one per input.
+/// @return See simplify.
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_cell_to_children_rs(cells: List, child_resolution: Nullable<i32>) -> List {
+fn a5_cell_to_children_rs(cells: List, child_resolution: Nullable<i32>, simplify: bool) -> Robj {
     let cres: Option<i32> = match child_resolution {
         Nullable::NotNull(v) => Some(v),
         Nullable::Null => None,
     };
-    one_to_many(&cells, "cell_to_children", |id| a5::cell_to_children(id, cres))
+    one_to_many(&cells, "cell_to_children", simplify, |id| a5::cell_to_children(id, cres))
 }
 
 /// The i-th child of each cell at a resolution, without building the list.

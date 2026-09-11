@@ -31,7 +31,7 @@ a5_grid_disk <- function(cell, k, vertex = FALSE, simplify = TRUE) {
   check_size1(k)
   check_flag(vertex)
   check_flag(simplify)
-  one_to_many(a5_grid_disk_rs(cell_data(cell), k, vertex), simplify)
+  one_to_many(a5_grid_disk_rs(cell_data(cell), k, vertex, simplify), simplify)
 }
 
 #' Cells within a great-circle radius
@@ -54,5 +54,5 @@ a5_spherical_cap <- function(cell, radius, simplify = TRUE) {
   radius <- vctrs::vec_cast(radius, double())
   check_size1(radius)
   check_flag(simplify)
-  one_to_many(a5_spherical_cap_rs(cell_data(cell), radius), simplify)
+  one_to_many(a5_spherical_cap_rs(cell_data(cell), radius, simplify), simplify)
 }

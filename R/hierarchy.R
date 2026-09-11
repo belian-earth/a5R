@@ -147,5 +147,5 @@ a5_cell_to_children <- function(cell, resolution = NULL, simplify = TRUE) {
     check_size1(resolution)
   }
   check_flag(simplify)
-  one_to_many(a5_cell_to_children_rs(cell_data(cell), resolution), simplify)
+  one_to_many(a5_cell_to_children_rs(cell_data(cell), resolution, simplify), simplify)
 }
