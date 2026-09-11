@@ -7,9 +7,15 @@
 a5_spherical_cap(cell, radius, simplify = TRUE)
 }
 \arguments{
-\item{cell}{A single \link{a5_cell} value.}
+\item{cell}{An \link{a5_cell} vector of centre cells.}
 
 \item{radius}{Numeric scalar, great-circle radius in metres.}
+
+\item{simplify}{Logical scalar. If \code{TRUE} (default), return one flat
+\link{a5_cell} vector with the caps of every input concatenated in input
+order; cells shared by several caps appear once per cap. If \code{FALSE},
+return an \link{a5_cell_list}: a \code{\link[vctrs:list_of]{vctrs::list_of()}} of \link{a5_cell} vectors with
+one element per input, suitable for a list column.}
 }
 \value{
 An \link{a5_cell} vector, or an \link{a5_cell_list} when \code{simplify = FALSE}.
@@ -17,11 +23,14 @@ An \code{NA} input contributes no cells (an empty element in the list form).
 }
 \description{
 Returns all cells whose centres fall within a great-circle distance
-of a given cell's centre.
+of each input cell's centre.
 }
 \examples{
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 8)
 a5_spherical_cap(cell, radius = 1000)
+
+cells <- a5_lonlat_to_cell(c(-3.19, 0), c(55.95, 0), resolution = 8)
+a5_spherical_cap(cells, radius = 1000, simplify = FALSE) # list of 2
 }
 \seealso{
 \code{\link[=a5_grid_disk]{a5_grid_disk()}} for hop-based selection.
