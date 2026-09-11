@@ -37,7 +37,25 @@ one_to_many <- function(rs, simplify) {
   if (simplify) {
     return(cells_from_rs(rs))
   }
-  vctrs::new_list_of(rs, ptype = new_a5_cell())
+  # Identical to vctrs::new_list_of(rs, ptype = new_a5_cell()); the elements
+  # are already a5_cell objects, and building the prototype and validating
+  # the list cost about 45 µs per call.
+  structure(
+    rs,
+    ptype = a5_cell_ptype(),
+    class = c("vctrs_list_of", "vctrs_vctr", "list")
+  )
+}
+
+the_ptype_cache <- new.env(parent = emptyenv())
+
+a5_cell_ptype <- function() {
+  cached <- the_ptype_cache$a5_cell
+  if (is.null(cached)) {
+    cached <- new_a5_cell()
+    assign("a5_cell", cached, envir = the_ptype_cache)
+  }
+  cached
 }
 
 #' Attach units to a numeric vector
