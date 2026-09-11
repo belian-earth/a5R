@@ -84,12 +84,19 @@ a5_cell_child <- function(cell, resolution, i) {
 #' descendant, and no descendant lies outside. This makes `BETWEEN lo AND hi`
 #' an exact filter on a store of `resolution` cells sorted by id. Not every
 #' integer in the range is a valid cell, and cells of other resolutions may
-#' fall inside it. At resolution 30 the encoding varies by dodecahedron
-#' face, so the contiguity guarantee does not hold across faces there.
+#' fall inside it.
+#'
+#' Resolution 30 is refused because the guarantee does not hold there. The
+#' index has no room for the usual face bits at that resolution, so faces use
+#' three different bit layouts whose id ranges overlap numerically, and a
+#' range can contain valid resolution-30 cells from another face. Eighteen of
+#' the sixty faces cannot be encoded at resolution 30 at all; the upstream
+#' library falls back to resolution 29 for them. Use
+#' [a5_cell_to_children()] if you need resolution-30 descendants.
 #'
 #' @param cell An [a5_cell] vector.
-#' @param resolution Integer scalar target resolution, at or finer than every
-#'   cell's own resolution.
+#' @param resolution Integer scalar target resolution from 0 to 29, at or
+#'   finer than every cell's own resolution.
 #' @returns A data frame with [a5_cell] columns `lo` and `hi`, one row per
 #'   input cell. `NA` where `cell` is `NA`.
 #'
@@ -107,6 +114,13 @@ a5_cell_children_range <- function(cell, resolution) {
   resolution <- vctrs::vec_cast(resolution, integer())
   check_resolution(resolution)
   check_size1(resolution)
+  if (identical(resolution, 30L)) {
+    cli::cli_abort(c(
+      "{.arg resolution} must be 29 or less.",
+      "x" = "Descendant ids are not contiguous at resolution 30: face bit layouts overlap numerically and some faces cannot be encoded.",
+      "i" = "Use {.fn a5_cell_to_children} to enumerate resolution-30 descendants."
+    ))
+  }
   rs <- a5_cell_children_range_rs(cell_data(cell), resolution)
   vctrs::new_data_frame(list(lo = cells_from_rs(rs$lo), hi = cells_from_rs(rs$hi)))
 }

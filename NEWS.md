@@ -14,8 +14,9 @@
   resolution without enumerating the others, for sampling from large cells.
 * New `a5_cell_children_range()` returns the smallest and largest descendant
   of each cell at a finer resolution. Descendants occupy a contiguous id range
-  among cells of that resolution (up to resolution 29), so the pair is an
-  exact `BETWEEN` filter on an id-sorted store.
+  among cells of that resolution, so the pair is an exact `BETWEEN` filter on
+  an id-sorted store. Resolution 30 is refused because the guarantee does not
+  hold there.
 
 * Reduced per-call overhead across the package. Rust output is wrapped
   without re-validation, cell fields are passed to Rust without building a

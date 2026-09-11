@@ -9,8 +9,8 @@ a5_cell_children_range(cell, resolution)
 \arguments{
 \item{cell}{An \link{a5_cell} vector.}
 
-\item{resolution}{Integer scalar target resolution, at or finer than every
-cell's own resolution.}
+\item{resolution}{Integer scalar target resolution from 0 to 29, at or
+finer than every cell's own resolution.}
 }
 \value{
 A data frame with \link{a5_cell} columns \code{lo} and \code{hi}, one row per
@@ -26,8 +26,16 @@ cell at \code{resolution} whose id lies between \code{lo} and \code{hi} inclusiv
 descendant, and no descendant lies outside. This makes \verb{BETWEEN lo AND hi}
 an exact filter on a store of \code{resolution} cells sorted by id. Not every
 integer in the range is a valid cell, and cells of other resolutions may
-fall inside it. At resolution 30 the encoding varies by dodecahedron
-face, so the contiguity guarantee does not hold across faces there.
+fall inside it.
+}
+\details{
+Resolution 30 is refused because the guarantee does not hold there. The
+index has no room for the usual face bits at that resolution, so faces use
+three different bit layouts whose id ranges overlap numerically, and a
+range can contain valid resolution-30 cells from another face. Eighteen of
+the sixty faces cannot be encoded at resolution 30 at all; the upstream
+library falls back to resolution 29 for them. Use
+\code{\link[=a5_cell_to_children]{a5_cell_to_children()}} if you need resolution-30 descendants.
 }
 \examples{
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)

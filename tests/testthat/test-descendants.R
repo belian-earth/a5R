@@ -55,3 +55,12 @@ test_that("children_range brackets exactly the descendants", {
   expect_true(is.na(rng$lo[2]) && is.na(rng$hi[2]))
   expect_error(a5_cell_children_range(cell, 4L), "resolution")
 })
+
+test_that("children_range refuses resolution 30", {
+  cell <- a5_lonlat_to_cell(0, 0, 20L)
+  expect_error(a5_cell_children_range(cell, 30L), "not contiguous at resolution 30")
+  expect_error(a5_cell_children_range(cell, 30), "29 or less")
+  # 29 remains fine, including for a resolution-29 cell itself.
+  c29 <- a5_lonlat_to_cell(0, 0, 29L)
+  expect_identical(a5_cell_children_range(c29, 29L)$lo, c29)
+})
