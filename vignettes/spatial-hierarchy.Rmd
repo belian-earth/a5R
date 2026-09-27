@@ -1,0 +1,151 @@
+---
+title: "Moving between resolutions by location"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Moving between resolutions by location}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(a5R)
+```
+
+`a5_cell_to_spatial_parent()` and `a5_cell_to_spatial_children()` are
+experimental. Their names and behaviour may change.
+
+## The index hierarchy is not spatially nested
+
+`a5_cell_to_parent()` and `a5_cell_to_children()` follow the A5 index. A
+cell's index children do not tile it: some of them lie mostly in its
+neighbours, and some cells inside it belong to a neighbour's index.
+
+The spatial functions follow location instead. A fine cell belongs to the
+coarse cell containing its centre.
+
+```{r children-plot, fig.width = 7, fig.height = 3.6}
+cell <- a5_lonlat_to_cell(-53.5, -19, resolution = 8)
+index_kids <- a5_cell_to_children(cell, resolution = 11)
+spatial_kids <- a5_cell_to_spatial_children(cell, resolution = 11)
+
+outline <- a5_cell_to_boundary(cell)
+lim <- wk::wk_bbox(a5_cell_to_boundary(c(index_kids, spatial_kids)))
+lim <- unclass(lim)
+
+op <- par(mfrow = c(1, 2), mar = c(0.5, 0.5, 2, 0.5))
+for (panel in list(list(index_kids, "Index children"),
+                   list(spatial_kids, "Spatial children"))) {
+  plot(NULL, xlim = c(lim$xmin, lim$xmax), ylim = c(lim$ymin, lim$ymax),
+       asp = 1, axes = FALSE, xlab = "", ylab = "", main = panel[[2]])
+  plot(a5_cell_to_boundary(panel[[1]]), col = "#206ead40",
+       border = "#206ead", add = TRUE)
+  plot(outline, border = "#333333", lwd = 2, add = TRUE)
+}
+par(op)
+```
+
+Both sets hold 64 cells here, but only the spatial set sits inside the
+outline. The mismatch is not rare:
+
+```{r}
+set.seed(1)
+fine <- a5_lonlat_to_cell(
+  stats::runif(1e4, -54, -53), stats::runif(1e4, -19.5, -18.5),
+  resolution = 18
+)
+mean(a5_cell_to_parent(fine, 15) != a5_cell_to_spatial_parent(fine, 15))
+```
+
+For about a third of res-18 cells, the index parent at res 15 is a
+neighbour of the cell they lie in.
+
+## Aggregating to a coarser grid
+
+Take a complete res-18 layer over a small area containing a circular patch,
+such as a stand of forest: cells inside the patch have value 1, cells
+outside have value 0. Average it to res 15 under each rule.
+
+```{r}
+area <- a5_lonlat_to_cell(-53.5, -19, resolution = 12)
+layer <- a5_cell_to_children(a5_grid_disk(area, 1), resolution = 18)
+length(layer)
+
+centre <- unclass(a5_cell_to_lonlat(area))
+in_patch <- function(p) {
+  p <- unclass(p)
+  as.numeric((p$x - centre$x)^2 + (p$y - centre$y)^2 < 0.004^2)
+}
+fine <- data.frame(value = in_patch(a5_cell_to_lonlat(layer)))
+
+mean_by <- function(cell, value) {
+  stats::aggregate(list(value = value), list(cell = format(cell)), mean)
+}
+by_index <- mean_by(a5_cell_to_parent(layer, 15), fine$value)
+by_spatial <- mean_by(a5_cell_to_spatial_parent(layer, 15), fine$value)
+```
+
+For a reference that uses neither hierarchy, drop two million random points
+on the area, place each directly in its res-15 cell, and take the share of
+points per cell that fall in the patch. This estimates each coarse cell's
+true patch fraction.
+
+```{r}
+set.seed(1)
+bb <- unclass(wk::wk_bbox(a5_cell_to_lonlat(layer)))
+pts <- list(x = stats::runif(2e6, bb$xmin, bb$xmax),
+            y = stats::runif(2e6, bb$ymin, bb$ymax))
+truth <- mean_by(a5_lonlat_to_cell(pts$x, pts$y, resolution = 15), in_patch(pts))
+names(truth)[2] <- "truth"
+
+error <- function(agg) {
+  m <- merge(agg, truth)
+  m <- m[m$value > 0 | m$truth > 0, ]
+  round(c(mean = mean(abs(m$value - m$truth)), max = max(abs(m$value - m$truth))), 3)
+}
+error(by_index)
+error(by_spatial)
+```
+
+Aggregating by index parent misstates the patch fraction of the cells it
+touches by about a tenth on average, and by a third at worst, because each
+coarse cell averages fine cells from its neighbours. The spatial rule is off
+only by the sampling noise of the reference. `format()` supplies a grouping
+key here because base grouping functions cannot group an `a5_cell` vector
+directly (see `vignette("internal-cell-representation")`).
+
+## Expanding coarse cells
+
+The downward direction is the exact inverse. Expanding a set of coarse cells
+gives each fine cell once, inside the coarse cell whose centre rule claims
+it:
+
+```{r}
+patch <- a5_uncompact(a5_grid_disk(cell, 1), 8)
+kids <- a5_cell_to_spatial_children(patch, resolution = 11, simplify = FALSE)
+lengths(kids)
+
+all_kids <- unlist(kids)
+vctrs::vec_duplicate_any(all_kids)
+all(a5_cell_to_spatial_parent(all_kids, 8) == rep(patch, lengths(kids)))
+```
+
+Counts vary slightly from cell to cell but average `4^3 = 64` for these three
+resolution steps, as for index children.
+
+## Which to use
+
+Use the index functions for operations on ids: compaction, id ranges and
+Hilbert ordering. Use the spatial functions whenever values move between
+resolutions and must stay where they are on the ground.
+
+The spatial functions cost more. The index functions are bit operations;
+`a5_cell_to_spatial_parent()` locates each centre, taking about as long as
+`a5_lonlat_to_cell()`. Both spatial functions run in parallel with
+`a5_set_threads()`.
