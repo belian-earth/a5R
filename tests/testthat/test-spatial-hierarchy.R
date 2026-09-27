@@ -49,6 +49,28 @@ test_that("spatial_children is complete and the exact inverse of spatial_parent"
   }
 })
 
+test_that("spatial_children is exact at large gaps, fine resolutions and the poles", {
+  check <- function(coarse, fine_res) {
+    res <- a5_get_resolution(coarse[1])
+    for (i in seq_along(coarse)) {
+      kids <- a5_cell_to_spatial_children(coarse[i], fine_res)
+      area <- a5_cell_to_children(a5_grid_disk(coarse[i], 2, vertex = TRUE), fine_res)
+      expect_identical(kids, vctrs::vec_sort(area[centre_cell(area, res) == coarse[i]]))
+    }
+  }
+  check(unique(random_cells(8, 6, seed = 40)), 12)
+  check(unique(random_cells(8, 24, seed = 41)), 28)
+  check(unique(random_cells(4, 26, seed = 42)), 30)
+  # one cell per face, including faces that cannot be encoded at resolution 30
+  faces <- a5_uncompact(a5_get_res0_cells(), 0)
+  face_cells <- a5_lonlat_to_cell(
+    unclass(a5_cell_to_lonlat(faces))$x, unclass(a5_cell_to_lonlat(faces))$y, 28
+  )
+  check(face_cells, 30)
+  poles <- a5_lonlat_to_cell(c(0, 90, -45, 170), c(90, 89.99, -90, -89.99), 9)
+  check(unique(poles), 13)
+})
+
 test_that("spatial children of a patch partition the patch's fine cells", {
   centre <- a5_lonlat_to_cell(-53.5, -19, resolution = 12)
   patch <- a5_uncompact(a5_grid_disk(centre, 2, vertex = TRUE), 12)

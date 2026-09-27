@@ -179,14 +179,85 @@ fn spatial_parent(id: u64, resolution: i32) -> Option<u64> {
     spherical_to_cell(cell_to_spherical(id).ok()?, resolution).ok()
 }
 
+/// Descendant centres of a cell stay within this many circumradii of the
+/// cell's own centre. Measured over random cells the drift converges to
+/// about 1.46 (each level adds at most ~0.77 of its own circumradius, and
+/// radii halve per level); 2.0 leaves room for projection distortion when
+/// the test runs in a neighbouring origin's face frame.
+const DESCENDANT_DRIFT: f64 = 2.0;
+
+/// Centres within this distance (face units) of an edge are decided by the
+/// exact upstream search instead of the margin test. Projection round trips
+/// agree to ~1e-15, so anything beyond this is unambiguous.
+const EDGE_EPS: f64 = 1e-11;
+
+/// A cell's shape in its origin's face frame, for signed-distance tests.
+struct CellShape {
+    origin_id: a5::core::utils::OriginId,
+    vertices: Vec<a5::coordinate_systems::Face>,
+}
+
+impl CellShape {
+    /// Mirrors the shapes `a5cell_contains_point` tests against: the face
+    /// pentagon at resolution 0, a quintant triangle at 1, else the cell.
+    fn new(id: u64) -> std::result::Result<Self, String> {
+        use a5::core::tiling::{get_face_vertices, get_quintant_vertices};
+        let cell = deserialize(id)?;
+        let shape = if cell.resolution == FIRST_HILBERT_RESOLUTION - 2 {
+            get_face_vertices()
+        } else if cell.resolution == FIRST_HILBERT_RESOLUTION - 1 {
+            let (q, _) = a5::core::origin::segment_to_quintant(cell.segment, cell.origin());
+            get_quintant_vertices(q)
+        } else {
+            a5::core::cell::get_pentagon(&cell)?
+        };
+        Ok(Self { origin_id: cell.origin_id, vertices: shape.get_vertices_vec().clone() })
+    }
+
+    /// Signed distance from `p` to the boundary: positive inside, and for a
+    /// point outside, at most minus its distance to the (convex) shape.
+    fn margin(&self, p: a5::coordinate_systems::Face) -> f64 {
+        let n = self.vertices.len();
+        let mut m = f64::INFINITY;
+        for i in 0..n {
+            let a = self.vertices[i];
+            let b = self.vertices[(i + 1) % n];
+            let (ex, ey) = (b.x() - a.x(), b.y() - a.y());
+            // Upstream's inside test: (a - b) x (p - a) >= 0 on every edge.
+            let d = (ey * (p.x() - a.x()) - ex * (p.y() - a.y())) / (ex * ex + ey * ey).sqrt();
+            m = m.min(d);
+        }
+        m
+    }
+
+    /// The centre of cell `id` in this shape's face frame.
+    fn project_centre(&self, id: u64) -> std::result::Result<a5::coordinate_systems::Face, String> {
+        let dode = a5::projections::dodecahedron::DodecahedronProjection::get_thread_local();
+        dode.forward(cell_to_spherical(id)?, self.origin_id)
+    }
+}
+
+/// Largest distance from a pentagon's centre to its vertices.
+fn circumradius(cell: &a5::A5Cell) -> std::result::Result<f64, String> {
+    let pent = a5::core::cell::get_pentagon(cell)?;
+    let c = pent.get_center();
+    Ok(pent
+        .get_vertices_vec()
+        .iter()
+        .map(|v| ((v.x() - c.x()).powi(2) + (v.y() - c.y()).powi(2)).sqrt())
+        .fold(0.0, f64::max))
+}
+
 /// The cells at `resolution` whose spatial parent at the resolution of `id`
 /// is `id`, in ascending id order.
 ///
-/// Candidates are the index descendants of `id` and of its vertex neighbours.
-/// A fine cell's index ancestor is at most one cell from its spatial parent
-/// (checked at every resolution pair in the tests), so the candidate set is
-/// complete. Filtering with `spatial_parent` itself makes the two functions
-/// exact inverses.
+/// Every such cell is an index descendant of `id` or of one of its vertex
+/// neighbours (checked at every resolution pair in the tests). Those index
+/// trees are walked top down: a subtree whose descendant centres all lie
+/// clearly inside the cell is taken whole, one whose centres all lie clearly
+/// outside is skipped, and only the rest is split further. Finest-level
+/// centres near an edge go to `spatial_parent`, so the result is exactly the
+/// inverse of `spatial_parent`.
 fn spatial_children(id: u64, resolution: i32) -> std::result::Result<Vec<u64>, String> {
     let own = a5::get_resolution(id);
     if resolution < own {
@@ -202,16 +273,39 @@ fn spatial_children(id: u64, resolution: i32) -> std::result::Result<Vec<u64>, S
     if own < 0 {
         return a5::cell_to_children(id, Some(resolution));
     }
+    let shape = CellShape::new(id)?;
     // grid_disk returns a compacted set: bring it back to the cell's own
     // resolution so compacted parents do not add far-away candidates.
-    let disk = a5::uncompact(&a5::grid_disk_vertex(id, 1)?, own)?;
+    // Nodes carry their nominal resolution: at resolution 30 some faces
+    // cannot be encoded and upstream returns resolution-29 ids instead, so
+    // the id's own resolution would never reach the target.
+    let mut stack: Vec<(u64, i32)> = a5::uncompact(&a5::grid_disk_vertex(id, 1)?, own)?
+        .into_iter()
+        .map(|c| (c, own))
+        .collect();
     let mut out = Vec::with_capacity(4usize.pow((resolution - own).min(15) as u32));
-    for d in disk {
-        for c in a5::cell_to_children(d, Some(resolution))? {
-            if spatial_parent(c, own) == Some(id) {
-                out.push(c);
+    while let Some((x, res)) = stack.pop() {
+        if res == resolution {
+            let m = shape.margin(shape.project_centre(x)?);
+            if m > EDGE_EPS || (m >= -EDGE_EPS && spatial_parent(x, own) == Some(id)) {
+                out.push(x);
+            }
+            continue;
+        }
+        // Below the first Hilbert resolution there is no pentagon to bound
+        // with, and only a handful of cells: always split.
+        if res >= FIRST_HILBERT_RESOLUTION {
+            let reach = DESCENDANT_DRIFT * circumradius(&deserialize(x)?)? + EDGE_EPS;
+            let m = shape.margin(shape.project_centre(x)?);
+            if m > reach {
+                out.extend(a5::cell_to_children(x, Some(resolution))?);
+                continue;
+            }
+            if m < -reach {
+                continue;
             }
         }
+        stack.extend(a5::cell_to_children(x, Some(res + 1))?.into_iter().map(|c| (c, res + 1)));
     }
     out.sort_unstable();
     Ok(out)

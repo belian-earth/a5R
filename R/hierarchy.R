@@ -249,6 +249,14 @@ a5_cell_to_spatial_parent <- function(cell, resolution = NULL) {
 #' Candidates are the index descendants of the cell and of its vertex
 #' neighbours, filtered by centre containment.
 #'
+#' The result usually equals
+#' `a5_uncompact(a5_polygon_to_cells(cell, resolution), resolution)`. That
+#' route tests centres against a polygon with great-circle edges between the
+#' cell's vertices, while A5 cell edges are slightly curved, so at large
+#' resolution differences it assigns a few edge cells (about 1 in 8,000 at a
+#' difference of 6) to a neighbour that [a5_cell_to_spatial_parent()] would
+#' not. This function is also faster and returns one result per input cell.
+#'
 #' @section Index hierarchy is not spatially nested:
 #' A5 parents and children are defined by the cell index, not by geometry. A
 #' cell's index children do not tile it: their union overlaps the parent's

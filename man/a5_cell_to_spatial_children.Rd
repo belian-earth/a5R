@@ -40,6 +40,14 @@ Counts vary from cell to cell and average \code{4^d} for a resolution
 difference \code{d}, or \code{5 * 4^(d - 1)} from resolution 0.
 Candidates are the index descendants of the cell and of its vertex
 neighbours, filtered by centre containment.
+
+The result usually equals
+\code{a5_uncompact(a5_polygon_to_cells(cell, resolution), resolution)}. That
+route tests centres against a polygon with great-circle edges between the
+cell's vertices, while A5 cell edges are slightly curved, so at large
+resolution differences it assigns a few edge cells (about 1 in 8,000 at a
+difference of 6) to a neighbour that \code{\link[=a5_cell_to_spatial_parent]{a5_cell_to_spatial_parent()}} would
+not. This function is also faster and returns one result per input cell.
 }
 \section{Index hierarchy is not spatially nested}{
 
