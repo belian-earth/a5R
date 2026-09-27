@@ -27,6 +27,17 @@ Returns the child cells of each input cell. By default returns the 4
 immediate children (one resolution finer). Optionally target a specific
 finer resolution.
 }
+\section{Index hierarchy is not spatially nested}{
+
+A5 parents and children are defined by the cell index, not by geometry. A
+cell's index children do not tile it: their union overlaps the parent's
+neighbours. Measured over random cells, the index parent is not the coarse
+cell containing a fine cell's centre for about half of fine cells one
+resolution apart, falling to about 35 percent at four or more resolutions
+apart. Use this function for index operations (ids, compaction, id ranges)
+and \code{\link[=a5_cell_to_spatial_children]{a5_cell_to_spatial_children()}} when cells must nest by location.
+}
+
 \examples{
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
 a5_cell_to_children(cell)
@@ -36,7 +47,7 @@ a5_cell_to_children(cells, resolution = 7)                  # 32 cells
 a5_cell_to_children(cells, resolution = 7, simplify = FALSE) # list of 2
 }
 \seealso{
-\code{\link[=a5_cell_to_parent]{a5_cell_to_parent()}}, \code{\link[=a5_get_resolution]{a5_get_resolution()}}, \code{\link[=a5_cell_child]{a5_cell_child()}}
-for one child at a time, \code{\link[=a5_cell_children_range]{a5_cell_children_range()}} for the id range of
-all descendants.
+\code{\link[=a5_cell_to_parent]{a5_cell_to_parent()}}, \code{\link[=a5_cell_to_spatial_children]{a5_cell_to_spatial_children()}},
+\code{\link[=a5_get_resolution]{a5_get_resolution()}}, \code{\link[=a5_cell_child]{a5_cell_child()}} for one child at a time,
+\code{\link[=a5_cell_children_range]{a5_cell_children_range()}} for the id range of all descendants.
 }

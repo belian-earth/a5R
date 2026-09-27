@@ -164,6 +164,26 @@ a5_cell_to_parent_rs <- function(cells, parent_resolution) .Call(wrap__a5_cell_t
 #' @keywords internal
 a5_cell_to_children_rs <- function(cells, child_resolution, simplify) .Call(wrap__a5_cell_to_children_rs, cells, child_resolution, simplify)
 
+#' Spatial parent: the coarser cell containing each cell's centre.
+#'
+#' @param cells List with b1..b8 raw vectors.
+#' @param parent_resolution Integer target resolution. NULL for one coarser.
+#' @return List with b1..b8 raw vectors.
+#' @noRd
+#' @keywords internal
+a5_cell_to_spatial_parent_rs <- function(cells, parent_resolution) .Call(wrap__a5_cell_to_spatial_parent_rs, cells, parent_resolution)
+
+#' Spatial children: the finer cells whose centres lie in each cell.
+#'
+#' @param cells List with b1..b8 raw vectors.
+#' @param child_resolution Integer target resolution. NULL for one finer.
+#' @param simplify If TRUE one flat b1..b8 list, else a list of a5_cell
+#'   objects, one per input.
+#' @return See simplify.
+#' @noRd
+#' @keywords internal
+a5_cell_to_spatial_children_rs <- function(cells, child_resolution, simplify) .Call(wrap__a5_cell_to_spatial_children_rs, cells, child_resolution, simplify)
+
 #' The i-th child of each cell at a resolution, without building the list.
 #'
 #' @param cells List with b1..b8 raw vectors.

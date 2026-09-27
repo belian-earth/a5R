@@ -26,7 +26,17 @@ a5_get_resolution <- function(cell) {
 #'   the immediate parent.
 #' @returns An [a5_cell] vector of parent cells.
 #'
-#' @seealso [a5_cell_to_children()], [a5_get_resolution()]
+#' @section Index hierarchy is not spatially nested:
+#' A5 parents and children are defined by the cell index, not by geometry. A
+#' cell's index children do not tile it: their union overlaps the parent's
+#' neighbours. Measured over random cells, the index parent is not the coarse
+#' cell containing a fine cell's centre for about half of fine cells one
+#' resolution apart, falling to about 35 percent at four or more resolutions
+#' apart. Use this function for index operations (ids, compaction, id ranges)
+#' and [a5_cell_to_spatial_parent()] when cells must nest by location.
+#'
+#' @seealso [a5_cell_to_children()], [a5_cell_to_spatial_parent()],
+#'   [a5_get_resolution()]
 #' @export
 #' @examples
 #' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
@@ -142,9 +152,18 @@ a5_cell_children_range <- function(cell, resolution) {
 #' @returns An [a5_cell] vector, or an [a5_cell_list] when `simplify = FALSE`.
 #'   An `NA` input contributes no cells (an empty element in the list form).
 #'
-#' @seealso [a5_cell_to_parent()], [a5_get_resolution()], [a5_cell_child()]
-#'   for one child at a time, [a5_cell_children_range()] for the id range of
-#'   all descendants.
+#' @section Index hierarchy is not spatially nested:
+#' A5 parents and children are defined by the cell index, not by geometry. A
+#' cell's index children do not tile it: their union overlaps the parent's
+#' neighbours. Measured over random cells, the index parent is not the coarse
+#' cell containing a fine cell's centre for about half of fine cells one
+#' resolution apart, falling to about 35 percent at four or more resolutions
+#' apart. Use this function for index operations (ids, compaction, id ranges)
+#' and [a5_cell_to_spatial_children()] when cells must nest by location.
+#'
+#' @seealso [a5_cell_to_parent()], [a5_cell_to_spatial_children()],
+#'   [a5_get_resolution()], [a5_cell_child()] for one child at a time,
+#'   [a5_cell_children_range()] for the id range of all descendants.
 #' @export
 #' @examples
 #' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
@@ -162,4 +181,103 @@ a5_cell_to_children <- function(cell, resolution = NULL, simplify = TRUE) {
   }
   check_flag(simplify)
   one_to_many(a5_cell_to_children_rs(cell_data(cell), resolution, simplify), simplify)
+}
+
+#' Spatial parent: the coarser cell containing each cell's centre
+#'
+#' \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+#'
+#' Returns, for each cell, the cell at a coarser resolution that contains the
+#' cell's centre. This is the spatial counterpart of [a5_cell_to_parent()],
+#' which follows the index and often returns a neighbour of the containing
+#' cell (see the section below). The result equals
+#' `a5_lonlat_to_cell(a5_cell_to_lonlat(cell), resolution)`, computed in one
+#' pass without converting the centre to degrees.
+#'
+#' Together with [a5_cell_to_spatial_children()] this defines an exact
+#' partition: every fine cell has exactly one spatial parent, and the spatial
+#' children of a coarse cell are exactly the fine cells whose spatial parent
+#' it is. A centre on a shared edge goes to the cell [a5_lonlat_to_cell()]
+#' assigns it to.
+#'
+#' @section Index hierarchy is not spatially nested:
+#' A5 parents and children are defined by the cell index, not by geometry. A
+#' cell's index children do not tile it: their union overlaps the parent's
+#' neighbours. Measured over random cells, the index parent is not the coarse
+#' cell containing a fine cell's centre for about half of fine cells one
+#' resolution apart, falling to about 35 percent at four or more resolutions
+#' apart. This function is the location-based alternative.
+#'
+#' @param cell An [a5_cell] vector.
+#' @param resolution Integer scalar target resolution, or `NULL` for one
+#'   resolution coarser than each cell.
+#' @returns An [a5_cell] vector the same length as `cell`. `NA` where `cell`
+#'   is `NA`, where `resolution` is finer than the cell, or for a
+#'   resolution-0 cell with `resolution = NULL`. A cell at `resolution` is
+#'   returned unchanged.
+#'
+#' @seealso [a5_cell_to_spatial_children()], [a5_cell_to_parent()]
+#' @export
+#' @examples
+#' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 18)
+#' a5_cell_to_spatial_parent(cell, resolution = 15)
+#' a5_cell_to_parent(cell, resolution = 15) # may differ
+a5_cell_to_spatial_parent <- function(cell, resolution = NULL) {
+  cell <- as_a5_cell(cell)
+  if (!is.null(resolution)) {
+    resolution <- vctrs::vec_cast(resolution, integer())
+    check_resolution(resolution)
+    check_size1(resolution)
+  }
+  cells_from_rs(a5_cell_to_spatial_parent_rs(cell_data(cell), resolution))
+}
+
+#' Spatial children: the finer cells whose centres lie in each cell
+#'
+#' \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+#'
+#' Returns, for each cell, the cells at a finer resolution whose centres lie
+#' inside it. This is the spatial counterpart of [a5_cell_to_children()],
+#' whose index children spill into neighbouring cells (see the section below).
+#' It is the exact inverse of [a5_cell_to_spatial_parent()]: a fine cell is
+#' returned for a coarse cell if and only if that coarse cell is its spatial
+#' parent. The spatial children of a set of cells that tile an area therefore
+#' tile it too, with no cell counted twice.
+#'
+#' Counts vary from cell to cell and average `4^d` for a resolution
+#' difference `d`, or `5 * 4^(d - 1)` from resolution 0.
+#' Candidates are the index descendants of the cell and of its vertex
+#' neighbours, filtered by centre containment.
+#'
+#' @section Index hierarchy is not spatially nested:
+#' A5 parents and children are defined by the cell index, not by geometry. A
+#' cell's index children do not tile it: their union overlaps the parent's
+#' neighbours. Measured over random cells, the index parent is not the coarse
+#' cell containing a fine cell's centre for about half of fine cells one
+#' resolution apart, falling to about 35 percent at four or more resolutions
+#' apart. This function is the location-based alternative.
+#'
+#' @inheritParams a5_cell_to_children
+#' @param resolution Integer scalar target resolution, or `NULL` for one
+#'   resolution finer than each cell. Must be at or finer than every cell's
+#'   own resolution.
+#' @returns An [a5_cell] vector, or an [a5_cell_list] when `simplify = FALSE`.
+#'   Each cell's children are in ascending id order. An `NA` input contributes
+#'   no cells (an empty element in the list form).
+#'
+#' @seealso [a5_cell_to_spatial_parent()], [a5_cell_to_children()]
+#' @export
+#' @examples
+#' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
+#' kids <- a5_cell_to_spatial_children(cell, resolution = 12)
+#' all(a5_cell_to_spatial_parent(kids, resolution = 10) == cell)
+a5_cell_to_spatial_children <- function(cell, resolution = NULL, simplify = TRUE) {
+  cell <- as_a5_cell(cell)
+  if (!is.null(resolution)) {
+    resolution <- vctrs::vec_cast(resolution, integer())
+    check_resolution(resolution)
+    check_size1(resolution)
+  }
+  check_flag(simplify)
+  one_to_many(a5_cell_to_spatial_children_rs(cell_data(cell), resolution, simplify), simplify)
 }

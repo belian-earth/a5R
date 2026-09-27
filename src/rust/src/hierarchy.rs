@@ -2,6 +2,7 @@ use extendr_api::prelude::*;
 use extendr_api::wrapper::Nullable;
 
 use crate::cell_raw::{collect_ids, map_cells, one_to_many, u64s_to_raw8_list, CellSlices};
+use a5::core::cell::{cell_to_spherical, spherical_to_cell};
 use a5::core::serialization::{deserialize, serialize, FIRST_HILBERT_RESOLUTION};
 use a5::A5Cell;
 
@@ -162,6 +163,103 @@ fn a5_cell_to_children_rs(cells: List, child_resolution: Nullable<i32>, simplify
     one_to_many(&cells, "cell_to_children", simplify, |id| a5::cell_to_children(id, cres))
 }
 
+/// The cell at `resolution` containing the centre of `id`.
+///
+/// The centre goes straight from `cell_to_spherical` to `spherical_to_cell`,
+/// so this is `lonlat_to_cell(cell_to_lonlat(id), resolution)` without the
+/// round trip through degrees. `None` when `resolution` is finer than `id`.
+fn spatial_parent(id: u64, resolution: i32) -> Option<u64> {
+    let own = a5::get_resolution(id);
+    if resolution > own {
+        return None;
+    }
+    if resolution == own {
+        return Some(id);
+    }
+    spherical_to_cell(cell_to_spherical(id).ok()?, resolution).ok()
+}
+
+/// The cells at `resolution` whose spatial parent at the resolution of `id`
+/// is `id`, in ascending id order.
+///
+/// Candidates are the index descendants of `id` and of its vertex neighbours.
+/// A fine cell's index ancestor is at most one cell from its spatial parent
+/// (checked at every resolution pair in the tests), so the candidate set is
+/// complete. Filtering with `spatial_parent` itself makes the two functions
+/// exact inverses.
+fn spatial_children(id: u64, resolution: i32) -> std::result::Result<Vec<u64>, String> {
+    let own = a5::get_resolution(id);
+    if resolution < own {
+        return Err(format!(
+            "target resolution {} is coarser than cell resolution {}",
+            resolution, own
+        ));
+    }
+    if resolution == own {
+        return Ok(vec![id]);
+    }
+    // The world cell (resolution -1) contains every centre.
+    if own < 0 {
+        return a5::cell_to_children(id, Some(resolution));
+    }
+    // grid_disk returns a compacted set: bring it back to the cell's own
+    // resolution so compacted parents do not add far-away candidates.
+    let disk = a5::uncompact(&a5::grid_disk_vertex(id, 1)?, own)?;
+    let mut out = Vec::with_capacity(4usize.pow((resolution - own).min(15) as u32));
+    for d in disk {
+        for c in a5::cell_to_children(d, Some(resolution))? {
+            if spatial_parent(c, own) == Some(id) {
+                out.push(c);
+            }
+        }
+    }
+    out.sort_unstable();
+    Ok(out)
+}
+
+/// Spatial parent: the coarser cell containing each cell's centre.
+///
+/// @param cells List with b1..b8 raw vectors.
+/// @param parent_resolution Integer target resolution. NULL for one coarser.
+/// @return List with b1..b8 raw vectors.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn a5_cell_to_spatial_parent_rs(cells: List, parent_resolution: Nullable<i32>) -> List {
+    let pres: Option<i32> = match parent_resolution {
+        Nullable::NotNull(v) => Some(v),
+        Nullable::Null => None,
+    };
+    let results = map_cells(&cells, |id| {
+        let res = pres.unwrap_or_else(|| a5::get_resolution(id) - 1);
+        if res < 0 {
+            return None;
+        }
+        spatial_parent(id, res)
+    });
+    u64s_to_raw8_list(results)
+}
+
+/// Spatial children: the finer cells whose centres lie in each cell.
+///
+/// @param cells List with b1..b8 raw vectors.
+/// @param child_resolution Integer target resolution. NULL for one finer.
+/// @param simplify If TRUE one flat b1..b8 list, else a list of a5_cell
+///   objects, one per input.
+/// @return See simplify.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn a5_cell_to_spatial_children_rs(cells: List, child_resolution: Nullable<i32>, simplify: bool) -> Robj {
+    let cres: Option<i32> = match child_resolution {
+        Nullable::NotNull(v) => Some(v),
+        Nullable::Null => None,
+    };
+    one_to_many(&cells, "cell_to_spatial_children", simplify, |id| {
+        spatial_children(id, cres.unwrap_or_else(|| a5::get_resolution(id) + 1))
+    })
+}
+
 /// The i-th child of each cell at a resolution, without building the list.
 ///
 /// @param cells List with b1..b8 raw vectors.
@@ -296,6 +394,8 @@ extendr_module! {
     fn a5_get_resolution_rs;
     fn a5_cell_to_parent_rs;
     fn a5_cell_to_children_rs;
+    fn a5_cell_to_spatial_parent_rs;
+    fn a5_cell_to_spatial_children_rs;
     fn a5_cell_child_rs;
     fn a5_cell_children_range_rs;
     fn a5_get_res0_cells_rs;
