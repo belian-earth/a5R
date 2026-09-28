@@ -74,6 +74,14 @@ resolution differences it assigns a few edge cells (about 1 in 8,000 at a
 difference of 6) to a neighbour that \code{a5_cell_to_spatial_parent()} would
 not. \code{a5_cell_to_spatial_children()} is also faster and returns one result
 per input cell.
+
+The result is not compacted, so every cell is at \code{resolution}, as with
+\code{\link[=a5_cell_to_children]{a5_cell_to_children()}}. \code{\link[=a5_compact]{a5_compact()}} on it is lossless (\code{\link[=a5_uncompact]{a5_uncompact()}}
+restores it exactly) and cuts the number of cells sharply at large
+resolution differences: to about 9 percent at a difference of 6. Treat the
+compacted form as storage only. Compacted cells are index parents, whose
+outlines extend beyond the coarse cell (see \link{a5_hierarchy}), so uncompact
+before plotting or any geometric use.
 }
 
 \examples{

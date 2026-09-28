@@ -210,6 +210,14 @@ a5_cell_children_range <- function(cell, resolution) {
 #' not. `a5_cell_to_spatial_children()` is also faster and returns one result
 #' per input cell.
 #'
+#' The result is not compacted, so every cell is at `resolution`, as with
+#' [a5_cell_to_children()]. [a5_compact()] on it is lossless ([a5_uncompact()]
+#' restores it exactly) and cuts the number of cells sharply at large
+#' resolution differences: to about 9 percent at a difference of 6. Treat the
+#' compacted form as storage only. Compacted cells are index parents, whose
+#' outlines extend beyond the coarse cell (see [a5_hierarchy]), so uncompact
+#' before plotting or any geometric use.
+#'
 #' @param cell An [a5_cell] vector.
 #' @param resolution Integer scalar target resolution, or `NULL` for one step:
 #'   one resolution coarser for `a5_cell_to_spatial_parent()`, one finer for
