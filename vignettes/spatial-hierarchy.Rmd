@@ -69,7 +69,7 @@ neighbour of the cell they lie in.
 The upward direction shows the same thing from the other side. Here is one
 res-10 cell whose index parent at res 8 is not the cell it lies in:
 
-```{r parent-plot, fig.width = 5, fig.height = 4, echo = -c(1, 16)}
+```{r parent-plot, fig.width = 5, fig.height = 4, echo = -c(1, 17)}
 op <- par(mar = c(0.5, 0.5, 0.5, 0.5))
 kids <- a5_cell_to_children(a5_grid_disk(cell, 1), resolution = 10)
 moved <- kids[a5_cell_to_parent(kids, 8) != a5_cell_to_spatial_parent(kids, 8)]
@@ -87,13 +87,14 @@ plot(a5_cell_to_boundary(index_parent), col = "#d9534f20", border = "#d9534f",
 plot(a5_cell_to_boundary(spatial_parent), col = "#206ead20", border = "#206ead",
      lwd = 2, add = TRUE)
 plot(a5_cell_to_boundary(fine_cell), col = "#333333", border = NA, add = TRUE)
+plot(a5_cell_to_lonlat(fine_cell), pch = 19, cex = 0.8, col = "white", add = TRUE)
 legend("bottomright", bty = "n", lwd = 2, lty = c(2, 1),
        col = c("#d9534f", "#206ead"), legend = c("Index parent", "Spatial parent"))
 par(op)
 ```
 
-The fine cell (dark) sits inside the spatial parent, while its index parent
-is the neighbouring cell.
+The fine cell (dark, with its centre in white) sits inside the spatial
+parent, while its index parent is the neighbouring cell.
 
 ## Aggregating to a coarser grid
 
