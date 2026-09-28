@@ -1,20 +1,50 @@
-#' Cell area at a given resolution
+#' Cell size and counts by resolution
 #'
-#' Returns the area of a single cell in square metres at the given
-#' resolution(s). Because A5 is an equal-area DGGS, all cells at the same
-#' resolution have identical area.
+#' Properties of the grid at a resolution, independent of any particular
+#' cell:
 #'
-#' @param resolution Integer vector of resolutions (0--30).
-#' @param units Character scalar specifying the output area unit (default
-#'   `"m^2"`). Any unit convertible from `m^2` via [units::set_units()] is
-#'   accepted (e.g. `"km^2"`, `"ha"`, `"acre"`).  If NULL, the area is
-#'   returned as a numeric vector in m^2.
-#' @returns A [units::units] vector of areas.
+#' * `a5_cell_area()`: the area of one cell. A5 is an equal-area grid, so
+#'   every cell at a resolution has the same area.
+#' * `a5_cell_edge_length_avg()`: the average cell edge length. Individual
+#'   edges vary from this by roughly +/-10%, depending on the cell's shape
+#'   and position; use [a5_cell_to_boundary()] to measure a specific cell.
+#' * `a5_get_num_cells()`: the number of cells covering the globe.
+#' * `a5_get_num_children()`: the number of descendants each cell has at a
+#'   finer resolution, as returned by [a5_cell_to_children()].
 #'
-#' @export
+#' Use the first two to choose a resolution for a target cell size.
+#'
+#' @param resolution Integer vector of resolutions (0--30). A scalar for
+#'   `a5_get_num_cells()`.
+#' @param units Character scalar giving the output unit: an area unit for
+#'   `a5_cell_area()` (default `"m^2"`), a length unit for
+#'   `a5_cell_edge_length_avg()` (default `"m"`). Any unit
+#'   [units::set_units()] can convert to is accepted (e.g. `"km^2"`, `"ha"`,
+#'   `"km"`, `"mi"`). If `NULL`, a plain numeric vector in square metres or
+#'   metres is returned.
+#' @param parent_resolution,child_resolution Integer scalars (0--30), with
+#'   `child_resolution` at or finer than `parent_resolution`.
+#' @returns
+#' * `a5_cell_area()`, `a5_cell_edge_length_avg()`: a [units::units] vector
+#'   the length of `resolution`, or numeric when `units = NULL`.
+#' * `a5_get_num_cells()`, `a5_get_num_children()`: a numeric scalar. Counts
+#'   are doubles because they can exceed R's integer range.
+#'
+#' @name a5_resolution_stats
 #' @examples
 #' a5_cell_area(0:5)
 #' a5_cell_area(5, units = "km^2")
+#' a5_cell_edge_length_avg(10, units = "km")
+#'
+#' a5_get_num_cells(10)
+#' a5_get_num_children(5, 8) # 4^3 = 64
+#'
+#' # cells at a resolution times their area covers the globe
+#' a5_get_num_cells(10) * a5_cell_area(10, units = "km^2")
+NULL
+
+#' @rdname a5_resolution_stats
+#' @export
 a5_cell_area <- function(resolution, units = "m^2") {
   resolution <- vctrs::vec_cast(resolution, integer())
   check_resolution(resolution)
@@ -22,27 +52,8 @@ a5_cell_area <- function(resolution, units = "m^2") {
   with_units(a5_cell_area_rs(resolution), "m^2", units)
 }
 
-#' Average cell edge length at a given resolution
-#'
-#' Returns the average length of a cell edge at the given resolution(s).
-#' Individual edge lengths vary from this average by roughly +/-10%,
-#' depending on the cell's shape and its position on the globe. Use this
-#' for a quick estimate of cell size when choosing a resolution; use
-#' [a5_cell_to_boundary()] to measure a specific cell.
-#'
-#' @param resolution Integer vector of resolutions (0--30).
-#' @param units Character scalar specifying the output length unit
-#'   (default `"m"`). Any unit convertible from `m` via
-#'   [units::set_units()] is accepted (e.g. `"km"`, `"mi"`). If NULL, the
-#'   length is returned as a numeric vector in metres.
-#' @returns A [units::units] vector of average edge lengths, or a numeric
-#'   vector if `units = NULL`.
-#'
-#' @seealso [a5_cell_area()]
+#' @rdname a5_resolution_stats
 #' @export
-#' @examples
-#' a5_cell_edge_length_avg(0:5)
-#' a5_cell_edge_length_avg(10, units = "km")
 a5_cell_edge_length_avg <- function(resolution, units = "m") {
   resolution <- vctrs::vec_cast(resolution, integer())
   check_resolution(resolution)
@@ -50,16 +61,8 @@ a5_cell_edge_length_avg <- function(resolution, units = "m") {
   with_units(a5_cell_edge_length_avg_rs(resolution), "m", units)
 }
 
-#' Total number of cells at a given resolution
-#'
-#' @param resolution Integer scalar resolution (0--30).
-#' @returns A numeric scalar (double) giving the total count. Returned as
-#'   double because the count can exceed R's integer range.
-#'
+#' @rdname a5_resolution_stats
 #' @export
-#' @examples
-#' a5_get_num_cells(0)
-#' a5_get_num_cells(10)
 a5_get_num_cells <- function(resolution) {
   resolution <- vctrs::vec_cast(resolution, integer())
   check_resolution(resolution)
@@ -67,23 +70,8 @@ a5_get_num_cells <- function(resolution) {
   a5_get_num_cells_rs(resolution)
 }
 
-#' Number of children between two resolutions
-#'
-#' Returns the number of child cells each parent cell contains when
-#' expanding from one resolution to another.
-#'
-#' @param parent_resolution Integer scalar (0--30).
-#' @param child_resolution Integer scalar (0--30), must be >=
-#'   `parent_resolution`.
-#' @returns A numeric scalar. Returned as double because the count can
-#'   exceed R's integer range at large resolution deltas.
-#'
-#' @seealso [a5_get_num_cells()], [a5_cell_to_children()],
-#'   [a5_uncompact()]
+#' @rdname a5_resolution_stats
 #' @export
-#' @examples
-#' a5_get_num_children(5, 8)   # 4^3 = 64
-#' a5_get_num_children(0, 5)
 a5_get_num_children <- function(parent_resolution, child_resolution) {
   parent_resolution <- vctrs::vec_cast(parent_resolution, integer())
   child_resolution <- vctrs::vec_cast(child_resolution, integer())
