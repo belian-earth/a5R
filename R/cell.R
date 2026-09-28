@@ -170,18 +170,24 @@ format.a5_cell <- function(x, ...) {
 #' @noRd
 #' @keywords internal
 is.na.a5_cell <- function(x) {
-  # NA sentinel: last byte (b8) == 0xFC
-  vctrs::field(x, "b8") == as.raw(0xFC)
+  # NA is the full id 0xFC00000000000000, stored as eight 00 bytes because
+  # b8 is stored XOR 0xFC (see src/rust/src/cell_raw.rs). A top byte of 0xFC
+  # alone is a valid resolution-30 cell, so all eight bytes are checked.
+  cells_is_na_rs(cell_data(x))
 }
 
 # --- ordering: big-endian byte order = u64 numeric order ---
+
+# True value of each stored b8 byte (stored XOR 0xFC), indexed by stored
+# value + 1. A lookup is cheaper than xor() then as.integer().
+b8_decoded <- bitwXor(0:255, 0xFC)
 
 #' @exportS3Method vctrs::vec_proxy_compare
 #' @noRd
 #' @keywords internal
 vec_proxy_compare.a5_cell <- function(x, ...) {
   data.frame(
-    b8 = as.integer(vctrs::field(x, "b8")),
+    b8 = b8_decoded[as.integer(vctrs::field(x, "b8")) + 1L],
     b7 = as.integer(vctrs::field(x, "b7")),
     b6 = as.integer(vctrs::field(x, "b6")),
     b5 = as.integer(vctrs::field(x, "b5")),

@@ -151,13 +151,11 @@ test_that("wk_handle.a5_cell produces boundary geometry", {
 
 # -- sentinel / NA byte-level tests -------------------------------------------
 
-test_that("NA sentinel has b8 == 0xFC", {
+test_that("NA is stored as eight 00 bytes", {
   cell <- a5_cell(c("0800000000000006", NA))
-  # Non-NA cell: b8 should NOT be 0xFC
-  expect_false(vctrs::field(cell, "b8")[1] == as.raw(0xFC))
-  # NA cell: b8 IS the sentinel byte
-
-  expect_equal(vctrs::field(cell, "b8")[2], as.raw(0xFC))
+  bytes <- vapply(unclass(cell), function(b) b[2], raw(1))
+  expect_true(all(bytes == as.raw(0)))
+  expect_false(vctrs::field(cell, "b8")[1] == as.raw(0))
 })
 
 test_that("sentinel hex value fc00000000000000 becomes NA", {
@@ -166,13 +164,21 @@ test_that("sentinel hex value fc00000000000000 becomes NA", {
   expect_true(is.na(format(cell)))
 })
 
-test_that("known hex encodes to correct little-endian bytes", {
+test_that("known hex encodes to little-endian bytes with b8 stored XOR 0xFC", {
   cell <- a5_cell("0800000000000006")
-  # 0x0800000000000006 in little-endian: 06 00 00 00 00 00 00 08
+  # 0x0800000000000006 in little-endian: 06 00 00 00 00 00 00 08,
+  # with b8 stored as 0x08 XOR 0xFC = 0xF4
   expect_equal(vctrs::field(cell, "b1"), as.raw(0x06))
   expect_equal(vctrs::field(cell, "b2"), as.raw(0x00))
   expect_equal(vctrs::field(cell, "b7"), as.raw(0x00))
-  expect_equal(vctrs::field(cell, "b8"), as.raw(0x08))
+  expect_equal(vctrs::field(cell, "b8"), as.raw(0xF4))
+})
+
+test_that("the world cell is stored as b8 = 0xFC and is not NA", {
+  world <- a5_cell("0000000000000000")
+  expect_equal(vctrs::field(world, "b8"), as.raw(0xFC))
+  expect_false(is.na(world))
+  expect_identical(format(world), "0000000000000000")
 })
 
 # -- empty / all-NA edge cases ------------------------------------------------

@@ -11,6 +11,11 @@ a5_set_threads_rs <- function(n) invisible(.Call(wrap__a5_set_threads_rs, n))
 
 a5_get_threads_rs <- function() .Call(wrap__a5_get_threads_rs)
 
+#' NA test for every cell: the full-id sentinel check, in one pass.
+#' @noRd
+#' @keywords internal
+cells_is_na_rs <- function(cells) .Call(wrap__cells_is_na_rs, cells)
+
 #' Convert cell raw bytes to hex strings (zero-padded to 16 chars).
 #' @noRd
 #' @keywords internal
