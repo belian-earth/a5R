@@ -150,6 +150,48 @@ only by the sampling noise of the reference. `format()` supplies a grouping
 key here because base grouping functions cannot group an `a5_cell` vector
 directly (see `vignette("internal-cell-representation")`).
 
+Mapping the reference fractions, and each rule's error against them, shows
+where the index rule goes wrong:
+
+```{r aggregation-plot, fig.width = 7.5, fig.height = 3, echo = -c(1, 17)}
+op <- par(mfrow = c(1, 3), mar = c(0.5, 0.5, 2, 0.5))
+grid <- merge(merge(truth, by_index, all.x = TRUE), by_spatial,
+              by = "cell", all.x = TRUE, suffixes = c("_index", "_spatial"))
+grid[is.na(grid)] <- 0
+cells <- a5_cell(grid$cell)
+xy <- unclass(a5_cell_to_lonlat(cells))
+near <- (xy$x - centre$x)^2 + (xy$y - centre$y)^2 < 0.006^2
+grid <- grid[near, ]
+boundaries <- a5_cell_to_boundary(cells[near])
+lim <- unclass(wk::wk_bbox(boundaries))
+
+fraction_pal <- hcl.colors(101, "Greens", rev = TRUE)
+error_pal <- hcl.colors(101, "Blue-Red 3")
+ring <- seq(0, 2 * pi, length.out = 200)
+error_col <- function(e) error_pal[round(pmin(pmax(e / 0.4, -1), 1) * 50) + 51]
+
+for (panel in list(
+  list(fraction_pal[round(grid$truth * 100) + 1], "Reference fraction"),
+  list(error_col(grid$value_index - grid$truth), "Index parent error"),
+  list(error_col(grid$value_spatial - grid$truth), "Spatial parent error")
+)) {
+  plot(NULL, xlim = c(lim$xmin, lim$xmax), ylim = c(lim$ymin, lim$ymax),
+       asp = 1, axes = FALSE, xlab = "", ylab = "", main = panel[[2]])
+  plot(boundaries, col = panel[[1]], border = "white", lwd = 0.5, add = TRUE)
+  lines(centre$x + 0.004 * cos(ring), centre$y + 0.004 * sin(ring),
+        col = "#333333", lwd = 1.5)
+}
+par(op)
+```
+
+The left panel shades each res-15 cell by its patch fraction, from white
+(none) to dark green (all), with the patch outline in dark grey. The other
+two show aggregated minus reference, from blue (0.4 or more too low) through
+grey to red (0.4 or more too high). Index aggregation is wrong in both
+directions all along the patch edge, where a coarse cell's index children
+fall on the other side of the edge from the cell itself. Spatial aggregation
+is grey apart from faint tints, which are sampling noise in the reference.
+
 ## Expanding coarse cells
 
 The downward direction is the exact inverse. Expanding a set of coarse cells
