@@ -19,6 +19,25 @@
   are unchanged and now document the difference (requested by
   belian-production).
 
+- Missing values filled in by vctrs are now `NA`, not the world cell
+  ([\#27](https://github.com/belian-earth/a5R/issues/27)). Combining
+  with `NA`, subsetting with an `NA` index, assigning `NA`,
+  [`vctrs::vec_init()`](https://vctrs.r-lib.org/reference/vec_init.html),
+  and unmatched rows from `merge(all = TRUE)`,
+  [`vctrs::vec_rbind()`](https://vctrs.r-lib.org/reference/vec_bind.html)
+  or dplyr joins used to produce id 0, a valid cell. The top byte of
+  each id is now stored XOR `0xFC`, so a filled-in gap decodes to the NA
+  sentinel, at no measurable cost. This changes the stored byte layout:
+  `a5_cell` objects saved with
+  [`saveRDS()`](https://rdrr.io/r/base/readRDS.html),
+  [`save()`](https://rdrr.io/r/base/save.html) or qs by earlier versions
+  do not read correctly. Re-create them from hex strings or Arrow, which
+  store the true id.
+
+- Resolution-30 cells whose id starts with `0xFC` (about 0.3% of them,
+  in quintants 31, 39 and 41) are no longer treated as `NA`. The NA
+  check now compares the full id rather than its top byte.
+
 - The benchmark suite now mirrors the TypeScript, Python and Rust A5
   ports (same case names, same deterministic inputs) and runs in CI on
   every pull request, failing on regressions above 15%. The old

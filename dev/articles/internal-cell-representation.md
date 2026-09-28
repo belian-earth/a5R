@@ -18,21 +18,27 @@ or
 ## The solution: eight raw-byte fields
 
 A `u64` is exactly 8 bytes. We store each byte of the little-endian
-representation as a separate `raw` vector field in a vctrs record type:
+representation as a separate `raw` vector field in a vctrs record type,
+with one twist: the most significant byte, `b8`, is stored XOR `0xFC`
+(see [NA handling](#na-handling) for why).
 
     cell_id (u64):  0x0800000000000006
 
     little-endian bytes:
-      b1 = 0x06, b2 = 0x00, b3 = 0x00, b4 = 0x00,
-      b5 = 0x00, b6 = 0x00, b7 = 0x00, b8 = 0x08
+      0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08
 
-This is lossless: the eight bytes are the exact same bits as the
-original `u64`, just stored across eight contiguous `raw` vectors. No
-precision loss, no special-case handling. On the Rust side,
-reconstructing the `u64` from the eight byte slices is a single
-`u64::from_le_bytes()` call. This also avoids pointers, so there is no
-need to think about serialization when saving an `a5_cell` object to
-disk.
+    stored fields:
+      b1 = 0x06, b2 = 0x00, b3 = 0x00, b4 = 0x00,
+      b5 = 0x00, b6 = 0x00, b7 = 0x00, b8 = 0x08 XOR 0xFC = 0xF4
+
+This is lossless: XOR with a constant is its own inverse, so the eight
+stored bytes map one-to-one onto the original `u64`. On the Rust side,
+reconstructing the id from the eight byte slices is one XOR and a single
+`u64::from_le_bytes()` call. There are no pointers, so an `a5_cell` can
+be saved with [`saveRDS()`](https://rdrr.io/r/base/readRDS.html) like
+any other R object. Objects saved by a5R 0.6.0 or earlier used the plain
+byte layout and do not read correctly in later versions; re-create them
+from hex strings or Arrow, which store the true id.
 
 ## R-side: a vctrs record type
 
@@ -46,8 +52,8 @@ library(a5R)
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
 vctrs::field(cell, "b1")
 #> [1] 00
-vctrs::field(cell, "b8")
-#> [1] 63
+vctrs::field(cell, "b8") # stored XOR 0xFC
+#> [1] 9f
 ```
 
 Each field is a plain `raw` vector: a contiguous block of memory with no
@@ -99,11 +105,19 @@ format(object.size(hex), units = "MB")
 
 ## NA handling
 
-A5 cell IDs use 60 “quintants” (values 0–59) in their top 6 bits.
-Quintant 63 (binary `111111`) is invalid in the A5 system, so we use
-`0xFC00000000000000` as a sentinel value for `NA`. In little-endian, the
-last byte (`b8`) is `0xFC`, making NA detection a fast single-byte
-check.
+`NA` is the id `0xFC00000000000000`. It is never a valid cell: at
+resolutions 0 to 29 the top 6 bits hold the quintant (0 to 59), and 63
+(binary `111111`) is unused; the id does not decode as a resolution-30
+cell either. Only the full id is the sentinel. Resolution 30 keeps just
+5, 3 or 1 quintant bits at the top to make room for position bits, so
+valid resolution-30 cells can have a top byte of `0xFC`.
+
+Storing `b8` XOR `0xFC` makes the sentinel’s stored form eight `00`
+bytes. That matters because vctrs fills gaps field by field, and a
+missing `raw` value is `00`. Combining with `NA`, subsetting with an
+`NA` index, assigning `NA`, and unmatched rows in joins all produce
+eight `00` bytes, which decode to `NA`. With plain bytes they would
+decode to id 0, the world cell, a valid id.
 
 On the Rust side, the sentinel is detected and mapped to `None`.
 Standard R idioms work as expected:
@@ -112,6 +126,8 @@ Standard R idioms work as expected:
 
 cells_with_na <- a5_cell(c("0800000000000006", NA))
 is.na(cells_with_na)
+#> [1] FALSE  TRUE
+is.na(c(cell, NA))
 #> [1] FALSE  TRUE
 ```
 
@@ -144,14 +160,23 @@ hex strings, so they cost about the same as
 and
 [`vctrs::vec_in()`](https://vctrs.r-lib.org/reference/vec_match.html).
 
-**Use the vctrs form instead.** Two base functions inspect the record’s
-fields and cannot be intercepted by a method:
+**Use the vctrs form instead.** Three base cases cannot be intercepted
+by a method:
+
+- [`c()`](https://rdrr.io/r/base/c.html) dispatches on its first
+  argument only, so `c(NA, cells)` with a bare `NA` first never reaches
+  the `a5_cell` method and returns a list. Base classes behave the same
+  way: `c(NA, Sys.Date())` loses the `Date` class. Start with a cell, as
+  in `c(a5_cell(NA), cells)`, or use `vctrs::vec_c(NA, cells)`, which
+  combines by every argument’s type. An `NA` anywhere after the first
+  argument is fine.
 
 - `split(x, cells)` and `tapply(x, cells, f)` with an `a5_cell`
   *grouping* vector see a list of eight raw vectors and group on their
   interaction, giving one group or an error. Use
   `vctrs::vec_split(x, cells)` or `vctrs::vec_group_id(cells)`, or group
   with `factor(cells)`.
+
 - [`unlist()`](https://rdrr.io/r/base/unlist.html) on a plain list of
   `a5_cell` vectors, such as
   [`lapply()`](https://rdrr.io/r/base/lapply.html) output, descends into
@@ -175,6 +200,10 @@ class before growing the column. Use
 
 cells <- a5_lonlat_to_cell(c(0, 10, 0), c(0, 10, 0), resolution = 5)
 
+# A leading NA: start with a cell, or use vctrs
+c(a5_cell(NA), cells)
+vctrs::vec_c(NA, cells)
+
 # Grouping by cell: use vctrs
 vctrs::vec_split(1:3, cells)$val
 #> [[1]] 1 3   [[2]] 2
@@ -192,4 +221,4 @@ unlist(as_a5_cell_list(parts))
 | Memory (1M cells) | ~81 MB | ~7.6 MB |
 | R-Rust crossing | O(n) hex parse/format | Zero-copy byte access |
 | Human-readable | Always | On [`format()`](https://rdrr.io/r/base/format.html) / [`print()`](https://rdrr.io/r/base/print.html) |
-| Lossless | Yes | Yes (exact byte representation) |
+| Lossless | Yes | Yes (one-to-one byte encoding) |
