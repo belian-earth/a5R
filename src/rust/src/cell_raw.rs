@@ -3,14 +3,27 @@ use rayon::prelude::*;
 
 use crate::threading::{get_num_threads, maybe_par};
 
-// --- NA sentinel ---
-// A5 cell IDs encode a quintant (0–59) in the top 6 bits. Quintant 63
-// (binary 111111) is guaranteed invalid, so 0xFC00_0000_0000_0000 can
-// never be a real cell. In little-endian layout the most-significant byte
-// (b8) is 0xFC — this is what the R-side is.na() method checks.
-// Any input that decodes to NA_SENTINEL is treated as missing data.
+// --- NA sentinel and stored byte layout ---
+// NA is the id 0xFC00_0000_0000_0000, which is never a valid cell: at
+// resolutions 0-29 its top 6 bits give quintant 63, and it does not decode as
+// a resolution-30 cell either. Only the full id is the sentinel. A top byte of
+// 0xFC alone is not: resolution-30 ids keep only 5, 3 or 1 quintant bits at
+// the top, so valid cells in quintants 31, 39 and 41 can start with 0xFC.
 pub(crate) const NA_SENTINEL: u64 = 0xFC00_0000_0000_0000;
-pub(crate) const NA_BYTES: [u8; 8] = NA_SENTINEL.to_le_bytes();
+
+// The rcrd fields b1..b8 hold the id's little-endian bytes, except that b8
+// is stored XOR 0xFC. vctrs fills gaps (an NA index, `x[i] <- NA`,
+// vec_init(), unmatched join rows) with 00 bytes; under this encoding eight
+// 00 bytes decode to NA_SENTINEL, not to the world cell (id 0). Encoding and
+// decoding are the same operation.
+pub(crate) const B8_MASK: u8 = 0xFC;
+
+#[inline]
+fn encode(id: u64) -> [u8; 8] {
+    let mut b = id.to_le_bytes();
+    b[7] ^= B8_MASK;
+    b
+}
 
 // --- Cell byte slice accessor ---
 
@@ -52,20 +65,16 @@ impl<'a> CellSlices<'a> {
         CellSlices { slices, len }
     }
 
-    /// Get the u64 cell ID at index i. Returns None if b8 == 0xFC (NA sentinel).
-    /// Checks only b8 (the MSB in little-endian) to match the R-side is.na()
-    /// check. Any cell with b8 == 0xFC has quintant 63, which is always
-    /// invalid in A5, so this is safe.
+    /// Get the u64 cell ID at index i, or None for the NA sentinel.
     #[inline]
     pub fn get(&self, i: usize) -> Option<u64> {
-        if self.slices[7][i] == NA_BYTES[7] {
-            return None;
-        }
         let bytes = [
             self.slices[0][i], self.slices[1][i], self.slices[2][i], self.slices[3][i],
-            self.slices[4][i], self.slices[5][i], self.slices[6][i], self.slices[7][i],
+            self.slices[4][i], self.slices[5][i], self.slices[6][i],
+            self.slices[7][i] ^ B8_MASK,
         ];
-        Some(u64::from_le_bytes(bytes))
+        let id = u64::from_le_bytes(bytes);
+        if id == NA_SENTINEL { None } else { Some(id) }
     }
 }
 
@@ -76,9 +85,10 @@ pub(crate) fn u64s_to_raw8_list(values: Vec<Option<u64>>) -> List {
     let n = values.len();
     let mut bufs: [Vec<u8>; 8] = std::array::from_fn(|_| vec![0u8; n]);
     for (i, v) in values.iter().enumerate() {
+        // None encodes NA_SENTINEL, which is stored as eight 00 bytes.
         let bytes = match v {
-            Some(id) => id.to_le_bytes(),
-            None => NA_BYTES,
+            Some(id) => encode(*id),
+            None => [0u8; 8],
         };
         for j in 0..8 {
             bufs[j][i] = bytes[j];
@@ -222,6 +232,21 @@ fn raw8_to_hex_rs(cells: List) -> Strings {
     out
 }
 
+/// NA test for every cell: the full-id sentinel check, in one pass.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn cells_is_na_rs(cells: List) -> Robj {
+    let cs = CellSlices::from_list(&cells);
+    // Stored b8 is 00 only for the sentinel and for ids whose top byte is
+    // 0xFC; the full check runs for those alone.
+    let b8 = cs.slices[7];
+    let na: Vec<bool> = (0..cs.len)
+        .map(|i| b8[i] == 0 && cs.get(i).is_none())
+        .collect();
+    Robj::from(na)
+}
+
 /// Convert hex strings to cell raw bytes.
 /// Returns list(b1 = raw(), ..., b8 = raw()).
 /// @noRd
@@ -298,6 +323,7 @@ fn raw8_to_blobs_rs(cells: List) -> List {
 
 extendr_module! {
     mod cell_raw;
+    fn cells_is_na_rs;
     fn raw8_to_hex_rs;
     fn hex_to_raw8_rs;
     fn blobs_to_raw8_rs;

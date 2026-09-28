@@ -31,22 +31,28 @@ dominates the cost of lightweight operations like `a5_get_resolution()` or
 ## The solution: eight raw-byte fields
 
 A `u64` is exactly 8 bytes. We store each byte of the little-endian
-representation as a separate `raw` vector field in a vctrs record type:
+representation as a separate `raw` vector field in a vctrs record type, with
+one twist: the most significant byte, `b8`, is stored XOR `0xFC` (see
+[NA handling](#na-handling) for why).
 
 ```
 cell_id (u64):  0x0800000000000006
 
 little-endian bytes:
+  0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08
+
+stored fields:
   b1 = 0x06, b2 = 0x00, b3 = 0x00, b4 = 0x00,
-  b5 = 0x00, b6 = 0x00, b7 = 0x00, b8 = 0x08
+  b5 = 0x00, b6 = 0x00, b7 = 0x00, b8 = 0x08 XOR 0xFC = 0xF4
 ```
 
-This is lossless: the eight bytes are the exact same bits as the original
-`u64`, just stored across eight contiguous `raw` vectors. No precision loss,
-no special-case handling. On the Rust side, reconstructing the `u64` from
-the eight byte slices is a single `u64::from_le_bytes()` call. This also
-avoids pointers, so there is no need to think about serialization when saving
-an `a5_cell` object to disk.
+This is lossless: XOR with a constant is its own inverse, so the eight
+stored bytes map one-to-one onto the original `u64`. On the Rust side,
+reconstructing the id from the eight byte slices is one XOR and a single
+`u64::from_le_bytes()` call. There are no pointers, so an `a5_cell` can be
+saved with `saveRDS()` like any other R object. Objects saved by a5R 0.6.0
+or earlier used the plain byte layout and do not read correctly in later
+versions; re-create them from hex strings or Arrow, which store the true id.
 
 ## R-side: a vctrs record type
 
@@ -57,7 +63,7 @@ eight fields (`b1` through `b8`):
 library(a5R)
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
 vctrs::field(cell, "b1")
-vctrs::field(cell, "b8")
+vctrs::field(cell, "b8") # stored XOR 0xFC
 ```
 
 Each field is a plain `raw` vector: a contiguous block of memory with
@@ -100,10 +106,19 @@ format(object.size(hex), units = "MB")
 
 ## NA handling
 
-A5 cell IDs use 60 "quintants" (values 0–59) in their top 6 bits. Quintant
-63 (binary `111111`) is invalid in the A5 system, so we use
-`0xFC00000000000000` as a sentinel value for `NA`. In little-endian, the
-last byte (`b8`) is `0xFC`, making NA detection a fast single-byte check.
+`NA` is the id `0xFC00000000000000`. It is never a valid cell: at
+resolutions 0 to 29 the top 6 bits hold the quintant (0 to 59), and 63
+(binary `111111`) is unused; the id does not decode as a resolution-30 cell
+either. Only the full id is the sentinel. Resolution 30 keeps just 5, 3 or 1
+quintant bits at the top to make room for position bits, so valid
+resolution-30 cells can have a top byte of `0xFC`.
+
+Storing `b8` XOR `0xFC` makes the sentinel's stored form eight `00` bytes.
+That matters because vctrs fills gaps field by field, and a missing `raw`
+value is `00`. Combining with `NA`, subsetting with an `NA` index, assigning
+`NA`, and unmatched rows in joins all produce eight `00` bytes, which decode
+to `NA`. With plain bytes they would decode to id 0, the world cell, a valid
+id.
 
 On the Rust side, the sentinel is detected and mapped to `None`. Standard
 R idioms work as expected:
@@ -111,6 +126,7 @@ R idioms work as expected:
 ```{r}
 cells_with_na <- a5_cell(c("0800000000000006", NA))
 is.na(cells_with_na)
+is.na(c(cell, NA))
 ```
 
 ## Working with base R

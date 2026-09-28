@@ -75,3 +75,55 @@ test_that("split of cells by a factor works; grouping by cells needs vctrs", {
   g <- c(a[1], a[2], a[1])
   expect_identical(vctrs::vec_split(1:3, g)$val, list(c(1L, 3L), 2L))
 })
+
+# -- gaps filled by vctrs are NA, not the world cell (#27) --------------------
+
+test_that("every gap-filling path gives NA", {
+  x <- a5_lonlat_to_cell(-3.19, 55.95, 10)
+  expect_identical(is.na(c(x, NA)), c(FALSE, TRUE))
+  expect_identical(is.na(vctrs::vec_c(x, NA)), c(FALSE, TRUE))
+  expect_identical(is.na(x[c(1, NA)]), c(FALSE, TRUE))
+  expect_identical(is.na(vctrs::vec_slice(x, c(1L, NA))), c(FALSE, TRUE))
+  expect_true(all(is.na(vctrs::vec_init(x, 3))))
+  y <- c(x, x)
+  y[2] <- NA
+  expect_identical(is.na(y), c(FALSE, TRUE))
+
+  df <- data.frame(id = 1:2)
+  df$cell <- c(x, x)
+  joined <- merge(df, data.frame(id = 3), all = TRUE)
+  expect_identical(is.na(joined$cell), c(FALSE, FALSE, TRUE))
+  bound <- vctrs::vec_rbind(data.frame(a = 1, cell = x), data.frame(a = 2))
+  expect_identical(is.na(bound$cell), c(FALSE, TRUE))
+})
+
+test_that("gap NAs behave like any other NA", {
+  x <- a5_lonlat_to_cell(-3.19, 55.95, 10)
+  filled <- c(x, NA)
+  expect_identical(format(filled)[2], NA_character_)
+  expect_identical(filled[2], a5_cell(NA_character_))
+  expect_identical(unique(c(x, NA, x, NA)), filled)
+  expect_true(is.na(a5_get_resolution(filled)[2]))
+})
+
+test_that("resolution-30 cells whose top byte is 0xFC are not NA", {
+  # Resolution 30 keeps only 5, 3 or 1 quintant bits at the top, so valid
+  # cells in quintants 31, 39 and 41 can start with 0xFC.
+  cell <- a5_cell("fc9529c9c837d6e7")
+  expect_false(is.na(cell))
+  expect_identical(a5_get_resolution(cell), 30L)
+  ll <- a5_cell_to_lonlat(cell, as_dataframe = TRUE)
+  expect_false(is.na(ll$lon))
+  back <- a5_lonlat_to_cell(ll$lon, ll$lat, resolution = 30)
+  expect_identical(format(back), "fc9529c9c837d6e7")
+  expect_false(is.na(back))
+})
+
+test_that("ordering follows true id order across the b8 encoding", {
+  hex <- c("fc9529c9c837d6e7", "0000000000000000", "0800000000000006",
+           "6344be8000000000", "f400000000000000")
+  cells <- a5_cell(hex)
+  expect_identical(format(sort(cells)), sort(hex))
+  expect_identical(order(cells), order(hex))
+  expect_true(cells[3] < cells[1])
+})
