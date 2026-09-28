@@ -25,8 +25,7 @@ reference:
 - title: Indexing
   desc: Convert between coordinates and A5 cell indices.
   contents:
-  - a5_lonlat_to_cell
-  - a5_cell_to_lonlat
+  - a5_coordinates
 - title: Cell type
   desc: The `a5_cell` vector type and helpers.
   contents:
@@ -41,8 +40,8 @@ reference:
   desc: Navigate the cell hierarchy across resolutions.
   contents:
   - a5_get_resolution
-  - a5_cell_to_parent
-  - a5_cell_to_children
+  - a5_hierarchy
+  - a5_spatial_hierarchy
   - a5_cell_child
   - a5_cell_children_range
   - a5_get_res0_cells
@@ -51,10 +50,7 @@ reference:
   contents:
   - a5_cell_to_boundary
   - a5_cell_distance
-  - a5_cell_area
-  - a5_cell_edge_length_avg
-  - a5_get_num_cells
-  - a5_get_num_children
+  - a5_resolution_stats
 - title: Traversal
   desc: Neighbourhood and distance-based cell selection.
   contents:
@@ -63,8 +59,7 @@ reference:
 - title: Compact & uncompact
   desc: Compress and expand sets of cells.
   contents:
-  - a5_compact
-  - a5_uncompact
+  - a5_compaction
 - title: Geometry indexing
   desc: Convert polygons and linestrings to cells covering them.
   contents:

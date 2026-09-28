@@ -1,5 +1,15 @@
 # a5R (development version)
 
+* New experimental `a5_cell_to_spatial_parent()` and
+  `a5_cell_to_spatial_children()` move between resolutions by cell centre
+  rather than by index. The A5 index hierarchy is not spatially nested: for
+  about half of cells one resolution apart, and about 35% at four or more
+  apart, the index parent is not the coarse cell containing the fine cell's
+  centre. The spatial pair forms an exact partition, so aggregating fine
+  cells to a coarser grid counts each fine cell once, inside the coarse cell
+  it lies in. `a5_cell_to_parent()` and `a5_cell_to_children()` are
+  unchanged and now document the difference (requested by belian-production).
+
 * Missing values filled in by vctrs are now `NA`, not the world cell (#27).
   Combining with `NA`, subsetting with an `NA` index, assigning `NA`,
   `vctrs::vec_init()`, and unmatched rows from `merge(all = TRUE)`,
