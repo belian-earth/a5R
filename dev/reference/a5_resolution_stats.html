@@ -15,7 +15,7 @@ cell:"><meta property="og:image" content="https://belian-earth.github.io/a5R/log
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.6.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.6.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -78,7 +78,7 @@ cell:</p>
 <dd><p>Character scalar giving the output unit: an area unit for
 <code>a5_cell_area()</code> (default <code>"m^2"</code>), a length unit for
 <code>a5_cell_edge_length_avg()</code> (default <code>"m"</code>). Any unit
-<code><a href="https://r-quantities.github.io/units/reference/units.html" class="external-link">units::set_units()</a></code> can convert to is accepted (e.g. <code>"km^2"</code>, <code>"ha"</code>,
+<code><a href="https://rdrr.io/pkg/units/man/units.html" class="external-link">units::set_units()</a></code> can convert to is accepted (e.g. <code>"km^2"</code>, <code>"ha"</code>,
 <code>"km"</code>, <code>"mi"</code>). If <code>NULL</code>, a plain numeric vector in square metres or
 metres is returned.</p></dd>
 
@@ -91,7 +91,7 @@ metres is returned.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
 
-<ul><li><p><code>a5_cell_area()</code>, <code>a5_cell_edge_length_avg()</code>: a <a href="https://r-quantities.github.io/units/reference/units.html" class="external-link">units::units</a> vector
+<ul><li><p><code>a5_cell_area()</code>, <code>a5_cell_edge_length_avg()</code>: a <a href="https://rdrr.io/pkg/units/man/units.html" class="external-link">units::units</a> vector
 the length of <code>resolution</code>, or numeric when <code>units = NULL</code>.</p></li>
 <li><p><code>a5_get_num_cells()</code>, <code>a5_get_num_children()</code>: a numeric scalar. Counts
 are doubles because they can exceed R's integer range.</p></li>

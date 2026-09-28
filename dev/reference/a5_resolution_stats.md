@@ -27,8 +27,8 @@ a5_get_num_children(parent_resolution, child_resolution)
   Character scalar giving the output unit: an area unit for
   `a5_cell_area()` (default `"m^2"`), a length unit for
   `a5_cell_edge_length_avg()` (default `"m"`). Any unit
-  [`units::set_units()`](https://r-quantities.github.io/units/reference/units.html)
-  can convert to is accepted (e.g. `"km^2"`, `"ha"`, `"km"`, `"mi"`). If
+  [`units::set_units()`](https://rdrr.io/pkg/units/man/units.html) can
+  convert to is accepted (e.g. `"km^2"`, `"ha"`, `"km"`, `"mi"`). If
   `NULL`, a plain numeric vector in square metres or metres is returned.
 
 - parent_resolution, child_resolution:
@@ -39,8 +39,8 @@ a5_get_num_children(parent_resolution, child_resolution)
 ## Value
 
 - `a5_cell_area()`, `a5_cell_edge_length_avg()`: a
-  [units::units](https://r-quantities.github.io/units/reference/units.html)
-  vector the length of `resolution`, or numeric when `units = NULL`.
+  [units::units](https://rdrr.io/pkg/units/man/units.html) vector the
+  length of `resolution`, or numeric when `units = NULL`.
 
 - `a5_get_num_cells()`, `a5_get_num_children()`: a numeric scalar.
   Counts are doubles because they can exceed R's integer range.
