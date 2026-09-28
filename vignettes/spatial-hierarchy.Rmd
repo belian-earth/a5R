@@ -66,6 +66,34 @@ mean(a5_cell_to_parent(fine, 15) != a5_cell_to_spatial_parent(fine, 15))
 For about a third of res-18 cells, the index parent at res 15 is a
 neighbour of the cell they lie in.
 
+The upward direction shows the same thing from the other side. Here is one
+res-10 cell whose index parent at res 8 is not the cell it lies in:
+
+```{r parent-plot, fig.width = 5, fig.height = 4}
+kids <- a5_cell_to_children(a5_grid_disk(cell, 1), resolution = 10)
+moved <- kids[a5_cell_to_parent(kids, 8) != a5_cell_to_spatial_parent(kids, 8)]
+# the clearest case: the fine cell furthest from its index parent's centre
+fine_cell <- moved[which.max(a5_cell_distance(moved, a5_cell_to_parent(moved, 8)))]
+index_parent <- a5_cell_to_parent(fine_cell, 8)
+spatial_parent <- a5_cell_to_spatial_parent(fine_cell, 8)
+
+lim <- unclass(wk::wk_bbox(a5_cell_to_boundary(c(index_parent, spatial_parent))))
+op <- par(mar = c(0.5, 0.5, 0.5, 0.5))
+plot(NULL, xlim = c(lim$xmin, lim$xmax), ylim = c(lim$ymin, lim$ymax),
+     asp = 1, axes = FALSE, xlab = "", ylab = "")
+plot(a5_cell_to_boundary(index_parent), col = "#d9534f20", border = "#d9534f",
+     lwd = 2, lty = 2, add = TRUE)
+plot(a5_cell_to_boundary(spatial_parent), col = "#206ead20", border = "#206ead",
+     lwd = 2, add = TRUE)
+plot(a5_cell_to_boundary(fine_cell), col = "#333333", border = NA, add = TRUE)
+legend("bottomright", bty = "n", lwd = 2, lty = c(2, 1),
+       col = c("#d9534f", "#206ead"), legend = c("Index parent", "Spatial parent"))
+par(op)
+```
+
+The fine cell (dark) sits inside the spatial parent, while its index parent
+is the neighbouring cell.
+
 ## Aggregating to a coarser grid
 
 Take a complete res-18 layer over a small area containing a circular patch,
