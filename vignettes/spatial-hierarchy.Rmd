@@ -30,7 +30,7 @@ neighbours, and some cells inside it belong to a neighbour's index.
 The spatial functions follow location instead. A fine cell belongs to the
 coarse cell containing its centre.
 
-```{r children-plot, fig.width = 7, fig.height = 3.6, echo = 2:8}
+```{r children-plot, fig.width = 7, fig.height = 3.6, echo = -c(1, 11)}
 op <- par(mfrow = c(1, 2), mar = c(0.5, 0.5, 2, 0.5))
 cell <- a5_lonlat_to_cell(-53.5, -19, resolution = 8)
 index_kids <- a5_cell_to_children(cell, resolution = 11)
@@ -69,7 +69,7 @@ neighbour of the cell they lie in.
 The upward direction shows the same thing from the other side. Here is one
 res-10 cell whose index parent at res 8 is not the cell it lies in:
 
-```{r parent-plot, fig.width = 5, fig.height = 4, echo = 2:12}
+```{r parent-plot, fig.width = 5, fig.height = 4, echo = -c(1, 16)}
 op <- par(mar = c(0.5, 0.5, 0.5, 0.5))
 kids <- a5_cell_to_children(a5_grid_disk(cell, 1), resolution = 10)
 moved <- kids[a5_cell_to_parent(kids, 8) != a5_cell_to_spatial_parent(kids, 8)]

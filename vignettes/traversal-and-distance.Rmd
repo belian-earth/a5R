@@ -44,7 +44,7 @@ Compute the distance from the origin to every cell in the cap (or disk) and
 visualise it as a colour gradient.
 
 
-```{r heatmap, fig.width = 10, fig.height = 10, echo = 2:7}
+```{r heatmap, fig.width = 10, fig.height = 10, echo = -c(1, 10)}
 oldpar <- par(mfrow = c(2, 2), mar = c(2, 2, 2, 1))
 dcap <- a5_cell_distance(origin, cap, units = "km")
 dcap_compact <- a5_cell_distance(origin, cap_compact, units = "km")
@@ -81,7 +81,7 @@ constant-bearing). For short distances they are nearly identical; differences
 grow with distance.
 
 
-```{r methods, fig.width = 10, fig.height = 10, echo = 2:14}
+```{r methods, fig.width = 10, fig.height = 10, echo = -c(1, 19)}
 oldpar <- par(no.readonly = TRUE)
 wide_origin <- a5_lonlat_to_cell(35, 55, resolution = 8)
 wide_cap <- a5_uncompact(
