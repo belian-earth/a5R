@@ -1,17 +1,40 @@
-#' Convert coordinates to A5 cell indices
+#' Convert between coordinates and cells
 #'
-#' Maps longitude/latitude coordinates to A5 cell indices at the specified
-#' resolution.
+#' `a5_lonlat_to_cell()` maps longitude/latitude coordinates to the cell
+#' containing each point at a resolution. `a5_cell_to_lonlat()` returns the
+#' centre point of each cell. Indexing a cell's centre at the cell's own
+#' resolution returns the cell.
 #'
 #' @param lon Numeric vector of longitudes in degrees.
 #' @param lat Numeric vector of latitudes in degrees.
-#' @param resolution Integer scalar or vector of resolutions (0--30).
-#' @returns An [a5_cell] vector of cell indices.
+#' @param resolution Integer scalar or vector of resolutions (0--30),
+#'   recycled against `lon` and `lat`.
+#' @param cell An [a5_cell] vector (or character coercible to one).
+#' @param as_dataframe Logical scalar controlling the return container.
+#'   When `FALSE` (default), centres are returned as a [wk::xy()] vector
+#'   with WGS 84 CRS, the geographic-typed form that plugs into wk/sf
+#'   pipelines. When `TRUE`, centres are returned as a base `data.frame`
+#'   with columns `lon` and `lat`.
+#' @returns
+#' * `a5_lonlat_to_cell()`: an [a5_cell] vector.
+#' * `a5_cell_to_lonlat()`: a [wk::xy()] vector, or a `data.frame` with
+#'   columns `lon` and `lat` when `as_dataframe = TRUE`.
 #'
-#' @seealso [a5_cell_to_lonlat()] for the inverse operation.
-#' @export
+#' @seealso [a5_cell_to_boundary()] for full cell polygons,
+#'   [a5_polygon_to_cells()] for areas.
+#' @name a5_coordinates
 #' @examples
-#' a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
+#' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
+#' a5_cell_to_lonlat(cell)
+#' a5_cell_to_lonlat(cell, as_dataframe = TRUE)
+#'
+#' # a cell's centre indexes back to the cell
+#' ll <- a5_cell_to_lonlat(cell, as_dataframe = TRUE)
+#' a5_lonlat_to_cell(ll$lon, ll$lat, resolution = 5) == cell
+NULL
+
+#' @rdname a5_coordinates
+#' @export
 a5_lonlat_to_cell <- function(lon, lat, resolution) {
   args <- recycle_lonlat_resolution(lon, lat, resolution)
   check_resolution(args$resolution)
@@ -52,29 +75,8 @@ recycle_lonlat_resolution <- function(lon, lat, resolution) {
   )
 }
 
-#' Convert A5 cell indices to coordinates
-#'
-#' Returns the centre-point longitude and latitude of each cell.
-#'
-#' @param cell An [a5_cell] vector (or character coercible to one).
-#' @param as_dataframe Logical scalar controlling the return container.
-#'   When `FALSE` (default), centroids are returned as a [wk::xy()] vector
-#'   with WGS 84 CRS, the geographic-typed form that plugs into wk/sf
-#'   pipelines. When `TRUE`, centroids are returned as a base `data.frame`
-#'   with columns `lon` and `lat`.
-#' @returns A [wk::xy()] vector (if `as_dataframe = FALSE`) or a
-#'   `data.frame` with columns `lon` and `lat` (if `as_dataframe = TRUE`).
-#'
-#' @seealso [a5_lonlat_to_cell()] for the inverse operation,
-#'   [a5_cell_to_boundary()] for full cell polygons.
+#' @rdname a5_coordinates
 #' @export
-#' @examples
-#' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
-#' a5_cell_to_lonlat(cell)
-#'
-#' # Data frame output
-#' cell2 <- a5_lonlat_to_cell(114.8, 4.1, resolution = 5)
-#' a5_cell_to_lonlat(cell2, as_dataframe = TRUE)
 a5_cell_to_lonlat <- function(cell, as_dataframe = FALSE) {
   cell <- as_a5_cell(cell)
   ll <- a5_cell_to_lonlat_rs(cell_data(cell), TRUE)

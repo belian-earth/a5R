@@ -15,23 +15,58 @@ a5_get_resolution <- function(cell) {
   a5_get_resolution_rs(cell_data(cell))
 }
 
-#' Navigate to parent cell(s)
+#' Index parents and children
 #'
-#' Returns the parent cell of each input cell. By default returns the
-#' immediate parent (one resolution coarser). Optionally target a specific
-#' coarser resolution.
+#' `a5_cell_to_parent()` returns the ancestor of each cell at a coarser
+#' resolution. `a5_cell_to_children()` returns the descendants of each cell
+#' at a finer resolution: 4 per resolution step, or 5 from resolution 0.
+#' Both follow the cell index, so they are cheap bit operations.
+#'
+#' @section Index hierarchy is not spatially nested:
+#' A5 parents and children are defined by the cell index, not by geometry. A
+#' cell's index children do not tile it: their union overlaps the parent's
+#' neighbours. Measured over random cells, the index parent is not the coarse
+#' cell containing a fine cell's centre for about half of fine cells one
+#' resolution apart, falling to about 35 percent at four or more resolutions
+#' apart. Use these functions for operations on ids (compaction, id ranges,
+#' Hilbert ordering) and [a5_spatial_hierarchy] when cells must nest by
+#' location.
 #'
 #' @param cell An [a5_cell] vector.
-#' @param resolution Integer scalar target parent resolution, or `NULL` for
-#'   the immediate parent.
-#' @returns An [a5_cell] vector of parent cells.
+#' @param resolution Integer scalar target resolution, or `NULL` for one step:
+#'   the immediate parent for `a5_cell_to_parent()`, the immediate children
+#'   for `a5_cell_to_children()`.
+#' @param simplify Logical scalar. If `TRUE` (default), return one flat
+#'   [a5_cell] vector with the children of every input concatenated in input
+#'   order; which child came from which parent is not recorded. If `FALSE`,
+#'   return an [a5_cell_list]: a [vctrs::list_of()] of [a5_cell] vectors with
+#'   one element per input, suitable for a list column.
+#' @returns
+#' * `a5_cell_to_parent()`: an [a5_cell] vector the same length as `cell`.
+#' * `a5_cell_to_children()`: an [a5_cell] vector, or an [a5_cell_list] when
+#'   `simplify = FALSE`. An `NA` input contributes no cells (an empty element
+#'   in the list form).
 #'
-#' @seealso [a5_cell_to_children()], [a5_get_resolution()]
-#' @export
+#' @seealso [a5_spatial_hierarchy] for parents and children by location,
+#'   [a5_cell_child()] for one child at a time, [a5_cell_children_range()]
+#'   for the id range of all descendants, [a5_get_resolution()].
+#' @name a5_hierarchy
 #' @examples
 #' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
 #' a5_cell_to_parent(cell)
 #' a5_cell_to_parent(cell, resolution = 5)
+#'
+#' a5_cell_to_children(cell)
+#' cells <- a5_lonlat_to_cell(c(-3.19, 0), c(55.95, 0), resolution = 5)
+#' a5_cell_to_children(cells, resolution = 7)                   # 32 cells
+#' a5_cell_to_children(cells, resolution = 7, simplify = FALSE) # list of 2
+#'
+#' # children map back to their parent
+#' all(a5_cell_to_parent(a5_cell_to_children(cell, 12), 10) == cell)
+NULL
+
+#' @rdname a5_hierarchy
+#' @export
 a5_cell_to_parent <- function(cell, resolution = NULL) {
   cell <- as_a5_cell(cell)
   if (!is.null(resolution)) {
@@ -40,6 +75,19 @@ a5_cell_to_parent <- function(cell, resolution = NULL) {
     check_size1(resolution)
   }
   cells_from_rs(a5_cell_to_parent_rs(cell_data(cell), resolution))
+}
+
+#' @rdname a5_hierarchy
+#' @export
+a5_cell_to_children <- function(cell, resolution = NULL, simplify = TRUE) {
+  cell <- as_a5_cell(cell)
+  if (!is.null(resolution)) {
+    resolution <- vctrs::vec_cast(resolution, integer())
+    check_resolution(resolution)
+    check_size1(resolution)
+  }
+  check_flag(simplify)
+  one_to_many(a5_cell_to_children_rs(cell_data(cell), resolution, simplify), simplify)
 }
 
 #' The i-th child of each cell
@@ -125,35 +173,94 @@ a5_cell_children_range <- function(cell, resolution) {
   vctrs::new_data_frame(list(lo = cells_from_rs(rs$lo), hi = cells_from_rs(rs$hi)))
 }
 
-#' Get child cells
+#' Spatial parents and children
 #'
-#' Returns the child cells of each input cell. By default returns the 4
-#' immediate children (one resolution finer). Optionally target a specific
-#' finer resolution.
+#' \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+#'
+#' `a5_cell_to_spatial_parent()` returns, for each cell, the cell at a coarser
+#' resolution that contains its centre. `a5_cell_to_spatial_children()`
+#' returns, for each cell, the cells at a finer resolution whose centres lie
+#' inside it. These are the location-based counterparts of
+#' [a5_cell_to_parent()] and [a5_cell_to_children()], which follow the index
+#' and often cross into neighbouring cells (see [a5_hierarchy]).
+#'
+#' The two functions define an exact partition. Every fine cell has exactly
+#' one spatial parent, and the spatial children of a coarse cell are exactly
+#' the fine cells whose spatial parent it is, so the spatial children of cells
+#' that tile an area tile it too, with no cell counted twice. A centre on a
+#' shared edge goes to the cell [a5_lonlat_to_cell()] assigns it to.
+#'
+#' @section Spatial parent:
+#' The result equals `a5_lonlat_to_cell(a5_cell_to_lonlat(cell), resolution)`,
+#' computed in one pass without converting the centre to degrees. It costs
+#' about as much as [a5_lonlat_to_cell()].
+#'
+#' @section Spatial children:
+#' Counts vary from cell to cell and average `4^d` for a resolution
+#' difference `d`, or `5 * 4^(d - 1)` from resolution 0. Candidates are the
+#' index descendants of the cell and of its vertex neighbours, filtered by
+#' centre containment.
+#'
+#' The result usually equals
+#' `a5_uncompact(a5_polygon_to_cells(cell, resolution), resolution)`. That
+#' route tests centres against a polygon with great-circle edges between the
+#' cell's vertices, while A5 cell edges are slightly curved, so at large
+#' resolution differences it assigns a few edge cells (about 1 in 8,000 at a
+#' difference of 6) to a neighbour that `a5_cell_to_spatial_parent()` would
+#' not. `a5_cell_to_spatial_children()` is also faster and returns one result
+#' per input cell.
+#'
+#' The result is not compacted, so every cell is at `resolution`, as with
+#' [a5_cell_to_children()]. [a5_compact()] on it is lossless ([a5_uncompact()]
+#' restores it exactly) and cuts the number of cells sharply at large
+#' resolution differences: to about 9 percent at a difference of 6. Treat the
+#' compacted form as storage only. Compacted cells are index parents, whose
+#' outlines extend beyond the coarse cell (see [a5_hierarchy]), so uncompact
+#' before plotting or any geometric use.
 #'
 #' @param cell An [a5_cell] vector.
-#' @param resolution Integer scalar target child resolution, or `NULL` for
-#'   immediate children.
-#' @param simplify Logical scalar. If `TRUE` (default), return one flat
-#'   [a5_cell] vector with the children of every input concatenated in input
-#'   order; which child came from which parent is not recorded. If `FALSE`,
-#'   return an [a5_cell_list]: a [vctrs::list_of()] of [a5_cell] vectors with
-#'   one element per input, suitable for a list column.
-#' @returns An [a5_cell] vector, or an [a5_cell_list] when `simplify = FALSE`.
-#'   An `NA` input contributes no cells (an empty element in the list form).
+#' @param resolution Integer scalar target resolution, or `NULL` for one step:
+#'   one resolution coarser for `a5_cell_to_spatial_parent()`, one finer for
+#'   `a5_cell_to_spatial_children()`. Children require a resolution at or
+#'   finer than every cell's own.
+#' @inheritParams a5_hierarchy
+#' @returns
+#' * `a5_cell_to_spatial_parent()`: an [a5_cell] vector the same length as
+#'   `cell`. `NA` where `cell` is `NA`, where `resolution` is finer than the
+#'   cell, or for a resolution-0 cell with `resolution = NULL`. A cell at
+#'   `resolution` is returned unchanged.
+#' * `a5_cell_to_spatial_children()`: an [a5_cell] vector, or an
+#'   [a5_cell_list] when `simplify = FALSE`. Each cell's children are in
+#'   ascending id order. An `NA` input contributes no cells.
 #'
-#' @seealso [a5_cell_to_parent()], [a5_get_resolution()], [a5_cell_child()]
-#'   for one child at a time, [a5_cell_children_range()] for the id range of
-#'   all descendants.
-#' @export
+#' @seealso [a5_hierarchy] for parents and children by index,
+#'   `vignette("spatial-hierarchy")`.
+#' @name a5_spatial_hierarchy
 #' @examples
-#' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
-#' a5_cell_to_children(cell)
+#' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 18)
+#' a5_cell_to_spatial_parent(cell, resolution = 15)
+#' a5_cell_to_parent(cell, resolution = 15) # may differ
 #'
-#' cells <- a5_lonlat_to_cell(c(-3.19, 0), c(55.95, 0), resolution = 5)
-#' a5_cell_to_children(cells, resolution = 7)                  # 32 cells
-#' a5_cell_to_children(cells, resolution = 7, simplify = FALSE) # list of 2
-a5_cell_to_children <- function(cell, resolution = NULL, simplify = TRUE) {
+#' coarse <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
+#' kids <- a5_cell_to_spatial_children(coarse, resolution = 12)
+#' all(a5_cell_to_spatial_parent(kids, resolution = 10) == coarse)
+NULL
+
+#' @rdname a5_spatial_hierarchy
+#' @export
+a5_cell_to_spatial_parent <- function(cell, resolution = NULL) {
+  cell <- as_a5_cell(cell)
+  if (!is.null(resolution)) {
+    resolution <- vctrs::vec_cast(resolution, integer())
+    check_resolution(resolution)
+    check_size1(resolution)
+  }
+  cells_from_rs(a5_cell_to_spatial_parent_rs(cell_data(cell), resolution))
+}
+
+#' @rdname a5_spatial_hierarchy
+#' @export
+a5_cell_to_spatial_children <- function(cell, resolution = NULL, simplify = TRUE) {
   cell <- as_a5_cell(cell)
   if (!is.null(resolution)) {
     resolution <- vctrs::vec_cast(resolution, integer())
@@ -161,5 +268,5 @@ a5_cell_to_children <- function(cell, resolution = NULL, simplify = TRUE) {
     check_size1(resolution)
   }
   check_flag(simplify)
-  one_to_many(a5_cell_to_children_rs(cell_data(cell), resolution, simplify), simplify)
+  one_to_many(a5_cell_to_spatial_children_rs(cell_data(cell), resolution, simplify), simplify)
 }
