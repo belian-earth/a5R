@@ -147,8 +147,15 @@ grow the vector with `NA`, as they do for base vectors.
 strings, so they cost about the same as `vctrs::vec_match()` and
 `vctrs::vec_in()`.
 
-**Use the vctrs form instead.** Two base functions inspect the record's
-fields and cannot be intercepted by a method:
+**Use the vctrs form instead.** Three base cases cannot be intercepted by a
+method:
+
+- `c()` dispatches on its first argument only, so `c(NA, cells)` with a
+  bare `NA` first never reaches the `a5_cell` method and returns a list.
+  Base classes behave the same way: `c(NA, Sys.Date())` loses the `Date`
+  class. Start with a cell, as in `c(a5_cell(NA), cells)`, or use
+  `vctrs::vec_c(NA, cells)`, which combines by every argument's type. An
+  `NA` anywhere after the first argument is fine.
 
 - `split(x, cells)` and `tapply(x, cells, f)` with an `a5_cell` *grouping*
   vector see a list of eight raw vectors and group on their interaction,
@@ -168,6 +175,10 @@ before growing the column. Use `rbind()` or `vctrs::vec_rbind()`.
 ```{r base-r, eval = FALSE}
 cells <- a5_lonlat_to_cell(c(0, 10, 0), c(0, 10, 0), resolution = 5)
 
+# A leading NA: start with a cell, or use vctrs
+c(a5_cell(NA), cells)
+vctrs::vec_c(NA, cells)
+
 # Grouping by cell: use vctrs
 vctrs::vec_split(1:3, cells)$val
 #> [[1]] 1 3   [[2]] 2
@@ -185,4 +196,4 @@ unlist(as_a5_cell_list(parts))
 | Memory (1M cells) | ~81 MB | ~7.6 MB |
 | R-Rust crossing | O(n) hex parse/format | Zero-copy byte access |
 | Human-readable | Always | On `format()` / `print()` |
-| Lossless | Yes | Yes (exact byte representation) |
+| Lossless | Yes | Yes (one-to-one byte encoding) |
