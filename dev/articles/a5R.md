@@ -84,7 +84,7 @@ plot(a5_cell_to_boundary(parent), border = "#333333", lwd = 2, add = TRUE)
 
 Cell area decreases geometrically: each level is roughly 4x smaller, so
 the average edge length roughly halves per level.
-[`a5_cell_edge_length_avg()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_edge_length_avg.md)
+[`a5_cell_edge_length_avg()`](https://belian-earth.github.io/a5R/dev/reference/a5_resolution_stats.md)
 gives a quick sense of cell size when choosing a resolution.
 
 ``` r
@@ -101,9 +101,9 @@ a5_cell_edge_length_avg(0:5, units = "km")
 ### Compact and uncompact
 
 When a complete set of siblings is present,
-[`a5_compact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compact.md)
+[`a5_compact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)
 merges them back into their shared parent. This is the inverse of
-[`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_children.md)
+[`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)
 and is useful for reducing the size of large cell sets without losing
 coverage.
 
@@ -127,7 +127,7 @@ Many a5R functions return compacted output automatically. For example,
 and
 [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md)
 compact their results; use
-[`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_uncompact.md)
+[`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)
 when you need a uniform-resolution grid (see [Traversal](#traversal)
 below).
 
@@ -158,7 +158,7 @@ plot(a5_cell_to_boundary(disk), col = "#206ead20", border = "#206ead", asp = 1)
 Both functions return a **compacted** cell vector: sibling groups are
 merged into coarser parent cells to save space. To recover a uniform
 grid at the original resolution, pass the result through
-[`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_uncompact.md):
+[`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md):
 
 ``` r
 
@@ -192,7 +192,7 @@ plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
 The returned vector is sorted and compacted: whenever four sibling cells
 all sit inside the polygon, they are merged into their parent so the
 result uses fewer slots without losing coverage. Call
-[`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_uncompact.md)
+[`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)
 to expand back to a uniform grid at the target resolution:
 
 ``` r

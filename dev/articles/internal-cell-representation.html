@@ -49,6 +49,7 @@
 <li><a class="dropdown-item" href="../articles/arrow-parquet.html">Working with Arrow and Parquet</a></li>
     <li><a class="dropdown-item" href="../articles/internal-cell-representation.html">How a5R stores cell IDs without strings</a></li>
     <li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
+    <li><a class="dropdown-item" href="../articles/spatial-hierarchy.html">Moving between resolutions by location</a></li>
     <li><a class="dropdown-item" href="../articles/traversal-and-distance.html">Traversal and distance</a></li>
   </ul>
 </li>
@@ -93,7 +94,7 @@ exactly up to 2^53, while a <code>u64</code> can go up to 2^64 - 1.</p>
 R / Rust boundary requires hex parsing and formatting: O(n) string
 allocation that dominates the cost of lightweight operations like
 <code><a href="../reference/a5_get_resolution.html">a5_get_resolution()</a></code> or
-<code><a href="../reference/a5_cell_to_parent.html">a5_cell_to_parent()</a></code>.</p>
+<code><a href="../reference/a5_hierarchy.html">a5_cell_to_parent()</a></code>.</p>
 </div>
 <div class="section level2">
 <h2 id="the-solution-eight-raw-byte-fields">The solution: eight raw-byte fields<a class="anchor" aria-label="anchor" href="#the-solution-eight-raw-byte-fields"></a>
@@ -122,7 +123,7 @@ record</strong> (<code><a href="https://vctrs.r-lib.org/reference/new_rcrd.html"
 (<code>b1</code> through <code>b8</code>):</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/belian-earth/a5R" class="external-link">a5R</a></span><span class="op">)</span></span>
-<span><span class="va">cell</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_lonlat_to_cell.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">55.95</span>, resolution <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="va">cell</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">55.95</span>, resolution <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="fu">vctrs</span><span class="fu">::</span><span class="fu"><a href="https://vctrs.r-lib.org/reference/fields.html" class="external-link">field</a></span><span class="op">(</span><span class="va">cell</span>, <span class="st">"b1"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 00</span></span>
 <span><span class="fu">vctrs</span><span class="fu">::</span><span class="fu"><a href="https://vctrs.r-lib.org/reference/fields.html" class="external-link">field</a></span><span class="op">(</span><span class="va">cell</span>, <span class="st">"b8"</span><span class="op">)</span></span>
@@ -152,7 +153,7 @@ propagation are all handled automatically by vctrs.</p>
 <p>Compare memory for one million cells:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_lonlat_to_cell.html">a5_lonlat_to_cell</a></span><span class="op">(</span></span>
+<span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">1e6</span>, <span class="op">-</span><span class="fl">180</span>, <span class="fl">180</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">1e6</span>, <span class="op">-</span><span class="fl">80</span>, <span class="fl">80</span><span class="op">)</span>,</span>
 <span>  resolution <span class="op">=</span> <span class="fl">10</span></span>
@@ -221,7 +222,7 @@ and returns a meaningless <code>raw</code> vector. Use
 <code><a href="https://vctrs.r-lib.org/reference/list_unchop.html" class="external-link">vctrs::list_unchop()</a></code>, <code>do.call(c, x)</code>, or wrap
 the list with <code><a href="../reference/a5_cell_list.html">as_a5_cell_list()</a></code>, after which
 <code><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist()</a></code> works. Lists returned by
-<code><a href="../reference/a5_cell_to_children.html">a5_cell_to_children()</a></code> and friends with
+<code><a href="../reference/a5_hierarchy.html">a5_cell_to_children()</a></code> and friends with
 <code>simplify = FALSE</code> are already <code>a5_cell_list</code>
 objects.</li>
 </ul>
@@ -230,14 +231,14 @@ objects.</li>
 record-backed column, because base R strips the class before growing the
 column. Use <code><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind()</a></code> or <code><a href="https://vctrs.r-lib.org/reference/vec_bind.html" class="external-link">vctrs::vec_rbind()</a></code>.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_lonlat_to_cell.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">10</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">10</span>, <span class="fl">0</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">10</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">10</span>, <span class="fl">0</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Grouping by cell: use vctrs</span></span>
 <span><span class="fu">vctrs</span><span class="fu">::</span><span class="fu"><a href="https://vctrs.r-lib.org/reference/vec_split.html" class="external-link">vec_split</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="va">cells</span><span class="op">)</span><span class="op">$</span><span class="va">val</span></span>
 <span><span class="co">#&gt; [[1]] 1 3   [[2]] 2</span></span>
 <span></span>
 <span><span class="co"># Flattening lapply() output</span></span>
-<span><span class="va">parts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu"><a href="../reference/a5_cell_to_children.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cells</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">parts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cells</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_list.html">as_a5_cell_list</a></span><span class="op">(</span><span class="va">parts</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">

@@ -13,7 +13,7 @@ boundary requires hex parsing and formatting: O(n) string allocation
 that dominates the cost of lightweight operations like
 [`a5_get_resolution()`](https://belian-earth.github.io/a5R/dev/reference/a5_get_resolution.md)
 or
-[`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_parent.md).
+[`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md).
 
 ## The solution: eight raw-byte fields
 
@@ -161,7 +161,7 @@ fields and cannot be intercepted by a method:
   [`as_a5_cell_list()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_list.md),
   after which [`unlist()`](https://rdrr.io/r/base/unlist.html) works.
   Lists returned by
-  [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_children.md)
+  [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)
   and friends with `simplify = FALSE` are already `a5_cell_list`
   objects.
 

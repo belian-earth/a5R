@@ -9,5 +9,7 @@
 - [How a5R stores cell IDs without
   strings](https://belian-earth.github.io/a5R/dev/articles/internal-cell-representation.md):
 - [Multi-threading](https://belian-earth.github.io/a5R/dev/articles/multithreading.md):
+- [Moving between resolutions by
+  location](https://belian-earth.github.io/a5R/dev/articles/spatial-hierarchy.md):
 - [Traversal and
   distance](https://belian-earth.github.io/a5R/dev/articles/traversal-and-distance.md):

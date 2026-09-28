@@ -34,6 +34,7 @@ cells, where building the full child list to pick one element is wasteful."><met
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/arrow-parquet.html">Working with Arrow and Parquet</a></li>
     <li><a class="dropdown-item" href="../articles/internal-cell-representation.html">How a5R stores cell IDs without strings</a></li>
     <li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
+    <li><a class="dropdown-item" href="../articles/spatial-hierarchy.html">Moving between resolutions by location</a></li>
     <li><a class="dropdown-item" href="../articles/traversal-and-distance.html">Traversal and distance</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -55,7 +56,7 @@ cells, where building the full child list to pick one element is wasteful."><met
     <div class="ref-description section level2">
     <p>Returns one descendant of each cell at a finer resolution without
 enumerating the others: the <code>i</code>-th element of what
-<code><a href="a5_cell_to_children.html">a5_cell_to_children()</a></code> would return. Useful for random draws from large
+<code><a href="a5_hierarchy.html">a5_cell_to_children()</a></code> would return. Useful for random draws from large
 cells, where building the full child list to pick one element is wasteful.</p>
     </div>
 
@@ -90,19 +91,19 @@ or <code>i</code> is <code>NA</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="a5_cell_to_children.html">a5_cell_to_children()</a></code>, <code><a href="a5_get_num_children.html">a5_get_num_children()</a></code></p></div>
+    <div class="dont-index"><p><code><a href="a5_hierarchy.html">a5_cell_to_children()</a></code>, <code><a href="a5_resolution_stats.html">a5_get_num_children()</a></code></p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">cell</span> <span class="op">&lt;-</span> <span class="fu"><a href="a5_lonlat_to_cell.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">55.95</span>, resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">cell</span> <span class="op">&lt;-</span> <span class="fu"><a href="a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">55.95</span>, resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">a5_cell_child</span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="fl">7</span>, i <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">16</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[16]&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 633c200000000000 633c600000000000 633ca00000000000 633ce00000000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [5] 633d200000000000 633d600000000000 633da00000000000 633de00000000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [9] 633e200000000000 633e600000000000 633ea00000000000 633ee00000000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [13] 633f200000000000 633f600000000000 633fa00000000000 633fe00000000000</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="fu">a5_cell_child</span><span class="op">(</span><span class="va">cell</span>, <span class="fl">7</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">16</span><span class="op">)</span>, <span class="fu"><a href="a5_cell_to_children.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cell</span>, <span class="fl">7</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="fu">a5_cell_child</span><span class="op">(</span><span class="va">cell</span>, <span class="fl">7</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">16</span><span class="op">)</span>, <span class="fu"><a href="a5_hierarchy.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cell</span>, <span class="fl">7</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 </code></pre></div>
     </div>

@@ -44,6 +44,7 @@ is compacted; use a5_uncompact() to expand to a uniform-resolution grid.'><meta 
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/arrow-parquet.html">Working with Arrow and Parquet</a></li>
     <li><a class="dropdown-item" href="../articles/internal-cell-representation.html">How a5R stores cell IDs without strings</a></li>
     <li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
+    <li><a class="dropdown-item" href="../articles/spatial-hierarchy.html">Moving between resolutions by location</a></li>
     <li><a class="dropdown-item" href="../articles/traversal-and-distance.html">Traversal and distance</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -71,7 +72,7 @@ Multi-feature inputs (a <code>MULTIPOLYGON</code>, an <code>sfc</code> of multip
 or a <code>POLYGON</code> with holes) are handled natively: per polygon part, the
 outer ring and its holes are converted together with hole interiors
 excluded, then the results are unioned across parts. The final cell set
-is compacted; use <code><a href="a5_uncompact.html">a5_uncompact()</a></code> to expand to a uniform-resolution grid.</p>
+is compacted; use <code><a href="a5_compaction.html">a5_uncompact()</a></code> to expand to a uniform-resolution grid.</p>
     </div>
 
     <div class="section level2">
@@ -134,7 +135,7 @@ or <code>SpatVector</code> geometry instead.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="a5_linestring_to_cells.html">a5_linestring_to_cells()</a></code>, <code><a href="a5_uncompact.html">a5_uncompact()</a></code>.</p></div>
+    <div class="dont-index"><p><code><a href="a5_linestring_to_cells.html">a5_linestring_to_cells()</a></code>, <code><a href="a5_compaction.html">a5_uncompact()</a></code>.</p></div>
     </div>
 
     <div class="section level2">

@@ -2,12 +2,29 @@
 
 ## a5R (development version)
 
+- New experimental
+  [`a5_cell_to_spatial_parent()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
+  and
+  [`a5_cell_to_spatial_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
+  move between resolutions by cell centre rather than by index. The A5
+  index hierarchy is not spatially nested: for about half of cells one
+  resolution apart, and about 35% at four or more apart, the index
+  parent is not the coarse cell containing the fine cell’s centre. The
+  spatial pair forms an exact partition, so aggregating fine cells to a
+  coarser grid counts each fine cell once, inside the coarse cell it
+  lies in.
+  [`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)
+  and
+  [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)
+  are unchanged and now document the difference (requested by
+  belian-production).
+
 - The benchmark suite now mirrors the TypeScript, Python and Rust A5
   ports (same case names, same deterministic inputs) and runs in CI on
   every pull request, failing on regressions above 15%. The old
   cross-language comparison scripts are gone.
 
-- [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_children.md),
+- [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md),
   [`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md)
   and
   [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md)
@@ -62,12 +79,12 @@
   arguments are checked with a lightweight helper, default `format`,
   `containment` and `method` arguments skip
   [`rlang::arg_match()`](https://rlang.r-lib.org/reference/arg_match.html),
-  [`a5_lonlat_to_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_lonlat_to_cell.md)
+  [`a5_lonlat_to_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_coordinates.md)
   casts and recycles common inputs without vctrs,
-  [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_lonlat.md)
+  [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/dev/reference/a5_coordinates.md)
   uses low-level `wk` and data frame constructors, and
-  [`a5_cell_area()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_area.md),
-  [`a5_cell_edge_length_avg()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_edge_length_avg.md)
+  [`a5_cell_area()`](https://belian-earth.github.io/a5R/dev/reference/a5_resolution_stats.md),
+  [`a5_cell_edge_length_avg()`](https://belian-earth.github.io/a5R/dev/reference/a5_resolution_stats.md)
   and
   [`a5_cell_distance()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_distance.md)
   cache the parsed base unit. Scalar calls are three to twenty times
@@ -84,7 +101,7 @@ CRAN release: 2026-09-08
   [`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md),
   [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md)
   and
-  [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_lonlat.md).
+  [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/dev/reference/a5_coordinates.md).
   Cell identifiers are unchanged: all existing results and snapshots are
   bit-for-bit identical.
 - [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md)
@@ -96,7 +113,7 @@ CRAN release: 2026-09-08
   boundary-intersection use case previously served by the removed
   `a5_grid()`.
 - New
-  [`a5_cell_edge_length_avg()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_edge_length_avg.md)
+  [`a5_cell_edge_length_avg()`](https://belian-earth.github.io/a5R/dev/reference/a5_resolution_stats.md)
   returns the average edge length of a cell at a given resolution, as a
   `units` vector (metres by default). Individual edges vary from the
   average by roughly +/-10%.
@@ -177,7 +194,7 @@ CRAN release: 2026-05-14
   `cell_to_parent`, and a polar-region spiral fix in `grid_disk` and
   `spherical_cap`.
 - **Breaking:**
-  [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_lonlat.md)
+  [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/dev/reference/a5_coordinates.md)
   replaces its `normalise` argument with `as_dataframe` (default
   `FALSE`). When `FALSE`, centroids are returned as a
   [`wk::xy()`](https://paleolimbot.github.io/wk/reference/xy.html)
@@ -233,7 +250,7 @@ CRAN release: 2026-03-26
   and now accepts both `a5_cell` vectors and character hex strings.
 - [`a5_cell_distance()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_distance.md)
   and
-  [`a5_cell_area()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_area.md)
+  [`a5_cell_area()`](https://belian-earth.github.io/a5R/dev/reference/a5_resolution_stats.md)
   gain a `units = NULL` option to return plain numeric vectors without
   `units` class overhead.
 - New vignettes:

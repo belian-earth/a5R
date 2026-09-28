@@ -20,10 +20,10 @@ R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 
 ## Indexing
 
-- [`a5_lonlat_to_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_lonlat_to_cell.md)
+- [`a5_lonlat_to_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_coordinates.md)
   — coordinates to cell IDs
 
-- [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_lonlat.md)
+- [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/dev/reference/a5_coordinates.md)
   — cell IDs to centre coordinates
 
 ## Geometry
@@ -31,19 +31,19 @@ R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 - [`a5_cell_to_boundary()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_boundary.md)
   — cell boundary polygons (WKB or WKT)
 
-- [`a5_cell_area()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_area.md)
+- [`a5_cell_area()`](https://belian-earth.github.io/a5R/dev/reference/a5_resolution_stats.md)
   — cell area at a given resolution
 
-- [`a5_cell_edge_length_avg()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_edge_length_avg.md)
+- [`a5_cell_edge_length_avg()`](https://belian-earth.github.io/a5R/dev/reference/a5_resolution_stats.md)
   — average cell edge length at a resolution
 
 - [`a5_cell_distance()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_distance.md)
   — distance between cell centroids
 
-- [`a5_get_num_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_get_num_cells.md)
+- [`a5_get_num_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_resolution_stats.md)
   — total cell count at a resolution
 
-- [`a5_get_num_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_get_num_children.md)
+- [`a5_get_num_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_resolution_stats.md)
   — child count between resolutions
 
 ## Hierarchy
@@ -51,18 +51,18 @@ R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 - [`a5_get_resolution()`](https://belian-earth.github.io/a5R/dev/reference/a5_get_resolution.md)
   — extract resolution from cell IDs
 
-- [`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_parent.md)
+- [`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)
   — navigate to coarser cells
 
-- [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_children.md)
+- [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)
   — navigate to finer cells
 
 - [`a5_get_res0_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_get_res0_cells.md)
   — the 12 root cells
 
-- [`a5_compact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compact.md)
+- [`a5_compact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)
   /
-  [`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_uncompact.md)
+  [`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)
   — compress and expand cell sets
 
 ## Traversal

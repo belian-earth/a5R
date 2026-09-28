@@ -38,6 +38,7 @@ one row per cell."><meta property="og:image" content="https://belian-earth.githu
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/arrow-parquet.html">Working with Arrow and Parquet</a></li>
     <li><a class="dropdown-item" href="../articles/internal-cell-representation.html">How a5R stores cell IDs without strings</a></li>
     <li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
+    <li><a class="dropdown-item" href="../articles/spatial-hierarchy.html">Moving between resolutions by location</a></li>
     <li><a class="dropdown-item" href="../articles/traversal-and-distance.html">Traversal and distance</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -57,7 +58,7 @@ one row per cell."><meta property="og:image" content="https://belian-earth.githu
     </div>
 
     <div class="ref-description section level2">
-    <p><code><a href="a5_cell_to_children.html">a5_cell_to_children()</a></code>, <code><a href="a5_grid_disk.html">a5_grid_disk()</a></code> and <code><a href="a5_spherical_cap.html">a5_spherical_cap()</a></code> return
+    <p><code><a href="a5_hierarchy.html">a5_cell_to_children()</a></code>, <code><a href="a5_grid_disk.html">a5_grid_disk()</a></code> and <code><a href="a5_spherical_cap.html">a5_spherical_cap()</a></code> return
 an <code>a5_cell_list</code> when called with <code>simplify = FALSE</code>: a
 <code><a href="https://vctrs.r-lib.org/reference/list_of.html" class="external-link">vctrs::list_of()</a></code> holding one <a href="a5_cell.html">a5_cell</a> vector per input, usable as a
 list column. It behaves as any list: <code><a href="https://rdrr.io/r/base/lengths.html" class="external-link">lengths()</a></code> gives the number of cells
@@ -104,8 +105,8 @@ are hex strings are converted; <code>NULL</code> elements become empty.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="a5_lonlat_to_cell.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">55.95</span>, <span class="fl">0</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">lst</span> <span class="op">&lt;-</span> <span class="fu"><a href="a5_cell_to_children.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cells</span>, simplify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">55.95</span>, <span class="fl">0</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">lst</span> <span class="op">&lt;-</span> <span class="fu"><a href="a5_hierarchy.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cells</span>, simplify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/lengths.html" class="external-link">lengths</a></span><span class="op">(</span><span class="va">lst</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4 4</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">lst</span><span class="op">)</span></span></span>
@@ -115,7 +116,7 @@ are hex strings are converted; <code>NULL</code> elements become empty.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># lapply() produces a plain list, on which base unlist() would return raw</span></span></span>
 <span class="r-in"><span><span class="co"># bytes; wrap it first.</span></span></span>
-<span class="r-in"><span><span class="va">plain</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu"><a href="a5_cell_to_children.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cells</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">plain</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu"><a href="a5_hierarchy.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cells</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="fu">as_a5_cell_list</span><span class="op">(</span><span class="va">plain</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[8]&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 633c800000000000 633d800000000000 633e800000000000 633f800000000000</span>

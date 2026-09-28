@@ -43,9 +43,9 @@ vector of distances.
 
 ## See also
 
-[`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_lonlat.md)
+[`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/dev/reference/a5_coordinates.md)
 for cell centroids,
-[`a5_cell_area()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_area.md)
+[`a5_cell_area()`](https://belian-earth.github.io/a5R/dev/reference/a5_resolution_stats.md)
 for cell areas.
 
 ## Examples

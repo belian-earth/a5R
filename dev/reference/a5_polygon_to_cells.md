@@ -8,7 +8,7 @@ the polygon boundary, giving gap-free coverage. Multi-feature inputs (a
 holes) are handled natively: per polygon part, the outer ring and its
 holes are converted together with hole interiors excluded, then the
 results are unioned across parts. The final cell set is compacted; use
-[`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_uncompact.md)
+[`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)
 to expand to a uniform-resolution grid.
 
 ## Usage
@@ -85,7 +85,7 @@ multi-feature data or polygons with holes, pass an `sf`, `sfc`, wk, or
 ## See also
 
 [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_linestring_to_cells.md),
-[`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_uncompact.md).
+[`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md).
 
 ## Examples
 

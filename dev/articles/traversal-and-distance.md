@@ -11,7 +11,7 @@ Pick an origin cell and use
 [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md)
 to grab every cell whose centre falls within a given great-circle
 radius. The result is compacted, so pass it through
-[`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_uncompact.md)
+[`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)
 for a uniform-resolution grid.
 
 ``` r
@@ -45,7 +45,6 @@ ddisk_vertex <- a5_cell_distance(origin, disk_vertex, units = "km")
 
 pal <- hcl.colors(256, "Inferno")
 
-oldpar <- par(mfrow = c(2, 2), mar = c(2, 2, 2, 1))
 for (info in list(
   list(s = disk, d = ddisk, lab = "Grid disk (edges)"),
   list(s = disk_vertex, d = ddisk_vertex, lab = "Grid disk (vertices)"),
@@ -89,7 +88,6 @@ diff_m <- as.numeric(geo - hav)
 brk <- seq(min(diff_m), max(diff_m), length.out = 257)
 cols <- pal[findInterval(diff_m, brk, all.inside = TRUE)]
 
-oldpar <- par(no.readonly = TRUE)
 layout(matrix(c(1, 2), nrow = 1), widths = c(4, 1))
 par(mar = c(2, 2, 2, 1))
 plot(a5_cell_to_boundary(wide_cap), col = cols, border = NA, asp = 1,

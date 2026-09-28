@@ -28,6 +28,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/arrow-parquet.html">Working with Arrow and Parquet</a></li>
     <li><a class="dropdown-item" href="../articles/internal-cell-representation.html">How a5R stores cell IDs without strings</a></li>
     <li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
+    <li><a class="dropdown-item" href="../articles/spatial-hierarchy.html">Moving between resolutions by location</a></li>
     <li><a class="dropdown-item" href="../articles/traversal-and-distance.html">Traversal and distance</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -56,17 +57,10 @@
 
       <dl><dt>
 
-          <code><a href="a5_lonlat_to_cell.html">a5_lonlat_to_cell()</a></code>
+          <code><a href="a5_coordinates.html">a5_lonlat_to_cell()</a></code> <code><a href="a5_coordinates.html">a5_cell_to_lonlat()</a></code>
 
         </dt>
-        <dd>Convert coordinates to A5 cell indices</dd>
-
-        <dt>
-
-          <code><a href="a5_cell_to_lonlat.html">a5_cell_to_lonlat()</a></code>
-
-        </dt>
-        <dd>Convert A5 cell indices to coordinates</dd>
+        <dd>Convert between coordinates and cells</dd>
       </dl></div><div class="section level2">
       <h2 id="cell-type">Cell type<a class="anchor" aria-label="anchor" href="#cell-type"></a></h2>
 
@@ -132,17 +126,17 @@
 
         <dt>
 
-          <code><a href="a5_cell_to_parent.html">a5_cell_to_parent()</a></code>
+          <code><a href="a5_hierarchy.html">a5_cell_to_parent()</a></code> <code><a href="a5_hierarchy.html">a5_cell_to_children()</a></code>
 
         </dt>
-        <dd>Navigate to parent cell(s)</dd>
+        <dd>Index parents and children</dd>
 
         <dt>
 
-          <code><a href="a5_cell_to_children.html">a5_cell_to_children()</a></code>
-
+          <code><a href="a5_spatial_hierarchy.html">a5_cell_to_spatial_parent()</a></code> <code><a href="a5_spatial_hierarchy.html">a5_cell_to_spatial_children()</a></code>
+          <span class="badge lifecycle lifecycle-experimental">experimental</span>
         </dt>
-        <dd>Get child cells</dd>
+        <dd>Spatial parents and children</dd>
 
         <dt>
 
@@ -190,31 +184,10 @@
 
         <dt>
 
-          <code><a href="a5_cell_area.html">a5_cell_area()</a></code>
+          <code><a href="a5_resolution_stats.html">a5_cell_area()</a></code> <code><a href="a5_resolution_stats.html">a5_cell_edge_length_avg()</a></code> <code><a href="a5_resolution_stats.html">a5_get_num_cells()</a></code> <code><a href="a5_resolution_stats.html">a5_get_num_children()</a></code>
 
         </dt>
-        <dd>Cell area at a given resolution</dd>
-
-        <dt>
-
-          <code><a href="a5_cell_edge_length_avg.html">a5_cell_edge_length_avg()</a></code>
-
-        </dt>
-        <dd>Average cell edge length at a given resolution</dd>
-
-        <dt>
-
-          <code><a href="a5_get_num_cells.html">a5_get_num_cells()</a></code>
-
-        </dt>
-        <dd>Total number of cells at a given resolution</dd>
-
-        <dt>
-
-          <code><a href="a5_get_num_children.html">a5_get_num_children()</a></code>
-
-        </dt>
-        <dd>Number of children between two resolutions</dd>
+        <dd>Cell size and counts by resolution</dd>
       </dl></div><div class="section level2">
       <h2 id="traversal">Traversal<a class="anchor" aria-label="anchor" href="#traversal"></a></h2>
 
@@ -250,17 +223,10 @@
 
       <dl><dt>
 
-          <code><a href="a5_compact.html">a5_compact()</a></code>
+          <code><a href="a5_compaction.html">a5_compact()</a></code> <code><a href="a5_compaction.html">a5_uncompact()</a></code>
 
         </dt>
-        <dd>Compact a set of A5 cells</dd>
-
-        <dt>
-
-          <code><a href="a5_uncompact.html">a5_uncompact()</a></code>
-
-        </dt>
-        <dd>Uncompact a set of A5 cells to a target resolution</dd>
+        <dd>Compact and uncompact sets of cells</dd>
       </dl></div><div class="section level2">
       <h2 id="geometry-indexing">Geometry indexing<a class="anchor" aria-label="anchor" href="#geometry-indexing"></a></h2>
 

@@ -47,7 +47,7 @@ CRS.
 
 ## See also
 
-[`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_lonlat.md)
+[`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/dev/reference/a5_coordinates.md)
 for cell centroids.
 
 ## Examples

@@ -2,7 +2,7 @@
 
 Returns one descendant of each cell at a finer resolution without
 enumerating the others: the `i`-th element of what
-[`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_children.md)
+[`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)
 would return. Useful for random draws from large cells, where building
 the full child list to pick one element is wasteful.
 
@@ -39,8 +39,8 @@ vector the same length as `cell`. `NA` where `cell` or `i` is `NA`.
 
 ## See also
 
-[`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_children.md),
-[`a5_get_num_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_get_num_children.md)
+[`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md),
+[`a5_get_num_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_resolution_stats.md)
 
 ## Examples
 

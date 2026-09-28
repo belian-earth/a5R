@@ -45,12 +45,12 @@ use three different bit layouts whose id ranges overlap numerically, and
 a range can contain valid resolution-30 cells from another face.
 Eighteen of the sixty faces cannot be encoded at resolution 30 at all;
 the upstream library falls back to resolution 29 for them. Use
-[`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_children.md)
+[`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)
 if you need resolution-30 descendants.
 
 ## See also
 
-[`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_children.md),
+[`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md),
 [`a5_cell_to_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_from_arrow.md)
 for exact 64-bit ids to pass to SQL.
 

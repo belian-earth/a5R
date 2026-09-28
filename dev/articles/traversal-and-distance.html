@@ -49,6 +49,7 @@
 <li><a class="dropdown-item" href="../articles/arrow-parquet.html">Working with Arrow and Parquet</a></li>
     <li><a class="dropdown-item" href="../articles/internal-cell-representation.html">How a5R stores cell IDs without strings</a></li>
     <li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
+    <li><a class="dropdown-item" href="../articles/spatial-hierarchy.html">Moving between resolutions by location</a></li>
     <li><a class="dropdown-item" href="../articles/traversal-and-distance.html">Traversal and distance</a></li>
   </ul>
 </li>
@@ -87,15 +88,15 @@
 </h2>
 <p>Pick an origin cell and use <code><a href="../reference/a5_spherical_cap.html">a5_spherical_cap()</a></code> to grab
 every cell whose centre falls within a given great-circle radius. The
-result is compacted, so pass it through <code><a href="../reference/a5_uncompact.html">a5_uncompact()</a></code> for
+result is compacted, so pass it through <code><a href="../reference/a5_compaction.html">a5_uncompact()</a></code> for
 a uniform-resolution grid.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">origin</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_lonlat_to_cell.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="fl">35</span>, <span class="fl">55</span>, resolution <span class="op">=</span> <span class="fl">14</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">origin</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="fl">35</span>, <span class="fl">55</span>, resolution <span class="op">=</span> <span class="fl">14</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">disk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_grid_disk.html">a5_grid_disk</a></span><span class="op">(</span><span class="va">origin</span>, k <span class="op">=</span> <span class="fl">20</span>, vertex <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">disk_vertex</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_grid_disk.html">a5_grid_disk</a></span><span class="op">(</span><span class="va">origin</span>, k <span class="op">=</span> <span class="fl">20</span>, vertex <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">cap_compact</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spherical_cap.html">a5_spherical_cap</a></span><span class="op">(</span><span class="va">origin</span>, radius <span class="op">=</span> <span class="fl">5000</span><span class="op">)</span></span>
-<span><span class="va">cap</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_uncompact.html">a5_uncompact</a></span><span class="op">(</span><span class="va">cap_compact</span>, resolution <span class="op">=</span> <span class="fl">14</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">cap</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_compaction.html">a5_uncompact</a></span><span class="op">(</span><span class="va">cap_compact</span>, resolution <span class="op">=</span> <span class="fl">14</span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="../reference/a5_grid_disk.html">a5_grid_disk()</a></code> selects cells by hop count rather than
 metric distance. With <code>vertex = FALSE</code> (default) only
 edge-sharing neighbours are traversed (4-connected), producing a diamond
@@ -115,7 +116,6 @@ disk) and visualise it as a colour gradient.</p>
 <span></span>
 <span><span class="va">pal</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/palettes.html" class="external-link">hcl.colors</a></span><span class="op">(</span><span class="fl">256</span>, <span class="st">"Inferno"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">oldpar</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">info</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>s <span class="op">=</span> <span class="va">disk</span>, d <span class="op">=</span> <span class="va">ddisk</span>, lab <span class="op">=</span> <span class="st">"Grid disk (edges)"</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>s <span class="op">=</span> <span class="va">disk_vertex</span>, d <span class="op">=</span> <span class="va">ddisk_vertex</span>, lab <span class="op">=</span> <span class="st">"Grid disk (vertices)"</span><span class="op">)</span>,</span>
@@ -143,8 +143,8 @@ border for reference.</p>
 short distances they are nearly identical; differences grow with
 distance.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">wide_origin</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_lonlat_to_cell.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="fl">35</span>, <span class="fl">55</span>, resolution <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
-<span><span class="va">wide_cap</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_uncompact.html">a5_uncompact</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">wide_origin</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="fl">35</span>, <span class="fl">55</span>, resolution <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
+<span><span class="va">wide_cap</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_compaction.html">a5_uncompact</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/a5_spherical_cap.html">a5_spherical_cap</a></span><span class="op">(</span><span class="va">wide_origin</span>, radius <span class="op">=</span> <span class="fl">500000</span><span class="op">)</span>,</span>
 <span>  resolution <span class="op">=</span> <span class="fl">8</span></span>
 <span><span class="op">)</span></span>
@@ -156,7 +156,6 @@ distance.</p>
 <span><span class="va">brk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">diff_m</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">diff_m</span><span class="op">)</span>, length.out <span class="op">=</span> <span class="fl">257</span><span class="op">)</span></span>
 <span><span class="va">cols</span> <span class="op">&lt;-</span> <span class="va">pal</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/findInterval.html" class="external-link">findInterval</a></span><span class="op">(</span><span class="va">diff_m</span>, <span class="va">brk</span>, all.inside <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
-<span><span class="va">oldpar</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>no.readonly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/layout.html" class="external-link">layout</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, widths <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">wide_cap</span><span class="op">)</span>, col <span class="op">=</span> <span class="va">cols</span>, border <span class="op">=</span> <span class="cn">NA</span>, asp <span class="op">=</span> <span class="fl">1</span>,</span>
