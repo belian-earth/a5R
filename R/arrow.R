@@ -73,3 +73,69 @@ chunk_to_a5 <- function(chunk) {
   rs <- blobs_to_raw8_rs(raw_list)
   cells_from_rs(rs)
 }
+
+#' Convert between a5_covering and Arrow list<uint64> arrays
+#'
+#' Losslessly convert [a5_covering] vectors to and from Arrow
+#' `list<uint64>` arrays, one list element per covering. Each element holds
+#' the covering's compacted cells followed by its compaction marker, the
+#' layout every A5 library uses, so the resolution travels with the data
+#' into Parquet, DuckDB, Python or JavaScript. A missing covering is a null
+#' element.
+#'
+#' `a5_covering_from_arrow()` accepts coverings written by any A5 library.
+#' Each one is checked, sorted and compacted; an element without a
+#' compaction marker stands for the resolution of its finest cell.
+#'
+#' @param x For `a5_covering_from_arrow()`, an Arrow `Array` or
+#'   `ChunkedArray` of type `list<uint64>`. For `a5_covering_to_arrow()`, an
+#'   [a5_covering] vector.
+#' @returns `a5_covering_from_arrow()` returns an [a5_covering] vector.
+#'   `a5_covering_to_arrow()` returns an Arrow `Array` of type
+#'   `list<uint64>`.
+#'
+#' @seealso [a5_cell_to_arrow()] for single cells.
+#' @export
+#' @examplesIf requireNamespace("arrow", quietly = TRUE)
+#' cells <- a5_lonlat_to_cell(c(-3.19, 135), c(55.95, 0), resolution = 10)
+#' disks <- a5_grid_disk(cells, k = 2)
+#' arr <- a5_covering_to_arrow(disks)
+#' arr$type$ToString()
+#' identical(a5_covering_from_arrow(arr), disks)
+a5_covering_from_arrow <- function(x) {
+  rlang::check_installed("arrow", reason = "to convert Arrow arrays to a5_covering")
+  type <- x$type
+  if (!inherits(type, "ListType") || !identical(type$value_type$ToString(), "uint64")) {
+    cli::cli_abort(c(
+      "Expected an Arrow {.code list<uint64>} array.",
+      "x" = "Got {.code {type$ToString()}}."
+    ))
+  }
+  if (inherits(x, "ChunkedArray")) {
+    parts <- lapply(seq_len(x$num_chunks) - 1L, function(i) {
+      chunk_to_covering(x$chunk(i))
+    })
+    return(do.call(vctrs::vec_c, c(list(new_a5_covering()), parts)))
+  }
+  chunk_to_covering(x)
+}
+
+#' @rdname a5_covering_from_arrow
+#' @export
+a5_covering_to_arrow <- function(x) {
+  rlang::check_installed("arrow", reason = "to convert a5_covering to Arrow arrays")
+  x <- as_a5_covering(x)
+  blobs <- a5_covering_to_blobs_rs(x)
+  arr <- arrow::Array$create(blobs, type = arrow::list_of(arrow::fixed_size_binary(8L)))
+  arr$View(arrow::list_of(arrow::uint64()))
+}
+
+#' Convert a single Arrow list<uint64> chunk to a5_covering
+#' @noRd
+chunk_to_covering <- function(chunk) {
+  fsb <- chunk$View(arrow::list_of(arrow::fixed_size_binary(8L)))
+  raws <- lapply(fsb$as_vector(), function(el) {
+    if (is.null(el)) NULL else as.raw(unlist(unclass(el), use.names = FALSE))
+  })
+  as_a5_covering(raws)
+}

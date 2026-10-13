@@ -126,3 +126,15 @@ check_resolution <- function(resolution,
   }
   invisible(resolution)
 }
+
+#' Run a Rust call, re-raising its error from the user's call
+#'
+#' Rust errors surface as `Error in a5_xxx_rs(...)`, naming an internal
+#' function. This re-raises them as if from `call`, the exported function.
+#' @noRd
+from_caller <- function(expr, call) {
+  tryCatch(expr, error = function(e) {
+    msg <- conditionMessage(e)
+    cli::cli_abort("{msg}", call = call)
+  })
+}

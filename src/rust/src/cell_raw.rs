@@ -213,6 +213,32 @@ pub(crate) fn collect_ids(cells: &List) -> Vec<u64> {
     (0..cs.len).filter_map(|i| cs.get(i)).collect()
 }
 
+/// Groups of cells as one flat b1..b8 list (`simplify`), or as a list of
+/// a5_cell objects, one per group.
+pub(crate) fn groups_to_robj(groups: Vec<Vec<u64>>, simplify: bool) -> Robj {
+    if simplify {
+        let flat: Vec<Option<u64>> = groups.into_iter().flatten().map(Some).collect();
+        return u64s_to_raw8_list(flat).into();
+    }
+    let elements: Vec<Robj> = groups
+        .into_iter()
+        .map(|g| {
+            let mut cell: Robj = u64s_to_raw8_list(g.into_iter().map(Some).collect()).into();
+            cell.set_class(["a5_cell", "vctrs_rcrd", "vctrs_vctr"])
+                .expect("set class on a5_cell");
+            cell
+        })
+        .collect();
+    List::from_values(elements).into()
+}
+
+/// Cells as an upstream covering standing for `resolution`: the cells, then
+/// the compaction marker recording it.
+pub(crate) fn with_marker(mut cells: Vec<u64>, resolution: i32) -> Vec<u64> {
+    cells.push(a5::core::compaction_marker::compaction_marker(resolution));
+    cells
+}
+
 // --- Exported conversion functions ---
 
 /// Convert cell raw bytes to hex strings (zero-padded to 16 chars).

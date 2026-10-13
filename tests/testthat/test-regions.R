@@ -9,13 +9,17 @@ square_wkt <- function(xmin, ymin, xmax, ymax) {
 
 # -- a5_polygon_to_cells: return type ------------------------------------------
 
-test_that("a5_polygon_to_cells returns an a5_cell vector", {
+test_that("a5_polygon_to_cells returns one covering", {
   poly <- wk::wkt(square_wkt(-3.5, 55.5, -2.5, 56.5))
-  cells <- a5_polygon_to_cells(poly, resolution = 10)
-  expect_s3_class(cells, "a5_cell")
-  expect_true(length(cells) > 0)
-  expect_true(all(a5_get_resolution(cells) <= 10L))
-  expect_equal(length(cells), length(unique(format(cells))))
+  covering <- a5_polygon_to_cells(poly, resolution = 10)
+  expect_s3_class(covering, "a5_covering")
+  expect_length(covering, 1L)
+  expect_identical(a5_covering_resolution(covering), 10L)
+  expect_true(a5_is_valid(covering))
+  cells <- a5_uncompact(covering)
+  expect_gt(length(cells), 0L)
+  expect_true(all(a5_get_resolution(cells) == 10L))
+  expect_false(anyDuplicated(cells) > 0)
 })
 
 test_that("a5_polygon_to_cells uses centre-point containment (centre cell is inside)", {
@@ -35,7 +39,7 @@ test_that("a5_polygon_to_cells accepts a matrix shortcut", {
     wk::wkt(square_wkt(-3.5, 55.5, -2.5, 56.5)),
     resolution = 10
   )
-  expect_setequal(format(cells_m), format(cells_w))
+  expect_identical(cells_m, cells_w)
 })
 
 test_that("a5_polygon_to_cells accepts a data.frame shortcut", {
@@ -48,7 +52,7 @@ test_that("a5_polygon_to_cells accepts a data.frame shortcut", {
     wk::wkt(square_wkt(-3.5, 55.5, -2.5, 56.5)),
     resolution = 10
   )
-  expect_setequal(format(cells_df), format(cells_w))
+  expect_identical(cells_df, cells_w)
 })
 
 test_that("a5_polygon_to_cells accepts wk::rct", {
@@ -58,7 +62,7 @@ test_that("a5_polygon_to_cells accepts wk::rct", {
     wk::wkt(square_wkt(-3.5, 55.5, -2.5, 56.5)),
     resolution = 10
   )
-  expect_setequal(format(rect_cells), format(wkt_cells))
+  expect_identical(rect_cells, wkt_cells)
 })
 
 test_that("a5_polygon_to_cells accepts a terra SpatVector", {
@@ -69,7 +73,7 @@ test_that("a5_polygon_to_cells accepts a terra SpatVector", {
     wk::wkt(square_wkt(-3.5, 55.5, -2.5, 56.5)),
     resolution = 10
   )
-  expect_setequal(format(cells_terra), format(cells_w))
+  expect_identical(cells_terra, cells_w)
 })
 
 test_that("a5_polygon_to_cells handles a multi-polygon SpatVector", {
@@ -86,7 +90,7 @@ test_that("a5_polygon_to_cells handles a multi-polygon SpatVector", {
     )),
     resolution = 8
   )
-  expect_setequal(format(cells_terra), format(cells_w))
+  expect_identical(cells_terra, cells_w)
 })
 
 test_that("a5_linestring_to_cells accepts a terra SpatVector", {
@@ -114,7 +118,7 @@ test_that("a5_polygon_to_cells accepts an sfc polygon", {
     wk::wkt(square_wkt(-3.5, 55.5, -2.5, 56.5)),
     resolution = 10
   )
-  expect_setequal(format(cells_sf), format(cells_w))
+  expect_identical(cells_sf, cells_w)
 })
 
 # -- multi-feature: handled natively ------------------------------------------
@@ -139,7 +143,7 @@ test_that("MULTIPOLYGON returns the union of cells across parts", {
   expect_setequal(format(uu), c(format(u1), format(u2)))
 })
 
-test_that("sfc of multiple polygons returns the union", {
+test_that("sfc of multiple polygons gives one covering per feature", {
   skip_if_not_installed("sf")
   sfc <- sf::st_sfc(
     sf::st_polygon(list(matrix(
@@ -152,9 +156,34 @@ test_that("sfc of multiple polygons returns the union", {
     ))),
     crs = 4326
   )
-  cells <- a5_polygon_to_cells(sfc, resolution = 8)
-  expect_s3_class(cells, "a5_cell")
-  expect_true(length(cells) > 0)
+  coverings <- a5_polygon_to_cells(sfc, resolution = 8)
+  expect_s3_class(coverings, "a5_covering")
+  expect_length(coverings, 2L)
+  expect_identical(coverings[1], a5_polygon_to_cells(sfc[1], resolution = 8))
+  expect_identical(coverings[2], a5_polygon_to_cells(sfc[2], resolution = 8))
+
+  # an sf data frame gets a column
+  df <- sf::st_sf(id = 1:2, geometry = sfc)
+  df$cells <- a5_polygon_to_cells(df, resolution = 8)
+  expect_identical(df$cells, coverings)
+})
+
+test_that("each feature keeps its own covering, with NA and empty geometries", {
+  polys <- wk::wkt(c(
+    square_wkt(-3.5, 55.5, -2.5, 56.5),
+    NA,
+    "POLYGON EMPTY",
+    "MULTIPOLYGON (((0 0, 2 0, 2 2, 0 2, 0 0)), ((5 5, 7 5, 7 7, 5 7, 5 5)))",
+    square_wkt(1, 1, 2, 2)
+  ))
+  out <- a5_polygon_to_cells(polys, resolution = 8)
+  expect_length(out, 5L)
+  expect_identical(is.na(out), c(FALSE, TRUE, FALSE, FALSE, FALSE))
+  expect_identical(lengths(a5_uncompact(out, simplify = FALSE))[3], 0L)
+  expect_identical(a5_covering_resolution(out[3]), 8L)
+  for (i in c(1L, 4L, 5L)) {
+    expect_identical(out[i], a5_polygon_to_cells(polys[i], resolution = 8))
+  }
 })
 
 # -- holes are properly subtracted --------------------------------------------
@@ -297,7 +326,7 @@ test_that("a5_linestring_to_cells matrix and data.frame shortcuts match wk input
   expect_identical(format(c_d), format(c_w))
 })
 
-test_that("MULTILINESTRING returns the deduped union in feature order", {
+test_that("MULTILINESTRING parts join into one deduplicated path", {
   ml <- wk::wkt(
     "MULTILINESTRING ((2.35 48.86, -0.13 51.51),
                       (-0.13 51.51, 4.83 45.76))"
@@ -336,30 +365,49 @@ test_that("polygon/linestring results are identical with threads > 1", {
                       (-0.13 51.51, 4.83 45.76))"
   )
 
+  lines <- wk::wkt(c(as.character(ml), "LINESTRING (2.35 48.86, 13.4 52.52)"))
+
   a5_set_threads(1)
   p1 <- a5_polygon_to_cells(mp, resolution = 8)
   l1 <- a5_linestring_to_cells(ml, resolution = 5)
+  f1 <- a5_linestring_to_cells(lines, resolution = 5, simplify = FALSE)
 
   a5_set_threads(2)
   p2 <- a5_polygon_to_cells(mp, resolution = 8)
   l2 <- a5_linestring_to_cells(ml, resolution = 5)
+  f2 <- a5_linestring_to_cells(lines, resolution = 5, simplify = FALSE)
 
-  expect_setequal(format(p1), format(p2))
-  expect_identical(format(l1), format(l2))
+  expect_identical(p1, p2)
+  expect_identical(l1, l2)
+  expect_identical(f1, f2)
 })
 
 # -- empty-result behaviour ---------------------------------------------------
 
-test_that("polygon smaller than a single cell returns an empty a5_cell", {
+test_that("polygon smaller than a single cell gives an empty covering", {
   # A res-14 cell's pentagon is several orders of magnitude smaller than
   # any res-8 cell, so no res-8 centre can lie inside it.
   tiny <- a5_cell_to_boundary(a5_lonlat_to_cell(10, 50, resolution = 14))
   out <- a5_polygon_to_cells(tiny, resolution = 8)
-  expect_s3_class(out, "a5_cell")
-  expect_length(out, 0L)
+  expect_s3_class(out, "a5_covering")
+  expect_length(out, 1L)
+  expect_false(is.na(out))
+  expect_length(a5_uncompact(out), 0L)
+  expect_identical(a5_covering_resolution(out), 8L)
 })
 
 # -- input validation: polygon -------------------------------------------------
+
+test_that("polygon matrix and data.frame input must have vertices", {
+  expect_error(
+    a5_polygon_to_cells(matrix(numeric(), ncol = 2), resolution = 8),
+    "no polygon rings"
+  )
+  expect_error(
+    a5_polygon_to_cells(data.frame(lon = numeric(), lat = numeric()), resolution = 8),
+    "no polygon rings"
+  )
+})
 
 test_that("polygon matrix input must have exactly 2 columns", {
   expect_error(
@@ -426,18 +474,17 @@ test_that("polygon rejects wrong geometry types", {
   )
 })
 
-test_that("polygon rejects empty geometries", {
-  expect_error(
-    a5_polygon_to_cells(wk::wkt("POLYGON EMPTY"), resolution = 8),
-    "empty geometries"
-  )
+test_that("an empty geometry gives an empty covering", {
+  out <- a5_polygon_to_cells(wk::wkt("POLYGON EMPTY"), resolution = 8)
+  expect_length(out, 1L)
+  expect_false(is.na(out))
+  expect_length(a5_uncompact(out), 0L)
 })
 
-test_that("polygon rejects empty sfc / wkt vector", {
-  expect_error(
-    a5_polygon_to_cells(wk::wkt(character()), resolution = 8),
-    "no polygon rings"
-  )
+test_that("an empty geometry vector gives an empty covering vector", {
+  out <- a5_polygon_to_cells(wk::wkt(character()), resolution = 8)
+  expect_s3_class(out, "a5_covering")
+  expect_length(out, 0L)
 })
 
 test_that("polygon rejects non-geometry input", {
@@ -510,18 +557,56 @@ test_that("linestring rejects wrong geometry types", {
   )
 })
 
-test_that("linestring rejects empty geometries", {
+test_that("linestring empty and missing geometries contribute no cells", {
+  expect_length(a5_linestring_to_cells(wk::wkt("LINESTRING EMPTY"), resolution = 8), 0L)
+  expect_length(a5_linestring_to_cells(wk::wkt(character()), resolution = 8), 0L)
+  lst <- a5_linestring_to_cells(
+    wk::wkt(c("LINESTRING (2.35 48.86, -0.13 51.51)", NA, "LINESTRING EMPTY")),
+    resolution = 5, simplify = FALSE
+  )
+  expect_identical(lengths(lst)[2:3], c(0L, 0L))
+  expect_gt(lengths(lst)[1], 0L)
   expect_error(
-    a5_linestring_to_cells(wk::wkt("LINESTRING EMPTY"), resolution = 8),
-    "empty geometries"
+    a5_linestring_to_cells(matrix(numeric(), ncol = 2), resolution = 8),
+    "no linestrings"
   )
 })
 
-test_that("linestring rejects empty sfc / wkt vector", {
-  expect_error(
-    a5_linestring_to_cells(wk::wkt(character()), resolution = 8),
-    "no linestrings"
+test_that("linestrings give one ordered path per feature", {
+  lines <- wk::wkt(c(
+    "LINESTRING (2.35 48.86, -0.13 51.51)",
+    "LINESTRING (2.35 48.86, 4.83 45.76)",
+    "MULTILINESTRING ((2.35 48.86, -0.13 51.51), (-0.13 51.51, 4.83 45.76))"
+  ))
+  paths <- a5_linestring_to_cells(lines, resolution = 5, simplify = FALSE)
+  expect_s3_class(paths, "a5_cell_list")
+  expect_length(paths, 3L)
+  for (i in 1:3) {
+    expect_identical(paths[[i]], a5_linestring_to_cells(lines[i], resolution = 5))
+  }
+  # flat form: the paths concatenated, so the shared Paris cell appears twice
+  flat <- a5_linestring_to_cells(lines[1:2], resolution = 5)
+  expect_identical(flat, vctrs::list_unchop(paths[1:2]))
+  paris <- a5_lonlat_to_cell(2.35, 48.86, resolution = 5)
+  expect_identical(sum(flat == paris), 2L)
+  # within a feature, parts are joined in order and each cell kept once
+  expect_false(anyDuplicated(paths[[3]]) > 0)
+  expect_identical(paths[[3]][seq_along(paths[[1]])], paths[[1]])
+  expect_error(a5_linestring_to_cells(lines, 5, simplify = NA), "TRUE")
+})
+
+test_that("linestring paths fill a list column of an sf data frame", {
+  skip_if_not_installed("sf")
+  df <- sf::st_sf(
+    id = 1:2,
+    geometry = sf::st_as_sfc(c(
+      "LINESTRING (2.35 48.86, -0.13 51.51)",
+      "LINESTRING (2.35 48.86, 4.83 45.76)"
+    ), crs = 4326)
   )
+  df$path <- a5_linestring_to_cells(df, resolution = 5, simplify = FALSE)
+  expect_s3_class(df$path, "a5_cell_list")
+  expect_identical(df$path[[2]], a5_linestring_to_cells(df[2, ], resolution = 5))
 })
 
 test_that("linestring rejects non-geometry input", {

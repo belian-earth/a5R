@@ -1,14 +1,92 @@
 # a5R (development version)
 
-* New experimental `a5_cell_to_spatial_parent()` and
-  `a5_cell_to_spatial_children()` move between resolutions by cell centre
-  rather than by index. The A5 index hierarchy is not spatially nested: for
-  about half of cells one resolution apart, and about 35% at four or more
-  apart, the index parent is not the coarse cell containing the fine cell's
-  centre. The spatial pair forms an exact partition, so aggregating fine
-  cells to a coarser grid counts each fine cell once, inside the coarse cell
-  it lies in. `a5_cell_to_parent()` and `a5_cell_to_children()` are
-  unchanged and now document the difference (requested by belian-production).
+## Breaking changes
+
+* a5R now uses the a5 Rust crate 1.0.0-beta.2, which introduces A5's
+  permanent cell-ID system. The space-filling curve and the order of the
+  dodecahedron faces are new, so **every cell id changes**: an id written by
+  an earlier version of a5R is still a valid cell, but in a different place,
+  and nothing in the id says which version wrote it. Re-index stored data
+  from its coordinates, or convert the ids once with the new `a5_migrate()`.
+* Resolution-1 cells are now pentagons rather than triangles, so their
+  boundaries and centres change. Cells at every other resolution keep their
+  shape and position.
+* Compacted cell sets are now `a5_covering` vectors, one covering per
+  element. A covering stores its compacted cells followed by a compaction
+  marker recording the resolution they stand for, as in the other A5
+  libraries, so `a5_uncompact()` no longer needs a resolution. Coverings
+  print as their resolution, cell count and stored-cell count, work as data
+  frame columns, and compare equal with `==` when they hold the same cells.
+  Use `a5_uncompact()` for the cells; `as_a5_cell()` refuses a covering
+  rather than treat its stored cells, whose outlines do not nest, as a grid.
+* `a5_compact()`, `a5_grid_disk()` and `a5_spherical_cap()` return
+  coverings. `a5_grid_disk()` and `a5_spherical_cap()` give one covering
+  per centre cell and lose their `simplify` argument, which moves to
+  `a5_uncompact()`. An `NA` centre gives an `NA` covering.
+* `a5_polygon_to_cells()` returns one covering per feature instead of the
+  union of all features, so it can fill a column of an `sf` data frame.
+  A feature's parts and holes are still combined. A missing geometry gives
+  an `NA` covering and an empty geometry an empty covering; both used to be
+  errors.
+* `a5_linestring_to_cells()` gains `simplify`: with `simplify = FALSE` it
+  returns an `a5_cell_list` with one ordered path per feature, for a list
+  column. The default flat form concatenates the paths, so a cell crossed
+  by several features now appears once per feature rather than once
+  overall; within a feature, each cell still appears once. Missing and
+  empty geometries contribute no cells instead of an error.
+* `a5_uncompact()` takes coverings, and its `resolution` argument is
+  optional: by default each covering expands to its own resolution. It
+  refuses to build more than `.Machine$integer.max` cells.
+* `a5_is_valid()` now checks the index encoding. It used to return `TRUE`
+  for any non-missing `a5_cell` and for any hex string that parsed, whether
+  or not the value was a cell; hex strings must now also be 16 digits.
+
+## New features
+
+* New `a5_migrate()` converts ids from a5R before 1.0 to the current index.
+* New `as_a5_covering()` builds coverings from cells, cell lists or raw
+  64-bit values written by other A5 libraries, sorting and compacting them;
+  `a5_covering_resolution()` returns the resolution each covering stands
+  for. `a5_is_valid()` checks covering structure.
+* New covering operations, computed on the compacted cells without
+  expanding them: `a5_union()`, `a5_intersect()` and `a5_difference()`
+  combine coverings element by element, and `a5_union(x)` merges every
+  covering in `x`; `a5_contains()` tests cells against coverings (a
+  point-in-polygon test at the covering's resolution) and `a5_overlaps()`
+  tests pairs of coverings; `a5_count()` and `a5_area()` give the number of
+  cells and the area each covering stands for. Combining coverings at
+  different resolutions is an error, as upstream.
+* New `a5_covering_to_arrow()` and `a5_covering_from_arrow()` convert
+  coverings to and from Arrow `list<uint64>` with the compaction marker, the
+  layout DuckDB, Python and JavaScript A5 code read.
+* New `a5_is_valid_cell()` checks that values are A5 cells, mirroring the
+  upstream `is_valid_cell`. `a5_is_valid()` becomes a generic that also
+  accepts an `a5_cell_list`, returning one value per element.
+
+## Other changes
+
+* New `vignette("coverings")` on building, combining, testing and measuring
+  coverings. `vignette("arrow-parquet")` covers storing coverings and
+  migrating data written before 1.0, and `vignette("spatial-hierarchy")` is
+  rewritten for supercells and subcells.
+
+* `a5_cell_child()` and `a5_cell_children_range()` follow the new order of
+  `a5_cell_to_children()` (children are now in ascending id order).
+* `a5_get_num_cells()` is correct at high resolutions (a5 0.10.1).
+* `a5_polygon_to_cells()` merges a feature's parts with the upstream
+  covering union, without expanding each part to full resolution first.
+
+* New `a5_cell_to_supercell()` and `a5_cell_to_subcell()` move between
+  resolutions by cell centre rather than by index, wrapping the upstream
+  `cell_to_supercell()` and `cell_to_subcell()`. The A5 index hierarchy is
+  not spatially nested: for about half of cells one resolution apart, and
+  about 35% at four or more apart, the index parent is not the coarse cell
+  containing the fine cell's centre. Supercells and subcells form an exact
+  partition, so aggregating fine cells to a coarser grid counts each fine
+  cell once, inside the coarse cell it lies in. Subcells are returned as one
+  covering per cell. `a5_cell_to_parent()` and `a5_cell_to_children()` are
+  unchanged and now document the difference (requested by
+  belian-production).
 
 * Missing values filled in by vctrs are now `NA`, not the world cell (#27).
   Combining with `NA`, subsetting with an `NA` index, assigning `NA`,

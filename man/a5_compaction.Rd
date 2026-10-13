@@ -6,42 +6,68 @@
 \alias{a5_uncompact}
 \title{Compact and uncompact sets of cells}
 \usage{
-a5_compact(cells)
+a5_compact(cells, resolution = NULL)
 
-a5_uncompact(cells, resolution)
+a5_uncompact(x, resolution = NULL, simplify = TRUE)
 }
 \arguments{
-\item{cells}{An \link{a5_cell} vector.}
+\item{cells}{An \link{a5_cell} vector. \code{NA} cells are skipped.}
 
-\item{resolution}{Integer scalar target resolution (0--30), at or finer
-than every cell's own resolution.}
+\item{resolution}{Integer scalar resolution. For \code{a5_compact()}, the
+resolution the covering stands for: by default that of the finest cell,
+and never finer than it. For \code{a5_uncompact()}, the resolution to expand
+to: by default each covering's own, and never coarser than it.}
+
+\item{x}{An \link{a5_covering} vector, or an \link{a5_cell} vector treated as one
+covering (see \code{as_a5_covering()}).}
+
+\item{simplify}{Logical scalar. If \code{TRUE} (default), return one flat
+\link{a5_cell} vector with the cells of every covering concatenated in input
+order. If \code{FALSE}, return an \link{a5_cell_list} with one element per
+covering, suitable for a list column.}
 }
 \value{
-An \link{a5_cell} vector: mixed resolutions for \code{a5_compact()}, all at
-\code{resolution} for \code{a5_uncompact()}.
+\code{a5_compact()}: an \link{a5_covering} of length one.
+\code{a5_uncompact()}: an \link{a5_cell} vector, or an \link{a5_cell_list} when
+\code{simplify = FALSE}, with each covering's cells in curve order. A missing
+covering contributes no cells (an empty element in the list form).
 }
 \description{
-\code{a5_compact()} replaces every complete set of siblings with their common
-parent, repeatedly, giving the fewest cells that cover the same set.
-\code{a5_uncompact()} expands each cell to its descendants at a target
-resolution. Uncompacting a compacted set to the original resolution
-returns the original cells.
+\code{a5_compact()} stores a set of cells as an \link{a5_covering}: every complete
+group of siblings is replaced by its parent, repeatedly, giving the fewest
+cells for the same set, and the covering records the resolution the set
+stands for. \code{a5_uncompact()} expands coverings back to their cells at that
+resolution, or at a finer one. Uncompacting a compacted set returns the
+original cells, sorted in curve order and without duplicates.
 }
 \details{
 Both work on the index hierarchy (see \link{a5_hierarchy}), so the coverage they
 preserve is the set of index descendants, not a geometric area.
 }
+\section{Memory}{
+
+A covering can stand for far more cells than it stores: a country at
+resolution 18 is about a billion cells, stored as a few hundred thousand.
+\code{a5_uncompact()} refuses to build more than \code{.Machine$integer.max} cells;
+check with \link{a5_covering} printing first, and prefer the covering functions
+that work on compacted sets.
+}
+
 \examples{
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
 children <- a5_cell_to_children(cell, resolution = 7)
-a5_compact(children) # back to the parent
-a5_uncompact(cell, resolution = 7)
+covering <- a5_compact(children) # stored as the parent
+covering
+a5_uncompact(covering)           # the 16 children again
 
-# the round trip restores the original cells
-identical(vctrs::vec_sort(a5_uncompact(a5_compact(children), 7)),
-          vctrs::vec_sort(children))
+# expand to a finer resolution
+a5_uncompact(a5_compact(cell), resolution = 7)
+
+# one covering per element, kept apart with simplify = FALSE
+disks <- a5_grid_disk(a5_cell_to_children(cell), k = 1)
+a5_uncompact(disks, simplify = FALSE)
 }
 \seealso{
-\code{\link[=a5_polygon_to_cells]{a5_polygon_to_cells()}} and \code{\link[=a5_grid_disk]{a5_grid_disk()}}, which return
-compacted sets.
+\link{a5_covering}, \code{\link[=a5_polygon_to_cells]{a5_polygon_to_cells()}} and \code{\link[=a5_grid_disk]{a5_grid_disk()}},
+which return coverings.
 }

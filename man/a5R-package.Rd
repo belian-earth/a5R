@@ -13,8 +13,9 @@ discrete global grid system, powered by the a5 Rust crate via extendr.
 
 \itemize{
 \item \code{\link[=a5_cell]{a5_cell()}} --- construct cell ID vectors
-\item \link[=a5_cell]{is_a5_cell()} / \link[=a5_cell]{a5_is_valid()} --- type test and
-validation
+\item \link[=a5_cell]{is_a5_cell()} --- type test
+\item \link[=a5_is_valid]{a5_is_valid_cell()} / \code{\link[=a5_is_valid]{a5_is_valid()}} --- validation
+\item \code{\link[=a5_migrate]{a5_migrate()}} --- convert ids from a5R before 1.0
 \item \code{\link[=a5_u64_to_hex]{a5_u64_to_hex()}} / \link[=a5_u64_to_hex]{a5_hex_to_u64()} --- hex string
 conversion
 }
@@ -46,8 +47,25 @@ conversion
 \item \code{\link[=a5_get_resolution]{a5_get_resolution()}} --- extract resolution from cell IDs
 \item \code{\link[=a5_cell_to_parent]{a5_cell_to_parent()}} --- navigate to coarser cells
 \item \code{\link[=a5_cell_to_children]{a5_cell_to_children()}} --- navigate to finer cells
+\item \code{\link[=a5_cell_to_supercell]{a5_cell_to_supercell()}} / \link[=a5_spatial_hierarchy]{a5_cell_to_subcell()}
+--- move between resolutions by location
 \item \code{\link[=a5_get_res0_cells]{a5_get_res0_cells()}} --- the 12 root cells
-\item \code{\link[=a5_compact]{a5_compact()}} / \code{\link[=a5_uncompact]{a5_uncompact()}} --- compress and expand cell sets
+}
+}
+
+\section{Coverings}{
+
+\itemize{
+\item \link{a5_covering} --- compacted cell sets that record their resolution
+\item \code{\link[=a5_compact]{a5_compact()}} / \link[=a5_compaction]{a5_uncompact()} --- build and expand
+coverings
+\item \link[=a5_covering]{a5_covering_resolution()} --- the resolution a covering
+stands for
+\item \code{\link[=a5_union]{a5_union()}} / \link[=a5_set_operations]{a5_intersect()} /
+\link[=a5_set_operations]{a5_difference()} --- combine coverings
+\item \code{\link[=a5_contains]{a5_contains()}} / \link[=a5_covering_predicates]{a5_overlaps()} --- test
+coverings
+\item \code{\link[=a5_count]{a5_count()}} / \link[=a5_covering_measures]{a5_area()} --- measure coverings
 }
 }
 
@@ -72,6 +90,9 @@ conversion
 \itemize{
 \item \code{\link[=a5_cell_from_arrow]{a5_cell_from_arrow()}} / \link[=a5_cell_from_arrow]{a5_cell_to_arrow()} ---
 lossless conversion to/from Arrow \code{uint64}
+\item \code{\link[=a5_covering_from_arrow]{a5_covering_from_arrow()}} /
+\link[=a5_covering_from_arrow]{a5_covering_to_arrow()} --- coverings to/from
+Arrow \verb{list<uint64>}
 }
 }
 
@@ -86,6 +107,9 @@ lossless conversion to/from Arrow \code{uint64}
 
 \itemize{
 \item \code{vignette("a5R")} --- getting started
+\item \code{vignette("coverings")} --- sets of cells: build, combine, test, measure
+\item \code{vignette("spatial-hierarchy")} --- moving between resolutions by location
+\item \code{vignette("traversal-and-distance")} --- disks, caps and distances
 \item \code{vignette("multithreading")} --- parallel processing
 \item \code{vignette("internal-cell-representation")} --- how cell IDs are stored
 \item \code{vignette("arrow-parquet")} --- Arrow and Parquet interop

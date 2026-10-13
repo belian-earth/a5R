@@ -4,7 +4,6 @@
 \alias{a5_cell}
 \alias{is_a5_cell}
 \alias{as_a5_cell}
-\alias{a5_is_valid}
 \title{A5 Cell Index Vector}
 \usage{
 a5_cell(x = character())
@@ -12,16 +11,14 @@ a5_cell(x = character())
 is_a5_cell(x)
 
 as_a5_cell(x)
-
-a5_is_valid(x)
 }
 \arguments{
 \item{x}{A character vector of hex-encoded A5 cell IDs, or an object
 coercible to one.}
 }
 \value{
-An \code{a5_cell} vector (\code{a5_cell}, \code{as_a5_cell}), a logical
-scalar (\code{is_a5_cell}), or a logical vector (\code{a5_is_valid}).
+An \code{a5_cell} vector (\code{a5_cell}, \code{as_a5_cell}), or a logical
+scalar (\code{is_a5_cell}).
 }
 \description{
 Create, test, and coerce A5 cell index vectors. Cells are stored as
@@ -29,8 +26,22 @@ a record with eight raw-byte fields (\code{b1}--\code{b8}) representing the
 little-endian bytes of the u64 cell ID. This avoids the precision
 loss of floating-point storage and keeps memory compact.
 }
+\details{
+\code{a5_cell()} accepts any 16-digit hex string without checking that it
+encodes an A5 cell, so an \code{a5_cell} vector can hold values that are not
+cells. Check ids from outside sources, such as a file or a database, with
+\code{\link[=a5_is_valid_cell]{a5_is_valid_cell()}}.
+}
 \examples{
 cells <- a5_cell(c("0800000000000006", "0800000000000016"))
 cells
-a5_is_valid(c("0800000000000006", "not_a_cell", NA))
+a5_is_valid_cell(cells)
+
+# a5_cell() does not validate: this value is not a cell
+a5_is_valid_cell(a5_cell("fd00000000000000"))
+}
+\seealso{
+\code{\link[=a5_is_valid_cell]{a5_is_valid_cell()}} to check that values are A5 cells, and
+\code{\link[=a5_is_valid]{a5_is_valid()}} for any a5R object; \code{\link[=a5_u64_to_hex]{a5_u64_to_hex()}} to convert back to
+hex strings; \code{\link[=a5_migrate]{a5_migrate()}} for ids written by a5R before 1.0.
 }

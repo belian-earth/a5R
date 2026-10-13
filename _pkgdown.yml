@@ -31,11 +31,14 @@ reference:
   contents:
   - a5_cell
   - a5_cell_list
+  - a5_is_valid
   - a5_u64_to_hex
+  - a5_migrate
 - title: Arrow & Parquet
-  desc: Lossless conversion between `a5_cell` and Arrow `uint64` arrays.
+  desc: Lossless conversion to and from Arrow arrays.
   contents:
   - a5_cell_from_arrow
+  - a5_covering_from_arrow
 - title: Hierarchy
   desc: Navigate the cell hierarchy across resolutions.
   contents:
@@ -56,10 +59,14 @@ reference:
   contents:
   - a5_grid_disk
   - a5_spherical_cap
-- title: Compact & uncompact
-  desc: Compress and expand sets of cells.
+- title: Coverings
+  desc: Compacted sets of cells that record their resolution.
   contents:
+  - a5_covering
   - a5_compaction
+  - a5_set_operations
+  - a5_covering_predicates
+  - a5_covering_measures
 - title: Geometry indexing
   desc: Convert polygons and linestrings to cells covering them.
   contents:

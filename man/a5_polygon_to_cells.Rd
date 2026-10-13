@@ -28,20 +28,24 @@ overlaps the polygon boundary, so the result fully covers the polygon.
 The overlapping set is a superset of the centre set.}
 }
 \value{
-An \link{a5_cell} vector at or coarser than \code{resolution}.
+An \link{a5_covering} vector with one element per feature (one for
+matrix and \code{data.frame} input). \code{NA} for a missing geometry; an empty
+covering for an empty geometry or one too small to hold a cell centre.
 }
 \description{
-Returns A5 cells at \code{resolution} that fall inside the polygon. By
-default a cell is included when its centre lies inside the polygon;
-set \code{containment = "overlapping"} to also include every cell that
-touches the polygon boundary, giving gap-free coverage.
-Multi-feature inputs (a \code{MULTIPOLYGON}, an \code{sfc} of multiple polygons,
-or a \code{POLYGON} with holes) are handled natively: per polygon part, the
-outer ring and its holes are converted together with hole interiors
-excluded, then the results are unioned across parts. The final cell set
-is compacted; use \code{\link[=a5_uncompact]{a5_uncompact()}} to expand to a uniform-resolution grid.
+Returns, for each polygon feature, an \link{a5_covering} of the A5 cells at
+\code{resolution} that belong to it. By default a cell belongs when its centre
+lies inside the polygon; set \code{containment = "overlapping"} to also include
+every cell that touches the polygon boundary, giving gap-free coverage.
 }
 \details{
+The result has one covering per feature, so it can be added as a column:
+\code{sf_data$cells <- a5_polygon_to_cells(sf_data, 10)}. A feature's parts (a
+\code{MULTIPOLYGON}) and holes are combined into its covering, with hole
+interiors excluded. To combine features into one covering, use
+\code{\link[=a5_union]{a5_union()}}. Coverings are compacted; use \code{\link[=a5_uncompact]{a5_uncompact()}} for the cells
+at \code{resolution}.
+
 With \code{containment = "centre"}, membership is determined by
 \strong{centre-point containment}: a cell is included if its centroid lies
 inside the polygon, with hole interiors excluded. Cells straddling the
@@ -59,7 +63,7 @@ closed automatically; a trailing duplicate vertex is dropped if
 present.
 
 Where no A5 cell centroids at the specified \code{resolution} fall within
-the geometry, an empty \code{a5_cell} vector is returned.
+the geometry, its covering is empty.
 
 Matrix and \code{data.frame} inputs are treated as a single ring; for
 multi-feature data or polygons with holes, pass an \code{sf}, \code{sfc}, wk,
@@ -69,13 +73,20 @@ or \code{SpatVector} geometry instead.
 poly <- wk::wkt(
   "POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))"
 )
-cells <- a5_polygon_to_cells(poly, resolution = 8)
-length(cells)
+covering <- a5_polygon_to_cells(poly, resolution = 8)
+covering
+a5_uncompact(covering)
 
 # Gap-free coverage: every cell touching the polygon
-covering <- a5_polygon_to_cells(poly, resolution = 8,
-                                containment = "overlapping")
-length(covering)
+a5_polygon_to_cells(poly, resolution = 8, containment = "overlapping")
+
+# One covering per feature
+polys <- wk::wkt(c(
+  "POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))",
+  NA,
+  "POLYGON ((-4.3 55.8, -4.2 55.8, -4.2 55.9, -4.3 55.9, -4.3 55.8))"
+))
+a5_polygon_to_cells(polys, resolution = 8)
 }
 \seealso{
 \code{\link[=a5_linestring_to_cells]{a5_linestring_to_cells()}}, \code{\link[=a5_uncompact]{a5_uncompact()}}.

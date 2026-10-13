@@ -21,16 +21,18 @@ library(a5R)
 ## Selecting cells around a point
 
 Pick an origin cell and use `a5_spherical_cap()` to grab every cell whose
-centre falls within a given great-circle radius. The result is compacted, so
-pass it through `a5_uncompact()` for a uniform-resolution grid.
+centre falls within a given great-circle radius. Like `a5_grid_disk()`, it
+returns an `a5_covering`: a compacted set that records its resolution. Pass
+it through `a5_uncompact()` for the cells.
 
 ```{r}
 origin <- a5_lonlat_to_cell(35, 55, resolution = 14)
 
-disk <- a5_grid_disk(origin, k = 20, vertex = FALSE)
-disk_vertex <- a5_grid_disk(origin, k = 20, vertex = TRUE)
-cap_compact <- a5_spherical_cap(origin, radius = 5000)
-cap <- a5_uncompact(cap_compact, resolution = 14)
+a5_spherical_cap(origin, radius = 5000)
+
+disk <- a5_uncompact(a5_grid_disk(origin, k = 20, vertex = FALSE))
+disk_vertex <- a5_uncompact(a5_grid_disk(origin, k = 20, vertex = TRUE))
+cap <- a5_uncompact(a5_spherical_cap(origin, radius = 5000))
 ```
 
 `a5_grid_disk()` selects cells by hop count rather than metric distance.
@@ -44,10 +46,9 @@ Compute the distance from the origin to every cell in the cap (or disk) and
 visualise it as a colour gradient.
 
 
-```{r heatmap, fig.width = 10, fig.height = 10, echo = -c(1, 10)}
-oldpar <- par(mfrow = c(2, 2), mar = c(2, 2, 2, 1))
+```{r heatmap, fig.width = 10, fig.height = 4, echo = -c(1, 9)}
+oldpar <- par(mfrow = c(1, 3), mar = c(2, 2, 2, 1))
 dcap <- a5_cell_distance(origin, cap, units = "km")
-dcap_compact <- a5_cell_distance(origin, cap_compact, units = "km")
 ddisk <- a5_cell_distance(origin, disk, units = "km")
 ddisk_vertex <- a5_cell_distance(origin, disk_vertex, units = "km")
 
@@ -56,7 +57,6 @@ pal <- hcl.colors(256, "Inferno")
 for (info in list(
   list(s = disk, d = ddisk, lab = "Grid disk (edges)"),
   list(s = disk_vertex, d = ddisk_vertex, lab = "Grid disk (vertices)"),
-  list(s = cap_compact, d = dcap_compact, lab = "Spherical cap (compact)"),
   list(s = cap, d = dcap, lab = "Spherical cap")
 )) {
   brk <- seq(0, max(as.numeric(info$d)), length.out = 257)
@@ -84,10 +84,7 @@ grow with distance.
 ```{r methods, fig.width = 10, fig.height = 10, echo = -c(1, 19)}
 oldpar <- par(no.readonly = TRUE)
 wide_origin <- a5_lonlat_to_cell(35, 55, resolution = 8)
-wide_cap <- a5_uncompact(
-  a5_spherical_cap(wide_origin, radius = 500000),
-  resolution = 8
-)
+wide_cap <- a5_uncompact(a5_spherical_cap(wide_origin, radius = 500000))
 
 hav <- a5_cell_distance(wide_origin, wide_cap, units = "m", method = "haversine")
 geo <- a5_cell_distance(wide_origin, wide_cap, units = "m", method = "geodesic")

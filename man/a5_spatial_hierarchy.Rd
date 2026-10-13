@@ -2,96 +2,78 @@
 % Please edit documentation in R/hierarchy.R
 \name{a5_spatial_hierarchy}
 \alias{a5_spatial_hierarchy}
-\alias{a5_cell_to_spatial_parent}
-\alias{a5_cell_to_spatial_children}
-\title{Spatial parents and children}
+\alias{a5_cell_to_supercell}
+\alias{a5_cell_to_subcell}
+\title{Supercells and subcells: parents and children by location}
 \usage{
-a5_cell_to_spatial_parent(cell, resolution = NULL)
+a5_cell_to_supercell(cell, resolution = NULL)
 
-a5_cell_to_spatial_children(cell, resolution = NULL, simplify = TRUE)
+a5_cell_to_subcell(cell, resolution = NULL)
 }
 \arguments{
 \item{cell}{An \link{a5_cell} vector.}
 
 \item{resolution}{Integer scalar target resolution, or \code{NULL} for one step:
-one resolution coarser for \code{a5_cell_to_spatial_parent()}, one finer for
-\code{a5_cell_to_spatial_children()}. Children require a resolution at or
-finer than every cell's own.}
-
-\item{simplify}{Logical scalar. If \code{TRUE} (default), return one flat
-\link{a5_cell} vector with the children of every input concatenated in input
-order; which child came from which parent is not recorded. If \code{FALSE},
-return an \link{a5_cell_list}: a \code{\link[vctrs:list_of]{vctrs::list_of()}} of \link{a5_cell} vectors with
-one element per input, suitable for a list column.}
+one resolution coarser for \code{a5_cell_to_supercell()}, one finer for
+\code{a5_cell_to_subcell()}. Subcells require a resolution at or finer than
+every cell's own.}
 }
 \value{
 \itemize{
-\item \code{a5_cell_to_spatial_parent()}: an \link{a5_cell} vector the same length as
-\code{cell}. \code{NA} where \code{cell} is \code{NA}, where \code{resolution} is finer than the
-cell, or for a resolution-0 cell with \code{resolution = NULL}. A cell at
-\code{resolution} is returned unchanged.
-\item \code{a5_cell_to_spatial_children()}: an \link{a5_cell} vector, or an
-\link{a5_cell_list} when \code{simplify = FALSE}. Each cell's children are in
-ascending id order. An \code{NA} input contributes no cells.
+\item \code{a5_cell_to_supercell()}: an \link{a5_cell} vector the same length as \code{cell}.
+\code{NA} where \code{cell} is \code{NA}, where \code{resolution} is finer than the cell, or
+for a resolution-0 cell with \code{resolution = NULL}. A cell at \code{resolution}
+is returned unchanged.
+\item \code{a5_cell_to_subcell()}: an \link{a5_covering} vector the same length as
+\code{cell}. \code{NA} where \code{cell} is \code{NA}.
 }
 }
 \description{
-\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
-}
-\details{
-\code{a5_cell_to_spatial_parent()} returns, for each cell, the cell at a coarser
-resolution that contains its centre. \code{a5_cell_to_spatial_children()}
-returns, for each cell, the cells at a finer resolution whose centres lie
-inside it. These are the location-based counterparts of
+\code{a5_cell_to_supercell()} returns, for each cell, the cell at a coarser
+resolution that contains its centre. \code{a5_cell_to_subcell()} returns, for
+each cell, the cells at a finer resolution whose centres lie inside it, as
+an \link{a5_covering}. These are the location-based counterparts of
 \code{\link[=a5_cell_to_parent]{a5_cell_to_parent()}} and \code{\link[=a5_cell_to_children]{a5_cell_to_children()}}, which follow the index
 and often cross into neighbouring cells (see \link{a5_hierarchy}).
-
-The two functions define an exact partition. Every fine cell has exactly
-one spatial parent, and the spatial children of a coarse cell are exactly
-the fine cells whose spatial parent it is, so the spatial children of cells
-that tile an area tile it too, with no cell counted twice. A centre on a
-shared edge goes to the cell \code{\link[=a5_lonlat_to_cell]{a5_lonlat_to_cell()}} assigns it to.
 }
-\section{Spatial parent}{
+\details{
+The two functions define an exact partition. Every fine cell has exactly
+one supercell at each coarser resolution, and the subcells of a coarse
+cell are exactly the fine cells whose supercell it is, so the subcells of
+cells that tile an area tile it too, with no cell counted twice. A centre
+on a shared edge goes to the cell \code{\link[=a5_lonlat_to_cell]{a5_lonlat_to_cell()}} assigns it to.
+Aggregating fine values by supercell therefore attributes each value to
+the coarse cell it lies in.
+}
+\section{Supercell}{
 
 The result equals \code{a5_lonlat_to_cell(a5_cell_to_lonlat(cell), resolution)},
-computed in one pass without converting the centre to degrees. It costs
-about as much as \code{\link[=a5_lonlat_to_cell]{a5_lonlat_to_cell()}}.
+computed without converting the centre to degrees. It takes well under
+half the time of \code{\link[=a5_lonlat_to_cell]{a5_lonlat_to_cell()}}, but far longer than
+\code{\link[=a5_cell_to_parent]{a5_cell_to_parent()}}, which is a bit operation.
 }
 
-\section{Spatial children}{
+\section{Subcells}{
 
 Counts vary from cell to cell and average \code{4^d} for a resolution
-difference \code{d}, or \code{5 * 4^(d - 1)} from resolution 0. Candidates are the
-index descendants of the cell and of its vertex neighbours, filtered by
-centre containment.
-
-The result usually equals
-\code{a5_uncompact(a5_polygon_to_cells(cell, resolution), resolution)}. That
-route tests centres against a polygon with great-circle edges between the
-cell's vertices, while A5 cell edges are slightly curved, so at large
-resolution differences it assigns a few edge cells (about 1 in 8,000 at a
-difference of 6) to a neighbour that \code{a5_cell_to_spatial_parent()} would
-not. \code{a5_cell_to_spatial_children()} is also faster and returns one result
-per input cell.
-
-The result is not compacted, so every cell is at \code{resolution}, as with
-\code{\link[=a5_cell_to_children]{a5_cell_to_children()}}. \code{\link[=a5_compact]{a5_compact()}} on it is lossless (\code{\link[=a5_uncompact]{a5_uncompact()}}
-restores it exactly) and cuts the number of cells sharply at large
-resolution differences: to about 9 percent at a difference of 6. Treat the
-compacted form as storage only. Compacted cells are index parents, whose
-outlines extend beyond the coarse cell (see \link{a5_hierarchy}), so uncompact
-before plotting or any geometric use.
+difference \code{d}, or \code{5 * 4^(d - 1)} from resolution 0. The covering is
+compacted, so it stores far fewer cells than it stands for at large
+differences; use \code{\link[=a5_uncompact]{a5_uncompact()}} for the cells, and never draw the stored
+cells, which are index parents whose outlines extend beyond the coarse
+cell. Resolution 30 covers only part of the globe, so a cell whose
+subcells reach past it has all its subcells given at resolution 29.
 }
 
 \examples{
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 18)
-a5_cell_to_spatial_parent(cell, resolution = 15)
+a5_cell_to_supercell(cell, resolution = 15)
 a5_cell_to_parent(cell, resolution = 15) # may differ
 
 coarse <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
-kids <- a5_cell_to_spatial_children(coarse, resolution = 12)
-all(a5_cell_to_spatial_parent(kids, resolution = 10) == coarse)
+sub <- a5_cell_to_subcell(coarse, resolution = 12)
+sub
+kids <- a5_uncompact(sub)
+all(a5_cell_to_supercell(kids, resolution = 10) == coarse)
 }
 \seealso{
 \link{a5_hierarchy} for parents and children by index,

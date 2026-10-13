@@ -3,12 +3,10 @@ use rayon::prelude::*;
 use std::collections::HashSet;
 use std::result::Result as StdResult;
 
-// `Containment` / `PolygonToCellsOptions` are not re-exported from the crate
-// root in a5 0.10.0 (the `regions` module is `pub` but `#[doc(hidden)]`), so
-// reach them through the module path. Revisit once upstream re-exports them.
-use a5::regions::polygon::{Containment, PolygonToCellsOptions};
+use a5::{Containment, PolygonToCellsOptions};
 
-use crate::cell_raw::u64s_to_raw8_list;
+use crate::cell_raw::groups_to_robj;
+use crate::covering::coverings_to_list;
 use crate::threading::{get_num_threads, maybe_par};
 
 /// Map the R-side containment string to the upstream option struct.
@@ -44,75 +42,55 @@ fn split_rings(lon: &Doubles, lat: &Doubles, offsets: &Integers) -> Vec<Vec<a5::
     out
 }
 
-/// Gather one polygon part's rings as `[outer, holes...]`.
+/// Group rings into polygon parts as `[outer, holes...]`, in one pass.
 ///
-/// Returns an empty vec if the part has no outer ring. The ordering matches
-/// what `a5::polygon_to_cells` expects: index 0 is the outer ring, the rest
-/// are holes.
-fn collect_part_rings(
-    p: i32,
-    rings: &[Vec<a5::LonLat>],
+/// `part_id` (1-based, one per ring) names each ring's part and `is_outer`
+/// marks its outer ring. A part without an outer ring has no rings. The
+/// ordering matches what `a5::polygon_to_cells` expects: index 0 is the
+/// outer ring, the rest are holes.
+fn group_parts(
+    rings: Vec<Vec<a5::LonLat>>,
     part_id: &[i32],
     is_outer: &[i32],
-) -> Vec<Vec<a5::LonLat>> {
-    let mut outer: Option<&Vec<a5::LonLat>> = None;
-    let mut holes: Vec<&Vec<a5::LonLat>> = Vec::new();
-    for (i, &pid) in part_id.iter().enumerate() {
-        if pid != p {
-            continue;
-        }
-        if is_outer[i] != 0 {
-            outer = Some(&rings[i]);
+    n_parts: usize,
+) -> Vec<Vec<Vec<a5::LonLat>>> {
+    let mut outers: Vec<Option<Vec<a5::LonLat>>> = vec![None; n_parts];
+    let mut holes: Vec<Vec<Vec<a5::LonLat>>> = vec![Vec::new(); n_parts];
+    for ((ring, &p), &outer) in rings.into_iter().zip(part_id).zip(is_outer) {
+        let p = (p - 1) as usize;
+        if outer != 0 {
+            outers[p] = Some(ring);
         } else {
-            holes.push(&rings[i]);
+            holes[p].push(ring);
         }
     }
-    let outer = match outer {
-        Some(o) => o,
-        None => return Vec::new(),
-    };
-    let mut out = Vec::with_capacity(1 + holes.len());
-    out.push(outer.clone());
-    out.extend(holes.into_iter().cloned());
-    out
+    outers
+        .into_iter()
+        .zip(holes)
+        .map(|(outer, holes)| match outer {
+            Some(outer) => std::iter::once(outer).chain(holes).collect(),
+            None => Vec::new(),
+        })
+        .collect()
 }
 
-/// Per-part processing: cells of the outer ring with hole interiors excluded.
-///
-/// Hole subtraction is handled natively by `a5::polygon_to_cells`. The result
-/// is uncompacted to `resolution` so parts can be unioned and recompacted at a
-/// common resolution by the caller.
-fn process_part(
-    p: i32,
-    rings: &[Vec<a5::LonLat>],
-    part_id: &[i32],
-    is_outer: &[i32],
-    resolution: i32,
-    options: PolygonToCellsOptions,
-) -> StdResult<Vec<u64>, String> {
-    let part_rings = collect_part_rings(p, rings, part_id, is_outer);
-    if part_rings.is_empty() {
-        return Ok(Vec::new());
-    }
-    let compacted = a5::polygon_to_cells(&part_rings, resolution, Some(options))?;
-    a5::uncompact(&compacted, resolution)
-}
-
-/// Convert one or more polygon parts (with optional holes) to A5 cells.
+/// Convert polygon features (each one or more parts, with optional holes)
+/// to coverings, one per feature.
 ///
 /// `lon`, `lat` are flat coordinate vectors; `offsets` is cumulative
 /// (length `n_rings + 1`) so ring `i` is `lon[offsets[i]..offsets[i+1]]`.
-/// `part_id` (length `n_rings`) groups rings by polygon part. `is_outer`
-/// (length `n_rings`, 1 = outer / 0 = hole) classifies each ring.
+/// `part_id` (length `n_rings`, 1-based) groups rings by polygon part and
+/// `is_outer` (length `n_rings`, 1 = outer / 0 = hole) classifies each ring.
+/// `part_feature` (length `n_parts`, 1-based) names each part's feature.
 /// `containment` is `"centre"` (cell centre inside the polygon) or
 /// `"overlapping"` (any cell touching the polygon).
 ///
-/// For each polygon part, the outer ring and its holes are passed to
-/// `a5::polygon_to_cells`, which excludes hole interiors natively, and the
-/// resulting cells are unioned across parts. The result is recompacted at
-/// the end. A single-part input (with or without holes) takes a fast path
-/// that passes the upstream compacted result through unchanged.
+/// Each part goes to `a5::polygon_to_cells`, which excludes hole interiors
+/// natively, in parallel across parts. A feature's parts are then merged
+/// with `a5::union`, which works on the compacted cells directly. A feature
+/// with no parts gets an empty covering at `resolution`.
 ///
+/// @return A list of coverings, one per feature.
 /// @noRd
 /// @keywords internal
 #[extendr]
@@ -122,88 +100,63 @@ fn a5_polygon_to_cells_rs(
     offsets: Integers,
     part_id: Integers,
     is_outer: Integers,
+    part_feature: Integers,
+    n_features: i32,
     resolution: i32,
     containment: &str,
 ) -> List {
     let options = containment_options(containment);
-    let rings = split_rings(&lon, &lat, &offsets);
-    let n_rings = rings.len();
+    let part_id: Vec<i32> = part_id.iter().map(|p| p.inner()).collect();
+    let is_outer: Vec<i32> = is_outer.iter().map(|b| b.inner()).collect();
+    let part_feature: Vec<i32> = part_feature.iter().map(|f| f.inner()).collect();
+    let parts = group_parts(
+        split_rings(&lon, &lat, &offsets),
+        &part_id,
+        &is_outer,
+        part_feature.len(),
+    );
 
-    if n_rings == 0 {
-        return u64s_to_raw8_list(vec![]);
-    }
-
-    let part_id_vec: Vec<i32> = part_id.iter().map(|p| p.inner()).collect();
-    let is_outer_vec: Vec<i32> = is_outer.iter().map(|b| b.inner()).collect();
-
-    let max_part = part_id_vec.iter().copied().max().unwrap_or(0);
-    if max_part <= 0 {
-        return u64s_to_raw8_list(vec![]);
-    }
-
-    // Fast path: a single polygon part (outer ring plus any holes) — the
-    // common case for matrix / data.frame input and for an `sfc` of one
-    // POLYGON. `polygon_to_cells` handles holes natively and already returns
-    // a compacted result, so no uncompact/recompact round-trip is needed.
-    if max_part == 1 {
-        let part_rings = collect_part_rings(1, &rings, &part_id_vec, &is_outer_vec);
-        if part_rings.is_empty() {
-            return u64s_to_raw8_list(vec![]);
-        }
-        return match a5::polygon_to_cells(&part_rings, resolution, Some(options)) {
-            Ok(cells) => {
-                let out: Vec<Option<u64>> = cells.into_iter().map(Some).collect();
-                u64s_to_raw8_list(out)
-            }
-            Err(e) => throw_r_error(format!("polygon_to_cells failed: {}", e)),
-        };
-    }
-
-    let parts: Vec<i32> = (1..=max_part).collect();
-    let per_part: Vec<StdResult<Vec<u64>, String>> = if get_num_threads() <= 1 {
-        parts
-            .iter()
-            .map(|&p| {
-                process_part(p, &rings, &part_id_vec, &is_outer_vec, resolution, options)
-            })
-            .collect()
+    let fill = |rings: &Vec<Vec<a5::LonLat>>| a5::polygon_to_cells(rings, resolution, Some(options));
+    let per_part: Vec<StdResult<Vec<u64>, String>> = if get_num_threads() <= 1 || parts.len() == 1 {
+        parts.iter().map(fill).collect()
     } else {
-        maybe_par(|| {
-            parts
-                .par_iter()
-                .map(|&p| {
-                    process_part(p, &rings, &part_id_vec, &is_outer_vec, resolution, options)
-                })
-                .collect()
-        })
+        maybe_par(|| parts.par_iter().map(fill).collect())
     };
 
-    let mut union: HashSet<u64> = HashSet::new();
-    for r in per_part {
-        let part_cells = match r {
+    let mut features: Vec<Option<Vec<u64>>> = vec![None; n_features.max(0) as usize];
+    for (r, &f) in per_part.into_iter().zip(&part_feature) {
+        let covering = match r {
             Ok(c) => c,
             Err(e) => throw_r_error(format!("polygon_to_cells failed: {}", e)),
         };
-        union.extend(part_cells);
+        let slot = &mut features[(f - 1) as usize];
+        *slot = Some(match slot.take() {
+            None => covering,
+            Some(acc) => match a5::union(&acc, &covering) {
+                Ok(c) => c,
+                Err(e) => throw_r_error(format!("union failed: {}", e)),
+            },
+        });
     }
 
-    let mut combined: Vec<u64> = union.into_iter().collect();
-    combined.sort_unstable();
-    let recompacted = match a5::compact(&combined) {
-        Ok(c) => c,
-        Err(e) => throw_r_error(format!("compact failed: {}", e)),
-    };
-
-    let out: Vec<Option<u64>> = recompacted.into_iter().map(Some).collect();
-    u64s_to_raw8_list(out)
+    let results = features
+        .into_iter()
+        .map(|f| Some(f.map_or_else(|| a5::polygon_to_cells(&[], resolution, Some(options)), Ok)))
+        .collect();
+    coverings_to_list("polygon_to_cells", results)
 }
 
-/// Convert one or more linestring waypoint sequences to A5 cells.
+/// Convert linestring features to A5 cells, one ordered path per feature.
 ///
-/// Per-feature `line_string_to_cells` results are concatenated in feature
-/// order with first-seen deduplication, preserving discovery order along
-/// the path.
+/// `lon`, `lat`, `offsets` hold the lines as for polygons; `line_feature`
+/// (length `n_lines`, 1-based) names each line's feature. Lines are traced
+/// in parallel with `line_string_to_cells`; a feature's lines (the parts of
+/// a `MULTILINESTRING`) are concatenated in order with first-seen
+/// deduplication. A feature with no lines has no cells.
 ///
+/// @param simplify If TRUE one flat b1..b8 list, the features' paths
+///   concatenated (no deduplication across features); else a list of
+///   a5_cell objects, one per feature.
 /// @noRd
 /// @keywords internal
 #[extendr]
@@ -211,45 +164,36 @@ fn a5_linestring_to_cells_rs(
     lon: Doubles,
     lat: Doubles,
     offsets: Integers,
+    line_feature: Integers,
+    n_features: i32,
     resolution: i32,
-) -> List {
-    let features = split_rings(&lon, &lat, &offsets);
+    simplify: bool,
+) -> Robj {
+    let lines = split_rings(&lon, &lat, &offsets);
+    let line_feature: Vec<i32> = line_feature.iter().map(|f| f.inner()).collect();
 
-    if features.is_empty() {
-        return u64s_to_raw8_list(vec![]);
-    }
+    let trace = |w: &Vec<a5::LonLat>| a5::line_string_to_cells(w, resolution);
+    let per_line: Vec<StdResult<Vec<u64>, String>> = if get_num_threads() <= 1 || lines.len() == 1 {
+        lines.iter().map(trace).collect()
+    } else {
+        maybe_par(|| lines.par_iter().map(trace).collect())
+    };
 
-    let per_feature: Vec<StdResult<Vec<u64>, String>> =
-        if get_num_threads() <= 1 || features.len() == 1 {
-            features
-                .iter()
-                .map(|w| a5::line_string_to_cells(w, resolution))
-                .collect()
-        } else {
-            maybe_par(|| {
-                features
-                    .par_iter()
-                    .map(|w| a5::line_string_to_cells(w, resolution))
-                    .collect()
-            })
-        };
-
-    let mut seen: HashSet<u64> = HashSet::new();
-    let mut result: Vec<u64> = Vec::new();
-    for r in per_feature {
+    let mut features: Vec<Vec<u64>> = vec![Vec::new(); n_features.max(0) as usize];
+    let mut seen: Vec<HashSet<u64>> = vec![HashSet::new(); features.len()];
+    for (r, &f) in per_line.into_iter().zip(&line_feature) {
         let cells = match r {
             Ok(c) => c,
             Err(e) => throw_r_error(format!("line_string_to_cells failed: {}", e)),
         };
+        let f = (f - 1) as usize;
         for c in cells {
-            if seen.insert(c) {
-                result.push(c);
+            if seen[f].insert(c) {
+                features[f].push(c);
             }
         }
     }
-
-    let out: Vec<Option<u64>> = result.into_iter().map(Some).collect();
-    u64s_to_raw8_list(out)
+    groups_to_robj(features, simplify)
 }
 
 extendr_module! {

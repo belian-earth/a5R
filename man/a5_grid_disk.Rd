@@ -4,7 +4,7 @@
 \alias{a5_grid_disk}
 \title{Cells within k hops of a cell}
 \usage{
-a5_grid_disk(cell, k, vertex = FALSE, simplify = TRUE)
+a5_grid_disk(cell, k, vertex = FALSE)
 }
 \arguments{
 \item{cell}{An \link{a5_cell} vector of centre cells.}
@@ -12,30 +12,26 @@ a5_grid_disk(cell, k, vertex = FALSE, simplify = TRUE)
 \item{k}{Integer scalar, number of hops.}
 
 \item{vertex}{Logical scalar. If \code{FALSE} (default), only edge-sharing
-neighbours (4-connected) are traversed. If \code{TRUE}, vertex-sharing
-neighbours are included (8-connected).}
-
-\item{simplify}{Logical scalar. If \code{TRUE} (default), return one flat
-\link{a5_cell} vector with the disks of every input concatenated in input
-order; cells shared by several disks appear once per disk. If \code{FALSE},
-return an \link{a5_cell_list}: a \code{\link[vctrs:list_of]{vctrs::list_of()}} of \link{a5_cell} vectors with
-one element per input, suitable for a list column.}
+neighbours are traversed. If \code{TRUE}, vertex-sharing neighbours are
+included too.}
 }
 \value{
-An \link{a5_cell} vector, or an \link{a5_cell_list} when \code{simplify = FALSE}.
-An \code{NA} input contributes no cells (an empty element in the list form).
+An \link{a5_covering} vector the same length as \code{cell}, at the
+resolution of each centre cell. \code{NA} where \code{cell} is \code{NA}. Use
+\code{\link[=a5_uncompact]{a5_uncompact()}} for the cells.
 }
 \description{
-Returns all cells reachable within \code{k} edge hops of a centre cell,
-including the centre cell itself.
+Returns, for each centre cell, the cells reachable within \code{k} hops,
+including the centre cell itself, as an \link{a5_covering}.
 }
 \examples{
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 8)
-a5_grid_disk(cell, k = 1)
+disk <- a5_grid_disk(cell, k = 1)
+disk
+a5_uncompact(disk)
 
 cells <- a5_lonlat_to_cell(c(-3.19, 0), c(55.95, 0), resolution = 5)
-a5_grid_disk(cells, k = 1)                   # both disks, one vector
-a5_grid_disk(cells, k = 1, simplify = FALSE) # list of 2
+a5_grid_disk(cells, k = 2) # one covering per cell
 }
 \seealso{
 \code{\link[=a5_spherical_cap]{a5_spherical_cap()}} for distance-based selection.

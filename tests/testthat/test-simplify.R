@@ -1,11 +1,11 @@
-# One-to-many functions vectorised over cells: `simplify = TRUE` gives one
-# flat vector, `simplify = FALSE` a list_of with one element per input.
+# One-to-many functions vectorised over their input: `simplify = TRUE` gives
+# one flat vector, `simplify = FALSE` a list_of with one element per input.
 
 cells <- a5_lonlat_to_cell(c(-3.19, 0, 139.7), c(55.95, 0, 35.69), resolution = 5)
 ops <- list(
   children = function(x, ...) a5_cell_to_children(x, resolution = 7, ...),
-  disk = function(x, ...) a5_grid_disk(x, k = 2, ...),
-  cap = function(x, ...) a5_spherical_cap(x, radius = 200000, ...)
+  disk = function(x, ...) a5_uncompact(a5_grid_disk(x, k = 2), ...),
+  cap = function(x, ...) a5_uncompact(a5_spherical_cap(x, radius = 200000), ...)
 )
 
 test_that("list form matches the scalar call element-wise", {
@@ -47,7 +47,7 @@ test_that("a5_cell_list unlists to an a5_cell vector and survives slicing", {
   expect_s3_class(lst[2:3], "a5_cell_list")
   expect_identical(unlist(lst[2:3]), a5_cell_to_children(cells[2:3], resolution = 7))
   expect_identical(vctrs::vec_ptype_abbr(lst), "list<a5_cell>")
-  expect_length(unlist(a5_grid_disk(a5_cell(NA), k = 1, simplify = FALSE)), 0L)
+  expect_length(unlist(a5_uncompact(a5_grid_disk(a5_cell(NA), k = 1), simplify = FALSE)), 0L)
 })
 
 test_that("a5_cell_list unnests with tidyr", {
@@ -61,15 +61,15 @@ test_that("a5_cell_list unnests with tidyr", {
   expect_s3_class(long$children, "a5_cell")
   expect_identical(a5_cell_to_parent(long$children), long$cell)
   disks <- tidyr::unnest(
-    tibble::tibble(cell = cells, disk = a5_grid_disk(cells, k = 1, simplify = FALSE)),
+    tibble::tibble(cell = cells, disk = a5_uncompact(a5_grid_disk(cells, k = 1), simplify = FALSE)),
     "disk"
   )
-  expect_identical(nrow(disks), length(a5_grid_disk(cells, k = 1)))
+  expect_identical(nrow(disks), length(a5_uncompact(a5_grid_disk(cells, k = 1))))
 })
 
 test_that("simplify must be a flag", {
   expect_error(a5_cell_to_children(cells, simplify = NA), "TRUE")
-  expect_error(a5_grid_disk(cells, k = 1, simplify = "yes"), "TRUE")
+  expect_error(a5_uncompact(a5_grid_disk(cells, k = 1), simplify = "yes"), "TRUE")
   expect_error(a5_grid_disk(cells, k = 1, vertex = c(TRUE, FALSE)), "TRUE")
 })
 
@@ -92,7 +92,7 @@ test_that("threads give the same result", {
   withr::local_options(list())
   old <- a5_get_threads()
   on.exit(a5_set_threads(old))
-  single <- a5_grid_disk(cells, k = 3, simplify = FALSE)
+  single <- a5_grid_disk(cells, k = 3)
   a5_set_threads(2L)
-  expect_identical(a5_grid_disk(cells, k = 3, simplify = FALSE), single)
+  expect_identical(a5_grid_disk(cells, k = 3), single)
 })

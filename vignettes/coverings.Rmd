@@ -1,0 +1,420 @@
+---
+title: "Coverings: sets of cells"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Coverings: sets of cells}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+has_sf <- requireNamespace("sf", quietly = TRUE)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = has_sf,
+  fig.width = 7,
+  fig.height = 2.4,
+  dev.args = list(bg = "white")
+)
+```
+
+```{r setup, message = FALSE}
+library(a5R)
+library(sf)
+```
+
+```{r helpers, include = FALSE}
+# Plotting helpers for the figures; the a5R calls are in the visible chunks.
+pal <- list(
+  a = "#2a78d6", b = "#eb6834", result = "#1baf7a",
+  base = "#e4e3df", ink = "#333333", muted = "#8a8984"
+)
+ramp <- c("#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b")
+
+cells_of <- function(x) a5_cell_to_boundary(if (is_a5_covering(x)) a5_uncompact(x) else x)
+
+# The cells a covering stores, decoded from its bytes (marker dropped).
+stored_cells <- function(x) {
+  b <- unclass(x)[[1]]
+  n <- length(b) %/% 8
+  hex <- vapply(seq_len(n), function(i) {
+    paste(rev(as.character(b[(8 * i - 7):(8 * i)])), collapse = "")
+  }, "")
+  a5_cell(hex[-n])
+}
+
+panels <- function(n, top = 1.6) {
+  par(mfrow = c(1, n), mar = c(0.2, 0.2, top, 0.2), xpd = NA)
+}
+
+frame <- function(..., main = "", pad = 0.04) {
+  bbs <- lapply(list(...), function(g) unclass(wk::wk_bbox(g)))
+  xr <- range(unlist(lapply(bbs, `[`, c("xmin", "xmax"))))
+  yr <- range(unlist(lapply(bbs, `[`, c("ymin", "ymax"))))
+  xr <- xr + c(-1, 1) * pad * diff(xr)
+  yr <- yr + c(-1, 1) * pad * diff(yr)
+  plot.new()
+  plot.window(xr, yr, asp = 1 / cos(mean(yr) * pi / 180))
+  title(main, cex.main = 0.85, font.main = 1, col.main = pal$ink, line = 0.4)
+}
+
+fill <- function(g, col, border = "white", lwd = 0.4) {
+  if (length(g) > 0) plot(g, col = col, border = border, lwd = lwd, add = TRUE)
+}
+
+outline <- function(g, col = pal$ink, lwd = 1.2, lty = 1) {
+  plot(g, col = NA, border = col, lwd = lwd, lty = lty, add = TRUE)
+}
+
+circle <- function(cell, radius) {
+  ll <- a5_cell_to_lonlat(cell, as_dataframe = TRUE)
+  t <- seq(0, 2 * pi, length.out = 200)
+  d <- radius / 6371008.8 * 180 / pi
+  wk::wkt(sprintf("LINESTRING (%s)", paste(
+    ll$lon + d * cos(t) / cos(ll$lat * pi / 180), ll$lat + d * sin(t),
+    collapse = ", "
+  )))
+}
+
+# Stored cells shaded by how much coarser they are than the covering.
+stored_cols <- ramp[c(6, 4, 2, 1)]
+stored_fill <- function(x) {
+  s <- stored_cells(x)
+  if (length(s) == 0) return(invisible())
+  gap <- pmin(a5_covering_resolution(x) - a5_get_resolution(s), 3)
+  fill(a5_cell_to_boundary(s), paste0(stored_cols[gap + 1], "c0"), border = pal$ink, lwd = 0.5)
+}
+stored_legend <- function(res, where = "left") {
+  plot.new()
+  legend(where, bty = "n", cex = 0.75, fill = paste0(stored_cols, "c0"), border = pal$ink,
+         text.col = pal$ink,
+         legend = c(paste("res", res - 0:2), paste0("res \u2264 ", res - 3)),
+         title = "Stored at", title.adj = 0)
+}
+
+# Two rows (cells, then stored cells) of n panels, plus a legend column.
+two_rows <- function(n, legend_column = TRUE) {
+  m <- matrix(seq_len(2 * n), 2, byrow = TRUE)
+  if (legend_column) m <- cbind(m, 2 * n + 1)
+  layout(m, widths = c(rep(1, n), if (legend_column) 0.45))
+  par(mar = c(0.2, 0.2, 1.6, 0.2), oma = c(0, 1.2, 0, 0), xpd = NA, cex = 1)
+}
+row_labels <- function() {
+  mtext("cells", side = 2, outer = TRUE, at = 0.75, cex = 0.75, col = pal$muted)
+  mtext("stored", side = 2, outer = TRUE, at = 0.25, cex = 0.75, col = pal$muted)
+}
+```
+
+A *covering* is a set of A5 cells at one resolution that stands for an area:
+the cells of a polygon, of a disk around a cell, or of a cap of a given
+radius. An `a5_covering` vector holds one covering per element, so coverings
+sit in a data frame column next to the features they describe.
+
+## What a covering stores
+
+A covering is stored compacted: every complete group of four sibling cells
+is replaced by their parent, and a trailing *compaction marker* records the
+resolution the stored cells stand for.
+
+```{r what}
+raleigh <- a5_lonlat_to_cell(-78.64, 35.78, resolution = 11)
+cap <- a5_spherical_cap(raleigh, radius = 12000)
+cap
+```
+
+```{r what-plot, echo = FALSE, fig.height = 2.8}
+stored <- stored_cells(cap)
+layout(matrix(1:3, 1), widths = c(1, 1, 0.4))
+par(mar = c(0.2, 0.2, 1.6, 0.2), xpd = NA, cex = 1)
+frame(cells_of(cap), main = sprintf("Stands for: %d cells at resolution 11", a5_count(cap)))
+fill(cells_of(cap), pal$a)
+frame(cells_of(cap), main = sprintf("Stores: %d cells at mixed resolutions", length(stored)))
+stored_fill(cap)
+stored_legend(11)
+```
+
+The stored cells are parents in the A5 index, whose outlines do not nest:
+drawn directly they overlap their neighbours and leave gaps. Everything that
+combines, tests or measures coverings works on the stored cells without
+expanding them, which keeps it fast for coverings that stand for millions of
+cells. To draw a covering or join it to data keyed by cell, expand it with
+`a5_uncompact()`, as the figures here do. Where it helps, a second row
+shows what the same covering stores.
+
+## Building coverings
+
+`a5_polygon_to_cells()` returns one covering per feature. By default a cell
+belongs when its centre lies inside the polygon; `containment =
+"overlapping"` also takes every cell the boundary touches, so the cells
+cover the polygon without gaps.
+
+```{r polygons}
+nc <- st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
+nc <- st_transform(nc, 4326) # A5 works in WGS 84 longitude and latitude
+alleghany <- nc[nc$NAME == "Alleghany", ]
+
+centre <- a5_polygon_to_cells(alleghany, resolution = 11)
+overlapping <- a5_polygon_to_cells(alleghany, resolution = 11, containment = "overlapping")
+c(centre, overlapping)
+```
+
+```{r polygons-plot, echo = FALSE, fig.height = 4.6}
+county <- wk::as_wkb(st_geometry(alleghany))
+extent <- list(cells_of(overlapping), a5_cell_to_boundary(stored_cells(overlapping)))
+two_rows(2)
+for (x in list(centre, overlapping)) {
+  do.call(frame, c(extent, main = sprintf('containment = "%s"',
+    if (identical(x, centre)) "centre" else "overlapping")))
+  fill(cells_of(x), pal$a)
+  outline(county)
+}
+for (x in list(centre, overlapping)) {
+  do.call(frame, c(extent, main = sprintf("%d stored", length(stored_cells(x)))))
+  stored_fill(x)
+  outline(county)
+}
+stored_legend(11)
+row_labels()
+```
+
+The functions that start from a cell return one covering per centre cell:
+`a5_grid_disk()` takes every cell within `k` steps, `a5_spherical_cap()`
+every cell whose centre is within a distance, and `a5_cell_to_subcell()`
+the finer cells whose centres lie inside a coarser cell.
+
+```{r around}
+disk <- a5_grid_disk(raleigh, k = 3)
+cap <- a5_spherical_cap(raleigh, radius = 8000)
+coarse <- a5_cell_to_parent(raleigh, resolution = 9)
+subcells <- a5_cell_to_subcell(coarse, resolution = 11)
+```
+
+```{r around-plot, echo = FALSE, fig.height = 4.4}
+ring <- circle(raleigh, 8000)
+ring_xy <- wk::wk_coords(ring)[, c("x", "y")]
+ext <- function(x, ...) list(cells_of(x), a5_cell_to_boundary(stored_cells(x)), ...)
+two_rows(3)
+do.call(frame, c(ext(disk), main = "a5_grid_disk(k = 3)"))
+fill(cells_of(disk), pal$a)
+fill(cells_of(raleigh), pal$ink)
+do.call(frame, c(ext(cap, ring), main = "a5_spherical_cap(8 km)"))
+fill(cells_of(cap), pal$a)
+lines(ring_xy, col = pal$ink, lwd = 1.2)
+fill(cells_of(raleigh), pal$ink)
+do.call(frame, c(ext(subcells, cells_of(coarse)), main = "a5_cell_to_subcell(res 9 to 11)"))
+fill(cells_of(subcells), pal$a)
+outline(cells_of(coarse), lwd = 1.6)
+do.call(frame, c(ext(disk), main = sprintf("%d stored", length(stored_cells(disk)))))
+stored_fill(disk)
+do.call(frame, c(ext(cap, ring), main = sprintf("%d stored", length(stored_cells(cap)))))
+stored_fill(cap)
+lines(ring_xy, col = pal$ink, lwd = 1.2)
+do.call(frame, c(ext(subcells, cells_of(coarse)), main = sprintf("%d stored", length(stored_cells(subcells)))))
+stored_fill(subcells)
+outline(cells_of(coarse), lwd = 1.6)
+stored_legend(11)
+row_labels()
+```
+
+`a5_compact()` turns any set of cells into a covering, and
+`as_a5_covering()` builds coverings from cell lists or from the stored form
+written by other A5 libraries.
+
+## Measuring coverings
+
+`a5_count()` gives the number of cells a covering stands for, and
+`a5_area()` its area. A5 cells are equal-area, so the area is the count
+times the area of one cell. At resolution 11, where a cell covers about
+8 km², it tracks each county's true area closely:
+
+```{r measures}
+nc$cells <- a5_polygon_to_cells(nc, resolution = 11)
+nc$cell_area <- a5_area(nc$cells, units = "km^2")
+head(nc[c("NAME", "cells", "cell_area")], 3)
+```
+
+```{r measures-plot, echo = FALSE, fig.width = 3.6, fig.height = 3.4, fig.align = "center"}
+true_area <- as.numeric(units::set_units(st_area(nc), "km^2"))
+par(mar = c(3.2, 3.6, 0.6, 0.6), mgp = c(2.1, 0.5, 0), tcl = -0.25,
+    col.axis = pal$muted, col.lab = pal$ink, cex.axis = 0.75, cex.lab = 0.8)
+lim <- range(0, true_area, nc$cell_area)
+plot(NULL, xlim = lim, ylim = lim, asp = 1, bty = "n", las = 1,
+     xlab = "County area (km²)", ylab = "Covering area (km²)")
+abline(h = pretty(lim), v = pretty(lim), col = "#f0efec", lwd = 0.8)
+abline(0, 1, col = pal$muted, lwd = 1, lty = 2)
+points(true_area, nc$cell_area, pch = 21, bg = pal$a, col = "white", cex = 1.1)
+```
+
+Each point is a county; the dashed line marks equal areas. The covering
+area is within 1% of the county's for the median county and about 6% at
+worst, because each cell straddling a county boundary is in or out by its
+centre. Finer resolutions reduce the error.
+
+## Combining coverings
+
+`a5_union()`, `a5_intersect()` and `a5_difference()` combine coverings
+without expanding them.
+
+```{r combine}
+a <- a5_spherical_cap(a5_lonlat_to_cell(-78.72, 35.78, 11), radius = 10000)
+b <- a5_spherical_cap(a5_lonlat_to_cell(-78.58, 35.78, 11), radius = 10000)
+a5_union(a, b)
+a5_intersect(a, b)
+a5_difference(a, b)
+```
+
+```{r combine-plot, echo = FALSE, fig.height = 3.8}
+both <- cells_of(a5_union(a, b))
+results <- list(a5_union(a, b), a5_intersect(a, b), a5_difference(a, b))
+extent <- c(list(both), lapply(results, function(x) a5_cell_to_boundary(stored_cells(x))))
+two_rows(4, legend_column = FALSE)
+do.call(frame, c(extent, main = "a and b"))
+fill(cells_of(a), paste0(pal$a, "b0"))
+fill(cells_of(b), paste0(pal$b, "b0"))
+centres <- a5_cell_to_lonlat(a5_lonlat_to_cell(c(-78.79, -78.51), 35.78, 11), as_dataframe = TRUE)
+text(centres$lon, centres$lat, c("a", "b"), col = "white", font = 2, cex = 1.2)
+labels <- c("a5_union(a, b)", "a5_intersect(a, b)", "a5_difference(a, b)")
+for (i in 1:3) {
+  do.call(frame, c(extent, main = labels[i]))
+  fill(both, pal$base)
+  fill(cells_of(results[[i]]), pal$result)
+}
+stored_legend(11, where = "center")
+for (i in 1:3) {
+  do.call(frame, c(extent, main = sprintf("%d stored", length(stored_cells(results[[i]])))))
+  fill(both, pal$base)
+  stored_fill(results[[i]])
+}
+row_labels()
+```
+
+The result of each operation is compacted again, so a covering that comes
+out of a union stores its merged interior as coarser cells.
+
+They work element by element, recycling a length-one argument, so one call
+intersects every county with a single cap. With one argument, `a5_union()`
+merges every covering in a vector into one.
+
+```{r recycle}
+near_raleigh <- a5_spherical_cap(raleigh, radius = 60000)
+nc$share_near <- a5_count(a5_intersect(nc$cells, near_raleigh)) / a5_count(nc$cells)
+
+state <- a5_union(nc$cells)
+state
+```
+
+```{r recycle-plot, echo = FALSE, fig.height = 2.9}
+share <- nc$share_near
+steps <- ramp[c(2, 3, 5, 7)]
+cols <- ifelse(share == 0, pal$base, steps[pmax(1, ceiling(share * 4))])
+par(mar = c(0.2, 0.2, 0.2, 0.2))
+plot(st_geometry(nc), col = cols, border = "white", lwd = 0.6)
+lines(wk::wk_coords(circle(raleigh, 60000))[, c("x", "y")], col = pal$ink, lwd = 1.2)
+legend("bottomleft", bty = "n", cex = 0.7, border = NA, text.col = pal$ink,
+       fill = c(pal$base, steps),
+       legend = c("none", "up to 25%", "25 to 50%", "50 to 75%", "75 to 100%"),
+       title = "Share of county within 60 km of Raleigh", title.adj = 0)
+```
+
+Both coverings in each pair must be at the same resolution, or it is an
+error. A5 cells do not nest across resolutions: a resolution-11 cell can
+straddle the edge between two resolution-10 cells, so a set of cells at one
+resolution does not translate into a set at another.
+
+```{r mismatch, error = TRUE}
+a5_union(state, a5_spherical_cap(a5_cell_to_parent(raleigh), radius = 60000))
+```
+
+```{r nest-plot, echo = FALSE, fig.width = 3.6, fig.height = 3, fig.align = "center"}
+coarse_cells <- a5_uncompact(a5_grid_disk(a5_cell_to_parent(raleigh), k = 1))
+fine_cells <- a5_cell_to_children(coarse_cells)
+par(mar = c(0.2, 0.2, 1.6, 0.2))
+frame(cells_of(coarse_cells), main = "Resolution 11 cells over resolution 10 outlines")
+fill(cells_of(fine_cells), pal$base, border = "white", lwd = 0.8)
+outline(cells_of(coarse_cells), lwd = 1.4)
+```
+
+## Testing coverings
+
+`a5_contains()` tests cells against a covering. Indexing points at the
+covering's resolution turns it into a point-in-polygon test, decided cell by
+cell: a point counts as inside when its cell belongs to the covering.
+
+```{r contains}
+set.seed(1)
+lon <- stats::runif(300, -81.4, -80.9)
+lat <- stats::runif(300, 36.35, 36.6)
+points <- a5_lonlat_to_cell(lon, lat, resolution = 11)
+inside <- a5_contains(centre, points)
+table(inside)
+```
+
+```{r contains-plot, echo = FALSE, fig.height = 2.8}
+par(mar = c(0.2, 0.2, 1.6, 0.2))
+frame(county, wk::xy(lon, lat), main = "a5_contains(centre, points)")
+fill(cells_of(centre), pal$base)
+outline(county)
+points(lon[!inside], lat[!inside], pch = 21, bg = "white", col = pal$muted, cex = 0.7)
+points(lon[inside], lat[inside], pch = 21, bg = pal$a, col = "white", cex = 0.9)
+legend("bottomright", bty = "n", cex = 0.7, pch = 21, pt.cex = c(0.9, 0.7),
+       pt.bg = c(pal$a, "white"), col = c("white", pal$muted), text.col = pal$ink,
+       legend = c("TRUE", "FALSE"))
+```
+
+Near the county line the answer follows the cells, not the line: a point
+just outside it is inside when its cell's centre is in the county, and the
+reverse.
+
+`a5_overlaps()` tests whether two coverings share any cell. With centre
+containment every cell belongs to the one county holding its centre, so
+neighbouring counties never overlap. With `containment = "overlapping"`,
+cells along a shared border belong to both:
+
+```{r overlaps}
+pair <- nc[nc$NAME %in% c("Alleghany", "Ashe"), ]
+by_centre <- a5_polygon_to_cells(pair, resolution = 11)
+gap_free <- a5_polygon_to_cells(pair, resolution = 11, containment = "overlapping")
+a5_overlaps(by_centre[1], by_centre[2])
+a5_overlaps(gap_free[1], gap_free[2])
+```
+
+```{r overlaps-plot, echo = FALSE, fig.height = 2.4}
+borders <- wk::as_wkb(st_geometry(pair))
+panels(2)
+for (step in list(list(by_centre, "centre: no shared cells"),
+                  list(gap_free, "overlapping: shared border cells"))) {
+  x <- step[[1]]
+  frame(cells_of(gap_free), main = step[[2]])
+  fill(cells_of(x[1]), paste0(pal$a, "b0"))
+  fill(cells_of(x[2]), paste0(pal$b, "b0"))
+  fill(cells_of(a5_intersect(x[1], x[2])), pal$result)
+  outline(borders, lwd = 0.8)
+}
+```
+
+Shared cells are in aqua.
+
+## Drawing and joining
+
+`a5_uncompact()` expands coverings to their cells. `simplify = FALSE` keeps
+one element per covering, ready for `tidyr::unnest()`:
+
+```{r uncompact}
+per_county <- a5_uncompact(nc$cells[1:3], simplify = FALSE)
+lengths(per_county)
+```
+
+Uncompacting can build a great many cells: a covering of France at
+resolution 18 stands for about a billion. `a5_uncompact()` refuses to build
+more than `.Machine$integer.max` cells; work with the covering itself where
+possible.
+
+## Storing coverings
+
+Coverings keep their compaction marker in storage, as in the other A5
+libraries. `a5_covering_to_arrow()` writes them to an Arrow `list<uint64>`
+column that DuckDB, Python and JavaScript read with the resolution intact,
+and `a5_covering_from_arrow()` reads them back, normalising coverings
+written elsewhere. See `vignette("arrow-parquet")`. `a5_is_valid()` checks
+that a covering built by hand is well formed.

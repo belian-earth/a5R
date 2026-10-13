@@ -1,0 +1,10 @@
+# Supercells and subcells: mirrors benches/subcell.rs, vectorised over the
+# same 64 sample cells (n = 64, so per-cell figures line up).
+N <- 64L
+cells8 <- sample_cells(8L, N)
+cells15 <- sample_cells(15L, N)
+
+bench_group("subcell")
+bench_case("cellToSupercell res 15 -> 8", a5_cell_to_supercell(cells15, resolution = 8L), n = N)
+bench_case("cellToSubcell res 8 -> 11", a5_cell_to_subcell(cells8, resolution = 11L), n = N)
+bench_case("cellToSubcell res 8 -> 16", a5_cell_to_subcell(cells8, resolution = 16L), n = N)
