@@ -19,7 +19,7 @@ loss of floating-point storage and keeps memory compact."><meta property="og:ima
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.9</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,8 +32,10 @@ loss of floating-point storage and keeps memory compact."><meta property="og:ima
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/arrow-parquet.html">Working with Arrow and Parquet</a></li>
+    <li><a class="dropdown-item" href="../articles/coverings.html">Coverings: sets of cells</a></li>
     <li><a class="dropdown-item" href="../articles/internal-cell-representation.html">How a5R stores cell IDs without strings</a></li>
     <li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
+    <li><a class="dropdown-item" href="../articles/spatial-hierarchy.html">Moving between resolutions by location</a></li>
     <li><a class="dropdown-item" href="../articles/traversal-and-distance.html">Traversal and distance</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -48,7 +50,7 @@ loss of floating-point storage and keeps memory compact."><meta property="og:ima
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>A5 Cell Index Vector</h1>
-      <small class="dont-index">Source: <a href="https://github.com/belian-earth/a5R/blob/v0.6.0/R/cell.R" class="external-link"><code>R/cell.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/belian-earth/a5R/blob/main/R/cell.R" class="external-link"><code>R/cell.R</code></a></small>
       <div class="d-none name"><code>a5_cell.Rd</code></div>
     </div>
 
@@ -65,9 +67,7 @@ loss of floating-point storage and keeps memory compact.</p>
 <span></span>
 <span><span class="fu">is_a5_cell</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">as_a5_cell</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu">a5_is_valid</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">as_a5_cell</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -81,8 +81,21 @@ coercible to one.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An <code>a5_cell</code> vector (<code>a5_cell</code>, <code>as_a5_cell</code>), a logical
-scalar (<code>is_a5_cell</code>), or a logical vector (<code>a5_is_valid</code>).</p>
+    <p>An <code>a5_cell</code> vector (<code>a5_cell</code>, <code>as_a5_cell</code>), or a logical
+scalar (<code>is_a5_cell</code>).</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p><code>a5_cell()</code> accepts any 16-digit hex string without checking that it
+encodes an A5 cell, so an <code>a5_cell</code> vector can hold values that are not
+cells. Check ids from outside sources, such as a file or a database, with
+<code><a href="a5_is_valid.html">a5_is_valid_cell()</a></code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p><code><a href="a5_is_valid.html">a5_is_valid_cell()</a></code> to check that values are A5 cells, and
+<code><a href="a5_is_valid.html">a5_is_valid()</a></code> for any a5R object; <code><a href="a5_u64_to_hex.html">a5_u64_to_hex()</a></code> to convert back to
+hex strings; <code><a href="a5_migrate.html">a5_migrate()</a></code> for ids written by a5R before 1.0.</p></div>
     </div>
 
     <div class="section level2">
@@ -91,8 +104,12 @@ scalar (<code>is_a5_cell</code>), or a logical vector (<code>a5_is_valid</code>)
 <span class="r-in"><span><span class="va">cells</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[2]&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0800000000000006 0800000000000016</span>
-<span class="r-in"><span><span class="fu">a5_is_valid</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"0800000000000006"</span>, <span class="st">"not_a_cell"</span>, <span class="cn">NA</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  TRUE FALSE    NA</span>
+<span class="r-in"><span><span class="fu"><a href="a5_is_valid.html">a5_is_valid_cell</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE TRUE</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># a5_cell() does not validate: this value is not a cell</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="a5_is_valid.html">a5_is_valid_cell</a></span><span class="op">(</span><span class="fu">a5_cell</span><span class="op">(</span><span class="st">"fd00000000000000"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

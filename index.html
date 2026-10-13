@@ -34,7 +34,7 @@
 
     <a class="navbar-brand me-2" href="index.html">a5R</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.9</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -49,8 +49,10 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="articles/arrow-parquet.html">Working with Arrow and Parquet</a></li>
+    <li><a class="dropdown-item" href="articles/coverings.html">Coverings: sets of cells</a></li>
     <li><a class="dropdown-item" href="articles/internal-cell-representation.html">How a5R stores cell IDs without strings</a></li>
     <li><a class="dropdown-item" href="articles/multithreading.html">Multi-threading</a></li>
+    <li><a class="dropdown-item" href="articles/spatial-hierarchy.html">Moving between resolutions by location</a></li>
     <li><a class="dropdown-item" href="articles/traversal-and-distance.html">Traversal and distance</a></li>
   </ul>
 </li>
@@ -96,10 +98,10 @@
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/belian-earth/a5R" class="external-link">a5R</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Index a point to a cell</span></span>
-<span><span class="va">cell</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/a5_lonlat_to_cell.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">55.95</span>, resolution <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="va">cell</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">55.95</span>, resolution <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="va">cell</span></span>
 <span><span class="co">#&gt; &lt;a5_cell[1]&gt;</span></span>
-<span><span class="co">#&gt; [1] 6344be8000000000</span></span>
+<span><span class="co">#&gt; [1] 63bb948000000000</span></span>
 <span></span>
 <span><span class="co"># Get the boundary polygon</span></span>
 <span><span class="fu"><a href="reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span>
@@ -107,16 +109,16 @@
 <span><span class="co">#&gt; [1] &lt;POLYGON ((-3.175718 55.93546, -3.145905 55.97569, -3.151641 56.01921, -3.219413 56.00818, -3.226037 55.96443, -3.175718 55.93546...&gt;</span></span>
 <span></span>
 <span><span class="co"># Navigate the hierarchy</span></span>
-<span><span class="fu"><a href="reference/a5_cell_to_parent.html">a5_cell_to_parent</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/a5_hierarchy.html">a5_cell_to_parent</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;a5_cell[1]&gt;</span></span>
-<span><span class="co">#&gt; [1] 6344be0000000000</span></span>
-<span><span class="fu"><a href="reference/a5_cell_to_children.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 63bb960000000000</span></span>
+<span><span class="fu"><a href="reference/a5_hierarchy.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;a5_cell[4]&gt;</span></span>
-<span><span class="co">#&gt; [1] 6344be2000000000 6344be6000000000 6344bea000000000 6344bee000000000</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 63bb942000000000 63bb946000000000 63bb94a000000000 63bb94e000000000</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create a collection of cells whose centres fall within a great-circle distance of 100km from the origin cell</span></span>
 <span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/a5_spherical_cap.html">a5_spherical_cap</a></span><span class="op">(</span><span class="va">cell</span>, radius <span class="op">=</span> <span class="fl">100000</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="reference/a5_uncompact.html">a5_uncompact</a></span><span class="op">(</span>resolution <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="reference/a5_compaction.html">a5_uncompact</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#206ead20"</span>, border <span class="op">=</span> <span class="st">"#206ead"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-grid-plot-1.png" alt="A5 grid plot showing a collection of cells around a point" width="100%"></p>
 <p>See <code><a href="articles/a5R.html">vignette("a5R")</a></code> for a full walkthrough of indexing, boundaries, hierarchy, traversal, and geometry-to-cell conversion.</p>
@@ -126,13 +128,17 @@
 </h2>
 <ul>
 <li>
-<strong>Vectorised Rust core</strong> — all operations implemented in Rust and called from R via extendr. <a href="https://github.com/belian-earth/a5R/blob/main/benchmarks/RESULTS.md" class="external-link">Benchmarks</a> confirm identical results to the Python, JavaScript, and DuckDB A5 implementations.</li>
+<strong>Vectorised Rust core</strong> — all operations implemented in Rust and called from R via extendr. A <a href="https://github.com/belian-earth/a5R/tree/main/benchmarks" class="external-link">benchmark suite</a> mirroring the TypeScript, Python and Rust ports runs on every pull request and fails on regressions above 15%.</li>
 <li>
 <strong>vctrs + wk integration</strong> — cell indices use an <code>a5_cell</code> type with tibble support; geometries return as <code>wk_wkb</code>/<code>wk_wkt</code> vectors compatible with sf and terra.</li>
 <li>
-<strong>Geometry indexing</strong> — <code><a href="reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code> and <code><a href="reference/a5_linestring_to_cells.html">a5_linestring_to_cells()</a></code> map polygons and great-circle lines to the cells that cover them.</li>
+<strong>Coverings</strong> — polygons, disks and caps become <code>a5_covering</code> vectors, one compacted cell set per feature, that combine (<code><a href="reference/a5_set_operations.html">a5_union()</a></code>, <code><a href="reference/a5_set_operations.html">a5_intersect()</a></code>, <code><a href="reference/a5_set_operations.html">a5_difference()</a></code>), test (<code><a href="reference/a5_covering_predicates.html">a5_contains()</a></code>) and measure (<code><a href="reference/a5_covering_measures.html">a5_area()</a></code>) without expanding to millions of cells. See <code><a href="articles/coverings.html">vignette("coverings")</a></code>.</li>
+<li>
+<strong>Geometry indexing</strong> — <code><a href="reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code> and <code><a href="reference/a5_linestring_to_cells.html">a5_linestring_to_cells()</a></code> map polygons and great-circle lines to cells.</li>
 <li>
 <strong>Traversal</strong> — <code><a href="reference/a5_grid_disk.html">a5_grid_disk()</a></code> and <code><a href="reference/a5_spherical_cap.html">a5_spherical_cap()</a></code> select neighbours by hop count or great-circle distance.</li>
+<li>
+<strong>Spatial hierarchy</strong> — <code><a href="reference/a5_spatial_hierarchy.html">a5_cell_to_supercell()</a></code> and <code><a href="reference/a5_spatial_hierarchy.html">a5_cell_to_subcell()</a></code> move between resolutions by location, so aggregation counts each fine cell inside the coarse cell it lies in.</li>
 <li>
 <strong>Multi-threading</strong> — opt-in parallel processing via rayon for vectorised operations. See <code><a href="articles/multithreading.html">vignette("multithreading")</a></code>.</li>
 </ul>

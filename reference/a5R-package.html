@@ -15,7 +15,7 @@ discrete global grid system, powered by the a5 Rust crate via extendr."><meta pr
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.9</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -28,8 +28,10 @@ discrete global grid system, powered by the a5 Rust crate via extendr."><meta pr
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/arrow-parquet.html">Working with Arrow and Parquet</a></li>
+    <li><a class="dropdown-item" href="../articles/coverings.html">Coverings: sets of cells</a></li>
     <li><a class="dropdown-item" href="../articles/internal-cell-representation.html">How a5R stores cell IDs without strings</a></li>
     <li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
+    <li><a class="dropdown-item" href="../articles/spatial-hierarchy.html">Moving between resolutions by location</a></li>
     <li><a class="dropdown-item" href="../articles/traversal-and-distance.html">Traversal and distance</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -44,7 +46,7 @@ discrete global grid system, powered by the a5 Rust crate via extendr."><meta pr
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>a5R: A5 Pentagonal Geospatial Index for R</h1>
-      <small class="dont-index">Source: <a href="https://github.com/belian-earth/a5R/blob/v0.6.0/R/a5R-package.R" class="external-link"><code>R/a5R-package.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/belian-earth/a5R/blob/main/R/a5R-package.R" class="external-link"><code>R/a5R-package.R</code></a></small>
       <div class="d-none name"><code>a5R-package.Rd</code></div>
     </div>
 
@@ -59,8 +61,9 @@ discrete global grid system, powered by the a5 Rust crate via extendr.</p>
 
 
 <ul><li><p><code><a href="a5_cell.html">a5_cell()</a></code> — construct cell ID vectors</p></li>
-<li><p><a href="a5_cell.html">is_a5_cell()</a> / <a href="a5_cell.html">a5_is_valid()</a> — type test and
-validation</p></li>
+<li><p><a href="a5_cell.html">is_a5_cell()</a> — type test</p></li>
+<li><p><a href="a5_is_valid.html">a5_is_valid_cell()</a> / <code><a href="a5_is_valid.html">a5_is_valid()</a></code> — validation</p></li>
+<li><p><code><a href="a5_migrate.html">a5_migrate()</a></code> — convert ids from a5R before 1.0</p></li>
 <li><p><code><a href="a5_u64_to_hex.html">a5_u64_to_hex()</a></code> / <a href="a5_u64_to_hex.html">a5_hex_to_u64()</a> — hex string
 conversion</p></li>
 </ul></div>
@@ -68,29 +71,45 @@ conversion</p></li>
     <h2 id="indexing">Indexing<a class="anchor" aria-label="anchor" href="#indexing"></a></h2>
 
 
-<ul><li><p><code><a href="a5_lonlat_to_cell.html">a5_lonlat_to_cell()</a></code> — coordinates to cell IDs</p></li>
-<li><p><code><a href="a5_cell_to_lonlat.html">a5_cell_to_lonlat()</a></code> — cell IDs to centre coordinates</p></li>
+<ul><li><p><code><a href="a5_coordinates.html">a5_lonlat_to_cell()</a></code> — coordinates to cell IDs</p></li>
+<li><p><code><a href="a5_coordinates.html">a5_cell_to_lonlat()</a></code> — cell IDs to centre coordinates</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="geometry">Geometry<a class="anchor" aria-label="anchor" href="#geometry"></a></h2>
 
 
 <ul><li><p><code><a href="a5_cell_to_boundary.html">a5_cell_to_boundary()</a></code> — cell boundary polygons (WKB or WKT)</p></li>
-<li><p><code><a href="a5_cell_area.html">a5_cell_area()</a></code> — cell area at a given resolution</p></li>
-<li><p><code><a href="a5_cell_edge_length_avg.html">a5_cell_edge_length_avg()</a></code> — average cell edge length at a resolution</p></li>
+<li><p><code><a href="a5_resolution_stats.html">a5_cell_area()</a></code> — cell area at a given resolution</p></li>
+<li><p><code><a href="a5_resolution_stats.html">a5_cell_edge_length_avg()</a></code> — average cell edge length at a resolution</p></li>
 <li><p><code><a href="a5_cell_distance.html">a5_cell_distance()</a></code> — distance between cell centroids</p></li>
-<li><p><code><a href="a5_get_num_cells.html">a5_get_num_cells()</a></code> — total cell count at a resolution</p></li>
-<li><p><code><a href="a5_get_num_children.html">a5_get_num_children()</a></code> — child count between resolutions</p></li>
+<li><p><code><a href="a5_resolution_stats.html">a5_get_num_cells()</a></code> — total cell count at a resolution</p></li>
+<li><p><code><a href="a5_resolution_stats.html">a5_get_num_children()</a></code> — child count between resolutions</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="hierarchy">Hierarchy<a class="anchor" aria-label="anchor" href="#hierarchy"></a></h2>
 
 
 <ul><li><p><code><a href="a5_get_resolution.html">a5_get_resolution()</a></code> — extract resolution from cell IDs</p></li>
-<li><p><code><a href="a5_cell_to_parent.html">a5_cell_to_parent()</a></code> — navigate to coarser cells</p></li>
-<li><p><code><a href="a5_cell_to_children.html">a5_cell_to_children()</a></code> — navigate to finer cells</p></li>
+<li><p><code><a href="a5_hierarchy.html">a5_cell_to_parent()</a></code> — navigate to coarser cells</p></li>
+<li><p><code><a href="a5_hierarchy.html">a5_cell_to_children()</a></code> — navigate to finer cells</p></li>
+<li><p><code><a href="a5_spatial_hierarchy.html">a5_cell_to_supercell()</a></code> / <a href="a5_spatial_hierarchy.html">a5_cell_to_subcell()</a>
+— move between resolutions by location</p></li>
 <li><p><code><a href="a5_get_res0_cells.html">a5_get_res0_cells()</a></code> — the 12 root cells</p></li>
-<li><p><code><a href="a5_compact.html">a5_compact()</a></code> / <code><a href="a5_uncompact.html">a5_uncompact()</a></code> — compress and expand cell sets</p></li>
+</ul></div>
+    <div class="section level2">
+    <h2 id="coverings">Coverings<a class="anchor" aria-label="anchor" href="#coverings"></a></h2>
+
+
+<ul><li><p><a href="a5_covering.html">a5_covering</a> — compacted cell sets that record their resolution</p></li>
+<li><p><code><a href="a5_compaction.html">a5_compact()</a></code> / <a href="a5_compaction.html">a5_uncompact()</a> — build and expand
+coverings</p></li>
+<li><p><a href="a5_covering.html">a5_covering_resolution()</a> — the resolution a covering
+stands for</p></li>
+<li><p><code><a href="a5_set_operations.html">a5_union()</a></code> / <a href="a5_set_operations.html">a5_intersect()</a> /
+<a href="a5_set_operations.html">a5_difference()</a> — combine coverings</p></li>
+<li><p><code><a href="a5_covering_predicates.html">a5_contains()</a></code> / <a href="a5_covering_predicates.html">a5_overlaps()</a> — test
+coverings</p></li>
+<li><p><code><a href="a5_covering_measures.html">a5_count()</a></code> / <a href="a5_covering_measures.html">a5_area()</a> — measure coverings</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="traversal">Traversal<a class="anchor" aria-label="anchor" href="#traversal"></a></h2>
@@ -112,6 +131,9 @@ conversion</p></li>
 
 <ul><li><p><code><a href="a5_cell_from_arrow.html">a5_cell_from_arrow()</a></code> / <a href="a5_cell_from_arrow.html">a5_cell_to_arrow()</a> —
 lossless conversion to/from Arrow <code>uint64</code></p></li>
+<li><p><code><a href="a5_covering_from_arrow.html">a5_covering_from_arrow()</a></code> /
+<a href="a5_covering_from_arrow.html">a5_covering_to_arrow()</a> — coverings to/from
+Arrow <code>list&lt;uint64&gt;</code></p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="configuration">Configuration<a class="anchor" aria-label="anchor" href="#configuration"></a></h2>
@@ -124,6 +146,9 @@ lossless conversion to/from Arrow <code>uint64</code></p></li>
 
 
 <ul><li><p><code><a href="../articles/a5R.html">vignette("a5R")</a></code> — getting started</p></li>
+<li><p><code><a href="../articles/coverings.html">vignette("coverings")</a></code> — sets of cells: build, combine, test, measure</p></li>
+<li><p><code><a href="../articles/spatial-hierarchy.html">vignette("spatial-hierarchy")</a></code> — moving between resolutions by location</p></li>
+<li><p><code><a href="../articles/traversal-and-distance.html">vignette("traversal-and-distance")</a></code> — disks, caps and distances</p></li>
 <li><p><code><a href="../articles/multithreading.html">vignette("multithreading")</a></code> — parallel processing</p></li>
 <li><p><code><a href="../articles/internal-cell-representation.html">vignette("internal-cell-representation")</a></code> — how cell IDs are stored</p></li>
 <li><p><code><a href="../articles/arrow-parquet.html">vignette("arrow-parquet")</a></code> — Arrow and Parquet interop</p></li>

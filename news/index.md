@@ -1,6 +1,246 @@
 # Changelog
 
+## a5R 0.9.9
+
+### Breaking changes
+
+- a5R now uses the a5 Rust crate 1.0.0-beta.2, which introduces A5’s
+  permanent cell-ID system. The space-filling curve and the order of the
+  dodecahedron faces are new, so **every cell id changes**: an id
+  written by an earlier version of a5R is still a valid cell, but in a
+  different place, and nothing in the id says which version wrote it.
+  Re-index stored data from its coordinates, or convert the ids once
+  with the new
+  [`a5_migrate()`](https://belian-earth.github.io/a5R/reference/a5_migrate.md).
+- Resolution-1 cells are now pentagons rather than triangles, so their
+  boundaries and centres change. Cells at every other resolution keep
+  their shape and position.
+- Compacted cell sets are now `a5_covering` vectors, one covering per
+  element. A covering stores its compacted cells followed by a
+  compaction marker recording the resolution they stand for, as in the
+  other A5 libraries, so
+  [`a5_uncompact()`](https://belian-earth.github.io/a5R/reference/a5_compaction.md)
+  no longer needs a resolution. Coverings print as their resolution,
+  cell count and stored-cell count, work as data frame columns, and
+  compare equal with `==` when they hold the same cells. Use
+  [`a5_uncompact()`](https://belian-earth.github.io/a5R/reference/a5_compaction.md)
+  for the cells;
+  [`as_a5_cell()`](https://belian-earth.github.io/a5R/reference/a5_cell.md)
+  refuses a covering rather than treat its stored cells, whose outlines
+  do not nest, as a grid.
+- [`a5_compact()`](https://belian-earth.github.io/a5R/reference/a5_compaction.md),
+  [`a5_grid_disk()`](https://belian-earth.github.io/a5R/reference/a5_grid_disk.md)
+  and
+  [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/reference/a5_spherical_cap.md)
+  return coverings.
+  [`a5_grid_disk()`](https://belian-earth.github.io/a5R/reference/a5_grid_disk.md)
+  and
+  [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/reference/a5_spherical_cap.md)
+  give one covering per centre cell and lose their `simplify` argument,
+  which moves to
+  [`a5_uncompact()`](https://belian-earth.github.io/a5R/reference/a5_compaction.md).
+  An `NA` centre gives an `NA` covering.
+- [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_polygon_to_cells.md)
+  returns one covering per feature instead of the union of all features,
+  so it can fill a column of an `sf` data frame. A feature’s parts and
+  holes are still combined. A missing geometry gives an `NA` covering
+  and an empty geometry an empty covering; both used to be errors.
+- [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_linestring_to_cells.md)
+  gains `simplify`: with `simplify = FALSE` it returns an `a5_cell_list`
+  with one ordered path per feature, for a list column. The default flat
+  form concatenates the paths, so a cell crossed by several features now
+  appears once per feature rather than once overall; within a feature,
+  each cell still appears once. Missing and empty geometries contribute
+  no cells instead of an error.
+- [`a5_uncompact()`](https://belian-earth.github.io/a5R/reference/a5_compaction.md)
+  takes coverings, and its `resolution` argument is optional: by default
+  each covering expands to its own resolution. It refuses to build more
+  than `.Machine$integer.max` cells.
+- [`a5_is_valid()`](https://belian-earth.github.io/a5R/reference/a5_is_valid.md)
+  now checks the index encoding. It used to return `TRUE` for any
+  non-missing `a5_cell` and for any hex string that parsed, whether or
+  not the value was a cell; hex strings must now also be 16 digits.
+
+### New features
+
+- New
+  [`a5_migrate()`](https://belian-earth.github.io/a5R/reference/a5_migrate.md)
+  converts ids from a5R before 1.0 to the current index.
+- New
+  [`as_a5_covering()`](https://belian-earth.github.io/a5R/reference/a5_covering.md)
+  builds coverings from cells, cell lists or raw 64-bit values written
+  by other A5 libraries, sorting and compacting them;
+  [`a5_covering_resolution()`](https://belian-earth.github.io/a5R/reference/a5_covering.md)
+  returns the resolution each covering stands for.
+  [`a5_is_valid()`](https://belian-earth.github.io/a5R/reference/a5_is_valid.md)
+  checks covering structure.
+- New covering operations, computed on the compacted cells without
+  expanding them:
+  [`a5_union()`](https://belian-earth.github.io/a5R/reference/a5_set_operations.md),
+  [`a5_intersect()`](https://belian-earth.github.io/a5R/reference/a5_set_operations.md)
+  and
+  [`a5_difference()`](https://belian-earth.github.io/a5R/reference/a5_set_operations.md)
+  combine coverings element by element, and `a5_union(x)` merges every
+  covering in `x`;
+  [`a5_contains()`](https://belian-earth.github.io/a5R/reference/a5_covering_predicates.md)
+  tests cells against coverings (a point-in-polygon test at the
+  covering’s resolution) and
+  [`a5_overlaps()`](https://belian-earth.github.io/a5R/reference/a5_covering_predicates.md)
+  tests pairs of coverings;
+  [`a5_count()`](https://belian-earth.github.io/a5R/reference/a5_covering_measures.md)
+  and
+  [`a5_area()`](https://belian-earth.github.io/a5R/reference/a5_covering_measures.md)
+  give the number of cells and the area each covering stands for.
+  Combining coverings at different resolutions is an error, as upstream.
+- New
+  [`a5_covering_to_arrow()`](https://belian-earth.github.io/a5R/reference/a5_covering_from_arrow.md)
+  and
+  [`a5_covering_from_arrow()`](https://belian-earth.github.io/a5R/reference/a5_covering_from_arrow.md)
+  convert coverings to and from Arrow `list<uint64>` with the compaction
+  marker, the layout DuckDB, Python and JavaScript A5 code read.
+- New
+  [`a5_is_valid_cell()`](https://belian-earth.github.io/a5R/reference/a5_is_valid.md)
+  checks that values are A5 cells, mirroring the upstream
+  `is_valid_cell`.
+  [`a5_is_valid()`](https://belian-earth.github.io/a5R/reference/a5_is_valid.md)
+  becomes a generic that also accepts an `a5_cell_list`, returning one
+  value per element.
+
+### Other changes
+
+- New
+  [`vignette("coverings")`](https://belian-earth.github.io/a5R/articles/coverings.md)
+  on building, combining, testing and measuring coverings.
+  [`vignette("arrow-parquet")`](https://belian-earth.github.io/a5R/articles/arrow-parquet.md)
+  covers storing coverings and migrating data written before 1.0, and
+  [`vignette("spatial-hierarchy")`](https://belian-earth.github.io/a5R/articles/spatial-hierarchy.md)
+  is rewritten for supercells and subcells.
+
+- [`a5_cell_child()`](https://belian-earth.github.io/a5R/reference/a5_cell_child.md)
+  and
+  [`a5_cell_children_range()`](https://belian-earth.github.io/a5R/reference/a5_cell_children_range.md)
+  follow the new order of
+  [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/reference/a5_hierarchy.md)
+  (children are now in ascending id order).
+
+- [`a5_get_num_cells()`](https://belian-earth.github.io/a5R/reference/a5_resolution_stats.md)
+  is correct at high resolutions (a5 0.10.1).
+
+- [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_polygon_to_cells.md)
+  merges a feature’s parts with the upstream covering union, without
+  expanding each part to full resolution first.
+
+- New
+  [`a5_cell_to_supercell()`](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
+  and
+  [`a5_cell_to_subcell()`](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
+  move between resolutions by cell centre rather than by index, wrapping
+  the upstream `cell_to_supercell()` and `cell_to_subcell()`. The A5
+  index hierarchy is not spatially nested: for about half of cells one
+  resolution apart, and about 35% at four or more apart, the index
+  parent is not the coarse cell containing the fine cell’s centre.
+  Supercells and subcells form an exact partition, so aggregating fine
+  cells to a coarser grid counts each fine cell once, inside the coarse
+  cell it lies in. Subcells are returned as one covering per cell.
+  [`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/reference/a5_hierarchy.md)
+  and
+  [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/reference/a5_hierarchy.md)
+  are unchanged and now document the difference (requested by
+  belian-production).
+
+- Missing values filled in by vctrs are now `NA`, not the world cell
+  ([\#27](https://github.com/belian-earth/a5R/issues/27)). Combining
+  with `NA`, subsetting with an `NA` index, assigning `NA`,
+  [`vctrs::vec_init()`](https://vctrs.r-lib.org/reference/vec_init.html),
+  and unmatched rows from `merge(all = TRUE)`,
+  [`vctrs::vec_rbind()`](https://vctrs.r-lib.org/reference/vec_bind.html)
+  or dplyr joins used to produce id 0, a valid cell. The top byte of
+  each id is now stored XOR `0xFC`, so a filled-in gap decodes to the NA
+  sentinel, at no measurable cost. This changes the stored byte layout:
+  `a5_cell` objects saved with
+  [`saveRDS()`](https://rdrr.io/r/base/readRDS.html),
+  [`save()`](https://rdrr.io/r/base/save.html) or qs by earlier versions
+  do not read correctly. Re-create them from hex strings or Arrow, which
+  store the true id.
+
+- Resolution-30 cells whose id starts with `0xFC` (about 0.3% of them,
+  in quintants 31, 39 and 41) are no longer treated as `NA`. The NA
+  check now compares the full id rather than its top byte.
+
+- The benchmark suite now mirrors the TypeScript, Python and Rust A5
+  ports (same case names, same deterministic inputs) and runs in CI on
+  every pull request, failing on regressions above 15%. The old
+  cross-language comparison scripts are gone.
+
+- [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/reference/a5_hierarchy.md),
+  [`a5_grid_disk()`](https://belian-earth.github.io/a5R/reference/a5_grid_disk.md)
+  and
+  [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/reference/a5_spherical_cap.md)
+  are vectorised over their cell argument and gain a `simplify`
+  argument. The default `simplify = TRUE` returns one flat `a5_cell`
+  vector, so single-cell calls are unchanged; `simplify = FALSE` returns
+  a [`vctrs::list_of()`](https://vctrs.r-lib.org/reference/list_of.html)
+  with one element per input, for list columns. An `NA` cell now
+  contributes no cells instead of raising an error.
+
+- New `a5_cell_list` class for those lists, with an
+  [`unlist()`](https://rdrr.io/r/base/unlist.html) method that
+  concatenates the elements into one `a5_cell` vector. Base
+  [`unlist()`](https://rdrr.io/r/base/unlist.html) on a plain list of
+  `a5_cell` vectors returns a meaningless raw vector;
+  [`as_a5_cell_list()`](https://belian-earth.github.io/a5R/reference/a5_cell_list.md)
+  wraps such a list so [`unlist()`](https://rdrr.io/r/base/unlist.html)
+  works.
+
+- Base R compatibility for `a5_cell` (reported by the ramet project):
+  [`match()`](https://rdrr.io/r/base/match.html) and `%in%` are about
+  ten times faster via an exact
+  [`mtfrm()`](https://rdrr.io/r/base/mtfrm.html) method instead of hex
+  conversion; `x[i] <- value` past the end and `length(x) <- n` grow the
+  vector with `NA`, so [`rbind()`](https://rdrr.io/r/base/cbind.html) on
+  data frames with `a5_cell` columns works.
+  [`split()`](https://rdrr.io/r/base/split.html) and
+  [`tapply()`](https://rdrr.io/r/base/tapply.html) with an `a5_cell`
+  grouping vector cannot be intercepted and give wrong results; use
+  [`vctrs::vec_split()`](https://vctrs.r-lib.org/reference/vec_split.html)
+  or
+  [`vctrs::vec_group_id()`](https://vctrs.r-lib.org/reference/vec_group.html),
+  as documented in
+  [`vignette("internal-cell-representation")`](https://belian-earth.github.io/a5R/articles/internal-cell-representation.md).
+
+- New
+  [`a5_cell_child()`](https://belian-earth.github.io/a5R/reference/a5_cell_child.md)
+  returns the i-th descendant of each cell at a finer resolution without
+  enumerating the others, for sampling from large cells.
+
+- New
+  [`a5_cell_children_range()`](https://belian-earth.github.io/a5R/reference/a5_cell_children_range.md)
+  returns the smallest and largest descendant of each cell at a finer
+  resolution. Descendants occupy a contiguous id range among cells of
+  that resolution, so the pair is an exact `BETWEEN` filter on an
+  id-sorted store. Resolution 30 is refused because the guarantee does
+  not hold there.
+
+- Reduced per-call overhead across the package. Rust output is wrapped
+  without re-validation, cell fields are passed to Rust without building
+  a data frame and read there without R-level `$` calls, scalar
+  arguments are checked with a lightweight helper, default `format`,
+  `containment` and `method` arguments skip
+  [`rlang::arg_match()`](https://rlang.r-lib.org/reference/arg_match.html),
+  [`a5_lonlat_to_cell()`](https://belian-earth.github.io/a5R/reference/a5_coordinates.md)
+  casts and recycles common inputs without vctrs,
+  [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/reference/a5_coordinates.md)
+  uses low-level `wk` and data frame constructors, and
+  [`a5_cell_area()`](https://belian-earth.github.io/a5R/reference/a5_resolution_stats.md),
+  [`a5_cell_edge_length_avg()`](https://belian-earth.github.io/a5R/reference/a5_resolution_stats.md)
+  and
+  [`a5_cell_distance()`](https://belian-earth.github.io/a5R/reference/a5_cell_distance.md)
+  cache the parsed base unit. Scalar calls are three to twenty times
+  faster; results, recycling rules and error messages are unchanged.
+
 ## a5R 0.6.0
+
+CRAN release: 2026-09-08
 
 - Updated the bundled ‘A5’ Rust crate to 0.10.0. The lattice curve is
   now laid out with an L-system and the equal-area projection is more
@@ -9,7 +249,7 @@
   [`a5_grid_disk()`](https://belian-earth.github.io/a5R/reference/a5_grid_disk.md),
   [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/reference/a5_spherical_cap.md)
   and
-  [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_lonlat.md).
+  [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/reference/a5_coordinates.md).
   Cell identifiers are unchanged: all existing results and snapshots are
   bit-for-bit identical.
 - [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_polygon_to_cells.md)
@@ -21,10 +261,14 @@
   boundary-intersection use case previously served by the removed
   `a5_grid()`.
 - New
-  [`a5_cell_edge_length_avg()`](https://belian-earth.github.io/a5R/reference/a5_cell_edge_length_avg.md)
+  [`a5_cell_edge_length_avg()`](https://belian-earth.github.io/a5R/reference/a5_resolution_stats.md)
   returns the average edge length of a cell at a given resolution, as a
   `units` vector (metres by default). Individual edges vary from the
   average by roughly +/-10%.
+- Fixed the build on Windows ARM64 by bumping `extendr-api` to 0.8.2 and
+  passing the correct `--target` on Windows
+  ([\#22](https://github.com/belian-earth/a5R/issues/22),
+  [@jeroen](https://github.com/jeroen)).
 
 ## a5R 0.5.0
 
@@ -98,7 +342,7 @@ CRAN release: 2026-05-14
   `cell_to_parent`, and a polar-region spiral fix in `grid_disk` and
   `spherical_cap`.
 - **Breaking:**
-  [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_lonlat.md)
+  [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/reference/a5_coordinates.md)
   replaces its `normalise` argument with `as_dataframe` (default
   `FALSE`). When `FALSE`, centroids are returned as a
   [`wk::xy()`](https://paleolimbot.github.io/wk/reference/xy.html)
@@ -150,11 +394,11 @@ CRAN release: 2026-03-26
   [`a5_hex_to_u64()`](https://belian-earth.github.io/a5R/reference/a5_u64_to_hex.md)
   for explicit conversion between `a5_cell` vectors and hex strings.
 - `a5_is_cell()` has been renamed to
-  [`a5_is_valid()`](https://belian-earth.github.io/a5R/reference/a5_cell.md)
+  [`a5_is_valid()`](https://belian-earth.github.io/a5R/reference/a5_is_valid.md)
   and now accepts both `a5_cell` vectors and character hex strings.
 - [`a5_cell_distance()`](https://belian-earth.github.io/a5R/reference/a5_cell_distance.md)
   and
-  [`a5_cell_area()`](https://belian-earth.github.io/a5R/reference/a5_cell_area.md)
+  [`a5_cell_area()`](https://belian-earth.github.io/a5R/reference/a5_resolution_stats.md)
   gain a `units = NULL` option to return plain numeric vectors without
   `units` class overhead.
 - New vignettes:

@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.9</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,8 +46,10 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/arrow-parquet.html">Working with Arrow and Parquet</a></li>
+    <li><a class="dropdown-item" href="../articles/coverings.html">Coverings: sets of cells</a></li>
     <li><a class="dropdown-item" href="../articles/internal-cell-representation.html">How a5R stores cell IDs without strings</a></li>
     <li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
+    <li><a class="dropdown-item" href="../articles/spatial-hierarchy.html">Moving between resolutions by location</a></li>
     <li><a class="dropdown-item" href="../articles/traversal-and-distance.html">Traversal and distance</a></li>
   </ul>
 </li>
@@ -73,7 +75,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Multi-threading</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/belian-earth/a5R/blob/v0.6.0/vignettes/multithreading.Rmd" class="external-link"><code>vignettes/multithreading.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/belian-earth/a5R/blob/main/vignettes/multithreading.Rmd" class="external-link"><code>vignettes/multithreading.Rmd</code></a></small>
       <div class="d-none name"><code>multithreading.Rmd</code></div>
     </div>
 
@@ -136,7 +138,7 @@ process each element independently:</p>
 </tr>
 <tr class="even">
 <td><code><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code></td>
-<td>Heavy (per-part flood-fill, hole subtraction)</td>
+<td>Heavy (per-part fill, hole subtraction)</td>
 <td>High</td>
 </tr>
 <tr class="odd">
@@ -145,7 +147,17 @@ process each element independently:</p>
 <td>High</td>
 </tr>
 <tr class="even">
-<td><code><a href="../reference/a5_lonlat_to_cell.html">a5_lonlat_to_cell()</a></code></td>
+<td><code><a href="../reference/a5_spherical_cap.html">a5_spherical_cap()</a></code></td>
+<td>Heavy (per-cell search)</td>
+<td>High</td>
+</tr>
+<tr class="odd">
+<td><code><a href="../reference/a5_grid_disk.html">a5_grid_disk()</a></code></td>
+<td>Heavy (per-cell traversal)</td>
+<td>High</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell()</a></code></td>
 <td>Moderate (projection)</td>
 <td>High</td>
 </tr>
@@ -155,31 +167,47 @@ process each element independently:</p>
 <td>Medium</td>
 </tr>
 <tr class="even">
-<td><code><a href="../reference/a5_cell_to_lonlat.html">a5_cell_to_lonlat()</a></code></td>
+<td><code><a href="../reference/a5_coordinates.html">a5_cell_to_lonlat()</a></code></td>
 <td>Moderate (reverse projection)</td>
 <td>Medium</td>
 </tr>
 <tr class="odd">
-<td><code><a href="../reference/a5_cell_to_parent.html">a5_cell_to_parent()</a></code></td>
-<td>Light (bit ops + hex)</td>
+<td><code><a href="../reference/a5_hierarchy.html">a5_cell_to_children()</a></code></td>
+<td>Light (bit ops per child)</td>
 <td>Low</td>
 </tr>
 <tr class="even">
+<td><code><a href="../reference/a5_hierarchy.html">a5_cell_to_parent()</a></code></td>
+<td>Light (bit ops + hex)</td>
+<td>Low</td>
+</tr>
+<tr class="odd">
 <td><code><a href="../reference/a5_get_resolution.html">a5_get_resolution()</a></code></td>
 <td>Light (bit ops)</td>
 <td>Low</td>
 </tr>
+<tr class="even">
+<td><code><a href="../reference/a5_compaction.html">a5_uncompact()</a></code></td>
+<td>Light (per-covering expansion)</td>
+<td>Low</td>
+</tr>
 <tr class="odd">
-<td><code><a href="../reference/a5_cell.html">a5_is_valid()</a></code></td>
-<td>Light (hex parse)</td>
+<td><code><a href="../reference/a5_is_valid.html">a5_is_valid()</a></code></td>
+<td>Light (bit checks)</td>
 <td>Low</td>
 </tr>
 </tbody>
 </table>
-<p>Scalar and bulk operations (<code><a href="../reference/a5_cell_to_children.html">a5_cell_to_children()</a></code>,
-<code><a href="../reference/a5_compact.html">a5_compact()</a></code>, <code><a href="../reference/a5_cell_area.html">a5_cell_area()</a></code>, etc.) are
-unaffected: they are already fast or delegate to algorithms that don’t
-parallelise element-wise.</p>
+<p>For the one-to-many functions (<code><a href="../reference/a5_grid_disk.html">a5_grid_disk()</a></code>,
+<code><a href="../reference/a5_spherical_cap.html">a5_spherical_cap()</a></code>, <code><a href="../reference/a5_hierarchy.html">a5_cell_to_children()</a></code>,
+<code><a href="../reference/a5_compaction.html">a5_uncompact()</a></code>) the per-element work is parallelised;
+assembling the result, especially the <code>simplify = FALSE</code>
+list, is sequential, so the list form gains less than the flat form.</p>
+<p>Scalar and bulk operations (<code><a href="../reference/a5_compaction.html">a5_compact()</a></code>,
+<code><a href="../reference/a5_resolution_stats.html">a5_cell_area()</a></code>, <code><a href="../reference/a5_cell_child.html">a5_cell_child()</a></code>,
+<code><a href="../reference/a5_cell_children_range.html">a5_cell_children_range()</a></code>, etc.) are unaffected: they are
+already fast or delegate to algorithms that don’t parallelise
+element-wise.</p>
 </div>
 <div class="section level2">
 <h2 id="when-is-it-worthwhile">When is it worthwhile?<a class="anchor" aria-label="anchor" href="#when-is-it-worthwhile"></a>
@@ -199,7 +227,7 @@ cores</li>
 </ul>
 <p>Here’s a quick comparison on 100k cells:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells</a></span><span class="op">(</span><span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/rct.html" class="external-link">rct</a></span><span class="op">(</span><span class="op">-</span><span class="fl">10</span>, <span class="fl">50</span>, <span class="fl">10</span>, <span class="fl">60</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_compaction.html">a5_uncompact</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells</a></span><span class="op">(</span><span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/rct.html" class="external-link">rct</a></span><span class="op">(</span><span class="op">-</span><span class="fl">10</span>, <span class="fl">50</span>, <span class="fl">10</span>, <span class="fl">60</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">12</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 704259</span></span>
 <span></span>

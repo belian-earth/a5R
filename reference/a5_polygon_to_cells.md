@@ -1,15 +1,11 @@
 # Cells inside or overlapping a polygon
 
-Returns A5 cells at `resolution` that fall inside the polygon. By
-default a cell is included when its centre lies inside the polygon; set
+Returns, for each polygon feature, an
+[a5_covering](https://belian-earth.github.io/a5R/reference/a5_covering.md)
+of the A5 cells at `resolution` that belong to it. By default a cell
+belongs when its centre lies inside the polygon; set
 `containment = "overlapping"` to also include every cell that touches
-the polygon boundary, giving gap-free coverage. Multi-feature inputs (a
-`MULTIPOLYGON`, an `sfc` of multiple polygons, or a `POLYGON` with
-holes) are handled natively: per polygon part, the outer ring and its
-holes are converted together with hole interiors excluded, then the
-results are unioned across parts. The final cell set is compacted; use
-[`a5_uncompact()`](https://belian-earth.github.io/a5R/reference/a5_uncompact.md)
-to expand to a uniform-resolution grid.
+the polygon boundary, giving gap-free coverage.
 
 ## Usage
 
@@ -54,10 +50,22 @@ a5_polygon_to_cells(x, resolution, containment = c("centre", "overlapping"))
 
 ## Value
 
-An [a5_cell](https://belian-earth.github.io/a5R/reference/a5_cell.md)
-vector at or coarser than `resolution`.
+An
+[a5_covering](https://belian-earth.github.io/a5R/reference/a5_covering.md)
+vector with one element per feature (one for matrix and `data.frame`
+input). `NA` for a missing geometry; an empty covering for an empty
+geometry or one too small to hold a cell centre.
 
 ## Details
+
+The result has one covering per feature, so it can be added as a column:
+`sf_data$cells <- a5_polygon_to_cells(sf_data, 10)`. A feature's parts
+(a `MULTIPOLYGON`) and holes are combined into its covering, with hole
+interiors excluded. To combine features into one covering, use
+[`a5_union()`](https://belian-earth.github.io/a5R/reference/a5_set_operations.md).
+Coverings are compacted; use
+[`a5_uncompact()`](https://belian-earth.github.io/a5R/reference/a5_compaction.md)
+for the cells at `resolution`.
 
 With `containment = "centre"`, membership is determined by
 **centre-point containment**: a cell is included if its centroid lies
@@ -75,7 +83,7 @@ Coordinates must be WGS 84 longitude/latitude in degrees. Rings are
 closed automatically; a trailing duplicate vertex is dropped if present.
 
 Where no A5 cell centroids at the specified `resolution` fall within the
-geometry, an empty `a5_cell` vector is returned.
+geometry, its covering is empty.
 
 Matrix and `data.frame` inputs are treated as a single ring; for
 multi-feature data or polygons with holes, pass an `sf`, `sfc`, wk, or
@@ -84,7 +92,7 @@ multi-feature data or polygons with holes, pass an `sf`, `sfc`, wk, or
 ## See also
 
 [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_linestring_to_cells.md),
-[`a5_uncompact()`](https://belian-earth.github.io/a5R/reference/a5_uncompact.md).
+[`a5_uncompact()`](https://belian-earth.github.io/a5R/reference/a5_compaction.md).
 
 ## Examples
 
@@ -92,13 +100,25 @@ multi-feature data or polygons with holes, pass an `sf`, `sfc`, wk, or
 poly <- wk::wkt(
   "POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))"
 )
-cells <- a5_polygon_to_cells(poly, resolution = 8)
-length(cells)
-#> [1] 0
+covering <- a5_polygon_to_cells(poly, resolution = 8)
+covering
+#> <a5_covering[1]>
+#> [1] res 8: empty
+a5_uncompact(covering)
+#> <a5_cell[0]>
 
 # Gap-free coverage: every cell touching the polygon
-covering <- a5_polygon_to_cells(poly, resolution = 8,
-                                containment = "overlapping")
-length(covering)
-#> [1] 2
+a5_polygon_to_cells(poly, resolution = 8, containment = "overlapping")
+#> <a5_covering[1]>
+#> [1] res 8: 2 cells (2 stored)
+
+# One covering per feature
+polys <- wk::wkt(c(
+  "POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))",
+  NA,
+  "POLYGON ((-4.3 55.8, -4.2 55.8, -4.2 55.9, -4.3 55.9, -4.3 55.8))"
+))
+a5_polygon_to_cells(polys, resolution = 8)
+#> <a5_covering[3]>
+#> [1] res 8: empty <NA>         res 8: empty
 ```

@@ -1,7 +1,8 @@
 # Cells within a great-circle radius
 
-Returns all cells whose centres fall within a great-circle distance of a
-given cell's centre.
+Returns, for each centre cell, the cells whose centres fall within a
+great-circle distance of its centre, as an
+[a5_covering](https://belian-earth.github.io/a5R/reference/a5_covering.md).
 
 ## Usage
 
@@ -13,9 +14,8 @@ a5_spherical_cap(cell, radius)
 
 - cell:
 
-  A single
-  [a5_cell](https://belian-earth.github.io/a5R/reference/a5_cell.md)
-  value.
+  An [a5_cell](https://belian-earth.github.io/a5R/reference/a5_cell.md)
+  vector of centre cells.
 
 - radius:
 
@@ -23,9 +23,12 @@ a5_spherical_cap(cell, radius)
 
 ## Value
 
-A compacted
-[a5_cell](https://belian-earth.github.io/a5R/reference/a5_cell.md)
-vector.
+An
+[a5_covering](https://belian-earth.github.io/a5R/reference/a5_covering.md)
+vector the same length as `cell`, at the resolution of each centre cell.
+`NA` where `cell` is `NA`. Use
+[`a5_uncompact()`](https://belian-earth.github.io/a5R/reference/a5_compaction.md)
+for the cells.
 
 ## See also
 
@@ -36,7 +39,11 @@ for hop-based selection.
 
 ``` r
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 8)
-a5_spherical_cap(cell, radius = 1000)
+cap <- a5_spherical_cap(cell, radius = 1000)
+cap
+#> <a5_covering[1]>
+#> [1] res 8: 1 cell (1 stored)
+a5_uncompact(cap)
 #> <a5_cell[1]>
-#> [1] 6344b80000000000
+#> [1] 63bb980000000000
 ```
