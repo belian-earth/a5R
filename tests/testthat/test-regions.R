@@ -393,6 +393,17 @@ test_that("polygon smaller than a single cell gives an empty covering", {
 
 # -- input validation: polygon -------------------------------------------------
 
+test_that("polygon matrix and data.frame input must have vertices", {
+  expect_error(
+    a5_polygon_to_cells(matrix(numeric(), ncol = 2), resolution = 8),
+    "no polygon rings"
+  )
+  expect_error(
+    a5_polygon_to_cells(data.frame(lon = numeric(), lat = numeric()), resolution = 8),
+    "no polygon rings"
+  )
+})
+
 test_that("polygon matrix input must have exactly 2 columns", {
   expect_error(
     a5_polygon_to_cells(matrix(0, nrow = 4, ncol = 3), resolution = 8),

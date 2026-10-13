@@ -34,6 +34,13 @@ test_that("format shows resolution, cells and stored cells", {
   expect_snapshot(print(disks))
 })
 
+test_that("coverings are refused where cells are expected", {
+  expect_error(as_a5_cell(disks), "Use `a5_uncompact\\(\\)`")
+  expect_error(a5_cell_to_boundary(disks), class = "rlang_error")
+  err <- tryCatch(a5_cell_to_boundary(disks), error = identity)
+  expect_identical(deparse(err$call[[1]]), "a5_cell_to_boundary")
+})
+
 test_that("coverings work as tibble columns", {
   skip_if_not_installed("tibble")
   df <- tibble::tibble(cell = cells, disk = disks)
@@ -50,6 +57,7 @@ test_that("as_a5_covering builds coverings from cells and cell lists", {
   expect_identical(as_a5_covering(unclass(lst)), disks)
   expect_identical(a5_covering_resolution(as_a5_covering(lst, resolution = 9)), rep(9L, 3))
   expect_error(as_a5_covering(1:3), "Can't convert")
+  expect_error(as_a5_covering(list(1:3)), "list of .*a5_cell.* vectors or of raw vectors")
 })
 
 test_that("as_a5_covering normalises raw coverings from other libraries", {
