@@ -116,6 +116,19 @@
   [`vignette("spatial-hierarchy")`](https://belian-earth.github.io/a5R/dev/articles/spatial-hierarchy.md)
   is rewritten for supercells and subcells.
 
+- [`a5_cell_to_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_from_arrow.md),
+  [`a5_cell_from_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_from_arrow.md),
+  [`a5_covering_to_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_from_arrow.md)
+  and
+  [`a5_covering_from_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_from_arrow.md)
+  run in Rust and pass one contiguous `uint64` buffer through the Arrow
+  C data interface, instead of building an R object per cell. On 10
+  million cells, writing to Arrow is about 90 times faster and reading
+  about 40 times faster.
+  [`a5_covering_from_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_from_arrow.md)
+  now refuses a covering that holds a null cell; it used to drop the
+  null silently.
+
 - [`a5_cell_child()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_child.md)
   and
   [`a5_cell_children_range()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_children_range.md)
