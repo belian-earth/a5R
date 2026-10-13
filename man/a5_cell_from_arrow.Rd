@@ -26,11 +26,11 @@ integers exactly up to 2^53, while A5 cell IDs span the full
 0--2^64 range).
 }
 \details{
-Internally these use Arrow's zero-copy \code{View()} to reinterpret
-\code{uint64} bytes as \code{fixed_size_binary(8)}, then convert to/from the
-raw-byte representation used by \link{a5_cell}. The resulting Arrow
-arrays can be written directly to Parquet and read correctly by
-DuckDB, Python, and other Arrow-compatible tools.
+The conversion runs in Rust and passes one contiguous \code{uint64} buffer
+through the Arrow C data interface, so no value is ever converted to
+\code{double}. NA cells are null elements. The resulting Arrow arrays can be
+written directly to Parquet and read correctly by DuckDB, Python, and
+other Arrow-compatible tools.
 }
 \examples{
 \dontshow{if (requireNamespace("arrow", quietly = TRUE)) withAutoprint(\{ # examplesIf}
