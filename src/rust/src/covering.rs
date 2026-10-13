@@ -301,6 +301,58 @@ fn a5_covering_summary_rs(x: List) -> List {
     list!(resolution = resolution, count = count, stored = stored)
 }
 
+/// Digits of `n` in groups of three, separated by commas.
+fn group_digits(n: u64) -> String {
+    let digits = n.to_string();
+    let mut out = String::with_capacity(digits.len() + digits.len() / 3);
+    for (i, c) in digits.chars().enumerate() {
+        if i > 0 && (digits.len() - i) % 3 == 0 {
+            out.push(',');
+        }
+        out.push(c);
+    }
+    out
+}
+
+/// One line per covering for `format()`: its resolution, the exact number
+/// of cells it stands for and the number it stores.
+///
+/// @param x List of coverings.
+/// @return Character vector, NA for a missing covering.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn a5_covering_format_rs(x: List) -> Strings {
+    let results = map_coverings(&x, |values| {
+        let resolution = a5::covering_resolution(values);
+        let stored = values.iter().filter(|&&v| !a5::is_compaction_marker(v)).count();
+        let count = match a5::count(values) {
+            Ok(c) => c,
+            Err(_) => return "invalid covering".to_string(),
+        };
+        match (resolution, count) {
+            (-1, 0) => "empty".to_string(),
+            (-1, _) => "world".to_string(),
+            (r, 0) => format!("res {}: empty", r),
+            (r, c) => format!(
+                "res {}: {} {} ({} stored)",
+                r,
+                group_digits(c),
+                if c == 1 { "cell" } else { "cells" },
+                group_digits(stored as u64)
+            ),
+        }
+    });
+    let mut out = Strings::new(results.len());
+    for (i, r) in results.into_iter().enumerate() {
+        match r {
+            Some(text) => out.set_elt(i, Rstr::from(text)),
+            None => out.set_elt(i, Rstr::na()),
+        }
+    }
+    out
+}
+
 /// Structural validity of every covering.
 ///
 /// @param x List of coverings.
@@ -541,4 +593,5 @@ extendr_module! {
     fn a5_uncompact_rs;
     fn a5_covering_summary_rs;
     fn a5_is_valid_covering_rs;
+    fn a5_covering_format_rs;
 }

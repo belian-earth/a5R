@@ -153,17 +153,7 @@ check_optional_resolution <- function(resolution, call = rlang::caller_env()) {
 
 #' @export
 format.a5_covering <- function(x, ...) {
-  s <- a5_covering_summary_rs(x)
-  count <- format(s$count, big.mark = ",", scientific = FALSE, trim = TRUE)
-  stored <- format(s$stored, big.mark = ",", trim = TRUE)
-  out <- sprintf(
-    "res %d: %s %s (%s stored)",
-    s$resolution, count, ifelse(s$count == 1, "cell", "cells"), stored
-  )
-  out[s$count %in% 0] <- sprintf("res %d: empty", s$resolution[s$count %in% 0])
-  out[s$resolution %in% -1L] <- ifelse(s$count[s$resolution %in% -1L] %in% 0, "empty", "world")
-  out[is.na(s$resolution)] <- NA_character_
-  out
+  a5_covering_format_rs(x)
 }
 
 #' @export

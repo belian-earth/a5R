@@ -385,4 +385,13 @@ a5_covering_summary_rs <- function(x) .Call(wrap__a5_covering_summary_rs, x)
 #' @keywords internal
 a5_is_valid_covering_rs <- function(x) .Call(wrap__a5_is_valid_covering_rs, x)
 
+#' One line per covering for `format()`: its resolution, the exact number
+#' of cells it stands for and the number it stores.
+#'
+#' @param x List of coverings.
+#' @return Character vector, NA for a missing covering.
+#' @noRd
+#' @keywords internal
+a5_covering_format_rs <- function(x) .Call(wrap__a5_covering_format_rs, x)
+
 
