@@ -77,8 +77,32 @@ circle <- function(cell, radius) {
   )))
 }
 
-note <- function(text) {
-  mtext(text, side = 1, line = -0.6, cex = 0.7, col = pal$muted)
+# Stored cells shaded by how much coarser they are than the covering.
+stored_cols <- ramp[c(6, 4, 2, 1)]
+stored_fill <- function(x) {
+  s <- stored_cells(x)
+  if (length(s) == 0) return(invisible())
+  gap <- pmin(a5_covering_resolution(x) - a5_get_resolution(s), 3)
+  fill(a5_cell_to_boundary(s), paste0(stored_cols[gap + 1], "c0"), border = pal$ink, lwd = 0.5)
+}
+stored_legend <- function(res, where = "left") {
+  plot.new()
+  legend(where, bty = "n", cex = 0.75, fill = paste0(stored_cols, "c0"), border = pal$ink,
+         text.col = pal$ink,
+         legend = c(paste("res", res - 0:2), paste0("res \u2264 ", res - 3)),
+         title = "Stored at", title.adj = 0)
+}
+
+# Two rows (cells, then stored cells) of n panels, plus a legend column.
+two_rows <- function(n, legend_column = TRUE) {
+  m <- matrix(seq_len(2 * n), 2, byrow = TRUE)
+  if (legend_column) m <- cbind(m, 2 * n + 1)
+  layout(m, widths = c(rep(1, n), if (legend_column) 0.45))
+  par(mar = c(0.2, 0.2, 1.6, 0.2), oma = c(0, 1.2, 0, 0), xpd = NA, cex = 1)
+}
+row_labels <- function() {
+  mtext("cells", side = 2, outer = TRUE, at = 0.75, cex = 0.75, col = pal$muted)
+  mtext("stored", side = 2, outer = TRUE, at = 0.25, cex = 0.75, col = pal$muted)
 }
 ```
 
@@ -101,16 +125,13 @@ cap
 
 ```{r what-plot, echo = FALSE, fig.height = 2.8}
 stored <- stored_cells(cap)
-res <- a5_get_resolution(stored)
 layout(matrix(1:3, 1), widths = c(1, 1, 0.4))
 par(mar = c(0.2, 0.2, 1.6, 0.2), xpd = NA, cex = 1)
 frame(cells_of(cap), main = sprintf("Stands for: %d cells at resolution 11", a5_count(cap)))
 fill(cells_of(cap), pal$a)
 frame(cells_of(cap), main = sprintf("Stores: %d cells at mixed resolutions", length(stored)))
-fill(a5_cell_to_boundary(stored), paste0(ramp[c(2, 4, 6)][res - 8], "b0"), border = pal$ink)
-plot.new()
-legend("left", bty = "n", cex = 0.75, fill = ramp[c(6, 4, 2)], border = NA,
-       legend = paste("res", 11:9), text.col = pal$ink)
+stored_fill(cap)
+stored_legend(11)
 ```
 
 The stored cells are parents in the A5 index, whose outlines do not nest:
@@ -118,7 +139,8 @@ drawn directly they overlap their neighbours and leave gaps. Everything that
 combines, tests or measures coverings works on the stored cells without
 expanding them, which keeps it fast for coverings that stand for millions of
 cells. To draw a covering or join it to data keyed by cell, expand it with
-`a5_uncompact()`, as every figure here does.
+`a5_uncompact()`, as the figures here do. Where it helps, a second row
+shows what the same covering stores.
 
 ## Building coverings
 
@@ -137,15 +159,23 @@ overlapping <- a5_polygon_to_cells(alleghany, resolution = 11, containment = "ov
 c(centre, overlapping)
 ```
 
-```{r polygons-plot, echo = FALSE, fig.height = 2.6}
+```{r polygons-plot, echo = FALSE, fig.height = 4.6}
 county <- wk::as_wkb(st_geometry(alleghany))
-panels(2)
-frame(cells_of(overlapping), main = 'containment = "centre"')
-fill(cells_of(centre), pal$a)
-outline(county)
-frame(cells_of(overlapping), main = 'containment = "overlapping"')
-fill(cells_of(overlapping), pal$a)
-outline(county)
+extent <- list(cells_of(overlapping), a5_cell_to_boundary(stored_cells(overlapping)))
+two_rows(2)
+for (x in list(centre, overlapping)) {
+  do.call(frame, c(extent, main = sprintf('containment = "%s"',
+    if (identical(x, centre)) "centre" else "overlapping")))
+  fill(cells_of(x), pal$a)
+  outline(county)
+}
+for (x in list(centre, overlapping)) {
+  do.call(frame, c(extent, main = sprintf("%d stored", length(stored_cells(x)))))
+  stored_fill(x)
+  outline(county)
+}
+stored_legend(11)
+row_labels()
 ```
 
 The functions that start from a cell return one covering per centre cell:
@@ -160,18 +190,31 @@ coarse <- a5_cell_to_parent(raleigh, resolution = 9)
 subcells <- a5_cell_to_subcell(coarse, resolution = 11)
 ```
 
-```{r around-plot, echo = FALSE}
-panels(3)
-frame(cells_of(disk), main = "a5_grid_disk(k = 3)")
+```{r around-plot, echo = FALSE, fig.height = 4.4}
+ring <- circle(raleigh, 8000)
+ring_xy <- wk::wk_coords(ring)[, c("x", "y")]
+ext <- function(x, ...) list(cells_of(x), a5_cell_to_boundary(stored_cells(x)), ...)
+two_rows(3)
+do.call(frame, c(ext(disk), main = "a5_grid_disk(k = 3)"))
 fill(cells_of(disk), pal$a)
 fill(cells_of(raleigh), pal$ink)
-frame(cells_of(cap), circle(raleigh, 8000), main = "a5_spherical_cap(8 km)")
+do.call(frame, c(ext(cap, ring), main = "a5_spherical_cap(8 km)"))
 fill(cells_of(cap), pal$a)
-lines(wk::wk_coords(circle(raleigh, 8000))[, c("x", "y")], col = pal$ink, lwd = 1.2)
+lines(ring_xy, col = pal$ink, lwd = 1.2)
 fill(cells_of(raleigh), pal$ink)
-frame(cells_of(subcells), cells_of(coarse), main = "a5_cell_to_subcell(res 9 to 11)")
+do.call(frame, c(ext(subcells, cells_of(coarse)), main = "a5_cell_to_subcell(res 9 to 11)"))
 fill(cells_of(subcells), pal$a)
 outline(cells_of(coarse), lwd = 1.6)
+do.call(frame, c(ext(disk), main = sprintf("%d stored", length(stored_cells(disk)))))
+stored_fill(disk)
+do.call(frame, c(ext(cap, ring), main = sprintf("%d stored", length(stored_cells(cap)))))
+stored_fill(cap)
+lines(ring_xy, col = pal$ink, lwd = 1.2)
+do.call(frame, c(ext(subcells, cells_of(coarse)), main = sprintf("%d stored", length(stored_cells(subcells)))))
+stored_fill(subcells)
+outline(cells_of(coarse), lwd = 1.6)
+stored_legend(11)
+row_labels()
 ```
 
 `a5_compact()` turns any set of cells into a covering, and
@@ -221,22 +264,33 @@ a5_intersect(a, b)
 a5_difference(a, b)
 ```
 
-```{r combine-plot, echo = FALSE, fig.height = 2}
+```{r combine-plot, echo = FALSE, fig.height = 3.8}
 both <- cells_of(a5_union(a, b))
-panels(4)
-frame(both, main = "a and b")
+results <- list(a5_union(a, b), a5_intersect(a, b), a5_difference(a, b))
+extent <- c(list(both), lapply(results, function(x) a5_cell_to_boundary(stored_cells(x))))
+two_rows(4, legend_column = FALSE)
+do.call(frame, c(extent, main = "a and b"))
 fill(cells_of(a), paste0(pal$a, "b0"))
 fill(cells_of(b), paste0(pal$b, "b0"))
 centres <- a5_cell_to_lonlat(a5_lonlat_to_cell(c(-78.79, -78.51), 35.78, 11), as_dataframe = TRUE)
 text(centres$lon, centres$lat, c("a", "b"), col = "white", font = 2, cex = 1.2)
-for (step in list(list(a5_union(a, b), "a5_union(a, b)"),
-                  list(a5_intersect(a, b), "a5_intersect(a, b)"),
-                  list(a5_difference(a, b), "a5_difference(a, b)"))) {
-  frame(both, main = step[[2]])
+labels <- c("a5_union(a, b)", "a5_intersect(a, b)", "a5_difference(a, b)")
+for (i in 1:3) {
+  do.call(frame, c(extent, main = labels[i]))
   fill(both, pal$base)
-  fill(cells_of(step[[1]]), pal$result)
+  fill(cells_of(results[[i]]), pal$result)
 }
+stored_legend(11, where = "center")
+for (i in 1:3) {
+  do.call(frame, c(extent, main = sprintf("%d stored", length(stored_cells(results[[i]])))))
+  fill(both, pal$base)
+  stored_fill(results[[i]])
+}
+row_labels()
 ```
+
+The result of each operation is compacted again, so a covering that comes
+out of a union stores its merged interior as coarser cells.
 
 They work element by element, recycling a length-one argument, so one call
 intersects every county with a single cap. With one argument, `a5_union()`
