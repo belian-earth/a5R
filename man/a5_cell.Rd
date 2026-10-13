@@ -26,10 +26,22 @@ a record with eight raw-byte fields (\code{b1}--\code{b8}) representing the
 little-endian bytes of the u64 cell ID. This avoids the precision
 loss of floating-point storage and keeps memory compact.
 }
+\details{
+\code{a5_cell()} accepts any 16-digit hex string without checking that it
+encodes an A5 cell, so an \code{a5_cell} vector can hold values that are not
+cells. Check ids from outside sources, such as a file or a database, with
+\code{\link[=a5_is_valid_cell]{a5_is_valid_cell()}}.
+}
 \examples{
 cells <- a5_cell(c("0800000000000006", "0800000000000016"))
 cells
+a5_is_valid_cell(cells)
+
+# a5_cell() does not validate: this value is not a cell
+a5_is_valid_cell(a5_cell("fd00000000000000"))
 }
 \seealso{
-\code{\link[=a5_is_valid]{a5_is_valid()}} to check that values are A5 cells.
+\code{\link[=a5_is_valid_cell]{a5_is_valid_cell()}} to check that values are A5 cells, and
+\code{\link[=a5_is_valid]{a5_is_valid()}} for any a5R object; \code{\link[=a5_u64_to_hex]{a5_u64_to_hex()}} to convert back to
+hex strings; \code{\link[=a5_migrate]{a5_migrate()}} for ids written by a5R before 1.0.
 }

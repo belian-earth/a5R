@@ -6,8 +6,8 @@
 #'
 #' @section Cell type:
 #' - [a5_cell()] --- construct cell ID vectors
-#' - [is_a5_cell()][a5_cell] / [a5_is_valid()] --- type test and
-#'   validation
+#' - [is_a5_cell()][a5_cell] --- type test
+#' - [a5_is_valid_cell()][a5_is_valid] / [a5_is_valid()] --- validation
 #' - [a5_migrate()] --- convert ids from a5R before 1.0
 #' - [a5_u64_to_hex()] / [a5_hex_to_u64()][a5_u64_to_hex] --- hex string
 #'   conversion

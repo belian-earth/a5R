@@ -5,16 +5,27 @@
 #' little-endian bytes of the u64 cell ID. This avoids the precision
 #' loss of floating-point storage and keeps memory compact.
 #'
+#' `a5_cell()` accepts any 16-digit hex string without checking that it
+#' encodes an A5 cell, so an `a5_cell` vector can hold values that are not
+#' cells. Check ids from outside sources, such as a file or a database, with
+#' [a5_is_valid_cell()].
+#'
 #' @param x A character vector of hex-encoded A5 cell IDs, or an object
 #'   coercible to one.
 #' @returns An `a5_cell` vector (`a5_cell`, `as_a5_cell`), or a logical
 #'   scalar (`is_a5_cell`).
-#' @seealso [a5_is_valid()] to check that values are A5 cells.
+#' @seealso [a5_is_valid_cell()] to check that values are A5 cells, and
+#'   [a5_is_valid()] for any a5R object; [a5_u64_to_hex()] to convert back to
+#'   hex strings; [a5_migrate()] for ids written by a5R before 1.0.
 #'
 #' @export
 #' @examples
 #' cells <- a5_cell(c("0800000000000006", "0800000000000016"))
 #' cells
+#' a5_is_valid_cell(cells)
+#'
+#' # a5_cell() does not validate: this value is not a cell
+#' a5_is_valid_cell(a5_cell("fd00000000000000"))
 a5_cell <- function(x = character()) {
   x <- vctrs::vec_cast(x, character())
   check_hex16(x)
