@@ -369,28 +369,6 @@ fn a5_is_valid_covering_rs(x: List) -> Logicals {
     out
 }
 
-/// Coverings as lists of raw(8) blobs, for Arrow `list<fixed_size_binary(8)>`.
-///
-/// @param x List of coverings.
-/// @return A list with, per covering, a list of raw(8) values or NULL.
-/// @noRd
-/// @keywords internal
-#[extendr]
-fn a5_covering_to_blobs_rs(x: List) -> List {
-    let elements: Vec<Robj> = read_coverings(&x)
-        .into_iter()
-        .map(|c| match c {
-            Some(values) => {
-                let blobs: Vec<Robj> =
-                    values.iter().map(|v| Robj::from(v.to_le_bytes().as_slice())).collect();
-                List::from_values(blobs).into()
-            }
-            None => ().into(),
-        })
-        .collect();
-    List::from_values(elements)
-}
-
 // --- Set operations, predicates and measures ---
 
 /// An empty covering with no recorded resolution (`compact` of no cells)
@@ -586,7 +564,6 @@ extendr_module! {
     fn a5_covering_overlaps_rs;
     fn a5_covering_contains_rs;
     fn a5_covering_area_rs;
-    fn a5_covering_to_blobs_rs;
     fn a5_compact_rs;
     fn a5_compact_each_rs;
     fn a5_covering_normalise_rs;

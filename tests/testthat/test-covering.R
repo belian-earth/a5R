@@ -114,3 +114,24 @@ test_that("coverings round-trip through Arrow list<uint64>", {
   expect_identical(utils::tail(unclass(disks)[[1]], 8), marker_8)
   expect_error(a5_covering_from_arrow(a5_cell_to_arrow(cells)), "list<uint64>")
 })
+
+test_that("sliced and empty list<uint64> arrays convert", {
+  skip_if_not_installed("arrow")
+  x <- c(disks, a5_grid_disk(a5_cell(NA), k = 1), a5_compact(a5_cell(), resolution = 4))
+  arr <- a5_covering_to_arrow(x)
+  expect_identical(a5_covering_from_arrow(arr$Slice(1L, 3L)), x[2:4])
+  # list offsets and values allocated by Arrow itself
+  copied <- arrow::concat_arrays(arr$Slice(2L), arr$Slice(0L, 2L))
+  expect_identical(a5_covering_from_arrow(copied), x[c(3:5, 1:2)])
+  empty <- a5_covering_to_arrow(new_a5_covering())
+  expect_identical(empty$length(), 0L)
+  expect_identical(a5_covering_from_arrow(empty), new_a5_covering())
+  no_chunks <- arrow::chunked_array(type = arrow::list_of(arrow::uint64()))
+  expect_identical(a5_covering_from_arrow(no_chunks), new_a5_covering())
+})
+
+test_that("a list<uint64> element holding a null cell is an error", {
+  skip_if_not_installed("arrow")
+  arr <- arrow::Array$create(list(c(1, 2), c(3, NA)), type = arrow::list_of(arrow::uint64()))
+  expect_error(a5_covering_from_arrow(arr), "covering 2 contains a null cell")
+})

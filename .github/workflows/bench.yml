@@ -42,7 +42,7 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           dependencies: '"hard"'
-          extra-packages: any::bench, any::jsonlite
+          extra-packages: any::arrow, any::bench, any::jsonlite
 
       - name: Install package (PR)
         run: R CMD INSTALL --no-docs --no-multiarch .

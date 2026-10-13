@@ -70,6 +70,13 @@
   migrating data written before 1.0, and `vignette("spatial-hierarchy")` is
   rewritten for supercells and subcells.
 
+* `a5_cell_to_arrow()`, `a5_cell_from_arrow()`, `a5_covering_to_arrow()` and
+  `a5_covering_from_arrow()` run in Rust and pass one contiguous `uint64`
+  buffer through the Arrow C data interface, instead of building an R object
+  per cell. On 10 million cells, writing to Arrow is about 90 times faster
+  and reading about 40 times faster. `a5_covering_from_arrow()` now refuses
+  a covering that holds a null cell; it used to drop the null silently.
+
 * `a5_cell_child()` and `a5_cell_children_range()` follow the new order of
   `a5_cell_to_children()` (children are now in ascending id order).
 * `a5_get_num_cells()` is correct at high resolutions (a5 0.10.1).

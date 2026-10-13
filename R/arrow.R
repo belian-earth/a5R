@@ -13,11 +13,11 @@
 #'   `a5_cell_to_arrow()` returns an Arrow `Array` of type `uint64`.
 #'
 #' @details
-#' Internally these use Arrow's zero-copy `View()` to reinterpret
-#' `uint64` bytes as `fixed_size_binary(8)`, then convert to/from the
-#' raw-byte representation used by [a5_cell]. The resulting Arrow
-#' arrays can be written directly to Parquet and read correctly by
-#' DuckDB, Python, and other Arrow-compatible tools.
+#' The conversion runs in Rust and passes one contiguous `uint64` buffer
+#' through the Arrow C data interface, so no value is ever converted to
+#' `double`. NA cells are null elements. The resulting Arrow arrays can be
+#' written directly to Parquet and read correctly by DuckDB, Python, and
+#' other Arrow-compatible tools.
 #'
 #' @seealso [a5_u64_to_hex()] for converting to hex strings instead.
 #'
@@ -38,15 +38,8 @@ a5_cell_from_arrow <- function(x) {
     ))
   }
 
-  # Handle ChunkedArray by processing each chunk
-  if (inherits(x, "ChunkedArray")) {
-    parts <- lapply(seq_len(x$num_chunks) - 1L, function(i) {
-      chunk_to_a5(x$chunk(i))
-    })
-    return(do.call(vctrs::vec_c, parts))
-  }
-
-  chunk_to_a5(x)
+  slots <- arrow_slots(x)
+  cells_from_rs(a5_cell_from_arrow_rs(slots$holder))
 }
 
 #' @rdname a5_cell_from_arrow
@@ -59,19 +52,20 @@ a5_cell_to_arrow <- function(x) {
   rlang::check_installed("arrow", reason = "to convert a5_cell to Arrow arrays")
   x <- as_a5_cell(x)
 
-  raw_list <- raw8_to_blobs_rs(cell_data(x))
-
-  bin_arr <- arrow::Array$create(raw_list, type = arrow::fixed_size_binary(8L))
-  bin_arr$View(arrow::uint64())
+  slots <- a5_cell_to_arrow_rs(cell_data(x))
+  arrow::Array$import_from_c(slots$array, slots$schema)
 }
 
-#' Convert a single Arrow uint64 chunk to a5_cell
+#' Export every chunk of an Arrow array into Rust-owned C data interface
+#' slots, ready for the `*_from_arrow_rs()` readers.
 #' @noRd
-chunk_to_a5 <- function(chunk) {
-  fsb <- chunk$View(arrow::fixed_size_binary(8L))
-  raw_list <- fsb$as_vector()
-  rs <- blobs_to_raw8_rs(raw_list)
-  cells_from_rs(rs)
+arrow_slots <- function(x) {
+  chunks <- if (inherits(x, "ChunkedArray")) x$chunks else list(x)
+  slots <- arrow_slots_rs(length(chunks))
+  for (i in seq_along(chunks)) {
+    chunks[[i]]$export_to_c(slots$array[[i]], slots$schema[[i]])
+  }
+  slots
 }
 
 #' Convert between a5_covering and Arrow list<uint64> arrays
@@ -111,13 +105,9 @@ a5_covering_from_arrow <- function(x) {
       "x" = "Got {.code {type$ToString()}}."
     ))
   }
-  if (inherits(x, "ChunkedArray")) {
-    parts <- lapply(seq_len(x$num_chunks) - 1L, function(i) {
-      chunk_to_covering(x$chunk(i))
-    })
-    return(do.call(vctrs::vec_c, c(list(new_a5_covering()), parts)))
-  }
-  chunk_to_covering(x)
+  slots <- arrow_slots(x)
+  raws <- from_caller(a5_covering_from_arrow_rs(slots$holder), call = rlang::current_env())
+  as_a5_covering(raws)
 }
 
 #' @rdname a5_covering_from_arrow
@@ -125,17 +115,6 @@ a5_covering_from_arrow <- function(x) {
 a5_covering_to_arrow <- function(x) {
   rlang::check_installed("arrow", reason = "to convert a5_covering to Arrow arrays")
   x <- as_a5_covering(x)
-  blobs <- a5_covering_to_blobs_rs(x)
-  arr <- arrow::Array$create(blobs, type = arrow::list_of(arrow::fixed_size_binary(8L)))
-  arr$View(arrow::list_of(arrow::uint64()))
-}
-
-#' Convert a single Arrow list<uint64> chunk to a5_covering
-#' @noRd
-chunk_to_covering <- function(chunk) {
-  fsb <- chunk$View(arrow::list_of(arrow::fixed_size_binary(8L)))
-  raws <- lapply(fsb$as_vector(), function(el) {
-    if (is.null(el)) NULL else as.raw(unlist(unclass(el), use.names = FALSE))
-  })
-  as_a5_covering(raws)
+  slots <- a5_covering_to_arrow_rs(x)
+  arrow::Array$import_from_c(slots$array, slots$schema)
 }

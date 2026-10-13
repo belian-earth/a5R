@@ -27,17 +27,6 @@ raw8_to_hex_rs <- function(cells) .Call(wrap__raw8_to_hex_rs, cells)
 #' @keywords internal
 hex_to_raw8_rs <- function(cells) .Call(wrap__hex_to_raw8_rs, cells)
 
-#' Convert a list of raw(8) blobs (from Arrow) to cell raw bytes.
-#' @noRd
-#' @keywords internal
-blobs_to_raw8_rs <- function(blobs) .Call(wrap__blobs_to_raw8_rs, blobs)
-
-#' Convert cell raw bytes to a list of raw(8) blobs (for Arrow).
-#' NA cells produce NULL elements.
-#' @noRd
-#' @keywords internal
-raw8_to_blobs_rs <- function(cells) .Call(wrap__raw8_to_blobs_rs, cells)
-
 #' Convert longitude/latitude coordinates to A5 cell indices.
 #'
 #' @param lon Numeric vector of longitudes (degrees).
@@ -324,14 +313,6 @@ a5_covering_contains_rs <- function(x, cells) .Call(wrap__a5_covering_contains_r
 #' @keywords internal
 a5_covering_area_rs <- function(x) .Call(wrap__a5_covering_area_rs, x)
 
-#' Coverings as lists of raw(8) blobs, for Arrow `list<fixed_size_binary(8)>`.
-#'
-#' @param x List of coverings.
-#' @return A list with, per covering, a list of raw(8) values or NULL.
-#' @noRd
-#' @keywords internal
-a5_covering_to_blobs_rs <- function(x) .Call(wrap__a5_covering_to_blobs_rs, x)
-
 #' Compact cells into one covering.
 #'
 #' @param cells List with b1..b8 raw vectors. NA cells are skipped.
@@ -398,5 +379,31 @@ a5_is_valid_covering_rs <- function(x) .Call(wrap__a5_is_valid_covering_rs, x)
 #' @noRd
 #' @keywords internal
 a5_covering_format_rs <- function(x) .Call(wrap__a5_covering_format_rs, x)
+
+#' `n` empty slots for the arrow R package to export arrays into.
+#' @noRd
+#' @keywords internal
+arrow_slots_rs <- function(n) .Call(wrap__arrow_slots_rs, n)
+
+#' An a5_cell vector as a uint64 array in a new slot.
+#' @noRd
+#' @keywords internal
+a5_cell_to_arrow_rs <- function(cells) .Call(wrap__a5_cell_to_arrow_rs, cells)
+
+#' The cells of every uint64 array exported into `holder`, concatenated.
+#' @noRd
+#' @keywords internal
+a5_cell_from_arrow_rs <- function(holder) .Call(wrap__a5_cell_from_arrow_rs, holder)
+
+#' An a5_covering vector as a list<uint64> array in a new slot.
+#' @noRd
+#' @keywords internal
+a5_covering_to_arrow_rs <- function(x) .Call(wrap__a5_covering_to_arrow_rs, x)
+
+#' The coverings of every list<uint64> array exported into `holder`, as raw
+#' vectors of their values (NULL for a null element), concatenated.
+#' @noRd
+#' @keywords internal
+a5_covering_from_arrow_rs <- function(holder) .Call(wrap__a5_covering_from_arrow_rs, holder)
 
 

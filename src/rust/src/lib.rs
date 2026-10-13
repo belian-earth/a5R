@@ -10,6 +10,7 @@ mod hierarchy;
 mod traversal;
 mod regions;
 mod covering;
+mod arrow_ffi;
 
 extendr_module! {
     mod a5R;
@@ -23,4 +24,5 @@ extendr_module! {
     use traversal;
     use regions;
     use covering;
+    use arrow_ffi;
 }

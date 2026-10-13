@@ -19,7 +19,7 @@ pub(crate) const NA_SENTINEL: u64 = 0xFC00_0000_0000_0000;
 pub(crate) const B8_MASK: u8 = 0xFC;
 
 #[inline]
-fn encode(id: u64) -> [u8; 8] {
+pub(crate) fn encode(id: u64) -> [u8; 8] {
     let mut b = id.to_le_bytes();
     b[7] ^= B8_MASK;
     b
@@ -94,6 +94,12 @@ pub(crate) fn u64s_to_raw8_list(values: Vec<Option<u64>>) -> List {
             bufs[j][i] = bytes[j];
         }
     }
+    raw8_planes_to_list(bufs)
+}
+
+/// Build the named list(b1 = Raw, ..., b8 = Raw) from eight encoded byte
+/// planes.
+pub(crate) fn raw8_planes_to_list(bufs: [Vec<u8>; 8]) -> List {
     list!(
         b1 = Robj::from(bufs[0].as_slice()),
         b2 = Robj::from(bufs[1].as_slice()),
@@ -295,63 +301,9 @@ fn hex_to_raw8_rs(cells: Strings) -> List {
     u64s_to_raw8_list(values)
 }
 
-/// Convert a list of raw(8) blobs (from Arrow) to cell raw bytes.
-/// @noRd
-/// @keywords internal
-#[extendr]
-fn blobs_to_raw8_rs(blobs: List) -> List {
-    let n = blobs.len();
-    let mut values: Vec<Option<u64>> = Vec::with_capacity(n);
-    for i in 0..n {
-        let robj = blobs.elt(i).unwrap();
-        if robj.is_null() || robj.rtype() != Rtype::Raw {
-            values.push(None);
-        } else if let Some(slice) = robj.as_raw_slice() {
-            if slice.len() == 8 {
-                let id = u64::from_le_bytes(slice[..8].try_into().unwrap());
-                if id == NA_SENTINEL {
-                    values.push(None);
-                } else {
-                    values.push(Some(id));
-                }
-            } else {
-                values.push(None);
-            }
-        } else {
-            values.push(None);
-        }
-    }
-    u64s_to_raw8_list(values)
-}
-
-/// Convert cell raw bytes to a list of raw(8) blobs (for Arrow).
-/// NA cells produce NULL elements.
-/// @noRd
-/// @keywords internal
-#[extendr]
-fn raw8_to_blobs_rs(cells: List) -> List {
-    let cs = CellSlices::from_list(&cells);
-    let n = cs.len;
-    let mut out: Vec<Robj> = Vec::with_capacity(n);
-    for i in 0..n {
-        match cs.get(i) {
-            Some(id) => {
-                let bytes = id.to_le_bytes();
-                out.push(Robj::from(bytes.as_slice()));
-            }
-            None => {
-                out.push(().into());
-            }
-        }
-    }
-    List::from_values(out)
-}
-
 extendr_module! {
     mod cell_raw;
     fn cells_is_na_rs;
     fn raw8_to_hex_rs;
     fn hex_to_raw8_rs;
-    fn blobs_to_raw8_rs;
-    fn raw8_to_blobs_rs;
 }

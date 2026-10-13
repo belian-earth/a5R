@@ -101,3 +101,37 @@ test_that("resolution 29 round-trips through arrow (vectorised)", {
   back <- a5_cell_from_arrow(arr)
   expect_equal(format(back), format(cells))
 })
+
+test_that("sliced arrays with nulls convert at any offset", {
+  skip_if_not_installed("arrow")
+  cells <- a5_lonlat_to_cell(seq(-170, 170, length.out = 20), 10, 12)
+  cells[c(2, 9, 10, 17)] <- NA
+  arr <- a5_cell_to_arrow(cells)
+  expect_identical(arr$null_count, 4L)
+  for (offset in c(1L, 3L, 8L, 9L)) {
+    back <- a5_cell_from_arrow(arr$Slice(offset, 9L))
+    expect_identical(format(back), format(cells[offset + 1:9]))
+  }
+  # buffers allocated by Arrow itself, not by a5R
+  copied <- arrow::concat_arrays(arr$Slice(5L), arr$Slice(0L, 5L))
+  expect_identical(format(a5_cell_from_arrow(copied)), format(cells[c(6:20, 1:5)]))
+})
+
+test_that("empty arrays and chunked arrays convert", {
+  skip_if_not_installed("arrow")
+  arr <- a5_cell_to_arrow(a5_cell())
+  expect_identical(arr$length(), 0L)
+  expect_identical(arr$type$ToString(), "uint64")
+  expect_length(a5_cell_from_arrow(arr), 0L)
+  expect_length(a5_cell_from_arrow(arrow::chunked_array(type = arrow::uint64())), 0L)
+})
+
+test_that("exported arrays outlive the cells they came from", {
+  skip_if_not_installed("arrow")
+  cells <- a5_lonlat_to_cell(c(0, 135), c(0, 0), 10)
+  expected <- format(cells)
+  arr <- a5_cell_to_arrow(cells)
+  rm(cells)
+  gc()
+  expect_identical(format(a5_cell_from_arrow(arr)), expected)
+})
