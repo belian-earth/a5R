@@ -264,15 +264,20 @@ a5_spherical_cap_rs <- function(cells, radius) .Call(wrap__a5_spherical_cap_rs, 
 #' @keywords internal
 a5_polygon_to_cells_rs <- function(lon, lat, offsets, part_id, is_outer, part_feature, n_features, resolution, containment) .Call(wrap__a5_polygon_to_cells_rs, lon, lat, offsets, part_id, is_outer, part_feature, n_features, resolution, containment)
 
-#' Convert one or more linestring waypoint sequences to A5 cells.
+#' Convert linestring features to A5 cells, one ordered path per feature.
 #'
-#' Per-feature `line_string_to_cells` results are concatenated in feature
-#' order with first-seen deduplication, preserving discovery order along
-#' the path.
+#' `lon`, `lat`, `offsets` hold the lines as for polygons; `line_feature`
+#' (length `n_lines`, 1-based) names each line's feature. Lines are traced
+#' in parallel with `line_string_to_cells`; a feature's lines (the parts of
+#' a `MULTILINESTRING`) are concatenated in order with first-seen
+#' deduplication. A feature with no lines has no cells.
 #'
+#' @param simplify If TRUE one flat b1..b8 list, the features' paths
+#'   concatenated (no deduplication across features); else a list of
+#'   a5_cell objects, one per feature.
 #' @noRd
 #' @keywords internal
-a5_linestring_to_cells_rs <- function(lon, lat, offsets, resolution) .Call(wrap__a5_linestring_to_cells_rs, lon, lat, offsets, resolution)
+a5_linestring_to_cells_rs <- function(lon, lat, offsets, line_feature, n_features, resolution, simplify) .Call(wrap__a5_linestring_to_cells_rs, lon, lat, offsets, line_feature, n_features, resolution, simplify)
 
 #' Element-wise union, intersection or difference of two covering lists.
 #'

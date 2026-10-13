@@ -5,7 +5,7 @@ use std::result::Result as StdResult;
 
 use a5::{Containment, PolygonToCellsOptions};
 
-use crate::cell_raw::u64s_to_raw8_list;
+use crate::cell_raw::groups_to_robj;
 use crate::covering::coverings_to_list;
 use crate::threading::{get_num_threads, maybe_par};
 
@@ -146,12 +146,17 @@ fn a5_polygon_to_cells_rs(
     coverings_to_list("polygon_to_cells", results)
 }
 
-/// Convert one or more linestring waypoint sequences to A5 cells.
+/// Convert linestring features to A5 cells, one ordered path per feature.
 ///
-/// Per-feature `line_string_to_cells` results are concatenated in feature
-/// order with first-seen deduplication, preserving discovery order along
-/// the path.
+/// `lon`, `lat`, `offsets` hold the lines as for polygons; `line_feature`
+/// (length `n_lines`, 1-based) names each line's feature. Lines are traced
+/// in parallel with `line_string_to_cells`; a feature's lines (the parts of
+/// a `MULTILINESTRING`) are concatenated in order with first-seen
+/// deduplication. A feature with no lines has no cells.
 ///
+/// @param simplify If TRUE one flat b1..b8 list, the features' paths
+///   concatenated (no deduplication across features); else a list of
+///   a5_cell objects, one per feature.
 /// @noRd
 /// @keywords internal
 #[extendr]
@@ -159,45 +164,36 @@ fn a5_linestring_to_cells_rs(
     lon: Doubles,
     lat: Doubles,
     offsets: Integers,
+    line_feature: Integers,
+    n_features: i32,
     resolution: i32,
-) -> List {
-    let features = split_rings(&lon, &lat, &offsets);
+    simplify: bool,
+) -> Robj {
+    let lines = split_rings(&lon, &lat, &offsets);
+    let line_feature: Vec<i32> = line_feature.iter().map(|f| f.inner()).collect();
 
-    if features.is_empty() {
-        return u64s_to_raw8_list(vec![]);
-    }
+    let trace = |w: &Vec<a5::LonLat>| a5::line_string_to_cells(w, resolution);
+    let per_line: Vec<StdResult<Vec<u64>, String>> = if get_num_threads() <= 1 || lines.len() == 1 {
+        lines.iter().map(trace).collect()
+    } else {
+        maybe_par(|| lines.par_iter().map(trace).collect())
+    };
 
-    let per_feature: Vec<StdResult<Vec<u64>, String>> =
-        if get_num_threads() <= 1 || features.len() == 1 {
-            features
-                .iter()
-                .map(|w| a5::line_string_to_cells(w, resolution))
-                .collect()
-        } else {
-            maybe_par(|| {
-                features
-                    .par_iter()
-                    .map(|w| a5::line_string_to_cells(w, resolution))
-                    .collect()
-            })
-        };
-
-    let mut seen: HashSet<u64> = HashSet::new();
-    let mut result: Vec<u64> = Vec::new();
-    for r in per_feature {
+    let mut features: Vec<Vec<u64>> = vec![Vec::new(); n_features.max(0) as usize];
+    let mut seen: Vec<HashSet<u64>> = vec![HashSet::new(); features.len()];
+    for (r, &f) in per_line.into_iter().zip(&line_feature) {
         let cells = match r {
             Ok(c) => c,
             Err(e) => throw_r_error(format!("line_string_to_cells failed: {}", e)),
         };
+        let f = (f - 1) as usize;
         for c in cells {
-            if seen.insert(c) {
-                result.push(c);
+            if seen[f].insert(c) {
+                features[f].push(c);
             }
         }
     }
-
-    let out: Vec<Option<u64>> = result.into_iter().map(Some).collect();
-    u64s_to_raw8_list(out)
+    groups_to_robj(features, simplify)
 }
 
 extendr_module! {

@@ -4,7 +4,7 @@
 \alias{a5_linestring_to_cells}
 \title{Cells traced by a great-circle linestring}
 \usage{
-a5_linestring_to_cells(x, resolution)
+a5_linestring_to_cells(x, resolution, simplify = TRUE)
 }
 \arguments{
 \item{x}{A linestring-like geometry. One of:
@@ -17,22 +17,33 @@ more \code{LINESTRING} / \code{MULTILINESTRING} features.
 }}
 
 \item{resolution}{Integer scalar target resolution (0--30).}
+
+\item{simplify}{Logical scalar. If \code{TRUE} (default), return one flat
+\link{a5_cell} vector with the paths of every feature concatenated in feature
+order; a cell crossed by several features appears once per feature. If
+\code{FALSE}, return an \link{a5_cell_list} with one path per feature, suitable for
+a list column.}
 }
 \value{
-An \link{a5_cell} vector at \code{resolution}.
+An \link{a5_cell} vector at \code{resolution}, or an \link{a5_cell_list} when
+\code{simplify = FALSE}. A missing or empty geometry contributes no cells (an
+empty element in the list form).
 }
 \description{
-Returns the A5 cells at \code{resolution} whose pentagons are intersected by
-the great-circle polyline connecting the supplied waypoints. Output is
-uncompacted, in discovery order along the path, with duplicates removed
-first-seen. Multi-feature inputs (a \code{MULTILINESTRING} or an \code{sfc} of
-multiple linestrings) are handled natively: per-feature cell sequences
-are concatenated in feature order with first-seen deduplication.
+Returns, for each linestring feature, the A5 cells at \code{resolution} whose
+pentagons the great-circle path through its waypoints crosses. Each
+path's cells are uncompacted and in order along it, with duplicates
+removed first-seen; a \code{MULTILINESTRING} feature's parts are traced in
+order into one path.
 }
 \details{
 Consecutive waypoints are connected by great-circle arcs (not rhumb
 lines or planar segments), so antimeridian-crossing paths work
 transparently when written in unwrapped lon/lat.
+
+A path is an ordered sequence, so the result is a vector of cells rather
+than an \link{a5_covering}; use \code{\link[=as_a5_covering]{as_a5_covering()}} to treat the cells a path
+crosses as a set.
 
 Matrix and \code{data.frame} inputs are treated as a single linestring;
 for multi-feature data, pass an \code{sf}, \code{sfc}, wk, or \code{SpatVector}
@@ -41,7 +52,15 @@ geometry instead.
 \examples{
 line <- wk::wkt("LINESTRING (2.35 48.86, -0.13 51.51)")
 cells <- a5_linestring_to_cells(line, resolution = 6)
-length(cells)
+cells
+
+# One path per feature
+lines <- wk::wkt(c(
+  "LINESTRING (2.35 48.86, -0.13 51.51)",
+  "LINESTRING (2.35 48.86, 4.83 45.76)"
+))
+paths <- a5_linestring_to_cells(lines, resolution = 6, simplify = FALSE)
+lengths(paths)
 }
 \seealso{
 \code{\link[=a5_polygon_to_cells]{a5_polygon_to_cells()}}, \code{\link[=a5_grid_disk]{a5_grid_disk()}}.

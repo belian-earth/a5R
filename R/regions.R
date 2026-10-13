@@ -102,12 +102,11 @@ a5_polygon_to_cells <- function(x, resolution,
 
 #' Cells traced by a great-circle linestring
 #'
-#' Returns the A5 cells at `resolution` whose pentagons are intersected by
-#' the great-circle polyline connecting the supplied waypoints. Output is
-#' uncompacted, in discovery order along the path, with duplicates removed
-#' first-seen. Multi-feature inputs (a `MULTILINESTRING` or an `sfc` of
-#' multiple linestrings) are handled natively: per-feature cell sequences
-#' are concatenated in feature order with first-seen deduplication.
+#' Returns, for each linestring feature, the A5 cells at `resolution` whose
+#' pentagons the great-circle path through its waypoints crosses. Each
+#' path's cells are uncompacted and in order along it, with duplicates
+#' removed first-seen; a `MULTILINESTRING` feature's parts are traced in
+#' order into one path.
 #'
 #' @param x A linestring-like geometry. One of:
 #'   - Any geometry handleable by [wk::wk_handle()] containing one or
@@ -116,13 +115,24 @@ a5_polygon_to_cells <- function(x, resolution,
 #'   - A two-column numeric matrix (`cbind(lon, lat)`) of waypoints.
 #'   - A `data.frame` with columns `lon` and `lat`.
 #' @param resolution Integer scalar target resolution (0--30).
+#' @param simplify Logical scalar. If `TRUE` (default), return one flat
+#'   [a5_cell] vector with the paths of every feature concatenated in feature
+#'   order; a cell crossed by several features appears once per feature. If
+#'   `FALSE`, return an [a5_cell_list] with one path per feature, suitable for
+#'   a list column.
 #'
-#' @returns An [a5_cell] vector at `resolution`.
+#' @returns An [a5_cell] vector at `resolution`, or an [a5_cell_list] when
+#'   `simplify = FALSE`. A missing or empty geometry contributes no cells (an
+#'   empty element in the list form).
 #'
 #' @details
 #' Consecutive waypoints are connected by great-circle arcs (not rhumb
 #' lines or planar segments), so antimeridian-crossing paths work
 #' transparently when written in unwrapped lon/lat.
+#'
+#' A path is an ordered sequence, so the result is a vector of cells rather
+#' than an [a5_covering]; use [as_a5_covering()] to treat the cells a path
+#' crosses as a set.
 #'
 #' Matrix and `data.frame` inputs are treated as a single linestring;
 #' for multi-feature data, pass an `sf`, `sfc`, wk, or `SpatVector`
@@ -133,20 +143,32 @@ a5_polygon_to_cells <- function(x, resolution,
 #' @examples
 #' line <- wk::wkt("LINESTRING (2.35 48.86, -0.13 51.51)")
 #' cells <- a5_linestring_to_cells(line, resolution = 6)
-#' length(cells)
-a5_linestring_to_cells <- function(x, resolution) {
+#' cells
+#'
+#' # One path per feature
+#' lines <- wk::wkt(c(
+#'   "LINESTRING (2.35 48.86, -0.13 51.51)",
+#'   "LINESTRING (2.35 48.86, 4.83 45.76)"
+#' ))
+#' paths <- a5_linestring_to_cells(lines, resolution = 6, simplify = FALSE)
+#' lengths(paths)
+a5_linestring_to_cells <- function(x, resolution, simplify = TRUE) {
   resolution <- vctrs::vec_cast(resolution, integer())
   check_resolution(resolution)
   check_size1(resolution)
+  check_flag(simplify)
 
   bundle <- prepare_linestring_input(x)
 
-  cells_from_rs(a5_linestring_to_cells_rs(
+  one_to_many(a5_linestring_to_cells_rs(
     bundle$lon,
     bundle$lat,
     bundle$offsets,
-    resolution
-  ))
+    bundle$line_feature,
+    bundle$n_features,
+    resolution,
+    simplify
+  ), simplify)
 }
 
 # -- input preparation ---------------------------------------------------------
@@ -188,17 +210,20 @@ prepare_polygon_input <- function(x, call = rlang::caller_env()) {
 #' @noRd
 prepare_linestring_input <- function(x, call = rlang::caller_env()) {
   x <- maybe_coerce_spatvector(x, call = call)
-  bundle <- if (is.matrix(x)) {
-    coords_from_matrix(x, call = call)
-  } else if (is.data.frame(x) && !inherits(x, "sf")) {
-    coords_from_data_frame(x, call = call)
+  bundle <- if (is.matrix(x) || (is.data.frame(x) && !inherits(x, "sf"))) {
+    line <- if (is.matrix(x)) {
+      coords_from_matrix(x, call = call)
+    } else {
+      coords_from_data_frame(x, call = call)
+    }
+    if (length(line$lon) == 0L) {
+      cli::cli_abort("{.arg x} contains no linestrings.", call = call)
+    }
+    c(line, list(line_feature = 1L, n_features = 1L))
   } else {
     coords_from_wk_linestrings(x, call = call)
   }
 
-  if (length(bundle$offsets) < 2L) {
-    cli::cli_abort("{.arg x} contains no linestrings.", call = call)
-  }
   validate_feature_sizes(bundle, expected = "linestring", call = call)
   if (anyNA(bundle$lon) || anyNA(bundle$lat)) {
     cli::cli_abort(
@@ -334,13 +359,13 @@ coords_from_wk_linestrings <- function(x, call = rlang::caller_env()) {
       call = call
     )
   }
-  if (any(meta$is_empty)) {
-    cli::cli_abort("{.arg x} contains empty geometries.", call = call)
-  }
+  # Missing and empty geometries have no coordinates, so no cells.
+  n_features <- nrow(meta)
 
   coords <- wk::wk_coords(x)
   if (nrow(coords) == 0L) {
-    return(list(lon = numeric(), lat = numeric(), offsets = 0L))
+    return(list(lon = numeric(), lat = numeric(), offsets = 0L,
+                line_feature = integer(), n_features = n_features))
   }
 
   # Linestrings: one ring_id per linestring (within a feature/part).
@@ -357,7 +382,9 @@ coords_from_wk_linestrings <- function(x, call = rlang::caller_env()) {
   list(
     lon = as.numeric(coords$x),
     lat = as.numeric(coords$y),
-    offsets = as.integer(offsets)
+    offsets = as.integer(offsets),
+    line_feature = as.integer(coords$feature_id[offsets[-length(offsets)] + 1L]),
+    n_features = n_features
   )
 }
 

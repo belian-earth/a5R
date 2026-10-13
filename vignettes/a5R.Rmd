@@ -181,9 +181,10 @@ crossed by a great-circle polyline. Output is in discovery order along
 the path. Consecutive waypoints are connected by great-circle arcs, so
 antimeridian-crossing routes work transparently.
 
-Multi-part inputs (`MULTILINESTRING` or an `sfc` of several linestrings)
-are handled natively: per-feature outputs are concatenated in feature
-order with first-seen deduplication.
+Each feature gives one path: a `MULTILINESTRING`'s parts are traced in
+order into one path, each cell kept once. For several features,
+`simplify = FALSE` returns one path per feature as an `a5_cell_list`; the
+default concatenates them.
 
 To show what cell-by-cell tracing looks like, we can write a short
 phrase as a `MULTILINESTRING` (one stroke per letter) and ask A5 to
@@ -205,7 +206,7 @@ plot(a5_cell_to_boundary(cells),
      col = "#206ead80", border = "#37af6d", asp = 1)
 ```
 
-Each stroke is one continuous linestring; the function walks the
-great-circle path, expanding cell neighbours along the way, and
-returns the union across all strokes.
+Each stroke is one part of the `MULTILINESTRING`; the function walks
+each great-circle path in turn and joins the strokes into one path, each
+cell kept once.
 

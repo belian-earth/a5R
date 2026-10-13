@@ -28,6 +28,12 @@
   A feature's parts and holes are still combined. A missing geometry gives
   an `NA` covering and an empty geometry an empty covering; both used to be
   errors.
+* `a5_linestring_to_cells()` gains `simplify`: with `simplify = FALSE` it
+  returns an `a5_cell_list` with one ordered path per feature, for a list
+  column. The default flat form concatenates the paths, so a cell crossed
+  by several features now appears once per feature rather than once
+  overall; within a feature, each cell still appears once. Missing and
+  empty geometries contribute no cells instead of an error.
 * `a5_uncompact()` takes coverings, and its `resolution` argument is
   optional: by default each covering expands to its own resolution. It
   refuses to build more than `.Machine$integer.max` cells.

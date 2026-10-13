@@ -326,7 +326,7 @@ test_that("a5_linestring_to_cells matrix and data.frame shortcuts match wk input
   expect_identical(format(c_d), format(c_w))
 })
 
-test_that("MULTILINESTRING returns the deduped union in feature order", {
+test_that("MULTILINESTRING parts join into one deduplicated path", {
   ml <- wk::wkt(
     "MULTILINESTRING ((2.35 48.86, -0.13 51.51),
                       (-0.13 51.51, 4.83 45.76))"
@@ -365,16 +365,21 @@ test_that("polygon/linestring results are identical with threads > 1", {
                       (-0.13 51.51, 4.83 45.76))"
   )
 
+  lines <- wk::wkt(c(as.character(ml), "LINESTRING (2.35 48.86, 13.4 52.52)"))
+
   a5_set_threads(1)
   p1 <- a5_polygon_to_cells(mp, resolution = 8)
   l1 <- a5_linestring_to_cells(ml, resolution = 5)
+  f1 <- a5_linestring_to_cells(lines, resolution = 5, simplify = FALSE)
 
   a5_set_threads(2)
   p2 <- a5_polygon_to_cells(mp, resolution = 8)
   l2 <- a5_linestring_to_cells(ml, resolution = 5)
+  f2 <- a5_linestring_to_cells(lines, resolution = 5, simplify = FALSE)
 
   expect_identical(p1, p2)
-  expect_identical(format(l1), format(l2))
+  expect_identical(l1, l2)
+  expect_identical(f1, f2)
 })
 
 # -- empty-result behaviour ---------------------------------------------------
@@ -552,18 +557,56 @@ test_that("linestring rejects wrong geometry types", {
   )
 })
 
-test_that("linestring rejects empty geometries", {
+test_that("linestring empty and missing geometries contribute no cells", {
+  expect_length(a5_linestring_to_cells(wk::wkt("LINESTRING EMPTY"), resolution = 8), 0L)
+  expect_length(a5_linestring_to_cells(wk::wkt(character()), resolution = 8), 0L)
+  lst <- a5_linestring_to_cells(
+    wk::wkt(c("LINESTRING (2.35 48.86, -0.13 51.51)", NA, "LINESTRING EMPTY")),
+    resolution = 5, simplify = FALSE
+  )
+  expect_identical(lengths(lst)[2:3], c(0L, 0L))
+  expect_gt(lengths(lst)[1], 0L)
   expect_error(
-    a5_linestring_to_cells(wk::wkt("LINESTRING EMPTY"), resolution = 8),
-    "empty geometries"
+    a5_linestring_to_cells(matrix(numeric(), ncol = 2), resolution = 8),
+    "no linestrings"
   )
 })
 
-test_that("linestring rejects empty sfc / wkt vector", {
-  expect_error(
-    a5_linestring_to_cells(wk::wkt(character()), resolution = 8),
-    "no linestrings"
+test_that("linestrings give one ordered path per feature", {
+  lines <- wk::wkt(c(
+    "LINESTRING (2.35 48.86, -0.13 51.51)",
+    "LINESTRING (2.35 48.86, 4.83 45.76)",
+    "MULTILINESTRING ((2.35 48.86, -0.13 51.51), (-0.13 51.51, 4.83 45.76))"
+  ))
+  paths <- a5_linestring_to_cells(lines, resolution = 5, simplify = FALSE)
+  expect_s3_class(paths, "a5_cell_list")
+  expect_length(paths, 3L)
+  for (i in 1:3) {
+    expect_identical(paths[[i]], a5_linestring_to_cells(lines[i], resolution = 5))
+  }
+  # flat form: the paths concatenated, so the shared Paris cell appears twice
+  flat <- a5_linestring_to_cells(lines[1:2], resolution = 5)
+  expect_identical(flat, vctrs::list_unchop(paths[1:2]))
+  paris <- a5_lonlat_to_cell(2.35, 48.86, resolution = 5)
+  expect_identical(sum(flat == paris), 2L)
+  # within a feature, parts are joined in order and each cell kept once
+  expect_false(anyDuplicated(paths[[3]]) > 0)
+  expect_identical(paths[[3]][seq_along(paths[[1]])], paths[[1]])
+  expect_error(a5_linestring_to_cells(lines, 5, simplify = NA), "TRUE")
+})
+
+test_that("linestring paths fill a list column of an sf data frame", {
+  skip_if_not_installed("sf")
+  df <- sf::st_sf(
+    id = 1:2,
+    geometry = sf::st_as_sfc(c(
+      "LINESTRING (2.35 48.86, -0.13 51.51)",
+      "LINESTRING (2.35 48.86, 4.83 45.76)"
+    ), crs = 4326)
   )
+  df$path <- a5_linestring_to_cells(df, resolution = 5, simplify = FALSE)
+  expect_s3_class(df$path, "a5_cell_list")
+  expect_identical(df$path[[2]], a5_linestring_to_cells(df[2, ], resolution = 5))
 })
 
 test_that("linestring rejects non-geometry input", {
