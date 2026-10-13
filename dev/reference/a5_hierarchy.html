@@ -32,6 +32,7 @@ Both follow the cell index, so they are cheap bit operations."><meta property="o
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/arrow-parquet.html">Working with Arrow and Parquet</a></li>
+    <li><a class="dropdown-item" href="../articles/coverings.html">Coverings: sets of cells</a></li>
     <li><a class="dropdown-item" href="../articles/internal-cell-representation.html">How a5R stores cell IDs without strings</a></li>
     <li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
     <li><a class="dropdown-item" href="../articles/spatial-hierarchy.html">Moving between resolutions by location</a></li>
@@ -122,40 +123,40 @@ for the id range of all descendants, <code><a href="a5_get_resolution.html">a5_g
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">cell</span> <span class="op">&lt;-</span> <span class="fu"><a href="a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">55.95</span>, resolution <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">a5_cell_to_parent</span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[1]&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 6344be0000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 63bb960000000000</span>
 <span class="r-in"><span><span class="fu">a5_cell_to_parent</span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[1]&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 6346000000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 63ba000000000000</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">a5_cell_to_children</span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[4]&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 6344be2000000000 6344be6000000000 6344bea000000000 6344bee000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 63bb942000000000 63bb946000000000 63bb94a000000000 63bb94e000000000</span>
 <span class="r-in"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">55.95</span>, <span class="fl">0</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">a5_cell_to_children</span><span class="op">(</span><span class="va">cells</span>, resolution <span class="op">=</span> <span class="fl">7</span><span class="op">)</span>                   <span class="co"># 32 cells</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[32]&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 633c200000000000 633c600000000000 633ca00000000000 633ce00000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] 633d200000000000 633d600000000000 633da00000000000 633de00000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] 633e200000000000 633e600000000000 633ea00000000000 633ee00000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [13] 633f200000000000 633f600000000000 633fa00000000000 633fe00000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [17] 4f04200000000000 4f04600000000000 4f04a00000000000 4f04e00000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [21] 4f05200000000000 4f05600000000000 4f05a00000000000 4f05e00000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [25] 4f06200000000000 4f06600000000000 4f06a00000000000 4f06e00000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [29] 4f07200000000000 4f07600000000000 4f07a00000000000 4f07e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 6314200000000000 6314600000000000 6314a00000000000 6314e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] 6315200000000000 6315600000000000 6315a00000000000 6315e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] 6316200000000000 6316600000000000 6316a00000000000 6316e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13] 6317200000000000 6317600000000000 6317a00000000000 6317e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [17] 4f08200000000000 4f08600000000000 4f08a00000000000 4f08e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [21] 4f09200000000000 4f09600000000000 4f09a00000000000 4f09e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [25] 4f0a200000000000 4f0a600000000000 4f0aa00000000000 4f0ae00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [29] 4f0b200000000000 4f0b600000000000 4f0ba00000000000 4f0be00000000000</span>
 <span class="r-in"><span><span class="fu">a5_cell_to_children</span><span class="op">(</span><span class="va">cells</span>, resolution <span class="op">=</span> <span class="fl">7</span>, simplify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="co"># list of 2</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell_list[2]&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[16]&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 633c200000000000 633c600000000000 633ca00000000000 633ce00000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] 633d200000000000 633d600000000000 633da00000000000 633de00000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] 633e200000000000 633e600000000000 633ea00000000000 633ee00000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [13] 633f200000000000 633f600000000000 633fa00000000000 633fe00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 6314200000000000 6314600000000000 6314a00000000000 6314e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] 6315200000000000 6315600000000000 6315a00000000000 6315e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] 6316200000000000 6316600000000000 6316a00000000000 6316e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13] 6317200000000000 6317600000000000 6317a00000000000 6317e00000000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[16]&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 4f04200000000000 4f04600000000000 4f04a00000000000 4f04e00000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] 4f05200000000000 4f05600000000000 4f05a00000000000 4f05e00000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] 4f06200000000000 4f06600000000000 4f06a00000000000 4f06e00000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [13] 4f07200000000000 4f07600000000000 4f07a00000000000 4f07e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 4f08200000000000 4f08600000000000 4f08a00000000000 4f08e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] 4f09200000000000 4f09600000000000 4f09a00000000000 4f09e00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] 4f0a200000000000 4f0a600000000000 4f0aa00000000000 4f0ae00000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13] 4f0b200000000000 4f0b600000000000 4f0ba00000000000 4f0be00000000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># children map back to their parent</span></span></span>

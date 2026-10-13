@@ -5,23 +5,13 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Cells inside or overlapping a polygon — a5_polygon_to_cells"><meta name="description" content='Returns A5 cells at resolution that fall inside the polygon. By
-default a cell is included when its centre lies inside the polygon;
-set containment = "overlapping" to also include every cell that
-touches the polygon boundary, giving gap-free coverage.
-Multi-feature inputs (a MULTIPOLYGON, an sfc of multiple polygons,
-or a POLYGON with holes) are handled natively: per polygon part, the
-outer ring and its holes are converted together with hole interiors
-excluded, then the results are unioned across parts. The final cell set
-is compacted; use a5_uncompact() to expand to a uniform-resolution grid.'><meta property="og:description" content='Returns A5 cells at resolution that fall inside the polygon. By
-default a cell is included when its centre lies inside the polygon;
-set containment = "overlapping" to also include every cell that
-touches the polygon boundary, giving gap-free coverage.
-Multi-feature inputs (a MULTIPOLYGON, an sfc of multiple polygons,
-or a POLYGON with holes) are handled natively: per polygon part, the
-outer ring and its holes are converted together with hole interiors
-excluded, then the results are unioned across parts. The final cell set
-is compacted; use a5_uncompact() to expand to a uniform-resolution grid.'><meta property="og:image" content="https://belian-earth.github.io/a5R/logo.png"><meta name="robots" content="noindex"></head><body>
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Cells inside or overlapping a polygon — a5_polygon_to_cells"><meta name="description" content='Returns, for each polygon feature, an a5_covering of the A5 cells at
+resolution that belong to it. By default a cell belongs when its centre
+lies inside the polygon; set containment = "overlapping" to also include
+every cell that touches the polygon boundary, giving gap-free coverage.'><meta property="og:description" content='Returns, for each polygon feature, an a5_covering of the A5 cells at
+resolution that belong to it. By default a cell belongs when its centre
+lies inside the polygon; set containment = "overlapping" to also include
+every cell that touches the polygon boundary, giving gap-free coverage.'><meta property="og:image" content="https://belian-earth.github.io/a5R/logo.png"><meta name="robots" content="noindex"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -42,6 +32,7 @@ is compacted; use a5_uncompact() to expand to a uniform-resolution grid.'><meta 
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/arrow-parquet.html">Working with Arrow and Parquet</a></li>
+    <li><a class="dropdown-item" href="../articles/coverings.html">Coverings: sets of cells</a></li>
     <li><a class="dropdown-item" href="../articles/internal-cell-representation.html">How a5R stores cell IDs without strings</a></li>
     <li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
     <li><a class="dropdown-item" href="../articles/spatial-hierarchy.html">Moving between resolutions by location</a></li>
@@ -64,15 +55,10 @@ is compacted; use a5_uncompact() to expand to a uniform-resolution grid.'><meta 
     </div>
 
     <div class="ref-description section level2">
-    <p>Returns A5 cells at <code>resolution</code> that fall inside the polygon. By
-default a cell is included when its centre lies inside the polygon;
-set <code>containment = "overlapping"</code> to also include every cell that
-touches the polygon boundary, giving gap-free coverage.
-Multi-feature inputs (a <code>MULTIPOLYGON</code>, an <code>sfc</code> of multiple polygons,
-or a <code>POLYGON</code> with holes) are handled natively: per polygon part, the
-outer ring and its holes are converted together with hole interiors
-excluded, then the results are unioned across parts. The final cell set
-is compacted; use <code><a href="a5_compaction.html">a5_uncompact()</a></code> to expand to a uniform-resolution grid.</p>
+    <p>Returns, for each polygon feature, an <a href="a5_covering.html">a5_covering</a> of the A5 cells at
+<code>resolution</code> that belong to it. By default a cell belongs when its centre
+lies inside the polygon; set <code>containment = "overlapping"</code> to also include
+every cell that touches the polygon boundary, giving gap-free coverage.</p>
     </div>
 
     <div class="section level2">
@@ -110,11 +96,19 @@ The overlapping set is a superset of the centre set.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An <a href="a5_cell.html">a5_cell</a> vector at or coarser than <code>resolution</code>.</p>
+    <p>An <a href="a5_covering.html">a5_covering</a> vector with one element per feature (one for
+matrix and <code>data.frame</code> input). <code>NA</code> for a missing geometry; an empty
+covering for an empty geometry or one too small to hold a cell centre.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>With <code>containment = "centre"</code>, membership is determined by
+    <p>The result has one covering per feature, so it can be added as a column:
+<code>sf_data$cells &lt;- a5_polygon_to_cells(sf_data, 10)</code>. A feature's parts (a
+<code>MULTIPOLYGON</code>) and holes are combined into its covering, with hole
+interiors excluded. To combine features into one covering, use
+<code><a href="a5_set_operations.html">a5_union()</a></code>. Coverings are compacted; use <code><a href="a5_compaction.html">a5_uncompact()</a></code> for the cells
+at <code>resolution</code>.</p>
+<p>With <code>containment = "centre"</code>, membership is determined by
 <strong>centre-point containment</strong>: a cell is included if its centroid lies
 inside the polygon, with hole interiors excluded. Cells straddling the
 boundary whose centre falls outside are dropped, so the union of the
@@ -128,7 +122,7 @@ excluded.</p>
 closed automatically; a trailing duplicate vertex is dropped if
 present.</p>
 <p>Where no A5 cell centroids at the specified <code>resolution</code> fall within
-the geometry, an empty <code>a5_cell</code> vector is returned.</p>
+the geometry, its covering is empty.</p>
 <p>Matrix and <code>data.frame</code> inputs are treated as a single ring; for
 multi-feature data or polygons with holes, pass an <code>sf</code>, <code>sfc</code>, wk,
 or <code>SpatVector</code> geometry instead.</p>
@@ -143,15 +137,27 @@ or <code>SpatVector</code> geometry instead.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">poly</span> <span class="op">&lt;-</span> <span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wkt.html" class="external-link">wkt</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="st">"POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu">a5_polygon_to_cells</span><span class="op">(</span><span class="va">poly</span>, resolution <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
+<span class="r-in"><span><span class="va">covering</span> <span class="op">&lt;-</span> <span class="fu">a5_polygon_to_cells</span><span class="op">(</span><span class="va">poly</span>, resolution <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">covering</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_covering[1]&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] res 8: empty</span>
+<span class="r-in"><span><span class="fu"><a href="a5_compaction.html">a5_uncompact</a></span><span class="op">(</span><span class="va">covering</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[0]&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Gap-free coverage: every cell touching the polygon</span></span></span>
-<span class="r-in"><span><span class="va">covering</span> <span class="op">&lt;-</span> <span class="fu">a5_polygon_to_cells</span><span class="op">(</span><span class="va">poly</span>, resolution <span class="op">=</span> <span class="fl">8</span>,</span></span>
-<span class="r-in"><span>                                containment <span class="op">=</span> <span class="st">"overlapping"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">covering</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2</span>
+<span class="r-in"><span><span class="fu">a5_polygon_to_cells</span><span class="op">(</span><span class="va">poly</span>, resolution <span class="op">=</span> <span class="fl">8</span>, containment <span class="op">=</span> <span class="st">"overlapping"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_covering[1]&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] res 8: 2 cells (2 stored)</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># One covering per feature</span></span></span>
+<span class="r-in"><span><span class="va">polys</span> <span class="op">&lt;-</span> <span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wkt.html" class="external-link">wkt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))"</span>,</span></span>
+<span class="r-in"><span>  <span class="cn">NA</span>,</span></span>
+<span class="r-in"><span>  <span class="st">"POLYGON ((-4.3 55.8, -4.2 55.8, -4.2 55.9, -4.3 55.9, -4.3 55.8))"</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">a5_polygon_to_cells</span><span class="op">(</span><span class="va">polys</span>, resolution <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_covering[3]&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] res 8: empty &lt;NA&gt;         res 8: empty</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

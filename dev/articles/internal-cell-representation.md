@@ -67,11 +67,11 @@ Hex strings are only produced on demand:
 # Display calls format(), which converts to hex for readability
 cell
 #> <a5_cell[1]>
-#> [1] 6344be8000000000
+#> [1] 63bb948000000000
 
 # Explicit conversion
 a5_u64_to_hex(cell)
-#> [1] "6344be8000000000"
+#> [1] "63bb948000000000"
 
 # Round-trip from hex
 a5_cell("0800000000000006")
@@ -212,6 +212,37 @@ vctrs::vec_split(1:3, cells)$val
 parts <- lapply(1:3, function(i) a5_cell_to_children(cells[i]))
 unlist(as_a5_cell_list(parts))
 ```
+
+## Coverings
+
+An `a5_covering` holds one compacted set of cells per element, so it
+uses a different layout. Each element is a single `raw` vector of the
+covering’s 64-bit values, little-endian and unmasked: its cells sorted
+in curve order, then the compaction marker, exactly as the A5 libraries
+return them. Rust reads an element as one slice, and Arrow export is one
+`list<uint64>` value per covering.
+
+The compaction marker is a value no cell can take: quintant 60 (only 0
+to 59 exist) in the top 6 bits, the resolution in bits 55 to 48, and the
+tag `1000000` in the low 7 bits, which no resolution uses. The marker
+for resolution 12 is `0xf00c000000000040`:
+
+``` r
+
+covering <- a5_compact(a5_cell_to_children(cell, resolution = 12))
+covering
+#> <a5_covering[1]>
+#> [1] res 12: 16 cells (1 stored)
+bytes <- unclass(covering)[[1]]
+length(bytes) / 8                 # one stored cell, then the marker
+#> [1] 2
+rev(bytes[9:16])                  # the marker, most significant byte first
+#> [1] f0 0c 00 00 00 00 00 40
+```
+
+A covering never holds `NA`, so no byte is masked. A missing covering is
+a `NULL` element, which is what vctrs fills in for a list, so joins and
+`vec_init()` produce `NA` coverings with no extra work.
 
 ## Summary
 

@@ -47,6 +47,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/arrow-parquet.html">Working with Arrow and Parquet</a></li>
+    <li><a class="dropdown-item" href="../articles/coverings.html">Coverings: sets of cells</a></li>
     <li><a class="dropdown-item" href="../articles/internal-cell-representation.html">How a5R stores cell IDs without strings</a></li>
     <li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
     <li><a class="dropdown-item" href="../articles/spatial-hierarchy.html">Moving between resolutions by location</a></li>
@@ -83,9 +84,6 @@
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/belian-earth/a5R" class="external-link">a5R</a></span><span class="op">)</span></span></code></pre></div>
-<p><code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_spatial_parent()</a></code> and
-<code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_spatial_children()</a></code> are experimental. Their names
-and behaviour may change.</p>
 <div class="section level2">
 <h2 id="the-index-hierarchy-is-not-spatially-nested">The index hierarchy is not spatially nested<a class="anchor" aria-label="anchor" href="#the-index-hierarchy-is-not-spatially-nested"></a>
 </h2>
@@ -93,19 +91,22 @@ and behaviour may change.</p>
 <code><a href="../reference/a5_hierarchy.html">a5_cell_to_children()</a></code> follow the A5 index. A cell’s index
 children do not tile it: some of them lie mostly in its neighbours, and
 some cells inside it belong to a neighbour’s index.</p>
-<p>The spatial functions follow location instead. A fine cell belongs to
-the coarse cell containing its centre.</p>
+<p><code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_supercell()</a></code> and
+<code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcell()</a></code> follow location instead. A fine cell
+belongs to the coarse cell containing its centre: that coarse cell is
+its <em>supercell</em>, and the fine cells a coarse cell holds are its
+<em>subcells</em>.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cell</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="op">-</span><span class="fl">53.5</span>, <span class="op">-</span><span class="fl">19</span>, resolution <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
 <span><span class="va">index_kids</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="fl">11</span><span class="op">)</span></span>
-<span><span class="va">spatial_kids</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_spatial_children</a></span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="fl">11</span><span class="op">)</span></span>
+<span><span class="va">spatial_kids</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_compaction.html">a5_uncompact</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcell</a></span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="fl">11</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">outline</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span>
 <span><span class="va">lim</span> <span class="op">&lt;-</span> <span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wk_bbox.html" class="external-link">wk_bbox</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">index_kids</span>, <span class="va">spatial_kids</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">lim</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="va">lim</span><span class="op">)</span></span>
 <span></span>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">panel</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">index_kids</span>, <span class="st">"Index children"</span><span class="op">)</span>,</span>
-<span>                   <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">spatial_kids</span>, <span class="st">"Spatial children"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>                   <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">spatial_kids</span>, <span class="st">"Subcells"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="cn">NULL</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">lim</span><span class="op">$</span><span class="va">xmin</span>, <span class="va">lim</span><span class="op">$</span><span class="va">xmax</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">lim</span><span class="op">$</span><span class="va">ymin</span>, <span class="va">lim</span><span class="op">$</span><span class="va">ymax</span><span class="op">)</span>,</span>
 <span>       asp <span class="op">=</span> <span class="fl">1</span>, axes <span class="op">=</span> <span class="cn">FALSE</span>, xlab <span class="op">=</span> <span class="st">""</span>, ylab <span class="op">=</span> <span class="st">""</span>, main <span class="op">=</span> <span class="va">panel</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">panel</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#206ead40"</span>,</span>
@@ -113,44 +114,44 @@ the coarse cell containing its centre.</p>
 <span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">outline</span>, border <span class="op">=</span> <span class="st">"#333333"</span>, lwd <span class="op">=</span> <span class="fl">2</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p><img src="spatial-hierarchy_files/figure-html/children-plot-1.png" class="r-plt" alt="" width="672"></p>
-<p>Both sets hold 64 cells here, but only the spatial set sits inside
-the outline. The mismatch is not rare:</p>
+<p>The cell has 64 index children and 66 subcells here, and only the
+subcells sit inside the outline. The mismatch is not rare:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">fine</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span></span>
 <span>  <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">1e4</span>, <span class="op">-</span><span class="fl">54</span>, <span class="op">-</span><span class="fl">53</span><span class="op">)</span>, <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">1e4</span>, <span class="op">-</span><span class="fl">19.5</span>, <span class="op">-</span><span class="fl">18.5</span><span class="op">)</span>,</span>
 <span>  resolution <span class="op">=</span> <span class="fl">18</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_parent</a></span><span class="op">(</span><span class="va">fine</span>, <span class="fl">15</span><span class="op">)</span> <span class="op">!=</span> <span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_spatial_parent</a></span><span class="op">(</span><span class="va">fine</span>, <span class="fl">15</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_parent</a></span><span class="op">(</span><span class="va">fine</span>, <span class="fl">15</span><span class="op">)</span> <span class="op">!=</span> <span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_supercell</a></span><span class="op">(</span><span class="va">fine</span>, <span class="fl">15</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.3677</span></span></code></pre></div>
 <p>For about a third of res-18 cells, the index parent at res 15 is a
-neighbour of the cell they lie in.</p>
+neighbour of the cell they lie in, their supercell.</p>
 <p>The upward direction shows the same thing from the other side. Here
 is one res-10 cell whose index parent at res 8 is not the cell it lies
 in:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">kids</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_children</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_grid_disk.html">a5_grid_disk</a></span><span class="op">(</span><span class="va">cell</span>, <span class="fl">1</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
-<span><span class="va">moved</span> <span class="op">&lt;-</span> <span class="va">kids</span><span class="op">[</span><span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_parent</a></span><span class="op">(</span><span class="va">kids</span>, <span class="fl">8</span><span class="op">)</span> <span class="op">!=</span> <span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_spatial_parent</a></span><span class="op">(</span><span class="va">kids</span>, <span class="fl">8</span><span class="op">)</span><span class="op">]</span></span>
+<code class="sourceCode R"><span><span class="va">kids</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_compaction.html">a5_uncompact</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_grid_disk.html">a5_grid_disk</a></span><span class="op">(</span><span class="va">cell</span>, <span class="fl">1</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="va">moved</span> <span class="op">&lt;-</span> <span class="va">kids</span><span class="op">[</span><span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_parent</a></span><span class="op">(</span><span class="va">kids</span>, <span class="fl">8</span><span class="op">)</span> <span class="op">!=</span> <span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_supercell</a></span><span class="op">(</span><span class="va">kids</span>, <span class="fl">8</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co"># the clearest case: the fine cell furthest from its index parent's centre</span></span>
 <span><span class="va">fine_cell</span> <span class="op">&lt;-</span> <span class="va">moved</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.min.html" class="external-link">which.max</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_distance.html">a5_cell_distance</a></span><span class="op">(</span><span class="va">moved</span>, <span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_parent</a></span><span class="op">(</span><span class="va">moved</span>, <span class="fl">8</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="va">index_parent</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_parent</a></span><span class="op">(</span><span class="va">fine_cell</span>, <span class="fl">8</span><span class="op">)</span></span>
-<span><span class="va">spatial_parent</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_spatial_parent</a></span><span class="op">(</span><span class="va">fine_cell</span>, <span class="fl">8</span><span class="op">)</span></span>
+<span><span class="va">supercell</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_supercell</a></span><span class="op">(</span><span class="va">fine_cell</span>, <span class="fl">8</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">lim</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wk_bbox.html" class="external-link">wk_bbox</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">index_parent</span>, <span class="va">spatial_parent</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">lim</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wk_bbox.html" class="external-link">wk_bbox</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">index_parent</span>, <span class="va">supercell</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="cn">NULL</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">lim</span><span class="op">$</span><span class="va">xmin</span>, <span class="va">lim</span><span class="op">$</span><span class="va">xmax</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">lim</span><span class="op">$</span><span class="va">ymin</span>, <span class="va">lim</span><span class="op">$</span><span class="va">ymax</span><span class="op">)</span>,</span>
 <span>     asp <span class="op">=</span> <span class="fl">1</span>, axes <span class="op">=</span> <span class="cn">FALSE</span>, xlab <span class="op">=</span> <span class="st">""</span>, ylab <span class="op">=</span> <span class="st">""</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">index_parent</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#d9534f20"</span>, border <span class="op">=</span> <span class="st">"#d9534f"</span>,</span>
 <span>     lwd <span class="op">=</span> <span class="fl">2</span>, lty <span class="op">=</span> <span class="fl">2</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">spatial_parent</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#206ead20"</span>, border <span class="op">=</span> <span class="st">"#206ead"</span>,</span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">supercell</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#206ead20"</span>, border <span class="op">=</span> <span class="st">"#206ead"</span>,</span>
 <span>     lwd <span class="op">=</span> <span class="fl">2</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">fine_cell</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#333333"</span>, border <span class="op">=</span> <span class="cn">NA</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_coordinates.html">a5_cell_to_lonlat</a></span><span class="op">(</span><span class="va">fine_cell</span><span class="op">)</span>, pch <span class="op">=</span> <span class="fl">19</span>, cex <span class="op">=</span> <span class="fl">0.8</span>, col <span class="op">=</span> <span class="st">"white"</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"bottomright"</span>, bty <span class="op">=</span> <span class="st">"n"</span>, lwd <span class="op">=</span> <span class="fl">2</span>, lty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>       col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#d9534f"</span>, <span class="st">"#206ead"</span><span class="op">)</span>, legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Index parent"</span>, <span class="st">"Spatial parent"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span>       col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#d9534f"</span>, <span class="st">"#206ead"</span><span class="op">)</span>, legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Index parent"</span>, <span class="st">"Supercell"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="spatial-hierarchy_files/figure-html/parent-plot-1.png" class="r-plt" alt="" width="480"></p>
-<p>The fine cell (dark, with its centre in white) sits inside the
-spatial parent, while its index parent is the neighbouring cell.</p>
+<p>The fine cell (dark, with its centre in white) sits inside its
+supercell, while its index parent is the neighbouring cell.</p>
 </div>
 <div class="section level2">
 <h2 id="aggregating-to-a-coarser-grid">Aggregating to a coarser grid<a class="anchor" aria-label="anchor" href="#aggregating-to-a-coarser-grid"></a>
@@ -160,7 +161,7 @@ patch, such as a stand of forest: cells inside the patch have value 1,
 cells outside have value 0. Average it to res 15 under each rule.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">area</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="op">-</span><span class="fl">53.5</span>, <span class="op">-</span><span class="fl">19</span>, resolution <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
-<span><span class="va">layer</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_children</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_grid_disk.html">a5_grid_disk</a></span><span class="op">(</span><span class="va">area</span>, <span class="fl">1</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">18</span><span class="op">)</span></span>
+<span><span class="va">layer</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_compaction.html">a5_uncompact</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_grid_disk.html">a5_grid_disk</a></span><span class="op">(</span><span class="va">area</span>, <span class="fl">1</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">18</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">layer</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 24576</span></span>
 <span></span>
@@ -175,7 +176,7 @@ cells outside have value 0. Average it to res 15 under each rule.</p>
 <span>  <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>value <span class="op">=</span> <span class="va">value</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>cell <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span><span class="op">)</span>, <span class="va">mean</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span><span class="va">by_index</span> <span class="op">&lt;-</span> <span class="fu">mean_by</span><span class="op">(</span><span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_parent</a></span><span class="op">(</span><span class="va">layer</span>, <span class="fl">15</span><span class="op">)</span>, <span class="va">fine</span><span class="op">$</span><span class="va">value</span><span class="op">)</span></span>
-<span><span class="va">by_spatial</span> <span class="op">&lt;-</span> <span class="fu">mean_by</span><span class="op">(</span><span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_spatial_parent</a></span><span class="op">(</span><span class="va">layer</span>, <span class="fl">15</span><span class="op">)</span>, <span class="va">fine</span><span class="op">$</span><span class="va">value</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">by_super</span> <span class="op">&lt;-</span> <span class="fu">mean_by</span><span class="op">(</span><span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_supercell</a></span><span class="op">(</span><span class="va">layer</span>, <span class="fl">15</span><span class="op">)</span>, <span class="va">fine</span><span class="op">$</span><span class="va">value</span><span class="op">)</span></span></code></pre></div>
 <p>For a reference that uses neither hierarchy, drop two million random
 points on the area, place each directly in its res-15 cell, and take the
 share of points per cell that fall in the patch. This estimates each
@@ -196,21 +197,21 @@ coarse cell’s true patch fraction.</p>
 <span><span class="fu">error</span><span class="op">(</span><span class="va">by_index</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  mean   max </span></span>
 <span><span class="co">#&gt; 0.086 0.338</span></span>
-<span><span class="fu">error</span><span class="op">(</span><span class="va">by_spatial</span><span class="op">)</span></span>
+<span><span class="fu">error</span><span class="op">(</span><span class="va">by_super</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  mean   max </span></span>
 <span><span class="co">#&gt; 0.008 0.057</span></span></code></pre></div>
 <p>Aggregating by index parent misstates the patch fraction of the cells
 it touches by about a tenth on average, and by a third at worst, because
-each coarse cell averages fine cells from its neighbours. The spatial
-rule is off only by the sampling noise of the reference.
+each coarse cell averages fine cells from its neighbours. Aggregating by
+supercell is off only by the sampling noise of the reference.
 <code><a href="https://rdrr.io/r/base/format.html" class="external-link">format()</a></code> supplies a grouping key here because base grouping
 functions cannot group an <code>a5_cell</code> vector directly (see
 <code><a href="../articles/internal-cell-representation.html">vignette("internal-cell-representation")</a></code>).</p>
 <p>Mapping the reference fractions, and each rule’s error against them,
 shows where the index rule goes wrong:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">truth</span>, <span class="va">by_index</span>, all.x <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="va">by_spatial</span>,</span>
-<span>              by <span class="op">=</span> <span class="st">"cell"</span>, all.x <span class="op">=</span> <span class="cn">TRUE</span>, suffixes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"_index"</span>, <span class="st">"_spatial"</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">truth</span>, <span class="va">by_index</span>, all.x <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="va">by_super</span>,</span>
+<span>              by <span class="op">=</span> <span class="st">"cell"</span>, all.x <span class="op">=</span> <span class="cn">TRUE</span>, suffixes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"_index"</span>, <span class="st">"_super"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">grid</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">grid</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
 <span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_cell.html">a5_cell</a></span><span class="op">(</span><span class="va">grid</span><span class="op">$</span><span class="va">cell</span><span class="op">)</span></span>
 <span><span class="va">xy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_coordinates.html">a5_cell_to_lonlat</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span><span class="op">)</span></span>
@@ -227,7 +228,7 @@ shows where the index rule goes wrong:</p>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">panel</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">fraction_pal</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">grid</span><span class="op">$</span><span class="va">truth</span> <span class="op">*</span> <span class="fl">100</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span>, <span class="st">"Reference fraction"</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu">error_col</span><span class="op">(</span><span class="va">grid</span><span class="op">$</span><span class="va">value_index</span> <span class="op">-</span> <span class="va">grid</span><span class="op">$</span><span class="va">truth</span><span class="op">)</span>, <span class="st">"Index parent error"</span><span class="op">)</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu">error_col</span><span class="op">(</span><span class="va">grid</span><span class="op">$</span><span class="va">value_spatial</span> <span class="op">-</span> <span class="va">grid</span><span class="op">$</span><span class="va">truth</span><span class="op">)</span>, <span class="st">"Spatial parent error"</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu">error_col</span><span class="op">(</span><span class="va">grid</span><span class="op">$</span><span class="va">value_super</span> <span class="op">-</span> <span class="va">grid</span><span class="op">$</span><span class="va">truth</span><span class="op">)</span>, <span class="st">"Supercell error"</span><span class="op">)</span></span>
 <span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="cn">NULL</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">lim</span><span class="op">$</span><span class="va">xmin</span>, <span class="va">lim</span><span class="op">$</span><span class="va">xmax</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">lim</span><span class="op">$</span><span class="va">ymin</span>, <span class="va">lim</span><span class="op">$</span><span class="va">ymax</span><span class="op">)</span>,</span>
 <span>       asp <span class="op">=</span> <span class="fl">1</span>, axes <span class="op">=</span> <span class="cn">FALSE</span>, xlab <span class="op">=</span> <span class="st">""</span>, ylab <span class="op">=</span> <span class="st">""</span>, main <span class="op">=</span> <span class="va">panel</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
@@ -242,41 +243,51 @@ The other two show aggregated minus reference, from blue (0.4 or more
 too low) through grey to red (0.4 or more too high). Index aggregation
 is wrong in both directions all along the patch edge, where a coarse
 cell’s index children fall on the other side of the edge from the cell
-itself. Spatial aggregation is grey apart from faint tints, which are
+itself. Supercell aggregation is grey apart from faint tints, which are
 sampling noise in the reference.</p>
 </div>
 <div class="section level2">
 <h2 id="expanding-coarse-cells">Expanding coarse cells<a class="anchor" aria-label="anchor" href="#expanding-coarse-cells"></a>
 </h2>
-<p>The downward direction is the exact inverse. Expanding a set of
-coarse cells gives each fine cell once, inside the coarse cell whose
-centre rule claims it:</p>
+<p>The downward direction is the exact inverse.
+<code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcell()</a></code> returns one covering per coarse cell:
+a compacted set that records its resolution (see
+<code><a href="../reference/a5_covering.html">?a5_covering</a></code>). Expanding the subcells of a set of coarse
+cells gives each fine cell once, inside the coarse cell whose centre
+rule claims it:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">patch</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_compaction.html">a5_uncompact</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_grid_disk.html">a5_grid_disk</a></span><span class="op">(</span><span class="va">cell</span>, <span class="fl">1</span><span class="op">)</span>, <span class="fl">8</span><span class="op">)</span></span>
-<span><span class="va">kids</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_spatial_children</a></span><span class="op">(</span><span class="va">patch</span>, resolution <span class="op">=</span> <span class="fl">11</span>, simplify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">patch</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_compaction.html">a5_uncompact</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_grid_disk.html">a5_grid_disk</a></span><span class="op">(</span><span class="va">cell</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">sub</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcell</a></span><span class="op">(</span><span class="va">patch</span>, resolution <span class="op">=</span> <span class="fl">11</span><span class="op">)</span></span>
+<span><span class="va">sub</span></span>
+<span><span class="co">#&gt; &lt;a5_covering[6]&gt;</span></span>
+<span><span class="co">#&gt; [1] res 11: 62 cells (29 stored) res 11: 62 cells (29 stored)</span></span>
+<span><span class="co">#&gt; [3] res 11: 62 cells (29 stored) res 11: 66 cells (33 stored)</span></span>
+<span><span class="co">#&gt; [5] res 11: 66 cells (33 stored) res 11: 62 cells (29 stored)</span></span>
+<span></span>
+<span><span class="va">kids</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_compaction.html">a5_uncompact</a></span><span class="op">(</span><span class="va">sub</span>, simplify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/lengths.html" class="external-link">lengths</a></span><span class="op">(</span><span class="va">kids</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 62 62 62 62 66 66</span></span>
+<span><span class="co">#&gt; [1] 62 62 62 66 66 62</span></span>
 <span></span>
 <span><span class="va">all_kids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">kids</span><span class="op">)</span></span>
 <span><span class="fu">vctrs</span><span class="fu">::</span><span class="fu"><a href="https://vctrs.r-lib.org/reference/vec_duplicate.html" class="external-link">vec_duplicate_any</a></span><span class="op">(</span><span class="va">all_kids</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] FALSE</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_spatial_parent</a></span><span class="op">(</span><span class="va">all_kids</span>, <span class="fl">8</span><span class="op">)</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">patch</span>, <span class="fu"><a href="https://rdrr.io/r/base/lengths.html" class="external-link">lengths</a></span><span class="op">(</span><span class="va">kids</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_supercell</a></span><span class="op">(</span><span class="va">all_kids</span>, <span class="fl">8</span><span class="op">)</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">patch</span>, <span class="fu"><a href="https://rdrr.io/r/base/lengths.html" class="external-link">lengths</a></span><span class="op">(</span><span class="va">kids</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 <p>Counts vary slightly from cell to cell but average
 <code>4^3 = 64</code> for these three resolution steps, as for index
-children.</p>
+children. Each covering stores far fewer cells than it stands for;
+uncompact before drawing, as the stored cells are index parents.</p>
 </div>
 <div class="section level2">
 <h2 id="which-to-use">Which to use<a class="anchor" aria-label="anchor" href="#which-to-use"></a>
 </h2>
 <p>Use the index functions for operations on ids: compaction, id ranges
-and Hilbert ordering. Use the spatial functions whenever values move
+and curve ordering. Use supercells and subcells whenever values move
 between resolutions and must stay where they are on the ground.</p>
-<p>The spatial functions cost more. The index functions are bit
-operations; <code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_spatial_parent()</a></code> locates each
-centre, taking about as long as <code><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell()</a></code>. Both
-spatial functions run in parallel with
-<code><a href="../reference/a5_threads.html">a5_set_threads()</a></code>.</p>
+<p>Supercells and subcells cost more. The index functions are bit
+operations; <code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_supercell()</a></code> locates each centre, in
+well under half the time of <code><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell()</a></code>. Both run
+in parallel with <code><a href="../reference/a5_threads.html">a5_set_threads()</a></code>.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

@@ -26,6 +26,7 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/arrow-parquet.html">Working with Arrow and Parquet</a></li>
+    <li><a class="dropdown-item" href="../articles/coverings.html">Coverings: sets of cells</a></li>
     <li><a class="dropdown-item" href="../articles/internal-cell-representation.html">How a5R stores cell IDs without strings</a></li>
     <li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
     <li><a class="dropdown-item" href="../articles/spatial-hierarchy.html">Moving between resolutions by location</a></li>
@@ -73,7 +74,7 @@
 
       <dl><dt>
 
-          <code><a href="a5_cell.html">a5_cell()</a></code> <code><a href="a5_cell.html">is_a5_cell()</a></code> <code><a href="a5_cell.html">as_a5_cell()</a></code> <code><a href="a5_cell.html">a5_is_valid()</a></code>
+          <code><a href="a5_cell.html">a5_cell()</a></code> <code><a href="a5_cell.html">is_a5_cell()</a></code> <code><a href="a5_cell.html">as_a5_cell()</a></code>
 
         </dt>
         <dd>A5 Cell Index Vector</dd>
@@ -87,14 +88,28 @@
 
         <dt>
 
+          <code><a href="a5_is_valid.html">a5_is_valid()</a></code> <code><a href="a5_is_valid.html">a5_is_valid_cell()</a></code>
+
+        </dt>
+        <dd>Check that values are A5 cells</dd>
+
+        <dt>
+
           <code><a href="a5_u64_to_hex.html">a5_u64_to_hex()</a></code> <code><a href="a5_u64_to_hex.html">a5_hex_to_u64()</a></code>
 
         </dt>
         <dd>Coerce between hex strings and A5 cell vectors</dd>
+
+        <dt>
+
+          <code><a href="a5_migrate.html">a5_migrate()</a></code>
+
+        </dt>
+        <dd>Migrate cell ids from the pre-1.0 index</dd>
       </dl></div><div class="section level2">
       <h2 id="arrow-parquet">Arrow &amp; Parquet<a class="anchor" aria-label="anchor" href="#arrow-parquet"></a></h2>
 
-      <div class="section-desc"><p>Lossless conversion between <code>a5_cell</code> and Arrow <code>uint64</code> arrays.</p></div>
+      <div class="section-desc"><p>Lossless conversion to and from Arrow arrays.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -107,6 +122,13 @@
 
         </dt>
         <dd>Convert between a5_cell and Arrow uint64 arrays</dd>
+
+        <dt>
+
+          <code><a href="a5_covering_from_arrow.html">a5_covering_from_arrow()</a></code> <code><a href="a5_covering_from_arrow.html">a5_covering_to_arrow()</a></code>
+
+        </dt>
+        <dd>Convert between a5_covering and Arrow list<uint64> arrays</uint64></dd>
       </dl></div><div class="section level2">
       <h2 id="hierarchy">Hierarchy<a class="anchor" aria-label="anchor" href="#hierarchy"></a></h2>
 
@@ -133,10 +155,10 @@
 
         <dt>
 
-          <code><a href="a5_spatial_hierarchy.html">a5_cell_to_spatial_parent()</a></code> <code><a href="a5_spatial_hierarchy.html">a5_cell_to_spatial_children()</a></code>
-          <span class="badge lifecycle lifecycle-experimental">experimental</span>
+          <code><a href="a5_spatial_hierarchy.html">a5_cell_to_supercell()</a></code> <code><a href="a5_spatial_hierarchy.html">a5_cell_to_subcell()</a></code>
+
         </dt>
-        <dd>Spatial parents and children</dd>
+        <dd>Supercells and subcells: parents and children by location</dd>
 
         <dt>
 
@@ -212,9 +234,9 @@
         </dt>
         <dd>Cells within a great-circle radius</dd>
       </dl></div><div class="section level2">
-      <h2 id="compact-uncompact">Compact &amp; uncompact<a class="anchor" aria-label="anchor" href="#compact-uncompact"></a></h2>
+      <h2 id="coverings">Coverings<a class="anchor" aria-label="anchor" href="#coverings"></a></h2>
 
-      <div class="section-desc"><p>Compress and expand sets of cells.</p></div>
+      <div class="section-desc"><p>Compacted sets of cells that record their resolution.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -223,10 +245,38 @@
 
       <dl><dt>
 
+          <code><a href="a5_covering.html">as_a5_covering()</a></code> <code><a href="a5_covering.html">is_a5_covering()</a></code> <code><a href="a5_covering.html">a5_covering_resolution()</a></code>
+
+        </dt>
+        <dd>A5 covering vectors</dd>
+
+        <dt>
+
           <code><a href="a5_compaction.html">a5_compact()</a></code> <code><a href="a5_compaction.html">a5_uncompact()</a></code>
 
         </dt>
         <dd>Compact and uncompact sets of cells</dd>
+
+        <dt>
+
+          <code><a href="a5_set_operations.html">a5_union()</a></code> <code><a href="a5_set_operations.html">a5_intersect()</a></code> <code><a href="a5_set_operations.html">a5_difference()</a></code>
+
+        </dt>
+        <dd>Combine coverings</dd>
+
+        <dt>
+
+          <code><a href="a5_covering_predicates.html">a5_contains()</a></code> <code><a href="a5_covering_predicates.html">a5_overlaps()</a></code>
+
+        </dt>
+        <dd>Test coverings</dd>
+
+        <dt>
+
+          <code><a href="a5_covering_measures.html">a5_count()</a></code> <code><a href="a5_covering_measures.html">a5_area()</a></code>
+
+        </dt>
+        <dd>Measure coverings</dd>
       </dl></div><div class="section level2">
       <h2 id="geometry-indexing">Geometry indexing<a class="anchor" aria-label="anchor" href="#geometry-indexing"></a></h2>
 

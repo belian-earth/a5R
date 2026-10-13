@@ -2,17 +2,146 @@
 
 ## a5R (development version)
 
-- New experimental
-  [`a5_cell_to_spatial_parent()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
+### Breaking changes
+
+- a5R now uses the a5 Rust crate 1.0.0-beta.2, which introduces A5’s
+  permanent cell-ID system. The space-filling curve and the order of the
+  dodecahedron faces are new, so **every cell id changes**: an id
+  written by an earlier version of a5R is still a valid cell, but in a
+  different place, and nothing in the id says which version wrote it.
+  Re-index stored data from its coordinates, or convert the ids once
+  with the new
+  [`a5_migrate()`](https://belian-earth.github.io/a5R/dev/reference/a5_migrate.md).
+- Resolution-1 cells are now pentagons rather than triangles, so their
+  boundaries and centres change. Cells at every other resolution keep
+  their shape and position.
+- Compacted cell sets are now `a5_covering` vectors, one covering per
+  element. A covering stores its compacted cells followed by a
+  compaction marker recording the resolution they stand for, as in the
+  other A5 libraries, so
+  [`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)
+  no longer needs a resolution. Coverings print as their resolution,
+  cell count and stored-cell count, work as data frame columns, and
+  compare equal with `==` when they hold the same cells. Use
+  [`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)
+  for the cells;
+  [`as_a5_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell.md)
+  refuses a covering rather than treat its stored cells, whose outlines
+  do not nest, as a grid.
+- [`a5_compact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md),
+  [`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md)
   and
-  [`a5_cell_to_spatial_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
-  move between resolutions by cell centre rather than by index. The A5
+  [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md)
+  return coverings.
+  [`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md)
+  and
+  [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md)
+  give one covering per centre cell and lose their `simplify` argument,
+  which moves to
+  [`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md).
+  An `NA` centre gives an `NA` covering.
+- [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md)
+  returns one covering per feature instead of the union of all features,
+  so it can fill a column of an `sf` data frame. A feature’s parts and
+  holes are still combined. A missing geometry gives an `NA` covering
+  and an empty geometry an empty covering; both used to be errors.
+- [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_linestring_to_cells.md)
+  gains `simplify`: with `simplify = FALSE` it returns an `a5_cell_list`
+  with one ordered path per feature, for a list column. The default flat
+  form concatenates the paths, so a cell crossed by several features now
+  appears once per feature rather than once overall; within a feature,
+  each cell still appears once. Missing and empty geometries contribute
+  no cells instead of an error.
+- [`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)
+  takes coverings, and its `resolution` argument is optional: by default
+  each covering expands to its own resolution. It refuses to build more
+  than `.Machine$integer.max` cells.
+- [`a5_is_valid()`](https://belian-earth.github.io/a5R/dev/reference/a5_is_valid.md)
+  now checks the index encoding. It used to return `TRUE` for any
+  non-missing `a5_cell` and for any hex string that parsed, whether or
+  not the value was a cell; hex strings must now also be 16 digits.
+
+### New features
+
+- New
+  [`a5_migrate()`](https://belian-earth.github.io/a5R/dev/reference/a5_migrate.md)
+  converts ids from a5R before 1.0 to the current index.
+- New
+  [`as_a5_covering()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering.md)
+  builds coverings from cells, cell lists or raw 64-bit values written
+  by other A5 libraries, sorting and compacting them;
+  [`a5_covering_resolution()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering.md)
+  returns the resolution each covering stands for.
+  [`a5_is_valid()`](https://belian-earth.github.io/a5R/dev/reference/a5_is_valid.md)
+  checks covering structure.
+- New covering operations, computed on the compacted cells without
+  expanding them:
+  [`a5_union()`](https://belian-earth.github.io/a5R/dev/reference/a5_set_operations.md),
+  [`a5_intersect()`](https://belian-earth.github.io/a5R/dev/reference/a5_set_operations.md)
+  and
+  [`a5_difference()`](https://belian-earth.github.io/a5R/dev/reference/a5_set_operations.md)
+  combine coverings element by element, and `a5_union(x)` merges every
+  covering in `x`;
+  [`a5_contains()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_predicates.md)
+  tests cells against coverings (a point-in-polygon test at the
+  covering’s resolution) and
+  [`a5_overlaps()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_predicates.md)
+  tests pairs of coverings;
+  [`a5_count()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_measures.md)
+  and
+  [`a5_area()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_measures.md)
+  give the number of cells and the area each covering stands for.
+  Combining coverings at different resolutions is an error, as upstream.
+- New
+  [`a5_covering_to_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_from_arrow.md)
+  and
+  [`a5_covering_from_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_from_arrow.md)
+  convert coverings to and from Arrow `list<uint64>` with the compaction
+  marker, the layout DuckDB, Python and JavaScript A5 code read.
+- New
+  [`a5_is_valid_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_is_valid.md)
+  checks that values are A5 cells, mirroring the upstream
+  `is_valid_cell`.
+  [`a5_is_valid()`](https://belian-earth.github.io/a5R/dev/reference/a5_is_valid.md)
+  becomes a generic that also accepts an `a5_cell_list`, returning one
+  value per element.
+
+### Other changes
+
+- New
+  [`vignette("coverings")`](https://belian-earth.github.io/a5R/dev/articles/coverings.md)
+  on building, combining, testing and measuring coverings.
+  [`vignette("arrow-parquet")`](https://belian-earth.github.io/a5R/dev/articles/arrow-parquet.md)
+  covers storing coverings and migrating data written before 1.0, and
+  [`vignette("spatial-hierarchy")`](https://belian-earth.github.io/a5R/dev/articles/spatial-hierarchy.md)
+  is rewritten for supercells and subcells.
+
+- [`a5_cell_child()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_child.md)
+  and
+  [`a5_cell_children_range()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_children_range.md)
+  follow the new order of
+  [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)
+  (children are now in ascending id order).
+
+- [`a5_get_num_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_resolution_stats.md)
+  is correct at high resolutions (a5 0.10.1).
+
+- [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md)
+  merges a feature’s parts with the upstream covering union, without
+  expanding each part to full resolution first.
+
+- New
+  [`a5_cell_to_supercell()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
+  and
+  [`a5_cell_to_subcell()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
+  move between resolutions by cell centre rather than by index, wrapping
+  the upstream `cell_to_supercell()` and `cell_to_subcell()`. The A5
   index hierarchy is not spatially nested: for about half of cells one
   resolution apart, and about 35% at four or more apart, the index
-  parent is not the coarse cell containing the fine cell’s centre. The
-  spatial pair forms an exact partition, so aggregating fine cells to a
-  coarser grid counts each fine cell once, inside the coarse cell it
-  lies in.
+  parent is not the coarse cell containing the fine cell’s centre.
+  Supercells and subcells form an exact partition, so aggregating fine
+  cells to a coarser grid counts each fine cell once, inside the coarse
+  cell it lies in. Subcells are returned as one covering per cell.
   [`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)
   and
   [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)
@@ -265,7 +394,7 @@ CRAN release: 2026-03-26
   [`a5_hex_to_u64()`](https://belian-earth.github.io/a5R/dev/reference/a5_u64_to_hex.md)
   for explicit conversion between `a5_cell` vectors and hex strings.
 - `a5_is_cell()` has been renamed to
-  [`a5_is_valid()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell.md)
+  [`a5_is_valid()`](https://belian-earth.github.io/a5R/dev/reference/a5_is_valid.md)
   and now accepts both `a5_cell` vectors and character hex strings.
 - [`a5_cell_distance()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_distance.md)
   and

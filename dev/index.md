@@ -37,7 +37,7 @@ library(a5R)
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
 cell
 #> <a5_cell[1]>
-#> [1] 6344be8000000000
+#> [1] 63bb948000000000
 
 # Get the boundary polygon
 a5_cell_to_boundary(cell)
@@ -47,17 +47,17 @@ a5_cell_to_boundary(cell)
 # Navigate the hierarchy
 a5_cell_to_parent(cell)
 #> <a5_cell[1]>
-#> [1] 6344be0000000000
+#> [1] 63bb960000000000
 a5_cell_to_children(cell)
 #> <a5_cell[4]>
-#> [1] 6344be2000000000 6344be6000000000 6344bea000000000 6344bee000000000
+#> [1] 63bb942000000000 63bb946000000000 63bb94a000000000 63bb94e000000000
 ```
 
 ``` r
 
 # Create a collection of cells whose centres fall within a great-circle distance of 100km from the origin cell
 cells <- a5_spherical_cap(cell, radius = 100000) |> 
-  a5_uncompact(resolution = 10)
+  a5_uncompact()
 plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
 ```
 
@@ -79,16 +79,33 @@ and geometry-to-cell conversion.
 - **vctrs + wk integration** — cell indices use an `a5_cell` type with
   tibble support; geometries return as `wk_wkb`/`wk_wkt` vectors
   compatible with sf and terra.
+- **Coverings** — polygons, disks and caps become `a5_covering` vectors,
+  one compacted cell set per feature, that combine
+  ([`a5_union()`](https://belian-earth.github.io/a5R/dev/reference/a5_set_operations.md),
+  [`a5_intersect()`](https://belian-earth.github.io/a5R/dev/reference/a5_set_operations.md),
+  [`a5_difference()`](https://belian-earth.github.io/a5R/dev/reference/a5_set_operations.md)),
+  test
+  ([`a5_contains()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_predicates.md))
+  and measure
+  ([`a5_area()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_measures.md))
+  without expanding to millions of cells. See
+  [`vignette("coverings")`](https://belian-earth.github.io/a5R/dev/articles/coverings.md).
 - **Geometry indexing** —
   [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md)
   and
   [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_linestring_to_cells.md)
-  map polygons and great-circle lines to the cells that cover them.
+  map polygons and great-circle lines to cells.
 - **Traversal** —
   [`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md)
   and
   [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md)
   select neighbours by hop count or great-circle distance.
+- **Spatial hierarchy** —
+  [`a5_cell_to_supercell()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
+  and
+  [`a5_cell_to_subcell()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
+  move between resolutions by location, so aggregation counts each fine
+  cell inside the coarse cell it lies in.
 - **Multi-threading** — opt-in parallel processing via rayon for
   vectorised operations. See
   [`vignette("multithreading")`](https://belian-earth.github.io/a5R/dev/articles/multithreading.md).

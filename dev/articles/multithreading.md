@@ -53,7 +53,7 @@ independently:
 | Function | Per-element cost | Benefit |
 |----|----|----|
 | [`a5_cell_to_boundary()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_boundary.md) | Heavy (boundary + WKT/WKB) | High |
-| [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md) | Heavy (per-part flood-fill, hole subtraction) | High |
+| [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md) | Heavy (per-part fill, hole subtraction) | High |
 | [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_linestring_to_cells.md) | Heavy (per-feature tracing) | High |
 | [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md) | Heavy (per-cell search) | High |
 | [`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md) | Heavy (per-cell traversal) | High |
@@ -63,15 +63,17 @@ independently:
 | [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md) | Light (bit ops per child) | Low |
 | [`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md) | Light (bit ops + hex) | Low |
 | [`a5_get_resolution()`](https://belian-earth.github.io/a5R/dev/reference/a5_get_resolution.md) | Light (bit ops) | Low |
-| [`a5_is_valid()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell.md) | Light (hex parse) | Low |
+| [`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md) | Light (per-covering expansion) | Low |
+| [`a5_is_valid()`](https://belian-earth.github.io/a5R/dev/reference/a5_is_valid.md) | Light (bit checks) | Low |
 
 For the one-to-many functions
 ([`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md),
 [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md),
-[`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md))
-the per-cell work is parallelised; assembling the result, especially the
-`simplify = FALSE` list, is sequential, so the list form gains less than
-the flat form.
+[`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md),
+[`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md))
+the per-element work is parallelised; assembling the result, especially
+the `simplify = FALSE` list, is sequential, so the list form gains less
+than the flat form.
 
 Scalar and bulk operations
 ([`a5_compact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md),
@@ -95,7 +97,7 @@ Here’s a quick comparison on 100k cells:
 
 ``` r
 
-cells <- a5_polygon_to_cells(wk::rct(-10, 50, 10, 60), resolution = 12)
+cells <- a5_uncompact(a5_polygon_to_cells(wk::rct(-10, 50, 10, 60), resolution = 12))
 length(cells)
 #> [1] 704259
 

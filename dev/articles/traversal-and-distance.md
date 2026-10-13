@@ -10,18 +10,24 @@ library(a5R)
 Pick an origin cell and use
 [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md)
 to grab every cell whose centre falls within a given great-circle
-radius. The result is compacted, so pass it through
+radius. Like
+[`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md),
+it returns an `a5_covering`: a compacted set that records its
+resolution. Pass it through
 [`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)
-for a uniform-resolution grid.
+for the cells.
 
 ``` r
 
 origin <- a5_lonlat_to_cell(35, 55, resolution = 14)
 
-disk <- a5_grid_disk(origin, k = 20, vertex = FALSE)
-disk_vertex <- a5_grid_disk(origin, k = 20, vertex = TRUE)
-cap_compact <- a5_spherical_cap(origin, radius = 5000)
-cap <- a5_uncompact(cap_compact, resolution = 14)
+a5_spherical_cap(origin, radius = 5000)
+#> <a5_covering[1]>
+#> [1] res 14: 621 cells (105 stored)
+
+disk <- a5_uncompact(a5_grid_disk(origin, k = 20, vertex = FALSE))
+disk_vertex <- a5_uncompact(a5_grid_disk(origin, k = 20, vertex = TRUE))
+cap <- a5_uncompact(a5_spherical_cap(origin, radius = 5000))
 ```
 
 [`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md)
@@ -39,7 +45,6 @@ and visualise it as a colour gradient.
 ``` r
 
 dcap <- a5_cell_distance(origin, cap, units = "km")
-dcap_compact <- a5_cell_distance(origin, cap_compact, units = "km")
 ddisk <- a5_cell_distance(origin, disk, units = "km")
 ddisk_vertex <- a5_cell_distance(origin, disk_vertex, units = "km")
 
@@ -48,7 +53,6 @@ pal <- hcl.colors(256, "Inferno")
 for (info in list(
   list(s = disk, d = ddisk, lab = "Grid disk (edges)"),
   list(s = disk_vertex, d = ddisk_vertex, lab = "Grid disk (vertices)"),
-  list(s = cap_compact, d = dcap_compact, lab = "Spherical cap (compact)"),
   list(s = cap, d = dcap, lab = "Spherical cap")
 )) {
   brk <- seq(0, max(as.numeric(info$d)), length.out = 257)
@@ -76,10 +80,7 @@ differences grow with distance.
 ``` r
 
 wide_origin <- a5_lonlat_to_cell(35, 55, resolution = 8)
-wide_cap <- a5_uncompact(
-  a5_spherical_cap(wide_origin, radius = 500000),
-  resolution = 8
-)
+wide_cap <- a5_uncompact(a5_spherical_cap(wide_origin, radius = 500000))
 
 hav <- a5_cell_distance(wide_origin, wide_cap, units = "m", method = "haversine")
 geo <- a5_cell_distance(wide_origin, wide_cap, units = "m", method = "geodesic")

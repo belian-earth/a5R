@@ -57,9 +57,9 @@ and Arrow `uint64` arrays.
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
 hex <- a5_u64_to_hex(cell)
 hex
-#> [1] "633e000000000000"
+#> [1] "6316000000000000"
 
 a5_hex_to_u64(hex)
 #> <a5_cell[1]>
-#> [1] 633e000000000000
+#> [1] 6316000000000000
 ```

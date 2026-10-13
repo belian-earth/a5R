@@ -15,22 +15,32 @@ The `a5_cell` vector type and helpers.
 - [`a5_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell.md)
   [`is_a5_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell.md)
   [`as_a5_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell.md)
-  [`a5_is_valid()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell.md)
   : A5 Cell Index Vector
 - [`as_a5_cell_list()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_list.md)
   [`unlist(`*`<a5_cell_list>`*`)`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_list.md)
   : List of A5 cell vectors
+- [`a5_is_valid()`](https://belian-earth.github.io/a5R/dev/reference/a5_is_valid.md)
+  [`a5_is_valid_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_is_valid.md)
+  : Check that values are A5 cells
 - [`a5_u64_to_hex()`](https://belian-earth.github.io/a5R/dev/reference/a5_u64_to_hex.md)
   [`a5_hex_to_u64()`](https://belian-earth.github.io/a5R/dev/reference/a5_u64_to_hex.md)
   : Coerce between hex strings and A5 cell vectors
+- [`a5_migrate()`](https://belian-earth.github.io/a5R/dev/reference/a5_migrate.md)
+  : Migrate cell ids from the pre-1.0 index
 
 ## Arrow & Parquet
 
-Lossless conversion between `a5_cell` and Arrow `uint64` arrays.
+Lossless conversion to and from Arrow arrays.
 
 - [`a5_cell_from_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_from_arrow.md)
   [`a5_cell_to_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_from_arrow.md)
   : Convert between a5_cell and Arrow uint64 arrays
+
+- [`a5_covering_from_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_from_arrow.md)
+  [`a5_covering_to_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_from_arrow.md)
+  :
+
+  Convert between a5_covering and Arrow list arrays
 
 ## Hierarchy
 
@@ -41,9 +51,9 @@ Navigate the cell hierarchy across resolutions.
 - [`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)
   [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)
   : Index parents and children
-- [`a5_cell_to_spatial_parent()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
-  [`a5_cell_to_spatial_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
-  **\[experimental\]** : Spatial parents and children
+- [`a5_cell_to_supercell()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
+  [`a5_cell_to_subcell()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
+  : Supercells and subcells: parents and children by location
 - [`a5_cell_child()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_child.md)
   : The i-th child of each cell
 - [`a5_cell_children_range()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_children_range.md)
@@ -74,13 +84,27 @@ Neighbourhood and distance-based cell selection.
 - [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md)
   : Cells within a great-circle radius
 
-## Compact & uncompact
+## Coverings
 
-Compress and expand sets of cells.
+Compacted sets of cells that record their resolution.
 
+- [`as_a5_covering()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering.md)
+  [`is_a5_covering()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering.md)
+  [`a5_covering_resolution()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering.md)
+  : A5 covering vectors
 - [`a5_compact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)
   [`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)
   : Compact and uncompact sets of cells
+- [`a5_union()`](https://belian-earth.github.io/a5R/dev/reference/a5_set_operations.md)
+  [`a5_intersect()`](https://belian-earth.github.io/a5R/dev/reference/a5_set_operations.md)
+  [`a5_difference()`](https://belian-earth.github.io/a5R/dev/reference/a5_set_operations.md)
+  : Combine coverings
+- [`a5_contains()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_predicates.md)
+  [`a5_overlaps()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_predicates.md)
+  : Test coverings
+- [`a5_count()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_measures.md)
+  [`a5_area()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_measures.md)
+  : Measure coverings
 
 ## Geometry indexing
 

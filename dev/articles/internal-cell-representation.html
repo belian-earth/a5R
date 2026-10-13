@@ -47,6 +47,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/arrow-parquet.html">Working with Arrow and Parquet</a></li>
+    <li><a class="dropdown-item" href="../articles/coverings.html">Coverings: sets of cells</a></li>
     <li><a class="dropdown-item" href="../articles/internal-cell-representation.html">How a5R stores cell IDs without strings</a></li>
     <li><a class="dropdown-item" href="../articles/multithreading.html">Multi-threading</a></li>
     <li><a class="dropdown-item" href="../articles/spatial-hierarchy.html">Moving between resolutions by location</a></li>
@@ -142,11 +143,11 @@ propagation are all handled automatically by vctrs.</p>
 <code class="sourceCode R"><span><span class="co"># Display calls format(), which converts to hex for readability</span></span>
 <span><span class="va">cell</span></span>
 <span><span class="co">#&gt; &lt;a5_cell[1]&gt;</span></span>
-<span><span class="co">#&gt; [1] 6344be8000000000</span></span>
+<span><span class="co">#&gt; [1] 63bb948000000000</span></span>
 <span></span>
 <span><span class="co"># Explicit conversion</span></span>
 <span><span class="fu"><a href="../reference/a5_u64_to_hex.html">a5_u64_to_hex</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "6344be8000000000"</span></span>
+<span><span class="co">#&gt; [1] "63bb948000000000"</span></span>
 <span></span>
 <span><span class="co"># Round-trip from hex</span></span>
 <span><span class="fu"><a href="../reference/a5_cell.html">a5_cell</a></span><span class="op">(</span><span class="st">"0800000000000006"</span><span class="op">)</span></span>
@@ -269,6 +270,36 @@ column. Use <code><a href="https://rdrr.io/r/base/cbind.html" class="external-li
 <span><span class="co"># Flattening lapply() output</span></span>
 <span><span class="va">parts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cells</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_list.html">as_a5_cell_list</a></span><span class="op">(</span><span class="va">parts</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="coverings">Coverings<a class="anchor" aria-label="anchor" href="#coverings"></a>
+</h2>
+<p>An <code>a5_covering</code> holds one compacted set of cells per
+element, so it uses a different layout. Each element is a single
+<code>raw</code> vector of the covering’s 64-bit values, little-endian
+and unmasked: its cells sorted in curve order, then the compaction
+marker, exactly as the A5 libraries return them. Rust reads an element
+as one slice, and Arrow export is one <code>list&lt;uint64&gt;</code>
+value per covering.</p>
+<p>The compaction marker is a value no cell can take: quintant 60 (only
+0 to 59 exist) in the top 6 bits, the resolution in bits 55 to 48, and
+the tag <code>1000000</code> in the low 7 bits, which no resolution
+uses. The marker for resolution 12 is
+<code>0xf00c000000000040</code>:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">covering</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_compaction.html">a5_compact</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="fl">12</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">covering</span></span>
+<span><span class="co">#&gt; &lt;a5_covering[1]&gt;</span></span>
+<span><span class="co">#&gt; [1] res 12: 16 cells (1 stored)</span></span>
+<span><span class="va">bytes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="va">covering</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">bytes</span><span class="op">)</span> <span class="op">/</span> <span class="fl">8</span>                 <span class="co"># one stored cell, then the marker</span></span>
+<span><span class="co">#&gt; [1] 2</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/rev.html" class="external-link">rev</a></span><span class="op">(</span><span class="va">bytes</span><span class="op">[</span><span class="fl">9</span><span class="op">:</span><span class="fl">16</span><span class="op">]</span><span class="op">)</span>                  <span class="co"># the marker, most significant byte first</span></span>
+<span><span class="co">#&gt; [1] f0 0c 00 00 00 00 00 40</span></span></code></pre></div>
+<p>A covering never holds <code>NA</code>, so no byte is masked. A
+missing covering is a <code>NULL</code> element, which is what vctrs
+fills in for a list, so joins and <code>vec_init()</code> produce
+<code>NA</code> coverings with no extra work.</p>
 </div>
 <div class="section level2">
 <h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
