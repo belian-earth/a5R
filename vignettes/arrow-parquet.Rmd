@@ -61,7 +61,7 @@ entirely, using Arrow's zero-copy `View()` to reinterpret the raw bytes:
 library(a5R)
 library(tibble)
 
-# Six cities across the globe; some will have bit 63 set (origin >= 6)
+# Six cities across the globe; some will have bit 63 set (quintant >= 32)
 cities <- tibble(
   name = c("Edinburgh", "Tokyo", "São Paulo", "Nairobi", "Anchorage", "Sydney"),
   lon  = c(   -3.19,     139.69,     -46.63,     36.82,    -149.90,    151.21),
@@ -125,6 +125,67 @@ Verify the round-trip is lossless:
 identical(format(cities$cell), format(result$cell))
 ```
 
+## Storing coverings
+
+A covering, such as the cells of a polygon, is stored as a list of 64-bit
+values: its compacted cells in curve order, then a *compaction marker*
+recording the resolution they stand for (see `?a5_covering`). This is the
+layout every A5 library uses, so `a5_covering_to_arrow()` writes coverings
+to a `list<uint64>` column that DuckDB, Python and JavaScript read without
+losing the resolution:
+
+```{r covering_write, eval = requireNamespace("arrow", quietly = TRUE)}
+cities$within_50km <- a5_spherical_cap(cities$cell, radius = 50000)
+cities[c("name", "within_50km")]
+
+tf <- tempfile(fileext = ".parquet")
+arrow::write_parquet(
+  arrow::arrow_table(
+    name = cities$name,
+    cell_id = a5_cell_to_arrow(cities$cell),
+    within_50km = a5_covering_to_arrow(cities$within_50km)
+  ),
+  tf
+)
+pq <- arrow::read_parquet(tf, as_data_frame = FALSE)
+pq$schema
+```
+
+`a5_covering_from_arrow()` reads them back. It also accepts coverings
+written by other A5 libraries, checking, sorting and compacting each one;
+an element without a compaction marker stands for the resolution of its
+finest cell.
+
+```{r covering_read, eval = requireNamespace("arrow", quietly = TRUE)}
+back <- a5_covering_from_arrow(pq$within_50km)
+identical(back, cities$within_50km)
+```
+
+Keep the compaction marker when moving coverings through other tools: the
+stored cells have mixed resolutions, and without the marker nothing records
+which resolution they stand for. Expand a covering with `a5_uncompact()`
+before joining it to data keyed by cell.
+
+## Data written by a5R before 1.0
+
+a5R 1.0 uses A5's permanent cell-ID system. Its space-filling curve threads
+the cells differently from the index used by a5R 0.6 and earlier (the "v0"
+index), so every cell has a new id. A v0 id is still a valid cell in the
+current index, but in a different place, and nothing in the id records
+which version wrote it. Stored v0 ids must be converted exactly once, as
+they are read:
+
+```{r migrate, eval = requireNamespace("arrow", quietly = TRUE)}
+# A resolution-8 cell id written by a5R 0.6
+v0 <- a5_cell("59c4780000000000")
+a5_migrate(v0)
+```
+
+`a5_migrate()` is a bit operation, so it is cheap on large columns. Apply
+it to every stored id column, including the cells inside stored coverings
+(`a5_compact(a5_migrate(a5_uncompact(old)))`), or re-index the data from
+its coordinates. Upstream will retire the conversion in a future version.
+
 ## How it works under the hood
 
 1. **`a5_cell_to_arrow()`**: packs the eight raw-byte fields into 8-byte
@@ -136,6 +197,10 @@ identical(format(cities$cell), format(result$cell))
    `View(fixed_size_binary(8))` on the `uint64` array to get the raw
    bytes, then unpacks each 8-byte blob into the eight raw-byte fields
    used by `a5_cell`.
+
+3. **`a5_covering_to_arrow()`** and **`a5_covering_from_arrow()`** do the
+   same with `list<fixed_size_binary(8)>` and `list<uint64>`: each covering
+   is a list element of 8-byte values.
 
 The raw bytes never pass through `double`, so there is no precision loss
 at any step. See `vignette("internal-cell-representation")` for details

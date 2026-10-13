@@ -107,6 +107,9 @@ Arrow \verb{list<uint64>}
 
 \itemize{
 \item \code{vignette("a5R")} --- getting started
+\item \code{vignette("coverings")} --- sets of cells: build, combine, test, measure
+\item \code{vignette("spatial-hierarchy")} --- moving between resolutions by location
+\item \code{vignette("traversal-and-distance")} --- disks, caps and distances
 \item \code{vignette("multithreading")} --- parallel processing
 \item \code{vignette("internal-cell-representation")} --- how cell IDs are stored
 \item \code{vignette("arrow-parquet")} --- Arrow and Parquet interop

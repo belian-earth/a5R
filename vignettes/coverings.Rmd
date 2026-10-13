@@ -1,0 +1,188 @@
+---
+title: "Coverings: sets of cells"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Coverings: sets of cells}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+has_sf <- requireNamespace("sf", quietly = TRUE)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = has_sf
+)
+```
+
+```{r setup}
+library(a5R)
+```
+
+A *covering* is a set of A5 cells at one resolution that stands for an area:
+the cells of a polygon, of a disk around a cell, or of a cap of a given
+radius. a5R stores each covering compacted. Every complete group of sibling
+cells is replaced by its parent, and a trailing *compaction marker* records
+the resolution the stored cells stand for. An `a5_covering` vector holds one
+covering per element, so coverings sit in a data frame column next to the
+features they describe.
+
+Combining, testing and measuring coverings works on the compacted cells
+directly, without expanding them, so it stays fast for coverings that stand
+for millions of cells.
+
+## Building coverings
+
+`a5_polygon_to_cells()` returns one covering per feature. Here, every county
+of North Carolina at resolution 11, where a cell covers about 8 km²:
+
+```{r polygons, message = FALSE}
+library(sf)
+nc <- st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
+nc <- st_transform(nc, 4326) # A5 works in WGS 84 longitude and latitude
+nc$cells <- a5_polygon_to_cells(nc, resolution = 11)
+nc[1:4, c("NAME", "cells")]
+```
+
+Each covering prints its resolution, the number of cells it stands for, and
+the number it stores. `a5_spherical_cap()`, `a5_grid_disk()` and
+`a5_cell_to_subcell()` return one covering per centre cell, and
+`a5_compact()` turns any set of cells into one:
+
+```{r others}
+raleigh <- a5_lonlat_to_cell(-78.64, 35.78, resolution = 11)
+near_raleigh <- a5_spherical_cap(raleigh, radius = 60000)
+near_raleigh
+
+a5_grid_disk(raleigh, k = 5)
+a5_compact(a5_cell_to_children(raleigh, resolution = 13))
+```
+
+## Measuring coverings
+
+`a5_count()` gives the number of cells a covering stands for and `a5_area()`
+its area. A5 cells are equal-area, so the area is the count times the area
+of one cell. At resolution 11 it tracks each county's area closely:
+
+```{r measures}
+nc$cell_area <- a5_area(nc$cells, units = "km^2")
+nc$true_area <- units::set_units(st_area(nc), "km^2")
+head(nc[c("NAME", "cell_area", "true_area")], 4)
+
+err <- as.numeric((nc$cell_area - nc$true_area) / nc$true_area)
+round(100 * stats::quantile(abs(err), c(0.5, 0.9, 1)), 1)
+```
+
+The error is under 1% for the median county and about 6% at worst. A
+covering counts whole cells, and each cell straddling a county boundary is
+in or out by its centre. Finer resolutions reduce the error.
+
+## Combining coverings
+
+`a5_union()`, `a5_intersect()` and `a5_difference()` combine coverings
+element by element, recycling a length-one argument. With a single argument,
+`a5_union()` merges every covering in a vector into one:
+
+```{r combine}
+state <- a5_union(nc$cells)
+state
+
+a5_intersect(state, near_raleigh)
+counties_near <- a5_intersect(nc$cells, near_raleigh)
+nc$NAME[a5_count(counties_near) > 0]
+```
+
+```{r combine-plot, fig.width = 7, fig.height = 3.2, echo = -c(1, 9)}
+op <- par(mar = c(0.5, 0.5, 0.5, 0.5))
+plot(st_geometry(nc), border = "#bbbbbb", lwd = 0.5)
+plot(a5_cell_to_boundary(a5_uncompact(a5_difference(state, near_raleigh))),
+     col = "#206ead30", border = NA, add = TRUE)
+plot(a5_cell_to_boundary(a5_uncompact(a5_intersect(state, near_raleigh))),
+     col = "#d9534f80", border = NA, add = TRUE)
+plot(a5_cell_to_lonlat(raleigh), pch = 19, cex = 0.6, add = TRUE)
+legend("bottomleft", bty = "n", fill = c("#d9534f80", "#206ead30"),
+       border = NA, legend = c("Within 60 km of Raleigh", "Rest of the state"))
+par(op)
+```
+
+Both coverings in each pair must be at the same resolution. A5 cells do not
+nest geometrically across resolutions, so combining sets at different
+resolutions has no meaning, and it is an error:
+
+```{r mismatch, error = TRUE}
+a5_union(state, a5_spherical_cap(a5_cell_to_parent(raleigh), radius = 60000))
+```
+
+## Testing coverings
+
+`a5_contains()` tests cells against a covering. Indexing points at the
+covering's resolution turns it into a point-in-polygon test:
+
+```{r contains}
+set.seed(1)
+lon <- stats::runif(1000, -84.5, -75.5)
+lat <- stats::runif(1000, 33.8, 36.6)
+points <- a5_lonlat_to_cell(lon, lat, resolution = a5_covering_resolution(state))
+in_state <- a5_contains(state, points)
+mean(in_state)
+```
+
+The answer agrees with an exact geometric test except for a few points in
+cells that straddle the state boundary, all within one cell of it:
+
+```{r contains-check}
+exact <- lengths(st_intersects(
+  st_as_sf(data.frame(lon, lat), coords = c("lon", "lat"), crs = st_crs(nc)),
+  st_union(nc)
+)) > 0
+table(covering = in_state, exact = exact)
+```
+
+`a5_overlaps()` tests whether two coverings share any cell. With the default
+centre containment, every cell belongs to the one county holding its centre,
+so the county coverings partition the state and no two overlap. With
+`containment = "overlapping"`, cells along a shared border belong to both
+counties:
+
+```{r overlaps}
+ashe <- nc$cells[nc$NAME == "Ashe"]
+neighbours <- nc$NAME %in% c("Alleghany", "Wilkes", "Watauga")
+a5_overlaps(nc$cells[neighbours], ashe)
+
+gap_free <- a5_polygon_to_cells(nc[nc$NAME %in% c("Ashe", "Alleghany", "Wilkes", "Watauga"), ],
+                                resolution = 11, containment = "overlapping")
+a5_overlaps(gap_free[-1], gap_free[1])
+```
+
+## Drawing and joining
+
+The stored cells of a covering have mixed resolutions and are parents in
+the A5 index, whose outlines do not nest geometrically: drawn directly, they
+would show overlaps and gaps. `a5_uncompact()` expands coverings to their
+cells, which is what to plot or join to data keyed by cell:
+
+```{r uncompact}
+cells <- a5_uncompact(nc$cells[1:3])
+length(cells)
+all(a5_get_resolution(cells) == 11)
+
+per_county <- a5_uncompact(nc$cells[1:3], simplify = FALSE)
+lengths(per_county)
+```
+
+`simplify = FALSE` keeps one element per covering, ready for
+`tidyr::unnest()`. Uncompacting can build a great many cells: a covering of
+France at resolution 18 stands for about a billion. `a5_uncompact()` refuses
+to build more than `.Machine$integer.max` cells; work with the covering
+itself where possible.
+
+## Storing coverings
+
+Coverings keep their compaction marker in storage, as in the other A5
+libraries. `a5_covering_to_arrow()` writes them to an Arrow `list<uint64>`
+column that DuckDB, Python and JavaScript read with the resolution intact,
+and `a5_covering_from_arrow()` reads them back, normalising coverings
+written elsewhere. See `vignette("arrow-parquet")`. For coverings built by
+hand from outside data, `as_a5_covering()` sorts and compacts them, and
+`a5_is_valid()` checks that a covering is well formed.

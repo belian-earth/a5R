@@ -56,7 +56,7 @@ NULL
 a5_compact <- function(cells, resolution = NULL) {
   cells <- as_a5_cell(cells)
   resolution <- check_optional_resolution(resolution)
-  coverings_from_rs(a5_compact_rs(cell_data(cells), resolution))
+  coverings_from_rs(from_caller(a5_compact_rs(cell_data(cells), resolution), call = rlang::current_env()))
 }
 
 #' @rdname a5_compaction
@@ -80,5 +80,5 @@ a5_uncompact <- function(x, resolution = NULL, simplify = TRUE) {
       "i" = "Work with the covering instead, or uncompact a smaller area."
     ))
   }
-  one_to_many(a5_uncompact_rs(x, resolution, simplify), simplify)
+  one_to_many(from_caller(a5_uncompact_rs(x, resolution, simplify), call = rlang::current_env()), simplify)
 }

@@ -64,6 +64,9 @@
 #'
 #' @section Vignettes:
 #' - `vignette("a5R")` --- getting started
+#' - `vignette("coverings")` --- sets of cells: build, combine, test, measure
+#' - `vignette("spatial-hierarchy")` --- moving between resolutions by location
+#' - `vignette("traversal-and-distance")` --- disks, caps and distances
 #' - `vignette("multithreading")` --- parallel processing
 #' - `vignette("internal-cell-representation")` --- how cell IDs are stored
 #' - `vignette("arrow-parquet")` --- Arrow and Parquet interop

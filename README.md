@@ -90,11 +90,19 @@ hierarchy, traversal, and geometry-to-cell conversion.
 - **vctrs + wk integration** — cell indices use an `a5_cell` type with
   tibble support; geometries return as `wk_wkb`/`wk_wkt` vectors
   compatible with sf and terra.
+- **Coverings** — polygons, disks and caps become `a5_covering` vectors,
+  one compacted cell set per feature, that combine (`a5_union()`,
+  `a5_intersect()`, `a5_difference()`), test (`a5_contains()`) and
+  measure (`a5_area()`) without expanding to millions of cells. See
+  `vignette("coverings")`.
 - **Geometry indexing** — `a5_polygon_to_cells()` and
-  `a5_linestring_to_cells()` map polygons and great-circle lines to the
-  cells that cover them.
+  `a5_linestring_to_cells()` map polygons and great-circle lines to
+  cells.
 - **Traversal** — `a5_grid_disk()` and `a5_spherical_cap()` select
   neighbours by hop count or great-circle distance.
+- **Spatial hierarchy** — `a5_cell_to_supercell()` and
+  `a5_cell_to_subcell()` move between resolutions by location, so
+  aggregation counts each fine cell inside the coarse cell it lies in.
 - **Multi-threading** — opt-in parallel processing via rayon for
   vectorised operations. See `vignette("multithreading")`.
 

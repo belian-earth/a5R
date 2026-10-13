@@ -83,7 +83,7 @@ as_a5_covering.a5_cell <- function(x, resolution = NULL, ...) {
 #' @export
 as_a5_covering.a5_cell_list <- function(x, resolution = NULL, ...) {
   resolution <- check_optional_resolution(resolution)
-  coverings_from_rs(a5_compact_each_rs(lapply(x, cell_data), resolution))
+  coverings_from_rs(from_caller(a5_compact_each_rs(lapply(x, cell_data), resolution), call = rlang::current_env()))
 }
 
 #' @rdname a5_covering
@@ -105,7 +105,7 @@ as_a5_covering.list <- function(x, resolution = NULL, ...) {
     )
   }
   resolution <- check_optional_resolution(resolution)
-  coverings_from_rs(a5_covering_normalise_rs(unname(x), resolution))
+  coverings_from_rs(from_caller(a5_covering_normalise_rs(unname(x), resolution), call = rlang::current_env()))
 }
 
 #' @export

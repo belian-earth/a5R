@@ -59,6 +59,11 @@
 
 ## Other changes
 
+* New `vignette("coverings")` on building, combining, testing and measuring
+  coverings. `vignette("arrow-parquet")` covers storing coverings and
+  migrating data written before 1.0, and `vignette("spatial-hierarchy")` is
+  rewritten for supercells and subcells.
+
 * `a5_cell_child()` and `a5_cell_children_range()` follow the new order of
   `a5_cell_to_children()` (children are now in ascending id order).
 * `a5_get_num_cells()` is correct at high resolutions (a5 0.10.1).

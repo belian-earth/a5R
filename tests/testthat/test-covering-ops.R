@@ -116,3 +116,17 @@ test_that("covering operations are identical with threads > 1", {
     single
   )
 })
+
+test_that("covering errors name the user's call, not the Rust wrapper", {
+  disk8 <- a5_grid_disk(a5_lonlat_to_cell(-3.19, 55.95, resolution = 8), k = 1)
+  calls <- list(
+    a5_union = function() a5_union(caps[1], disk8),
+    a5_contains = function() a5_contains(caps[1], a5_cell_to_parent(edinburgh)),
+    a5_compact = function() a5_compact(a, resolution = 5),
+    a5_uncompact = function() a5_uncompact(caps, resolution = 4)
+  )
+  for (name in names(calls)) {
+    err <- tryCatch(calls[[name]](), error = identity)
+    expect_identical(deparse(err$call[[1]]), name)
+  }
+})

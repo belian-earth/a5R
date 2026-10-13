@@ -45,7 +45,7 @@ NULL
 a5_union <- function(x, y = NULL) {
   x <- as_a5_covering(x)
   if (is.null(y)) {
-    return(coverings_from_rs(a5_covering_union_all_rs(x)))
+    return(coverings_from_rs(from_caller(a5_covering_union_all_rs(x), call = rlang::current_env())))
   }
   covering_set_op(x, y, "union")
 }
@@ -65,7 +65,7 @@ a5_difference <- function(x, y) {
 covering_set_op <- function(x, y, op, call = rlang::caller_env()) {
   y <- as_a5_covering(y)
   vctrs::vec_size_common(x = x, y = y, .call = call)
-  coverings_from_rs(a5_covering_set_op_rs(x, y, op))
+  coverings_from_rs(from_caller(a5_covering_set_op_rs(x, y, op), call = call))
 }
 
 #' Test coverings
@@ -110,7 +110,7 @@ a5_contains <- function(x, cell) {
   x <- as_a5_covering(x)
   cell <- as_a5_cell(cell)
   vctrs::vec_size_common(x = x, cell = cell)
-  a5_covering_contains_rs(x, cell_data(cell))
+  from_caller(a5_covering_contains_rs(x, cell_data(cell)), call = rlang::current_env())
 }
 
 #' @rdname a5_covering_predicates
@@ -119,7 +119,7 @@ a5_overlaps <- function(x, y) {
   x <- as_a5_covering(x)
   y <- as_a5_covering(y)
   vctrs::vec_size_common(x = x, y = y)
-  a5_covering_overlaps_rs(x, y)
+  from_caller(a5_covering_overlaps_rs(x, y), call = rlang::current_env())
 }
 
 #' Measure coverings

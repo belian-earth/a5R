@@ -27,8 +27,8 @@ accepts.}
 \code{a5_count()} returns the number of cells each covering stands for at its
 resolution: the length of its \code{\link[=a5_uncompact]{a5_uncompact()}} result, without building
 it. This differs from the number of cells stored. \code{a5_area()} returns
-the area of each covering. A5 cells are equal-area, so this is exact: the
-count times \code{\link[=a5_cell_area]{a5_cell_area()}} at the covering's resolution.
+the area of each covering. A5 cells are equal-area, so this is exact up to
+rounding: the count times \code{\link[=a5_cell_area]{a5_cell_area()}} at the covering's resolution.
 }
 \details{
 Counts are doubles, exact up to 2^53 (about 9e15 cells); coverings at the
