@@ -4,33 +4,27 @@
 \alias{a5_spherical_cap}
 \title{Cells within a great-circle radius}
 \usage{
-a5_spherical_cap(cell, radius, simplify = TRUE)
+a5_spherical_cap(cell, radius)
 }
 \arguments{
 \item{cell}{An \link{a5_cell} vector of centre cells.}
 
 \item{radius}{Numeric scalar, great-circle radius in metres.}
-
-\item{simplify}{Logical scalar. If \code{TRUE} (default), return one flat
-\link{a5_cell} vector with the caps of every input concatenated in input
-order; cells shared by several caps appear once per cap. If \code{FALSE},
-return an \link{a5_cell_list}: a \code{\link[vctrs:list_of]{vctrs::list_of()}} of \link{a5_cell} vectors with
-one element per input, suitable for a list column.}
 }
 \value{
-An \link{a5_cell} vector, or an \link{a5_cell_list} when \code{simplify = FALSE}.
-An \code{NA} input contributes no cells (an empty element in the list form).
+An \link{a5_covering} vector the same length as \code{cell}, at the
+resolution of each centre cell. \code{NA} where \code{cell} is \code{NA}. Use
+\code{\link[=a5_uncompact]{a5_uncompact()}} for the cells.
 }
 \description{
-Returns all cells whose centres fall within a great-circle distance
-of each input cell's centre.
+Returns, for each centre cell, the cells whose centres fall within a
+great-circle distance of its centre, as an \link{a5_covering}.
 }
 \examples{
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 8)
-a5_spherical_cap(cell, radius = 1000)
-
-cells <- a5_lonlat_to_cell(c(-3.19, 0), c(55.95, 0), resolution = 8)
-a5_spherical_cap(cells, radius = 1000, simplify = FALSE) # list of 2
+cap <- a5_spherical_cap(cell, radius = 1000)
+cap
+a5_uncompact(cap)
 }
 \seealso{
 \code{\link[=a5_grid_disk]{a5_grid_disk()}} for hop-based selection.

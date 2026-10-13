@@ -213,14 +213,6 @@ pub(crate) fn collect_ids(cells: &List) -> Vec<u64> {
     (0..cs.len).filter_map(|i| cs.get(i)).collect()
 }
 
-/// The cells of an upstream covering, without its trailing compaction marker.
-pub(crate) fn strip_marker(mut covering: Vec<u64>) -> Vec<u64> {
-    if covering.last().is_some_and(|&v| a5::is_compaction_marker(v)) {
-        covering.pop();
-    }
-    covering
-}
-
 /// Cells as an upstream covering standing for `resolution`: the cells, then
 /// the compaction marker recording it.
 pub(crate) fn with_marker(mut cells: Vec<u64>, resolution: i32) -> Vec<u64> {

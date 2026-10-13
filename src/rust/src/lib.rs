@@ -9,6 +9,7 @@ mod distance;
 mod hierarchy;
 mod traversal;
 mod regions;
+mod covering;
 
 extendr_module! {
     mod a5R;
@@ -21,4 +22,5 @@ extendr_module! {
     use hierarchy;
     use traversal;
     use regions;
+    use covering;
 }

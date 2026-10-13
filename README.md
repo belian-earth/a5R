@@ -52,7 +52,7 @@ library(a5R)
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
 cell
 #> <a5_cell[1]>
-#> [1] 6344be8000000000
+#> [1] 63bb948000000000
 
 # Get the boundary polygon
 a5_cell_to_boundary(cell)
@@ -62,16 +62,16 @@ a5_cell_to_boundary(cell)
 # Navigate the hierarchy
 a5_cell_to_parent(cell)
 #> <a5_cell[1]>
-#> [1] 6344be0000000000
+#> [1] 63bb960000000000
 a5_cell_to_children(cell)
 #> <a5_cell[4]>
-#> [1] 6344be2000000000 6344be6000000000 6344bea000000000 6344bee000000000
+#> [1] 63bb942000000000 63bb946000000000 63bb94a000000000 63bb94e000000000
 ```
 
 ``` r
 # Create a collection of cells whose centres fall within a great-circle distance of 100km from the origin cell
 cells <- a5_spherical_cap(cell, radius = 100000) |> 
-  a5_uncompact(resolution = 10)
+  a5_uncompact()
 plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
 ```
 
@@ -83,7 +83,8 @@ hierarchy, traversal, and geometry-to-cell conversion.
 ## Features
 
 - **Vectorised Rust core** — all operations implemented in Rust and
-  called from R via extendr. A [benchmark suite](https://github.com/belian-earth/a5R/tree/main/benchmarks)
+  called from R via extendr. A [benchmark
+  suite](https://github.com/belian-earth/a5R/tree/main/benchmarks)
   mirroring the TypeScript, Python and Rust ports runs on every pull
   request and fails on regressions above 15%.
 - **vctrs + wk integration** — cell indices use an `a5_cell` type with

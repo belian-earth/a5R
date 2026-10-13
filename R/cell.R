@@ -91,6 +91,12 @@ as_a5_cell <- function(x) {
   if (is_a5_cell(x)) {
     return(x)
   }
+  if (is_a5_covering(x)) {
+    cli::cli_abort(c(
+      "Can't use an {.cls a5_covering} as cells.",
+      "i" = "Use {.fn a5_uncompact} to get the cells of a covering."
+    ), call = rlang::caller_env())
+  }
   a5_cell(x)
 }
 

@@ -65,7 +65,7 @@ independently:
 | Function | Per-element cost | Benefit |
 |---|---|---|
 | `a5_cell_to_boundary()` | Heavy (boundary + WKT/WKB) | High |
-| `a5_polygon_to_cells()` | Heavy (per-part flood-fill, hole subtraction) | High |
+| `a5_polygon_to_cells()` | Heavy (per-part fill, hole subtraction) | High |
 | `a5_linestring_to_cells()` | Heavy (per-feature tracing) | High |
 | `a5_spherical_cap()` | Heavy (per-cell search) | High |
 | `a5_grid_disk()` | Heavy (per-cell traversal) | High |
@@ -75,12 +75,13 @@ independently:
 | `a5_cell_to_children()` | Light (bit ops per child) | Low |
 | `a5_cell_to_parent()` | Light (bit ops + hex) | Low |
 | `a5_get_resolution()` | Light (bit ops) | Low |
-| `a5_is_valid()` | Light (hex parse) | Low |
+| `a5_uncompact()` | Light (per-covering expansion) | Low |
+| `a5_is_valid()` | Light (bit checks) | Low |
 
 For the one-to-many functions (`a5_grid_disk()`, `a5_spherical_cap()`,
-`a5_cell_to_children()`) the per-cell work is parallelised; assembling the
-result, especially the `simplify = FALSE` list, is sequential, so the list
-form gains less than the flat form.
+`a5_cell_to_children()`, `a5_uncompact()`) the per-element work is
+parallelised; assembling the result, especially the `simplify = FALSE` list,
+is sequential, so the list form gains less than the flat form.
 
 Scalar and bulk operations (`a5_compact()`, `a5_cell_area()`,
 `a5_cell_child()`, `a5_cell_children_range()`, etc.) are unaffected: they are
@@ -99,7 +100,7 @@ the benefit. As a rule of thumb:
 Here's a quick comparison on 100k cells:
 
 ```{r, eval = FALSE}
-cells <- a5_polygon_to_cells(wk::rct(-10, 50, 10, 60), resolution = 12)
+cells <- a5_uncompact(a5_polygon_to_cells(wk::rct(-10, 50, 10, 60), resolution = 12))
 length(cells)
 #> [1] 704259
 

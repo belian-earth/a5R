@@ -29,7 +29,13 @@
 #' - [a5_cell_to_parent()] --- navigate to coarser cells
 #' - [a5_cell_to_children()] --- navigate to finer cells
 #' - [a5_get_res0_cells()] --- the 12 root cells
-#' - [a5_compact()] / [a5_uncompact()] --- compress and expand cell sets
+#'
+#' @section Coverings:
+#' - [a5_covering] --- compacted cell sets that record their resolution
+#' - [a5_compact()] / [a5_uncompact()][a5_compaction] --- build and expand
+#'   coverings
+#' - [a5_covering_resolution()][a5_covering] --- the resolution a covering
+#'   stands for
 #'
 #' @section Traversal:
 #' - [a5_grid_disk()] --- neighbours by hop count
@@ -42,6 +48,9 @@
 #' @section Arrow & Parquet:
 #' - [a5_cell_from_arrow()] / [a5_cell_to_arrow()][a5_cell_from_arrow] ---
 #'   lossless conversion to/from Arrow `uint64`
+#' - [a5_covering_from_arrow()] /
+#'   [a5_covering_to_arrow()][a5_covering_from_arrow] --- coverings to/from
+#'   Arrow `list<uint64>`
 #'
 #' @section Configuration:
 #' - [a5_set_threads()] / [a5_get_threads()] --- multi-threading control

@@ -11,11 +11,12 @@ a5_is_valid_cell(x)
 }
 \arguments{
 \item{x}{An \link{a5_cell} vector or a character vector of hex strings. For
-\code{a5_is_valid()}, also an \link{a5_cell_list}.}
+\code{a5_is_valid()}, also an \link{a5_cell_list} or an \link{a5_covering}.}
 }
 \value{
 A logical vector the length of \code{x}. \code{NA} where \code{x} is \code{NA}; for
-an \link{a5_cell_list}, \code{NA} where an element holds \code{NA} and no invalid cell.
+an \link{a5_cell_list}, \code{NA} where an element holds \code{NA} and no invalid cell;
+for an \link{a5_covering}, \code{NA} for a missing covering.
 Hex strings that are not 16 hex digits are \code{FALSE}.
 }
 \description{
@@ -32,6 +33,12 @@ hex string, so an \code{a5_cell} vector can hold values that are not cells.
 \code{a5_is_valid_cell()}.
 \item an \link{a5_cell_list}: whether every cell in each element is valid. An empty
 element is valid.
+\item an \link{a5_covering}: whether each covering is well formed: every stored
+value but a trailing compaction marker is a valid cell, no cell is finer
+than the covering's resolution, and the cells are sorted in curve order
+without overlapping. a5R always builds coverings this way; the check is
+for coverings assembled by hand, as the covering functions rely on it.
+A covering need not be fully compacted to be valid.
 }
 
 The world cell (id 0, resolution -1) is valid: it has no boundary, but

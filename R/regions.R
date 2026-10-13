@@ -1,14 +1,16 @@
 #' Cells inside or overlapping a polygon
 #'
-#' Returns A5 cells at `resolution` that fall inside the polygon. By
-#' default a cell is included when its centre lies inside the polygon;
-#' set `containment = "overlapping"` to also include every cell that
-#' touches the polygon boundary, giving gap-free coverage.
-#' Multi-feature inputs (a `MULTIPOLYGON`, an `sfc` of multiple polygons,
-#' or a `POLYGON` with holes) are handled natively: per polygon part, the
-#' outer ring and its holes are converted together with hole interiors
-#' excluded, then the results are unioned across parts. The final cell set
-#' is compacted; use [a5_uncompact()] to expand to a uniform-resolution grid.
+#' Returns, for each polygon feature, an [a5_covering] of the A5 cells at
+#' `resolution` that belong to it. By default a cell belongs when its centre
+#' lies inside the polygon; set `containment = "overlapping"` to also include
+#' every cell that touches the polygon boundary, giving gap-free coverage.
+#'
+#' The result has one covering per feature, so it can be added as a column:
+#' `sf_data$cells <- a5_polygon_to_cells(sf_data, 10)`. A feature's parts (a
+#' `MULTIPOLYGON`) and holes are combined into its covering, with hole
+#' interiors excluded. To combine features into one covering, reduce with
+#' `a5_union()`. Coverings are compacted; use [a5_uncompact()] for the cells
+#' at `resolution`.
 #'
 #' @param x A polygon-like geometry. One of:
 #'   - Any geometry handleable by [wk::wk_handle()] (e.g. [wk::wkt()],
@@ -26,7 +28,9 @@
 #'   overlaps the polygon boundary, so the result fully covers the polygon.
 #'   The overlapping set is a superset of the centre set.
 #'
-#' @returns An [a5_cell] vector at or coarser than `resolution`.
+#' @returns An [a5_covering] vector with one element per feature (one for
+#'   matrix and `data.frame` input). `NA` for a missing geometry; an empty
+#'   covering for an empty geometry or one too small to hold a cell centre.
 #'
 #' @details
 #' With `containment = "centre"`, membership is determined by
@@ -46,7 +50,7 @@
 #' present.
 #'
 #' Where no A5 cell centroids at the specified `resolution` fall within
-#' the geometry, an empty `a5_cell` vector is returned.
+#' the geometry, its covering is empty.
 #'
 #' Matrix and `data.frame` inputs are treated as a single ring; for
 #' multi-feature data or polygons with holes, pass an `sf`, `sfc`, wk,
@@ -58,13 +62,20 @@
 #' poly <- wk::wkt(
 #'   "POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))"
 #' )
-#' cells <- a5_polygon_to_cells(poly, resolution = 8)
-#' length(cells)
+#' covering <- a5_polygon_to_cells(poly, resolution = 8)
+#' covering
+#' a5_uncompact(covering)
 #'
 #' # Gap-free coverage: every cell touching the polygon
-#' covering <- a5_polygon_to_cells(poly, resolution = 8,
-#'                                 containment = "overlapping")
-#' length(covering)
+#' a5_polygon_to_cells(poly, resolution = 8, containment = "overlapping")
+#'
+#' # One covering per feature
+#' polys <- wk::wkt(c(
+#'   "POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))",
+#'   NA,
+#'   "POLYGON ((-4.3 55.8, -4.2 55.8, -4.2 55.9, -4.3 55.9, -4.3 55.8))"
+#' ))
+#' a5_polygon_to_cells(polys, resolution = 8)
 a5_polygon_to_cells <- function(x, resolution,
                                 containment = c("centre", "overlapping")) {
   resolution <- vctrs::vec_cast(resolution, integer())
@@ -74,15 +85,19 @@ a5_polygon_to_cells <- function(x, resolution,
 
   bundle <- prepare_polygon_input(x)
 
-  cells_from_rs(a5_polygon_to_cells_rs(
+  out <- coverings_from_rs(a5_polygon_to_cells_rs(
     bundle$lon,
     bundle$lat,
     bundle$offsets,
     bundle$part_id,
     bundle$is_outer,
+    bundle$part_feature,
+    bundle$n_features,
     resolution,
     containment
   ))
+  out[bundle$missing] <- NA
+  out
 }
 
 #' Cells traced by a great-circle linestring
@@ -145,17 +160,20 @@ a5_linestring_to_cells <- function(x, resolution) {
 #' @noRd
 prepare_polygon_input <- function(x, call = rlang::caller_env()) {
   x <- maybe_coerce_spatvector(x, call = call)
-  bundle <- if (is.matrix(x)) {
-    coords_from_matrix(x, call = call)
-  } else if (is.data.frame(x) && !inherits(x, "sf")) {
-    coords_from_data_frame(x, call = call)
+  bundle <- if (is.matrix(x) || (is.data.frame(x) && !inherits(x, "sf"))) {
+    ring <- if (is.matrix(x)) {
+      coords_from_matrix(x, call = call)
+    } else {
+      coords_from_data_frame(x, call = call)
+    }
+    if (length(ring$lon) == 0L) {
+      cli::cli_abort("{.arg x} contains no polygon rings.", call = call)
+    }
+    c(ring, list(part_feature = 1L, n_features = 1L, missing = FALSE))
   } else {
     coords_from_wk_polygons(x, call = call)
   }
 
-  if (length(bundle$offsets) < 2L) {
-    cli::cli_abort("{.arg x} contains no polygon rings.", call = call)
-  }
   validate_feature_sizes(bundle, expected = "polygon", call = call)
   if (anyNA(bundle$lon) || anyNA(bundle$lat)) {
     cli::cli_abort(
@@ -246,9 +264,10 @@ coords_from_wk_polygons <- function(x, call = rlang::caller_env()) {
       call = call
     )
   }
-  if (any(meta$is_empty)) {
-    cli::cli_abort("{.arg x} contains empty geometries.", call = call)
-  }
+  # Missing geometries get an NA covering, empty ones an empty covering;
+  # neither has coordinates.
+  n_features <- nrow(meta)
+  missing <- is.na(meta$geometry_type)
 
   coords <- wk::wk_coords(x)
   if (nrow(coords) == 0L) {
@@ -257,7 +276,10 @@ coords_from_wk_polygons <- function(x, call = rlang::caller_env()) {
       lat = numeric(),
       offsets = 0L,
       part_id = integer(),
-      is_outer = integer()
+      is_outer = integer(),
+      part_feature = integer(),
+      n_features = n_features,
+      missing = missing
     ))
   }
 
@@ -279,6 +301,7 @@ coords_from_wk_polygons <- function(x, call = rlang::caller_env()) {
   ring_starts <- offsets[-length(offsets)] + 1L
 
   ring_part_id <- row_part_id[ring_starts]
+  part_feature <- coords$feature_id[match(seq_len(max(row_part_id)), row_part_id)]
   # Within a polygon part, the first ring (smallest ring_id) is the outer
   # and any later rings are holes. wk emits rings in outer-first order, so
   # the first occurrence of each part_id marks the outer ring.
@@ -291,7 +314,10 @@ coords_from_wk_polygons <- function(x, call = rlang::caller_env()) {
     lat = as.numeric(coords$y),
     offsets = as.integer(offsets),
     part_id = as.integer(ring_part_id),
-    is_outer = as.integer(ring_is_outer)
+    is_outer = as.integer(ring_is_outer),
+    part_feature = as.integer(part_feature),
+    n_features = n_features,
+    missing = missing
   )
 }
 

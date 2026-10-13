@@ -71,7 +71,7 @@ res-10 cell whose index parent at res 8 is not the cell it lies in:
 
 ```{r parent-plot, fig.width = 5, fig.height = 4, echo = -c(1, 17)}
 op <- par(mar = c(0.5, 0.5, 0.5, 0.5))
-kids <- a5_cell_to_children(a5_grid_disk(cell, 1), resolution = 10)
+kids <- a5_uncompact(a5_grid_disk(cell, 1), resolution = 10)
 moved <- kids[a5_cell_to_parent(kids, 8) != a5_cell_to_spatial_parent(kids, 8)]
 # the clearest case: the fine cell furthest from its index parent's centre
 fine_cell <- moved[which.max(a5_cell_distance(moved, a5_cell_to_parent(moved, 8)))]
@@ -104,7 +104,7 @@ outside have value 0. Average it to res 15 under each rule.
 
 ```{r}
 area <- a5_lonlat_to_cell(-53.5, -19, resolution = 12)
-layer <- a5_cell_to_children(a5_grid_disk(area, 1), resolution = 18)
+layer <- a5_uncompact(a5_grid_disk(area, 1), resolution = 18)
 length(layer)
 
 centre <- unclass(a5_cell_to_lonlat(area))

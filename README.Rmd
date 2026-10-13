@@ -70,7 +70,7 @@ a5_cell_to_children(cell)
 ```{r grid-plot, fig.alt = "A5 grid plot showing a collection of cells around a point"}
 # Create a collection of cells whose centres fall within a great-circle distance of 100km from the origin cell
 cells <- a5_spherical_cap(cell, radius = 100000) |> 
-  a5_uncompact(resolution = 10)
+  a5_uncompact()
 plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
 ```
 

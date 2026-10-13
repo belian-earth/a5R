@@ -11,6 +11,26 @@
 * Resolution-1 cells are now pentagons rather than triangles, so their
   boundaries and centres change. Cells at every other resolution keep their
   shape and position.
+* Compacted cell sets are now `a5_covering` vectors, one covering per
+  element. A covering stores its compacted cells followed by a compaction
+  marker recording the resolution they stand for, as in the other A5
+  libraries, so `a5_uncompact()` no longer needs a resolution. Coverings
+  print as their resolution, cell count and stored-cell count, work as data
+  frame columns, and compare equal with `==` when they hold the same cells.
+  Use `a5_uncompact()` for the cells; `as_a5_cell()` refuses a covering
+  rather than treat its stored cells, whose outlines do not nest, as a grid.
+* `a5_compact()`, `a5_grid_disk()` and `a5_spherical_cap()` return
+  coverings. `a5_grid_disk()` and `a5_spherical_cap()` give one covering
+  per centre cell and lose their `simplify` argument, which moves to
+  `a5_uncompact()`. An `NA` centre gives an `NA` covering.
+* `a5_polygon_to_cells()` returns one covering per feature instead of the
+  union of all features, so it can fill a column of an `sf` data frame.
+  A feature's parts and holes are still combined. A missing geometry gives
+  an `NA` covering and an empty geometry an empty covering; both used to be
+  errors.
+* `a5_uncompact()` takes coverings, and its `resolution` argument is
+  optional: by default each covering expands to its own resolution. It
+  refuses to build more than `.Machine$integer.max` cells.
 * `a5_is_valid()` now checks the index encoding. It used to return `TRUE`
   for any non-missing `a5_cell` and for any hex string that parsed, whether
   or not the value was a cell; hex strings must now also be 16 digits.
@@ -18,6 +38,13 @@
 ## New features
 
 * New `a5_migrate()` converts ids from a5R before 1.0 to the current index.
+* New `as_a5_covering()` builds coverings from cells, cell lists or raw
+  64-bit values written by other A5 libraries, sorting and compacting them;
+  `a5_covering_resolution()` returns the resolution each covering stands
+  for. `a5_is_valid()` checks covering structure.
+* New `a5_covering_to_arrow()` and `a5_covering_from_arrow()` convert
+  coverings to and from Arrow `list<uint64>` with the compaction marker, the
+  layout DuckDB, Python and JavaScript A5 code read.
 * New `a5_is_valid_cell()` checks that values are A5 cells, mirroring the
   upstream `is_valid_cell`. `a5_is_valid()` becomes a generic that also
   accepts an `a5_cell_list`, returning one value per element.
@@ -27,7 +54,7 @@
 * `a5_cell_child()` and `a5_cell_children_range()` follow the new order of
   `a5_cell_to_children()` (children are now in ascending id order).
 * `a5_get_num_cells()` is correct at high resolutions (a5 0.10.1).
-* `a5_polygon_to_cells()` merges multi-part polygons with the upstream
+* `a5_polygon_to_cells()` merges a feature's parts with the upstream
   covering union, without expanding each part to full resolution first.
 * `a5_cell_to_spatial_parent()` and `a5_cell_to_spatial_children()` now use
   the upstream `cell_to_supercell()` and `cell_to_subcell()`. A cell whose

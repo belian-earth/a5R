@@ -48,7 +48,17 @@ conversion
 \item \code{\link[=a5_cell_to_parent]{a5_cell_to_parent()}} --- navigate to coarser cells
 \item \code{\link[=a5_cell_to_children]{a5_cell_to_children()}} --- navigate to finer cells
 \item \code{\link[=a5_get_res0_cells]{a5_get_res0_cells()}} --- the 12 root cells
-\item \code{\link[=a5_compact]{a5_compact()}} / \code{\link[=a5_uncompact]{a5_uncompact()}} --- compress and expand cell sets
+}
+}
+
+\section{Coverings}{
+
+\itemize{
+\item \link{a5_covering} --- compacted cell sets that record their resolution
+\item \code{\link[=a5_compact]{a5_compact()}} / \link[=a5_compaction]{a5_uncompact()} --- build and expand
+coverings
+\item \link[=a5_covering]{a5_covering_resolution()} --- the resolution a covering
+stands for
 }
 }
 
@@ -73,6 +83,9 @@ conversion
 \itemize{
 \item \code{\link[=a5_cell_from_arrow]{a5_cell_from_arrow()}} / \link[=a5_cell_from_arrow]{a5_cell_to_arrow()} ---
 lossless conversion to/from Arrow \code{uint64}
+\item \code{\link[=a5_covering_from_arrow]{a5_covering_from_arrow()}} /
+\link[=a5_covering_from_arrow]{a5_covering_to_arrow()} --- coverings to/from
+Arrow \verb{list<uint64>}
 }
 }
 

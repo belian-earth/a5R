@@ -225,65 +225,45 @@ a5_cell_children_range_rs <- function(cells, child_resolution) .Call(wrap__a5_ce
 #' @keywords internal
 a5_get_res0_cells_rs <- function() .Call(wrap__a5_get_res0_cells_rs)
 
-#' Compact a set of A5 cell IDs.
-#'
-#' @param cells List with b1..b8 raw vectors.
-#' @return List with b1..b8 raw vectors.
-#' @noRd
-#' @keywords internal
-a5_compact_rs <- function(cells) .Call(wrap__a5_compact_rs, cells)
-
-#' Uncompact a set of A5 cell IDs to a target resolution.
-#'
-#' @param cells List with b1..b8 raw vectors.
-#' @param target_resolution Integer: the resolution to expand to.
-#' @return List with b1..b8 raw vectors.
-#' @noRd
-#' @keywords internal
-a5_uncompact_rs <- function(cells, target_resolution) .Call(wrap__a5_uncompact_rs, cells, target_resolution)
-
 #' Get all cells within k hops of each centre cell.
 #'
 #' @param cells List with b1..b8 raw vectors.
 #' @param k Number of hops.
 #' @param vertex If TRUE, include vertex-sharing (8-connected) neighbours.
-#' @param simplify If TRUE one flat b1..b8 list, else a list of a5_cell
-#'   objects, one per input.
-#' @return See simplify.
+#' @return A list of coverings, one per cell (NULL for an NA cell).
 #' @noRd
 #' @keywords internal
-a5_grid_disk_rs <- function(cells, k, vertex, simplify) .Call(wrap__a5_grid_disk_rs, cells, k, vertex, simplify)
+a5_grid_disk_rs <- function(cells, k, vertex) .Call(wrap__a5_grid_disk_rs, cells, k, vertex)
 
 #' Get all cells within a great-circle radius of each centre cell.
 #'
 #' @param cells List with b1..b8 raw vectors.
 #' @param radius Radius in metres.
-#' @param simplify If TRUE one flat b1..b8 list, else a list of a5_cell
-#'   objects, one per input.
-#' @return See simplify.
+#' @return A list of coverings, one per cell (NULL for an NA cell).
 #' @noRd
 #' @keywords internal
-a5_spherical_cap_rs <- function(cells, radius, simplify) .Call(wrap__a5_spherical_cap_rs, cells, radius, simplify)
+a5_spherical_cap_rs <- function(cells, radius) .Call(wrap__a5_spherical_cap_rs, cells, radius)
 
-#' Convert one or more polygon parts (with optional holes) to A5 cells.
+#' Convert polygon features (each one or more parts, with optional holes)
+#' to coverings, one per feature.
 #'
 #' `lon`, `lat` are flat coordinate vectors; `offsets` is cumulative
 #' (length `n_rings + 1`) so ring `i` is `lon[offsets[i]..offsets[i+1]]`.
-#' `part_id` (length `n_rings`) groups rings by polygon part. `is_outer`
-#' (length `n_rings`, 1 = outer / 0 = hole) classifies each ring.
+#' `part_id` (length `n_rings`, 1-based) groups rings by polygon part and
+#' `is_outer` (length `n_rings`, 1 = outer / 0 = hole) classifies each ring.
+#' `part_feature` (length `n_parts`, 1-based) names each part's feature.
 #' `containment` is `"centre"` (cell centre inside the polygon) or
 #' `"overlapping"` (any cell touching the polygon).
 #'
-#' For each polygon part, the outer ring and its holes are passed to
-#' `a5::polygon_to_cells`, which excludes hole interiors natively, and the
-#' resulting coverings are unioned across parts with `a5::union`, which
-#' works on the compacted cells directly. A single-part input (with or
-#' without holes) takes a fast path that passes the upstream compacted
-#' result through unchanged.
+#' Each part goes to `a5::polygon_to_cells`, which excludes hole interiors
+#' natively, in parallel across parts. A feature's parts are then merged
+#' with `a5::union`, which works on the compacted cells directly. A feature
+#' with no parts gets an empty covering at `resolution`.
 #'
+#' @return A list of coverings, one per feature.
 #' @noRd
 #' @keywords internal
-a5_polygon_to_cells_rs <- function(lon, lat, offsets, part_id, is_outer, resolution, containment) .Call(wrap__a5_polygon_to_cells_rs, lon, lat, offsets, part_id, is_outer, resolution, containment)
+a5_polygon_to_cells_rs <- function(lon, lat, offsets, part_id, is_outer, part_feature, n_features, resolution, containment) .Call(wrap__a5_polygon_to_cells_rs, lon, lat, offsets, part_id, is_outer, part_feature, n_features, resolution, containment)
 
 #' Convert one or more linestring waypoint sequences to A5 cells.
 #'
@@ -294,5 +274,71 @@ a5_polygon_to_cells_rs <- function(lon, lat, offsets, part_id, is_outer, resolut
 #' @noRd
 #' @keywords internal
 a5_linestring_to_cells_rs <- function(lon, lat, offsets, resolution) .Call(wrap__a5_linestring_to_cells_rs, lon, lat, offsets, resolution)
+
+#' Coverings as lists of raw(8) blobs, for Arrow `list<fixed_size_binary(8)>`.
+#'
+#' @param x List of coverings.
+#' @return A list with, per covering, a list of raw(8) values or NULL.
+#' @noRd
+#' @keywords internal
+a5_covering_to_blobs_rs <- function(x) .Call(wrap__a5_covering_to_blobs_rs, x)
+
+#' Compact cells into one covering.
+#'
+#' @param cells List with b1..b8 raw vectors. NA cells are skipped.
+#' @param resolution Integer resolution the covering stands for, or NULL
+#'   for the finest cell's.
+#' @return A list holding one covering.
+#' @noRd
+#' @keywords internal
+a5_compact_rs <- function(cells, resolution) .Call(wrap__a5_compact_rs, cells, resolution)
+
+#' Compact each element of a list of cell vectors into a covering.
+#'
+#' @param cell_lists List of a5_cell objects (b1..b8 lists).
+#' @param resolution As for `a5_compact_rs()`.
+#' @return A list of coverings, one per element.
+#' @noRd
+#' @keywords internal
+a5_compact_each_rs <- function(cell_lists, resolution) .Call(wrap__a5_compact_each_rs, cell_lists, resolution)
+
+#' Normalise raw coverings from outside a5R: re-sort and compact them, and
+#' record their resolution in a compaction marker.
+#'
+#' @param x List of raw vectors (u64 values, little-endian) or NULL.
+#' @param resolution Integer resolution for coverings without a compaction
+#'   marker, or NULL for their finest cell's. A marker always wins.
+#' @return A list of coverings.
+#' @noRd
+#' @keywords internal
+a5_covering_normalise_rs <- function(x, resolution) .Call(wrap__a5_covering_normalise_rs, x, resolution)
+
+#' Expand coverings to their cells.
+#'
+#' @param x List of coverings.
+#' @param resolution Integer target resolution, or NULL for each
+#'   covering's own. Must be at or finer than every covering's resolution.
+#' @param simplify If TRUE one flat b1..b8 list, else a list of a5_cell
+#'   objects, one per covering (empty for a missing covering).
+#' @noRd
+#' @keywords internal
+a5_uncompact_rs <- function(x, resolution, simplify) .Call(wrap__a5_uncompact_rs, x, resolution, simplify)
+
+#' Resolution, cell count and stored-cell count of every covering.
+#'
+#' @param x List of coverings.
+#' @return list(resolution = integer, count = double, stored = integer),
+#'   NA for a missing covering. Counts above 2^53 are rounded.
+#' @noRd
+#' @keywords internal
+a5_covering_summary_rs <- function(x) .Call(wrap__a5_covering_summary_rs, x)
+
+#' Structural validity of every covering.
+#'
+#' @param x List of coverings.
+#' @return Logical vector, NA for a missing covering.
+#' @noRd
+#' @keywords internal
+a5_is_valid_covering_rs <- function(x) .Call(wrap__a5_is_valid_covering_rs, x)
 
 

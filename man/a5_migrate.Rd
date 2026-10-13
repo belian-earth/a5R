@@ -16,9 +16,12 @@ same length as \code{cell}. \code{NA} where \code{cell} is \code{NA}.
 \description{
 Converts cell ids written by a5R before 1.0 (the a5 Rust crate 0.10 and
 earlier, the "v0" index) to the current, permanent index. A5 1.0 threads
-its space-filling curve through the cells differently, so every cell keeps
-its shape and position but gets a new id. The conversion is a cheap bit
-operation; there is no need to re-index data from its coordinates.
+its space-filling curve through the cells differently, so cells keep their
+shape and position but get new ids. The conversion is a cheap bit
+operation; there is no need to re-index data from its coordinates. The
+exception is resolution 1, whose 60 cells changed from triangles to
+pentagons: each migrated resolution-1 id is the new cell containing the old
+cell's centre.
 }
 \details{
 A v0 id is still a valid cell in the current index, but in a different

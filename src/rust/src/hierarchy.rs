@@ -1,9 +1,7 @@
 use extendr_api::prelude::*;
 use extendr_api::wrapper::Nullable;
 
-use crate::cell_raw::{
-    collect_ids, map_cells, one_to_many, strip_marker, u64s_to_raw8_list, with_marker, CellSlices,
-};
+use crate::cell_raw::{map_cells, one_to_many, u64s_to_raw8_list, CellSlices};
 use a5::core::serialization::{
     cell_first_slot, cell_slot_count, slot_to_cell, FIRST_HILBERT_RESOLUTION,
     QUINTANT_SHIFT, RES30_QUINTANTS, SLOT_COUNTS,
@@ -281,52 +279,6 @@ fn a5_get_res0_cells_rs() -> List {
     }
 }
 
-/// Compact a set of A5 cell IDs.
-///
-/// @param cells List with b1..b8 raw vectors.
-/// @return List with b1..b8 raw vectors.
-/// @noRd
-/// @keywords internal
-#[extendr]
-fn a5_compact_rs(cells: List) -> List {
-    let ids = collect_ids(&cells);
-    match a5::compact(&ids) {
-        Ok(compacted) => {
-            let results: Vec<Option<u64>> = strip_marker(compacted).into_iter().map(Some).collect();
-            u64s_to_raw8_list(results)
-        }
-        Err(e) => throw_r_error(format!("compact failed: {}", e)),
-    }
-}
-
-/// Uncompact a set of A5 cell IDs to a target resolution.
-///
-/// @param cells List with b1..b8 raw vectors.
-/// @param target_resolution Integer: the resolution to expand to.
-/// @return List with b1..b8 raw vectors.
-/// @noRd
-/// @keywords internal
-#[extendr]
-fn a5_uncompact_rs(cells: List, target_resolution: i32) -> List {
-    let ids = collect_ids(&cells);
-    if let Some(&finest) = ids.iter().max_by_key(|&&id| a5::get_resolution(id)) {
-        let resolution = a5::get_resolution(finest);
-        if resolution > target_resolution {
-            throw_r_error(format!(
-                "uncompact failed: Cannot uncompact cell at resolution {} to lower resolution {}",
-                resolution, target_resolution
-            ));
-        }
-    }
-    match a5::uncompact(&with_marker(ids, target_resolution)) {
-        Ok(result) => {
-            let results: Vec<Option<u64>> = result.into_iter().map(Some).collect();
-            u64s_to_raw8_list(results)
-        }
-        Err(e) => throw_r_error(format!("uncompact failed: {}", e)),
-    }
-}
-
 extendr_module! {
     mod hierarchy;
     fn a5_get_resolution_rs;
@@ -337,6 +289,4 @@ extendr_module! {
     fn a5_cell_child_rs;
     fn a5_cell_children_range_rs;
     fn a5_get_res0_cells_rs;
-    fn a5_compact_rs;
-    fn a5_uncompact_rs;
 }

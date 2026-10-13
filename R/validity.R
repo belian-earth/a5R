@@ -12,6 +12,12 @@
 #'   `a5_is_valid_cell()`.
 #' * an [a5_cell_list]: whether every cell in each element is valid. An empty
 #'   element is valid.
+#' * an [a5_covering]: whether each covering is well formed: every stored
+#'   value but a trailing compaction marker is a valid cell, no cell is finer
+#'   than the covering's resolution, and the cells are sorted in curve order
+#'   without overlapping. a5R always builds coverings this way; the check is
+#'   for coverings assembled by hand, as the covering functions rely on it.
+#'   A covering need not be fully compacted to be valid.
 #'
 #' The world cell (id 0, resolution -1) is valid: it has no boundary, but
 #' [a5_cell_to_parent()] returns it as the parent of the resolution-0 cells.
@@ -20,9 +26,10 @@
 #' [a5_migrate()].
 #'
 #' @param x An [a5_cell] vector or a character vector of hex strings. For
-#'   `a5_is_valid()`, also an [a5_cell_list].
+#'   `a5_is_valid()`, also an [a5_cell_list] or an [a5_covering].
 #' @returns A logical vector the length of `x`. `NA` where `x` is `NA`; for
-#'   an [a5_cell_list], `NA` where an element holds `NA` and no invalid cell.
+#'   an [a5_cell_list], `NA` where an element holds `NA` and no invalid cell;
+#'   for an [a5_covering], `NA` for a missing covering.
 #'   Hex strings that are not 16 hex digits are `FALSE`.
 #'
 #' @export
@@ -58,4 +65,9 @@ a5_is_valid.a5_cell_list <- function(x) {
   out[element[is.na(valid)]] <- NA
   out[element[valid %in% FALSE]] <- FALSE
   out
+}
+
+#' @export
+a5_is_valid.a5_covering <- function(x) {
+  a5_is_valid_covering_rs(x)
 }
