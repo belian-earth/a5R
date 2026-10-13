@@ -8,8 +8,8 @@
 #' The result has one covering per feature, so it can be added as a column:
 #' `sf_data$cells <- a5_polygon_to_cells(sf_data, 10)`. A feature's parts (a
 #' `MULTIPOLYGON`) and holes are combined into its covering, with hole
-#' interiors excluded. To combine features into one covering, reduce with
-#' `a5_union()`. Coverings are compacted; use [a5_uncompact()] for the cells
+#' interiors excluded. To combine features into one covering, use
+#' [a5_union()]. Coverings are compacted; use [a5_uncompact()] for the cells
 #' at `resolution`.
 #'
 #' @param x A polygon-like geometry. One of:

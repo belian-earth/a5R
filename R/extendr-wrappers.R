@@ -274,6 +274,51 @@ a5_polygon_to_cells_rs <- function(lon, lat, offsets, part_id, is_outer, part_fe
 #' @keywords internal
 a5_linestring_to_cells_rs <- function(lon, lat, offsets, resolution) .Call(wrap__a5_linestring_to_cells_rs, lon, lat, offsets, resolution)
 
+#' Element-wise union, intersection or difference of two covering lists.
+#'
+#' @param x,y Lists of coverings; a length-one side is recycled.
+#' @param op One of "union", "intersect", "difference".
+#' @return A list of coverings.
+#' @noRd
+#' @keywords internal
+a5_covering_set_op_rs <- function(x, y, op) .Call(wrap__a5_covering_set_op_rs, x, y, op)
+
+#' The union of all coverings in a list, as one covering. Missing coverings
+#' are skipped; all others must share a resolution.
+#'
+#' @param x List of coverings.
+#' @return A list holding one covering.
+#' @noRd
+#' @keywords internal
+a5_covering_union_all_rs <- function(x) .Call(wrap__a5_covering_union_all_rs, x)
+
+#' Element-wise test of whether two coverings share a cell.
+#'
+#' @param x,y Lists of coverings; a length-one side is recycled.
+#' @return Logical vector, NA where either covering is missing.
+#' @noRd
+#' @keywords internal
+a5_covering_overlaps_rs <- function(x, y) .Call(wrap__a5_covering_overlaps_rs, x, y)
+
+#' Whether each cell is in its covering.
+#'
+#' @param x List of coverings; a length-one list is recycled.
+#' @param cells List with b1..b8 raw vectors; a length-one vector is
+#'   recycled.
+#' @return Logical vector, NA where the covering or the cell is missing.
+#'   An empty covering contains no cell, whatever its resolution.
+#' @noRd
+#' @keywords internal
+a5_covering_contains_rs <- function(x, cells) .Call(wrap__a5_covering_contains_rs, x, cells)
+
+#' Area of every covering in square metres.
+#'
+#' @param x List of coverings.
+#' @return Numeric vector, NA for a missing covering.
+#' @noRd
+#' @keywords internal
+a5_covering_area_rs <- function(x) .Call(wrap__a5_covering_area_rs, x)
+
 #' Coverings as lists of raw(8) blobs, for Arrow `list<fixed_size_binary(8)>`.
 #'
 #' @param x List of coverings.

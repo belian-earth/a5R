@@ -42,8 +42,8 @@ every cell that touches the polygon boundary, giving gap-free coverage.
 The result has one covering per feature, so it can be added as a column:
 \code{sf_data$cells <- a5_polygon_to_cells(sf_data, 10)}. A feature's parts (a
 \code{MULTIPOLYGON}) and holes are combined into its covering, with hole
-interiors excluded. To combine features into one covering, reduce with
-\code{a5_union()}. Coverings are compacted; use \code{\link[=a5_uncompact]{a5_uncompact()}} for the cells
+interiors excluded. To combine features into one covering, use
+\code{\link[=a5_union]{a5_union()}}. Coverings are compacted; use \code{\link[=a5_uncompact]{a5_uncompact()}} for the cells
 at \code{resolution}.
 
 With \code{containment = "centre"}, membership is determined by

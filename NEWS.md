@@ -42,6 +42,14 @@
   64-bit values written by other A5 libraries, sorting and compacting them;
   `a5_covering_resolution()` returns the resolution each covering stands
   for. `a5_is_valid()` checks covering structure.
+* New covering operations, computed on the compacted cells without
+  expanding them: `a5_union()`, `a5_intersect()` and `a5_difference()`
+  combine coverings element by element, and `a5_union(x)` merges every
+  covering in `x`; `a5_contains()` tests cells against coverings (a
+  point-in-polygon test at the covering's resolution) and `a5_overlaps()`
+  tests pairs of coverings; `a5_count()` and `a5_area()` give the number of
+  cells and the area each covering stands for. Combining coverings at
+  different resolutions is an error, as upstream.
 * New `a5_covering_to_arrow()` and `a5_covering_from_arrow()` convert
   coverings to and from Arrow `list<uint64>` with the compaction marker, the
   layout DuckDB, Python and JavaScript A5 code read.

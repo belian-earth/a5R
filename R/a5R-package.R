@@ -38,6 +38,11 @@
 #'   coverings
 #' - [a5_covering_resolution()][a5_covering] --- the resolution a covering
 #'   stands for
+#' - [a5_union()] / [a5_intersect()][a5_set_operations] /
+#'   [a5_difference()][a5_set_operations] --- combine coverings
+#' - [a5_contains()] / [a5_overlaps()][a5_covering_predicates] --- test
+#'   coverings
+#' - [a5_count()] / [a5_area()][a5_covering_measures] --- measure coverings
 #'
 #' @section Traversal:
 #' - [a5_grid_disk()] --- neighbours by hop count

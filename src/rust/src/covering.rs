@@ -2,7 +2,7 @@ use extendr_api::prelude::*;
 use extendr_api::wrapper::Nullable;
 use rayon::prelude::*;
 
-use crate::cell_raw::{collect_ids, map_cells, u64s_to_raw8_list, with_marker};
+use crate::cell_raw::{collect_ids, map_cells, u64s_to_raw8_list, with_marker, CellSlices};
 use crate::threading::{get_num_threads, maybe_par};
 use a5::core::serialization::{cell_first_slot, cell_slot_count};
 
@@ -339,8 +339,201 @@ fn a5_covering_to_blobs_rs(x: List) -> List {
     List::from_values(elements)
 }
 
+// --- Set operations, predicates and measures ---
+
+/// An empty covering with no recorded resolution (`compact` of no cells)
+/// takes `resolution`, so it combines with any covering as the empty set.
+fn adopt_resolution(values: &[u64], resolution: i32) -> std::borrow::Cow<'_, [u64]> {
+    if values.is_empty() && resolution >= 0 {
+        std::borrow::Cow::Owned(with_marker(Vec::new(), resolution))
+    } else {
+        std::borrow::Cow::Borrowed(values)
+    }
+}
+
+/// Apply `f` to pairs of coverings from `x` and `y`, recycling a length-one
+/// side without copying it. None where either covering is missing. Errors
+/// are raised with the element index.
+fn map_covering_pairs<T, F>(x: &List, y: &List, name: &str, f: F) -> Vec<Option<T>>
+where
+    T: Send,
+    F: Fn(&[u64], &[u64]) -> std::result::Result<T, String> + Send + Sync,
+{
+    let a = read_coverings(x);
+    let b = read_coverings(y);
+    let n = if a.is_empty() || b.is_empty() { 0 } else { a.len().max(b.len()) };
+    let pick = |v: &Vec<Option<Vec<u64>>>, i: usize| if v.len() == 1 { 0 } else { i };
+    let one = |i: usize| -> Option<std::result::Result<T, String>> {
+        match (&a[pick(&a, i)], &b[pick(&b, i)]) {
+            (Some(ai), Some(bi)) => {
+                let ra = a5::covering_resolution(ai);
+                let rb = a5::covering_resolution(bi);
+                Some(f(&adopt_resolution(ai, rb), &adopt_resolution(bi, ra)))
+            }
+            _ => None,
+        }
+    };
+    let results: Vec<Option<std::result::Result<T, String>>> = if get_num_threads() <= 1 {
+        (0..n).map(one).collect()
+    } else {
+        maybe_par(|| (0..n).into_par_iter().map(one).collect())
+    };
+    results
+        .into_iter()
+        .enumerate()
+        .map(|(i, r)| match r {
+            Some(Ok(v)) => Some(v),
+            Some(Err(e)) => throw_r_error(format!("{} failed for element {}: {}", name, i + 1, e)),
+            None => None,
+        })
+        .collect()
+}
+
+fn logicals(results: Vec<Option<bool>>) -> Logicals {
+    let mut out = Logicals::new(results.len());
+    for (i, r) in results.into_iter().enumerate() {
+        out.set_elt(i, r.map(Rbool::from).unwrap_or(Rbool::na()));
+    }
+    out
+}
+
+/// Element-wise union, intersection or difference of two covering lists.
+///
+/// @param x,y Lists of coverings; a length-one side is recycled.
+/// @param op One of "union", "intersect", "difference".
+/// @return A list of coverings.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn a5_covering_set_op_rs(x: List, y: List, op: &str) -> List {
+    let f: fn(&[u64], &[u64]) -> std::result::Result<Vec<u64>, String> = match op {
+        "union" => a5::union,
+        "intersect" => a5::intersect,
+        "difference" => a5::difference,
+        other => throw_r_error(format!("unknown set operation {:?}", other)),
+    };
+    let results = map_covering_pairs(&x, &y, op, f);
+    coverings_to_list(op, results.into_iter().map(|r| r.map(Ok)).collect())
+}
+
+/// The union of all coverings in a list, as one covering. Missing coverings
+/// are skipped; all others must share a resolution.
+///
+/// @param x List of coverings.
+/// @return A list holding one covering.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn a5_covering_union_all_rs(x: List) -> List {
+    let coverings: Vec<Vec<u64>> = read_coverings(&x).into_iter().flatten().collect();
+    let mut resolution: Option<i32> = None;
+    for c in &coverings {
+        if c.is_empty() {
+            continue;
+        }
+        let r = a5::covering_resolution(c);
+        match resolution {
+            Some(prev) if prev != r => throw_r_error(format!(
+                "union failed: Cannot combine cells at resolution {} with cells at resolution {}",
+                prev, r
+            )),
+            _ => resolution = Some(r),
+        }
+    }
+    let cells: Vec<u64> = coverings
+        .into_iter()
+        .flatten()
+        .filter(|&v| !a5::is_compaction_marker(v))
+        .collect();
+    let covering = match resolution {
+        Some(r) if r >= 0 => a5::compact(&with_marker(cells, r)),
+        _ => a5::compact(&cells),
+    };
+    coverings_to_list("union", vec![Some(covering)])
+}
+
+/// Element-wise test of whether two coverings share a cell.
+///
+/// @param x,y Lists of coverings; a length-one side is recycled.
+/// @return Logical vector, NA where either covering is missing.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn a5_covering_overlaps_rs(x: List, y: List) -> Logicals {
+    logicals(map_covering_pairs(&x, &y, "overlaps", a5::overlaps))
+}
+
+/// Whether each cell is in its covering.
+///
+/// @param x List of coverings; a length-one list is recycled.
+/// @param cells List with b1..b8 raw vectors; a length-one vector is
+///   recycled.
+/// @return Logical vector, NA where the covering or the cell is missing.
+///   An empty covering contains no cell, whatever its resolution.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn a5_covering_contains_rs(x: List, cells: List) -> Logicals {
+    let coverings = read_coverings(&x);
+    let cs = CellSlices::from_list(&cells);
+    let ids: Vec<Option<u64>> = (0..cs.len).map(|i| cs.get(i)).collect();
+    let n = if coverings.is_empty() || ids.is_empty() {
+        0
+    } else {
+        coverings.len().max(ids.len())
+    };
+    let one = |i: usize| -> Option<std::result::Result<bool, String>> {
+        let covering = coverings[if coverings.len() == 1 { 0 } else { i }].as_deref()?;
+        let cell = ids[if ids.len() == 1 { 0 } else { i }]?;
+        if covering.iter().all(|&v| a5::is_compaction_marker(v)) {
+            return Some(Ok(false));
+        }
+        Some(a5::contains(covering, cell))
+    };
+    let results: Vec<Option<std::result::Result<bool, String>>> = if get_num_threads() <= 1 {
+        (0..n).map(one).collect()
+    } else {
+        maybe_par(|| (0..n).into_par_iter().map(one).collect())
+    };
+    let out = results
+        .into_iter()
+        .enumerate()
+        .map(|(i, r)| match r {
+            Some(Ok(v)) => Some(v),
+            Some(Err(e)) => throw_r_error(format!("contains failed for element {}: {}", i + 1, e)),
+            None => None,
+        })
+        .collect();
+    logicals(out)
+}
+
+/// Area of every covering in square metres.
+///
+/// @param x List of coverings.
+/// @return Numeric vector, NA for a missing covering.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn a5_covering_area_rs(x: List) -> Doubles {
+    let results = map_coverings(&x, a5::area);
+    let mut out = Doubles::new(results.len());
+    for (i, r) in results.into_iter().enumerate() {
+        match r {
+            Some(Ok(v)) => out.set_elt(i, Rfloat::from(v)),
+            Some(Err(e)) => throw_r_error(format!("area failed for element {}: {}", i + 1, e)),
+            None => out.set_elt(i, Rfloat::na()),
+        }
+    }
+    out
+}
+
 extendr_module! {
     mod covering;
+    fn a5_covering_set_op_rs;
+    fn a5_covering_union_all_rs;
+    fn a5_covering_overlaps_rs;
+    fn a5_covering_contains_rs;
+    fn a5_covering_area_rs;
     fn a5_covering_to_blobs_rs;
     fn a5_compact_rs;
     fn a5_compact_each_rs;
