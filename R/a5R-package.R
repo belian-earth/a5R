@@ -28,6 +28,8 @@
 #' - [a5_get_resolution()] --- extract resolution from cell IDs
 #' - [a5_cell_to_parent()] --- navigate to coarser cells
 #' - [a5_cell_to_children()] --- navigate to finer cells
+#' - [a5_cell_to_supercell()] / [a5_cell_to_subcell()][a5_spatial_hierarchy]
+#'   --- move between resolutions by location
 #' - [a5_get_res0_cells()] --- the 12 root cells
 #'
 #' @section Coverings:

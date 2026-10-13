@@ -56,20 +56,18 @@
 * `a5_get_num_cells()` is correct at high resolutions (a5 0.10.1).
 * `a5_polygon_to_cells()` merges a feature's parts with the upstream
   covering union, without expanding each part to full resolution first.
-* `a5_cell_to_spatial_parent()` and `a5_cell_to_spatial_children()` now use
-  the upstream `cell_to_supercell()` and `cell_to_subcell()`. A cell whose
-  subcells reach faces with no resolution-30 ids now has all its subcells
-  given at resolution 29.
 
-* New experimental `a5_cell_to_spatial_parent()` and
-  `a5_cell_to_spatial_children()` move between resolutions by cell centre
-  rather than by index. The A5 index hierarchy is not spatially nested: for
-  about half of cells one resolution apart, and about 35% at four or more
-  apart, the index parent is not the coarse cell containing the fine cell's
-  centre. The spatial pair forms an exact partition, so aggregating fine
-  cells to a coarser grid counts each fine cell once, inside the coarse cell
-  it lies in. `a5_cell_to_parent()` and `a5_cell_to_children()` are
-  unchanged and now document the difference (requested by belian-production).
+* New `a5_cell_to_supercell()` and `a5_cell_to_subcell()` move between
+  resolutions by cell centre rather than by index, wrapping the upstream
+  `cell_to_supercell()` and `cell_to_subcell()`. The A5 index hierarchy is
+  not spatially nested: for about half of cells one resolution apart, and
+  about 35% at four or more apart, the index parent is not the coarse cell
+  containing the fine cell's centre. Supercells and subcells form an exact
+  partition, so aggregating fine cells to a coarser grid counts each fine
+  cell once, inside the coarse cell it lies in. Subcells are returned as one
+  covering per cell. `a5_cell_to_parent()` and `a5_cell_to_children()` are
+  unchanged and now document the difference (requested by
+  belian-production).
 
 * Missing values filled in by vctrs are now `NA`, not the world cell (#27).
   Combining with `NA`, subsetting with an `NA` index, assigning `NA`,

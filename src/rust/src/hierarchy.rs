@@ -2,6 +2,7 @@ use extendr_api::prelude::*;
 use extendr_api::wrapper::Nullable;
 
 use crate::cell_raw::{map_cells, one_to_many, u64s_to_raw8_list, CellSlices};
+use crate::covering::cells_to_coverings;
 use a5::core::serialization::{
     cell_first_slot, cell_slot_count, slot_to_cell, FIRST_HILBERT_RESOLUTION,
     QUINTANT_SHIFT, RES30_QUINTANTS, SLOT_COUNTS,
@@ -133,60 +134,45 @@ fn a5_cell_to_children_rs(cells: List, child_resolution: Nullable<i32>, simplify
     one_to_many(&cells, "cell_to_children", simplify, |id| a5::cell_to_children(id, cres))
 }
 
-/// The cell at `resolution` containing the centre of `id`: upstream
-/// `cell_to_supercell`. `None` when `resolution` is finer than `id`.
-fn spatial_parent(id: u64, resolution: i32) -> Option<u64> {
-    a5::cell_to_supercell(id, resolution).ok()
-}
-
-/// The cells at `resolution` whose centres lie in `id`: upstream
-/// `cell_to_subcell`, uncompacted and in ascending id order.
-fn spatial_children(id: u64, resolution: i32) -> std::result::Result<Vec<u64>, String> {
-    let mut out = a5::uncompact(&a5::cell_to_subcell(id, resolution)?)?;
-    out.sort_unstable();
-    Ok(out)
-}
-
-/// Spatial parent: the coarser cell containing each cell's centre.
+/// Supercells: the coarser cell containing each cell's centre.
 ///
 /// @param cells List with b1..b8 raw vectors.
-/// @param parent_resolution Integer target resolution. NULL for one coarser.
-/// @return List with b1..b8 raw vectors.
+/// @param resolution Integer target resolution. NULL for one coarser.
+/// @return List with b1..b8 raw vectors. NA where the cell is NA, where the
+///   resolution is finer than the cell, or below 0.
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_cell_to_spatial_parent_rs(cells: List, parent_resolution: Nullable<i32>) -> List {
-    let pres: Option<i32> = match parent_resolution {
+fn a5_cell_to_supercell_rs(cells: List, resolution: Nullable<i32>) -> List {
+    let target: Option<i32> = match resolution {
         Nullable::NotNull(v) => Some(v),
         Nullable::Null => None,
     };
     let results = map_cells(&cells, |id| {
-        let res = pres.unwrap_or_else(|| a5::get_resolution(id) - 1);
+        let res = target.unwrap_or_else(|| a5::get_resolution(id) - 1);
         if res < 0 {
             return None;
         }
-        spatial_parent(id, res)
+        a5::cell_to_supercell(id, res).ok()
     });
     u64s_to_raw8_list(results)
 }
 
-/// Spatial children: the finer cells whose centres lie in each cell.
+/// Subcells: the finer cells whose centres lie in each cell, as coverings.
 ///
 /// @param cells List with b1..b8 raw vectors.
-/// @param child_resolution Integer target resolution. NULL for one finer.
-/// @param simplify If TRUE one flat b1..b8 list, else a list of a5_cell
-///   objects, one per input.
-/// @return See simplify.
+/// @param resolution Integer target resolution. NULL for one finer.
+/// @return A list of coverings, one per cell (NULL for an NA cell).
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_cell_to_spatial_children_rs(cells: List, child_resolution: Nullable<i32>, simplify: bool) -> Robj {
-    let cres: Option<i32> = match child_resolution {
+fn a5_cell_to_subcell_rs(cells: List, resolution: Nullable<i32>) -> List {
+    let target: Option<i32> = match resolution {
         Nullable::NotNull(v) => Some(v),
         Nullable::Null => None,
     };
-    one_to_many(&cells, "cell_to_spatial_children", simplify, |id| {
-        spatial_children(id, cres.unwrap_or_else(|| a5::get_resolution(id) + 1))
+    cells_to_coverings(&cells, "cell_to_subcell", |id| {
+        a5::cell_to_subcell(id, target.unwrap_or_else(|| a5::get_resolution(id) + 1))
     })
 }
 
@@ -284,8 +270,8 @@ extendr_module! {
     fn a5_get_resolution_rs;
     fn a5_cell_to_parent_rs;
     fn a5_cell_to_children_rs;
-    fn a5_cell_to_spatial_parent_rs;
-    fn a5_cell_to_spatial_children_rs;
+    fn a5_cell_to_supercell_rs;
+    fn a5_cell_to_subcell_rs;
     fn a5_cell_child_rs;
     fn a5_cell_children_range_rs;
     fn a5_get_res0_cells_rs;

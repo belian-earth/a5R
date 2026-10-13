@@ -13,33 +13,38 @@ random_cells <- function(n, resolution, seed) {
   a5_lonlat_to_cell(lon, lat, resolution)
 }
 
-test_that("spatial_parent matches the lon/lat round trip", {
+# Subcells as cells, in ascending id order.
+subcells <- function(cell, resolution = NULL) {
+  vctrs::vec_sort(a5_uncompact(a5_cell_to_subcell(cell, resolution)))
+}
+
+test_that("supercell matches the lon/lat round trip", {
   for (res in c(2, 9, 18, 25)) {
     fine <- random_cells(500, res + 3, seed = res)
     for (gap in 1:3) {
       expect_identical(
-        a5_cell_to_spatial_parent(fine, res + 3 - gap),
+        a5_cell_to_supercell(fine, res + 3 - gap),
         centre_cell(fine, res + 3 - gap)
       )
     }
   }
 })
 
-test_that("spatial_parent differs from the index parent for many cells", {
+test_that("supercell differs from the index parent for many cells", {
   fine <- random_cells(1000, 18, seed = 1)
-  differ <- mean(a5_cell_to_spatial_parent(fine, 14) != a5_cell_to_parent(fine, 14))
+  differ <- mean(a5_cell_to_supercell(fine, 14) != a5_cell_to_parent(fine, 14))
   expect_gt(differ, 0.2)
 })
 
-test_that("spatial_children is complete and the exact inverse of spatial_parent", {
+test_that("subcell is complete and the exact inverse of supercell", {
   for (res in c(0, 1, 2, 7, 16)) {
     coarse <- unique(random_cells(20, res, seed = 10 + res))
     for (gap in c(1, 3)) {
       fine_res <- res + gap
       for (i in seq_along(coarse)) {
-        kids <- a5_cell_to_spatial_children(coarse[i], fine_res)
+        kids <- subcells(coarse[i], fine_res)
         # every returned cell has this spatial parent
-        expect_true(all(a5_cell_to_spatial_parent(kids, res) == coarse[i]))
+        expect_true(all(a5_cell_to_supercell(kids, res) == coarse[i]))
         # nothing is missing from a wide search area (k = 2 around the cell)
         area <- a5_uncompact(a5_grid_disk(coarse[i], 2, vertex = TRUE), fine_res)
         expected <- area[centre_cell(area, res) == coarse[i]]
@@ -49,11 +54,11 @@ test_that("spatial_children is complete and the exact inverse of spatial_parent"
   }
 })
 
-test_that("spatial_children is exact at large gaps, fine resolutions and the poles", {
+test_that("subcell is exact at large gaps, fine resolutions and the poles", {
   check <- function(coarse, fine_res) {
     res <- a5_get_resolution(coarse[1])
     for (i in seq_along(coarse)) {
-      kids <- a5_cell_to_spatial_children(coarse[i], fine_res)
+      kids <- subcells(coarse[i], fine_res)
       # A cell reaching quintants with no resolution-30 ids has its subcells
       # given at resolution 29 instead, all of them.
       kids_res <- unique(a5_get_resolution(kids))
@@ -76,10 +81,10 @@ test_that("spatial_children is exact at large gaps, fine resolutions and the pol
   check(unique(poles), 13)
 })
 
-test_that("spatial children of a patch partition the patch's fine cells", {
+test_that("subcells of a patch partition the patch's fine cells", {
   centre <- a5_lonlat_to_cell(-53.5, -19, resolution = 12)
   patch <- a5_uncompact(a5_grid_disk(centre, 2, vertex = TRUE), 12)
-  kids <- a5_cell_to_spatial_children(patch, resolution = 14)
+  kids <- subcells(patch, resolution = 14)
   expect_false(anyDuplicated(kids) > 0)
   # every fine cell whose centre falls in the patch is covered exactly once
   area <- a5_uncompact(a5_grid_disk(centre, 3, vertex = TRUE), 14)
@@ -87,37 +92,46 @@ test_that("spatial children of a patch partition the patch's fine cells", {
   expect_identical(vctrs::vec_sort(kids), vctrs::vec_sort(inside))
 })
 
-test_that("spatial children counts average 4^d", {
+test_that("subcell counts average 4^d", {
   coarse <- random_cells(200, 10, seed = 3)
-  kids <- a5_cell_to_spatial_children(coarse, resolution = 13, simplify = FALSE)
-  expect_equal(mean(lengths(kids)), 64, tolerance = 0.05)
-  res0 <- a5_get_res0_cells()
-  expect_length(a5_cell_to_spatial_children(res0), 60)
+  sub <- a5_cell_to_subcell(coarse, resolution = 13)
+  expect_s3_class(sub, "a5_covering")
+  expect_length(sub, 200L)
+  expect_equal(mean(lengths(a5_uncompact(sub, simplify = FALSE))), 64, tolerance = 0.05)
+  expect_identical(a5_covering_resolution(sub), rep(13L, 200))
+  expect_true(all(a5_is_valid(sub)))
+  expect_length(subcells(a5_get_res0_cells()), 60)
 })
 
-test_that("spatial functions default to one resolution step", {
-  cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
-  expect_identical(a5_cell_to_spatial_parent(cell), a5_cell_to_spatial_parent(cell, 9))
-  expect_identical(a5_cell_to_spatial_children(cell), a5_cell_to_spatial_children(cell, 11))
+test_that("subcell is vectorised element-wise", {
+  coarse <- random_cells(5, 9, seed = 4)
+  sub <- a5_cell_to_subcell(coarse, resolution = 11)
+  for (i in seq_along(coarse)) {
+    expect_identical(sub[i], a5_cell_to_subcell(coarse[i], resolution = 11))
+  }
 })
 
-test_that("spatial functions handle equal, invalid and NA resolutions", {
+test_that("supercell and subcell default to one resolution step", {
   cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
-  expect_identical(a5_cell_to_spatial_parent(cell, 10), cell)
-  expect_identical(a5_cell_to_spatial_children(cell, 10), cell)
-  expect_true(is.na(a5_cell_to_spatial_parent(cell, 12)))
-  expect_true(is.na(a5_cell_to_spatial_parent(a5_get_res0_cells()[1])))
-  expect_error(a5_cell_to_spatial_children(cell, 8), "equal to or greater")
+  expect_identical(a5_cell_to_supercell(cell), a5_cell_to_supercell(cell, 9))
+  expect_identical(a5_cell_to_subcell(cell), a5_cell_to_subcell(cell, 11))
+})
+
+test_that("supercell and subcell handle equal, invalid and NA resolutions", {
+  cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
+  expect_identical(a5_cell_to_supercell(cell, 10), cell)
+  expect_identical(subcells(cell, 10), cell)
+  expect_true(is.na(a5_cell_to_supercell(cell, 12)))
+  expect_true(is.na(a5_cell_to_supercell(a5_get_res0_cells()[1])))
+  expect_error(a5_cell_to_subcell(cell, 8), "equal to or greater")
+  expect_error(a5_cell_to_subcell(cell, 31), "between 0 and 30")
 
   x <- a5_cell(c(format(cell), NA))
-  expect_true(is.na(a5_cell_to_spatial_parent(x, 5)[2]))
-  expect_length(a5_cell_to_spatial_children(x, 11), length(a5_cell_to_spatial_children(cell, 11)))
-  lst <- a5_cell_to_spatial_children(x, 11, simplify = FALSE)
-  expect_s3_class(lst, "a5_cell_list")
-  expect_identical(lengths(lst)[2], 0L)
+  expect_true(is.na(a5_cell_to_supercell(x, 5)[2]))
+  expect_identical(is.na(a5_cell_to_subcell(x, 11)), c(FALSE, TRUE))
 })
 
-test_that("the world cell's spatial children are all cells", {
+test_that("the world cell's subcells are all cells", {
   world <- a5_cell("0000000000000000")
-  expect_identical(a5_cell_to_spatial_children(world, 0), a5_cell_to_children(world, 0))
+  expect_identical(subcells(world, 0), a5_cell_to_children(world, 0))
 })

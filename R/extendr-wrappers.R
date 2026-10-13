@@ -178,25 +178,24 @@ a5_cell_to_parent_rs <- function(cells, parent_resolution) .Call(wrap__a5_cell_t
 #' @keywords internal
 a5_cell_to_children_rs <- function(cells, child_resolution, simplify) .Call(wrap__a5_cell_to_children_rs, cells, child_resolution, simplify)
 
-#' Spatial parent: the coarser cell containing each cell's centre.
+#' Supercells: the coarser cell containing each cell's centre.
 #'
 #' @param cells List with b1..b8 raw vectors.
-#' @param parent_resolution Integer target resolution. NULL for one coarser.
-#' @return List with b1..b8 raw vectors.
+#' @param resolution Integer target resolution. NULL for one coarser.
+#' @return List with b1..b8 raw vectors. NA where the cell is NA, where the
+#'   resolution is finer than the cell, or below 0.
 #' @noRd
 #' @keywords internal
-a5_cell_to_spatial_parent_rs <- function(cells, parent_resolution) .Call(wrap__a5_cell_to_spatial_parent_rs, cells, parent_resolution)
+a5_cell_to_supercell_rs <- function(cells, resolution) .Call(wrap__a5_cell_to_supercell_rs, cells, resolution)
 
-#' Spatial children: the finer cells whose centres lie in each cell.
+#' Subcells: the finer cells whose centres lie in each cell, as coverings.
 #'
 #' @param cells List with b1..b8 raw vectors.
-#' @param child_resolution Integer target resolution. NULL for one finer.
-#' @param simplify If TRUE one flat b1..b8 list, else a list of a5_cell
-#'   objects, one per input.
-#' @return See simplify.
+#' @param resolution Integer target resolution. NULL for one finer.
+#' @return A list of coverings, one per cell (NULL for an NA cell).
 #' @noRd
 #' @keywords internal
-a5_cell_to_spatial_children_rs <- function(cells, child_resolution, simplify) .Call(wrap__a5_cell_to_spatial_children_rs, cells, child_resolution, simplify)
+a5_cell_to_subcell_rs <- function(cells, resolution) .Call(wrap__a5_cell_to_subcell_rs, cells, resolution)
 
 #' The i-th child of each cell at a resolution, without building the list.
 #'
