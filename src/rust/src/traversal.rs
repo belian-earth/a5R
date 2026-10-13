@@ -1,6 +1,6 @@
 use extendr_api::prelude::*;
 
-use crate::cell_raw::one_to_many;
+use crate::cell_raw::{one_to_many, strip_marker};
 
 /// Get all cells within k hops of each centre cell.
 ///
@@ -16,11 +16,12 @@ use crate::cell_raw::one_to_many;
 fn a5_grid_disk_rs(cells: List, k: i32, vertex: bool, simplify: bool) -> Robj {
     let k = k as usize;
     one_to_many(&cells, "grid_disk", simplify, |id| {
-        if vertex {
+        let disk = if vertex {
             a5::grid_disk_vertex(id, k)
         } else {
             a5::grid_disk(id, k)
-        }
+        };
+        disk.map(strip_marker)
     })
 }
 
@@ -35,7 +36,9 @@ fn a5_grid_disk_rs(cells: List, k: i32, vertex: bool, simplify: bool) -> Robj {
 /// @keywords internal
 #[extendr]
 fn a5_spherical_cap_rs(cells: List, radius: f64, simplify: bool) -> Robj {
-    one_to_many(&cells, "spherical_cap", simplify, |id| a5::spherical_cap(id, radius))
+    one_to_many(&cells, "spherical_cap", simplify, |id| {
+        a5::spherical_cap(id, radius).map(strip_marker)
+    })
 }
 
 extendr_module! {

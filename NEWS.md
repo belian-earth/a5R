@@ -1,5 +1,39 @@
 # a5R (development version)
 
+## Breaking changes
+
+* a5R now uses the a5 Rust crate 1.0.0-beta.2, which introduces A5's
+  permanent cell-ID system. The space-filling curve and the order of the
+  dodecahedron faces are new, so **every cell id changes**: an id written by
+  an earlier version of a5R is still a valid cell, but in a different place,
+  and nothing in the id says which version wrote it. Re-index stored data
+  from its coordinates, or convert the ids once with the new `a5_migrate()`.
+* Resolution-1 cells are now pentagons rather than triangles, so their
+  boundaries and centres change. Cells at every other resolution keep their
+  shape and position.
+* `a5_is_valid()` now checks the index encoding. It used to return `TRUE`
+  for any non-missing `a5_cell` and for any hex string that parsed, whether
+  or not the value was a cell; hex strings must now also be 16 digits.
+
+## New features
+
+* New `a5_migrate()` converts ids from a5R before 1.0 to the current index.
+* New `a5_is_valid_cell()` checks that values are A5 cells, mirroring the
+  upstream `is_valid_cell`. `a5_is_valid()` becomes a generic that also
+  accepts an `a5_cell_list`, returning one value per element.
+
+## Other changes
+
+* `a5_cell_child()` and `a5_cell_children_range()` follow the new order of
+  `a5_cell_to_children()` (children are now in ascending id order).
+* `a5_get_num_cells()` is correct at high resolutions (a5 0.10.1).
+* `a5_polygon_to_cells()` merges multi-part polygons with the upstream
+  covering union, without expanding each part to full resolution first.
+* `a5_cell_to_spatial_parent()` and `a5_cell_to_spatial_children()` now use
+  the upstream `cell_to_supercell()` and `cell_to_subcell()`. A cell whose
+  subcells reach faces with no resolution-30 ids now has all its subcells
+  given at resolution 29.
+
 * New experimental `a5_cell_to_spatial_parent()` and
   `a5_cell_to_spatial_children()` move between resolutions by cell centre
   rather than by index. The A5 index hierarchy is not spatially nested: for

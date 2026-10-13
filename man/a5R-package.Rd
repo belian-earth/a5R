@@ -13,8 +13,9 @@ discrete global grid system, powered by the a5 Rust crate via extendr.
 
 \itemize{
 \item \code{\link[=a5_cell]{a5_cell()}} --- construct cell ID vectors
-\item \link[=a5_cell]{is_a5_cell()} / \link[=a5_cell]{a5_is_valid()} --- type test and
+\item \link[=a5_cell]{is_a5_cell()} / \code{\link[=a5_is_valid]{a5_is_valid()}} --- type test and
 validation
+\item \code{\link[=a5_migrate]{a5_migrate()}} --- convert ids from a5R before 1.0
 \item \code{\link[=a5_u64_to_hex]{a5_u64_to_hex()}} / \link[=a5_u64_to_hex]{a5_hex_to_u64()} --- hex string
 conversion
 }

@@ -113,21 +113,30 @@ a5_get_num_cells_rs <- function(resolution) .Call(wrap__a5_get_num_cells_rs, res
 #' @keywords internal
 a5_get_num_children_rs <- function(parent_resolution, child_resolution) .Call(wrap__a5_get_num_children_rs, parent_resolution, child_resolution)
 
-#' Validate cell IDs stored as raw bytes.
+#' Validate cell IDs stored as raw bytes with upstream `is_valid_cell`.
 #'
 #' @param cells List with b1..b8 raw vectors.
-#' @return Logical vector indicating validity.
+#' @return Logical vector: NA where the cell is NA.
 #' @noRd
 #' @keywords internal
 a5_is_valid_cell_rs <- function(cells) .Call(wrap__a5_is_valid_cell_rs, cells)
 
-#' Validate hex cell ID strings (for use before conversion to rcrd).
+#' Validate hex cell ID strings: 16 hex digits encoding an A5 cell.
 #'
 #' @param cell Character vector of hex strings to validate.
-#' @return Logical vector indicating validity.
+#' @return Logical vector: NA where the string is NA.
 #' @noRd
 #' @keywords internal
 a5_is_valid_hex_rs <- function(cell) .Call(wrap__a5_is_valid_hex_rs, cell)
+
+#' Convert cell IDs from the v0 index (a5 crate <= 0.10) to v1.
+#'
+#' @param cells List with b1..b8 raw vectors.
+#' @return List with b1..b8 raw vectors. NA where the cell is NA; an error
+#'   naming the first cell that cannot be decoded.
+#' @noRd
+#' @keywords internal
+a5_migrate_rs <- function(cells) .Call(wrap__a5_migrate_rs, cells)
 
 #' Distance between pairs of cell centroids.
 #'
@@ -267,9 +276,10 @@ a5_spherical_cap_rs <- function(cells, radius, simplify) .Call(wrap__a5_spherica
 #'
 #' For each polygon part, the outer ring and its holes are passed to
 #' `a5::polygon_to_cells`, which excludes hole interiors natively, and the
-#' resulting cells are unioned across parts. The result is recompacted at
-#' the end. A single-part input (with or without holes) takes a fast path
-#' that passes the upstream compacted result through unchanged.
+#' resulting coverings are unioned across parts with `a5::union`, which
+#' works on the compacted cells directly. A single-part input (with or
+#' without holes) takes a fast path that passes the upstream compacted
+#' result through unchanged.
 #'
 #' @noRd
 #' @keywords internal

@@ -3,14 +3,14 @@ use extendr_api::wrapper::Nullable;
 
 use crate::cell_raw::map_cells;
 
-pub(crate) const BOUNDARY_OPTS_CLOSED: a5::core::cell::CellToBoundaryOptions =
-    a5::core::cell::CellToBoundaryOptions {
+pub(crate) const BOUNDARY_OPTS_CLOSED: a5::CellToBoundaryOptions =
+    a5::CellToBoundaryOptions {
         closed_ring: true,
         segments: None,
     };
 
-pub(crate) const BOUNDARY_OPTS_OPEN: a5::core::cell::CellToBoundaryOptions =
-    a5::core::cell::CellToBoundaryOptions {
+pub(crate) const BOUNDARY_OPTS_OPEN: a5::CellToBoundaryOptions =
+    a5::CellToBoundaryOptions {
         closed_ring: false,
         segments: None,
     };
@@ -50,7 +50,7 @@ fn a5_cell_to_boundary_rs(
     };
 
     let results = map_cells(&cells, |id| {
-        let opts = a5::core::cell::CellToBoundaryOptions {
+        let opts = a5::CellToBoundaryOptions {
             closed_ring,
             segments: seg,
         };
@@ -93,7 +93,7 @@ fn a5_cell_to_boundary_wkb_rs(
     };
 
     let results = map_cells(&cells, |id| {
-        let opts = a5::core::cell::CellToBoundaryOptions {
+        let opts = a5::CellToBoundaryOptions {
             closed_ring,
             segments: seg,
         };

@@ -6,9 +6,9 @@ use std::result::Result as StdResult;
 // `Containment` / `PolygonToCellsOptions` are not re-exported from the crate
 // root in a5 0.10.0 (the `regions` module is `pub` but `#[doc(hidden)]`), so
 // reach them through the module path. Revisit once upstream re-exports them.
-use a5::regions::polygon::{Containment, PolygonToCellsOptions};
+use a5::{Containment, PolygonToCellsOptions};
 
-use crate::cell_raw::u64s_to_raw8_list;
+use crate::cell_raw::{strip_marker, u64s_to_raw8_list};
 use crate::threading::{get_num_threads, maybe_par};
 
 /// Map the R-side containment string to the upstream option struct.
@@ -80,8 +80,9 @@ fn collect_part_rings(
 /// Per-part processing: cells of the outer ring with hole interiors excluded.
 ///
 /// Hole subtraction is handled natively by `a5::polygon_to_cells`. The result
-/// is uncompacted to `resolution` so parts can be unioned and recompacted at a
-/// common resolution by the caller.
+/// is an upstream covering (compaction marker included), so the caller can
+/// union parts without uncompacting them. An empty part is an empty covering
+/// at `resolution`.
 fn process_part(
     p: i32,
     rings: &[Vec<a5::LonLat>],
@@ -92,10 +93,9 @@ fn process_part(
 ) -> StdResult<Vec<u64>, String> {
     let part_rings = collect_part_rings(p, rings, part_id, is_outer);
     if part_rings.is_empty() {
-        return Ok(Vec::new());
+        return a5::polygon_to_cells(&[], resolution, Some(options));
     }
-    let compacted = a5::polygon_to_cells(&part_rings, resolution, Some(options))?;
-    a5::uncompact(&compacted, resolution)
+    a5::polygon_to_cells(&part_rings, resolution, Some(options))
 }
 
 /// Convert one or more polygon parts (with optional holes) to A5 cells.
@@ -109,9 +109,10 @@ fn process_part(
 ///
 /// For each polygon part, the outer ring and its holes are passed to
 /// `a5::polygon_to_cells`, which excludes hole interiors natively, and the
-/// resulting cells are unioned across parts. The result is recompacted at
-/// the end. A single-part input (with or without holes) takes a fast path
-/// that passes the upstream compacted result through unchanged.
+/// resulting coverings are unioned across parts with `a5::union`, which
+/// works on the compacted cells directly. A single-part input (with or
+/// without holes) takes a fast path that passes the upstream compacted
+/// result through unchanged.
 ///
 /// @noRd
 /// @keywords internal
@@ -144,7 +145,7 @@ fn a5_polygon_to_cells_rs(
     // Fast path: a single polygon part (outer ring plus any holes) — the
     // common case for matrix / data.frame input and for an `sfc` of one
     // POLYGON. `polygon_to_cells` handles holes natively and already returns
-    // a compacted result, so no uncompact/recompact round-trip is needed.
+    // a compacted result, so no union is needed.
     if max_part == 1 {
         let part_rings = collect_part_rings(1, &rings, &part_id_vec, &is_outer_vec);
         if part_rings.is_empty() {
@@ -152,7 +153,7 @@ fn a5_polygon_to_cells_rs(
         }
         return match a5::polygon_to_cells(&part_rings, resolution, Some(options)) {
             Ok(cells) => {
-                let out: Vec<Option<u64>> = cells.into_iter().map(Some).collect();
+                let out: Vec<Option<u64>> = strip_marker(cells).into_iter().map(Some).collect();
                 u64s_to_raw8_list(out)
             }
             Err(e) => throw_r_error(format!("polygon_to_cells failed: {}", e)),
@@ -178,23 +179,23 @@ fn a5_polygon_to_cells_rs(
         })
     };
 
-    let mut union: HashSet<u64> = HashSet::new();
+    let mut union: Vec<u64> = Vec::new();
     for r in per_part {
         let part_cells = match r {
             Ok(c) => c,
             Err(e) => throw_r_error(format!("polygon_to_cells failed: {}", e)),
         };
-        union.extend(part_cells);
+        union = if union.is_empty() {
+            part_cells
+        } else {
+            match a5::union(&union, &part_cells) {
+                Ok(c) => c,
+                Err(e) => throw_r_error(format!("union failed: {}", e)),
+            }
+        };
     }
 
-    let mut combined: Vec<u64> = union.into_iter().collect();
-    combined.sort_unstable();
-    let recompacted = match a5::compact(&combined) {
-        Ok(c) => c,
-        Err(e) => throw_r_error(format!("compact failed: {}", e)),
-    };
-
-    let out: Vec<Option<u64>> = recompacted.into_iter().map(Some).collect();
+    let out: Vec<Option<u64>> = strip_marker(union).into_iter().map(Some).collect();
     u64s_to_raw8_list(out)
 }
 

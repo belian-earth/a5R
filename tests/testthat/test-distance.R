@@ -106,35 +106,37 @@ test_that("cell_distance rejects invalid method", {
 })
 
 # -- regression: distances match the geo-crate reference (pre-geographiclib-rs swap) --
+# Cell ids are the v0 originals passed through a5_migrate(): the cells (and
+# so the distances) are unchanged by the a5 1.0 index.
 
 test_that("cell_distance reproduces reference values across methods", {
   from <- a5_cell(c(
-    "4f05dce800000000",
-    "4f05dce800000000",
-    "6344b9a800000000",
-    "63c20d0800000000",
-    "636119e800000000",
-    "99ffbd8800000000",
-    "9994b2c800000000",
-    "0d7e51a800000000",
-    "03102db800000000",
-    "a519956800000000",
-    "e45b840800000000",
-    "e45beb8800000000"
+    "4f0a22c800000000",
+    "4f0a22c800000000",
+    "63bb91a800000000",
+    "63d9f20800000000",
+    "639726e800000000",
+    "976ae27800000000",
+    "979ca13800000000",
+    "0f5b73f800000000",
+    "0313d5b800000000",
+    "a5166fd800000000",
+    "e45bb3f800000000",
+    "e45be1b800000000"
   ))
   to <- a5_cell(c(
-    "4f05dce800000000",
-    "6344b9a800000000",
-    "63c20d0800000000",
-    "636119e800000000",
-    "99ffbd8800000000",
-    "9994b2c800000000",
-    "0d7e51a800000000",
-    "03102db800000000",
-    "a519956800000000",
-    "e45b840800000000",
-    "e45beb8800000000",
-    "4f05dce800000000"
+    "4f0a22c800000000",
+    "63bb91a800000000",
+    "63d9f20800000000",
+    "639726e800000000",
+    "976ae27800000000",
+    "979ca13800000000",
+    "0f5b73f800000000",
+    "0313d5b800000000",
+    "a5166fd800000000",
+    "e45bb3f800000000",
+    "e45be1b800000000",
+    "4f0a22c800000000"
   ))
   expected_haversine <- c(
     0.0000000000,

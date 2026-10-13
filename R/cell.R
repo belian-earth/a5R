@@ -7,8 +7,9 @@
 #'
 #' @param x A character vector of hex-encoded A5 cell IDs, or an object
 #'   coercible to one.
-#' @returns An `a5_cell` vector (`a5_cell`, `as_a5_cell`), a logical
-#'   scalar (`is_a5_cell`), or a logical vector (`a5_is_valid`).
+#' @returns An `a5_cell` vector (`a5_cell`, `as_a5_cell`), or a logical
+#'   scalar (`is_a5_cell`).
+#' @seealso [a5_is_valid()] to check that values are A5 cells.
 #'
 #' @export
 #' @examples
@@ -91,19 +92,6 @@ as_a5_cell <- function(x) {
     return(x)
   }
   a5_cell(x)
-}
-
-#' @export
-#' @rdname a5_cell
-#' @examples
-#' a5_is_valid(c("0800000000000006", "not_a_cell", NA))
-a5_is_valid <- function(x) {
-  if (is_a5_cell(x)) {
-    a5_is_valid_cell_rs(cell_data(x))
-  } else {
-    x <- vctrs::vec_cast(x, character())
-    a5_is_valid_hex_rs(x)
-  }
 }
 
 #' Coerce between hex strings and A5 cell vectors

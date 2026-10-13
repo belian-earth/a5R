@@ -54,7 +54,12 @@ test_that("spatial_children is exact at large gaps, fine resolutions and the pol
     res <- a5_get_resolution(coarse[1])
     for (i in seq_along(coarse)) {
       kids <- a5_cell_to_spatial_children(coarse[i], fine_res)
-      area <- a5_cell_to_children(a5_grid_disk(coarse[i], 2, vertex = TRUE), fine_res)
+      # A cell reaching quintants with no resolution-30 ids has its subcells
+      # given at resolution 29 instead, all of them.
+      kids_res <- unique(a5_get_resolution(kids))
+      expect_length(kids_res, 1L)
+      expect_true(kids_res == fine_res || (fine_res == 30L && kids_res == 29L))
+      area <- a5_cell_to_children(a5_grid_disk(coarse[i], 2, vertex = TRUE), kids_res)
       expect_identical(kids, vctrs::vec_sort(area[centre_cell(area, res) == coarse[i]]))
     }
   }
@@ -102,7 +107,7 @@ test_that("spatial functions handle equal, invalid and NA resolutions", {
   expect_identical(a5_cell_to_spatial_children(cell, 10), cell)
   expect_true(is.na(a5_cell_to_spatial_parent(cell, 12)))
   expect_true(is.na(a5_cell_to_spatial_parent(a5_get_res0_cells()[1])))
-  expect_error(a5_cell_to_spatial_children(cell, 8), "coarser")
+  expect_error(a5_cell_to_spatial_children(cell, 8), "equal to or greater")
 
   x <- a5_cell(c(format(cell), NA))
   expect_true(is.na(a5_cell_to_spatial_parent(x, 5)[2]))
