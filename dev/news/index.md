@@ -136,6 +136,16 @@
   `max(1, 2^(6 - resolution))` segments per edge, and how far a single
   segment strays from the curved cell edge at each resolution.
 
+- [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md)
+  handles
+  [`wk::rct()`](https://paleolimbot.github.io/wk/reference/rct.html)
+  boxes that previously gave wrong results. A box covering the whole
+  globe gives every cell instead of none, and a box reaching from pole
+  to pole keeps its west and east edges on their meridians. Any other
+  box spanning 180 degrees of longitude or more is an error, because its
+  great-circle edges would run the short way round. The documentation
+  now states that polygon edges are great circles.
+
 - New
   [`vignette("coverings")`](https://belian-earth.github.io/a5R/dev/articles/coverings.md)
   on building, combining, testing and measuring coverings.
