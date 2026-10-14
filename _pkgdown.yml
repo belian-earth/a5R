@@ -64,6 +64,7 @@ reference:
   desc: Compacted sets of cells that record their resolution.
   contents:
   - a5_covering
+  - a5_covering_stored
   - a5_compaction
   - a5_set_operations
   - a5_covering_predicates

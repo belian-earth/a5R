@@ -240,10 +240,21 @@ fn a5_uncompact_rs(x: List, resolution: Nullable<i32>, simplify: bool) -> Robj {
             }
         }
     });
+    covering_cells_robj("uncompact", results, simplify)
+}
+
+/// Cells taken from each covering, as one flat b1..b8 list when `simplify`
+/// or else a list of a5_cell objects, one per covering (empty for a missing
+/// covering). An error is raised as an R error prefixed by `name`.
+fn covering_cells_robj(
+    name: &str,
+    results: Vec<Option<std::result::Result<Vec<u64>, String>>>,
+    simplify: bool,
+) -> Robj {
     let unwrap = |r: Option<std::result::Result<Vec<u64>, String>>| -> Vec<Option<u64>> {
         match r {
             Some(Ok(v)) => v.into_iter().map(Some).collect(),
-            Some(Err(e)) => throw_r_error(format!("uncompact failed: {}", e)),
+            Some(Err(e)) => throw_r_error(format!("{} failed: {}", name, e)),
             None => Vec::new(),
         }
     };
@@ -264,6 +275,25 @@ fn a5_uncompact_rs(x: List, resolution: Nullable<i32>, simplify: bool) -> Robj {
         })
         .collect();
     List::from_values(elements).into()
+}
+
+/// The stored (compacted) cells of each covering, without the compaction
+/// marker.
+///
+/// @param x List of coverings.
+/// @param simplify As for `a5_uncompact_rs()`.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn a5_covering_stored_rs(x: List, simplify: bool) -> Robj {
+    let results = map_coverings(&x, |values| {
+        Ok(values
+            .iter()
+            .copied()
+            .filter(|&v| !a5::is_compaction_marker(v))
+            .collect())
+    });
+    covering_cells_robj("covering_stored", results, simplify)
 }
 
 /// Resolution, cell count and stored-cell count of every covering.
@@ -568,6 +598,7 @@ extendr_module! {
     fn a5_compact_each_rs;
     fn a5_covering_normalise_rs;
     fn a5_uncompact_rs;
+    fn a5_covering_stored_rs;
     fn a5_covering_summary_rs;
     fn a5_is_valid_covering_rs;
     fn a5_covering_format_rs;
