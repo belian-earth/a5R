@@ -33,6 +33,7 @@ conversion
 
 \itemize{
 \item \code{\link[=a5_cell_to_boundary]{a5_cell_to_boundary()}} --- cell boundary polygons (WKB or WKT)
+\item \code{\link[=a5_cell_to_boundary_xy]{a5_cell_to_boundary_xy()}} --- cell boundary vertices as flat vectors
 \item \code{\link[=a5_cell_area]{a5_cell_area()}} --- cell area at a given resolution
 \item \code{\link[=a5_cell_edge_length_avg]{a5_cell_edge_length_avg()}} --- average cell edge length at a resolution
 \item \code{\link[=a5_cell_distance]{a5_cell_distance()}} --- distance between cell centroids

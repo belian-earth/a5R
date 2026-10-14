@@ -52,6 +52,7 @@ reference:
   desc: Cell boundaries, areas, counts, and distances.
   contents:
   - a5_cell_to_boundary
+  - a5_cell_to_boundary_xy
   - a5_cell_distance
   - a5_resolution_stats
 - title: Traversal

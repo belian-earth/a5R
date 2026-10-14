@@ -18,6 +18,7 @@
 #'
 #' @section Geometry:
 #' - [a5_cell_to_boundary()] --- cell boundary polygons (WKB or WKT)
+#' - [a5_cell_to_boundary_xy()] --- cell boundary vertices as flat vectors
 #' - [a5_cell_area()] --- cell area at a given resolution
 #' - [a5_cell_edge_length_avg()] --- average cell edge length at a resolution
 #' - [a5_cell_distance()] --- distance between cell centroids

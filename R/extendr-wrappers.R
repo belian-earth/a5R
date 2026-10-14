@@ -66,6 +66,17 @@ a5_cell_to_boundary_rs <- function(cells, closed_ring, segments) .Call(wrap__a5_
 #' @keywords internal
 a5_cell_to_boundary_wkb_rs <- function(cells, closed_ring, segments) .Call(wrap__a5_cell_to_boundary_wkb_rs, cells, closed_ring, segments)
 
+#' Get boundary vertices for A5 cells as flat coordinate vectors.
+#'
+#' @param cells List with b1..b8 raw vectors.
+#' @param closed_ring Logical: should the polygon ring be closed?
+#' @param segments Integer: number of interpolation segments per edge.
+#' @return A list of `x` and `y` (doubles, every cell's vertices in turn) and
+#'   `lengths` (integer, vertices per cell; 0 for NA cells).
+#' @noRd
+#' @keywords internal
+a5_cell_to_boundary_xy_rs <- function(cells, closed_ring, segments) .Call(wrap__a5_cell_to_boundary_xy_rs, cells, closed_ring, segments)
+
 #' Get the area (in square metres) of cells at a given resolution.
 #'
 #' @param resolution Integer vector of resolutions (0--30).

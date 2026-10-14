@@ -20,7 +20,9 @@ a5_cell_to_boundary(
 (first vertex repeated at end).}
 
 \item{segments}{Integer scalar or \code{NULL}. Number of interpolation segments
-per edge for geodesic accuracy. \code{NULL} uses the default (straight edges).}
+per edge. \code{NULL} uses the A5 default of \code{max(1, 2^(6 - resolution))}, so
+cells coarser than resolution 6 have their edges densified and cells at
+resolution 6 or finer have straight edges.}
 }
 \value{
 A \code{wk_wkt} or \code{wk_wkb} vector of polygon geometries with
@@ -37,5 +39,6 @@ a5_cell_to_boundary(cell)
 a5_cell_to_boundary(cell, format = "wkt")
 }
 \seealso{
-\code{\link[=a5_cell_to_lonlat]{a5_cell_to_lonlat()}} for cell centroids.
+\code{\link[=a5_cell_to_boundary_xy]{a5_cell_to_boundary_xy()}} for the same vertices as flat
+coordinate vectors; \code{\link[=a5_cell_to_lonlat]{a5_cell_to_lonlat()}} for cell centroids.
 }
