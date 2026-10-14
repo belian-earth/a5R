@@ -94,6 +94,8 @@ Compacted sets of cells that record their resolution.
   [`is_a5_covering()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering.md)
   [`a5_covering_resolution()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering.md)
   : A5 covering vectors
+- [`a5_covering_stored()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_stored.md)
+  : Stored cells of a covering
 - [`a5_compact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)
   [`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)
   : Compact and uncompact sets of cells

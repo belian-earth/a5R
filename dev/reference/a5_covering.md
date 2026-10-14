@@ -77,12 +77,14 @@ expands coverings to their cells.
 
 ## Working with coverings
 
-Use coverings through a5R functions rather than by reading the stored
-cells. The stored cells are index parents (see
+Use coverings through a5R functions where one fits. The stored cells are
+index parents (see
 [a5_hierarchy](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)):
 their outlines do not nest geometrically, so drawing them shows overlaps
 and gaps. Uncompact a covering before plotting or joining it to data
-keyed by cell.
+keyed by cell. For index range queries,
+[`a5_covering_stored()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_stored.md)
+returns the stored cells.
 
 [`length()`](https://rdrr.io/r/base/length.html) counts coverings, not
 cells. `x[i]` and `x[[i]]` both return coverings, and

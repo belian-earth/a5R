@@ -133,11 +133,11 @@ for, and <code><a href="a5_compaction.html">a5_uncompact()</a></code> expands co
     <h2 id="working-with-coverings">Working with coverings<a class="anchor" aria-label="anchor" href="#working-with-coverings"></a></h2>
 
 
-<p>Use coverings through a5R functions rather than by reading the stored
-cells. The stored cells are index parents (see <a href="a5_hierarchy.html">a5_hierarchy</a>): their
-outlines do not nest geometrically, so drawing them shows overlaps and
-gaps. Uncompact a covering before plotting or joining it to data keyed by
-cell.</p>
+<p>Use coverings through a5R functions where one fits. The stored cells are
+index parents (see <a href="a5_hierarchy.html">a5_hierarchy</a>): their outlines do not nest
+geometrically, so drawing them shows overlaps and gaps. Uncompact a
+covering before plotting or joining it to data keyed by cell. For index
+range queries, <code><a href="a5_covering_stored.html">a5_covering_stored()</a></code> returns the stored cells.</p>
 <p><code><a href="https://rdrr.io/r/base/length.html" class="external-link">length()</a></code> counts coverings, not cells. <code>x[i]</code> and <code>x[[i]]</code> both return
 coverings, and <code><a href="https://rdrr.io/r/base/c.html" class="external-link">c()</a></code> concatenates them. Two coverings of the same cells
 compare equal with <code>==</code>, because a5R always stores a covering in the same

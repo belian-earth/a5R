@@ -87,6 +87,9 @@ R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 - [a5_covering_resolution()](https://belian-earth.github.io/a5R/dev/reference/a5_covering.md)
   — the resolution a covering stands for
 
+- [`a5_covering_stored()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_stored.md)
+  — the compacted cells a covering stores
+
 - [`a5_union()`](https://belian-earth.github.io/a5R/dev/reference/a5_set_operations.md)
   /
   [a5_intersect()](https://belian-earth.github.io/a5R/dev/reference/a5_set_operations.md)

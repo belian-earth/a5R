@@ -93,6 +93,11 @@
   give the number of cells and the area each covering stands for.
   Combining coverings at different resolutions is an error, as upstream.
 - New
+  [`a5_covering_stored()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_stored.md)
+  returns the compacted cells a covering stores, without the compaction
+  marker, for index range queries with
+  [`a5_cell_children_range()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_children_range.md).
+- New
   [`a5_covering_to_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_from_arrow.md)
   and
   [`a5_covering_from_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_from_arrow.md)
