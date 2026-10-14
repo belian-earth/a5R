@@ -23,3 +23,5 @@ scratch/
 vignettes/*_files/
 
 TODO.local.md
+
+**/*.quarto_ipynb
