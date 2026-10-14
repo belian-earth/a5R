@@ -75,9 +75,9 @@
   results: on a million cells, WKB takes about 25% less time on one thread
   and half the time on four, and WKT about 20% less.
 * `a5_cell_to_boundary()` rejects a `segments` value below 1 or `NA`;
-  a negative value used to hang. Its documentation now gives the default
-  densification, `max(1, 2^(6 - resolution))` segments per edge, instead
-  of describing the default as straight edges.
+  a negative value used to hang. Its documentation now gives the default,
+  `max(1, 2^(6 - resolution))` segments per edge, and how far a single
+  segment strays from the curved cell edge at each resolution.
 * New `vignette("coverings")` on building, combining, testing and measuring
   coverings. `vignette("arrow-parquet")` covers storing coverings and
   migrating data written before 1.0, and `vignette("spatial-hierarchy")` is

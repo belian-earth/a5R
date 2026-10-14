@@ -8,10 +8,14 @@
 #' @param format Character scalar, either `"wkb"` (default) or `"wkt"`.
 #' @param closed Logical scalar; if `TRUE` (default) the ring is closed
 #'   (first vertex repeated at end).
-#' @param segments Integer scalar or `NULL`. Number of interpolation segments
-#'   per edge. `NULL` uses the A5 default of `max(1, 2^(6 - resolution))`, so
-#'   cells coarser than resolution 6 have their edges densified and cells at
-#'   resolution 6 or finer have straight edges.
+#' @param segments Integer scalar or `NULL`. Number of segments per cell
+#'   edge. A5 cell edges are slightly curved on the sphere: a single segment
+#'   between two vertices strays from the true edge by up to about 450 m at
+#'   resolution 6, 25 m at resolution 8 and 1.5 m at resolution 10. The
+#'   error falls with the square of the number of segments. `NULL` uses the
+#'   A5 default of `max(1, 2^(6 - resolution))`, so at resolution 6 and finer
+#'   each edge is a single segment. Pass a larger value when the polygons are
+#'   used for spatial tests rather than display.
 #' @returns A `wk_wkt` or `wk_wkb` vector of polygon geometries with
 #'   `wk::wk_crs_longlat()` CRS.
 #'
