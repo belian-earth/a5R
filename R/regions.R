@@ -49,6 +49,23 @@
 #' closed automatically; a trailing duplicate vertex is dropped if
 #' present.
 #'
+#' Polygon edges are great-circle arcs, the shortest path on the sphere
+#' between consecutive vertices, as in the other A5 libraries and in s2. An
+#' edge between two points on the same parallel therefore bows toward the
+#' pole: a 20 degree edge along 10 degrees north peaks at 10.15 degrees
+#' north, and a 1 degree edge at that latitude bows by about 40 m. An edge
+#' whose ends are antipodal has no single great circle and gives an
+#' undefined result. Where
+#' edges should follow parallels, as in GeoJSON (RFC 7946 defines its edges
+#' as straight in longitude and latitude), add vertices along them first.
+#'
+#' A [wk::rct()] box is a polygon with great-circle edges like any other,
+#' with two exceptions: a box covering the whole globe (`wk::rct(-180, -90,
+#' 180, 90)`) gives every cell, and a box reaching from pole to pole keeps
+#' its west and east edges on their meridians. Any other box spanning 180
+#' degrees of longitude or more is an error, because its top and bottom
+#' edges would run the short way round the globe.
+#'
 #' Where no A5 cell centroids at the specified `resolution` fall within
 #' the geometry, its covering is empty.
 #'
@@ -83,7 +100,16 @@ a5_polygon_to_cells <- function(x, resolution,
   check_size1(resolution)
   containment <- arg_match_default(containment, c("centre", "overlapping"))
 
-  bundle <- prepare_polygon_input(x)
+  if (inherits(x, "wk_rct")) {
+    return(rct_to_cells(x, resolution, containment))
+  }
+  polygons_to_coverings(x, resolution, containment)
+}
+
+#' @noRd
+polygons_to_coverings <- function(x, resolution, containment,
+                                  call = rlang::caller_env()) {
+  bundle <- prepare_polygon_input(x, call = call)
 
   out <- coverings_from_rs(a5_polygon_to_cells_rs(
     bundle$lon,
@@ -98,6 +124,65 @@ a5_polygon_to_cells <- function(x, resolution,
   ))
   out[bundle$missing] <- NA
   out
+}
+
+#' Coverings of `wk_rct` boxes
+#'
+#' A box's edges are great circles, like any polygon's. Three kinds of box
+#' need care:
+#' - A box covering the whole globe has its west and east edges on the same
+#'   meridian and its other edges at the poles, so its ring has no area. It
+#'   gives every cell.
+#' - A box reaching from pole to pole has west and east edges between
+#'   antipodal points, which lie on every meridian. Adding each edge's
+#'   midpoint pins it to its own meridian. A meridian is a great circle, so
+#'   the box keeps its meaning.
+#' - Any other box spanning 180 degrees of longitude or more has top and
+#'   bottom edges that run the short way round the globe, so it is refused.
+#' @noRd
+rct_to_cells <- function(x, resolution, containment,
+                         call = rlang::caller_env()) {
+  b <- unclass(x)
+  width <- b$xmax - b$xmin
+  height <- b$ymax - b$ymin
+  globe <- !is.na(width) & width >= 360 & height >= 180
+  wide <- !is.na(width) & width >= 180 & !globe
+  if (any(wide)) {
+    i <- which(wide)[1]
+    cli::cli_abort(
+      c(
+        "Box {i} of {.arg x} spans {width[i]} degrees of longitude.",
+        i = "Box edges are great circles, so a box 180 degrees wide or more \
+             is ambiguous unless it covers the whole globe. Split it into \
+             narrower boxes."
+      ),
+      call = call
+    )
+  }
+
+  geom <- wk::as_wkb(x)
+  polar <- which(!globe & !is.na(height) & height >= 180)
+  if (length(polar) > 0L) {
+    xmin <- b$xmin[polar]
+    xmax <- b$xmax[polar]
+    ymin <- b$ymin[polar]
+    ymax <- b$ymax[polar]
+    ymid <- (ymin + ymax) / 2
+    ring_x <- rbind(xmin, xmax, xmax, xmax, xmin, xmin)
+    ring_y <- rbind(ymin, ymin, ymid, ymax, ymax, ymid)
+    geom[polar] <- wk::as_wkb(wk::wk_polygon(
+      wk::xy(as.vector(ring_x), as.vector(ring_y)),
+      feature_id = rep(seq_along(polar), each = 6L)
+    ))
+  }
+
+  out <- polygons_to_coverings(geom[!globe], resolution, containment, call)
+  if (!any(globe)) {
+    return(out)
+  }
+  whole <- a5_compact(a5_get_res0_cells(), resolution = resolution)
+  out <- c(out, rep(whole, sum(globe)))
+  out[order(c(which(!globe), which(globe)))]
 }
 
 #' Cells traced by a great-circle linestring
