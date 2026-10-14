@@ -15,11 +15,11 @@
 #' for, and [a5_uncompact()] expands coverings to their cells.
 #'
 #' @section Working with coverings:
-#' Use coverings through a5R functions rather than by reading the stored
-#' cells. The stored cells are index parents (see [a5_hierarchy]): their
-#' outlines do not nest geometrically, so drawing them shows overlaps and
-#' gaps. Uncompact a covering before plotting or joining it to data keyed by
-#' cell.
+#' Use coverings through a5R functions where one fits. The stored cells are
+#' index parents (see [a5_hierarchy]): their outlines do not nest
+#' geometrically, so drawing them shows overlaps and gaps. Uncompact a
+#' covering before plotting or joining it to data keyed by cell. For index
+#' range queries, [a5_covering_stored()] returns the stored cells.
 #'
 #' `length()` counts coverings, not cells. `x[i]` and `x[[i]]` both return
 #' coverings, and `c()` concatenates them. Two coverings of the same cells
@@ -124,6 +124,42 @@ is_a5_covering <- function(x) {
 a5_covering_resolution <- function(x) {
   x <- as_a5_covering(x)
   a5_covering_summary_rs(x)$resolution
+}
+
+#' Stored cells of a covering
+#'
+#' Returns the cells a covering stores: its compacted cells, which have
+#' mixed resolutions, in curve order and without the compaction marker. Use
+#' them for index range queries. Each stored cell's descendants at the
+#' covering's resolution form one contiguous id range, given by
+#' [a5_cell_children_range()], so a covering is the union of those ranges.
+#'
+#' The stored cells are index parents, not geometric ones: their outlines do
+#' not nest, so do not draw them or use them as an area. Use
+#' [a5_uncompact()] for the cells a covering stands for.
+#'
+#' @param x An [a5_covering] vector, or anything [as_a5_covering()] accepts.
+#' @param simplify Logical scalar. If `TRUE` (default), return one flat
+#'   [a5_cell] vector with the stored cells of every covering in turn. If
+#'   `FALSE`, return an [a5_cell_list] with one element per covering; a
+#'   missing covering gives an empty element.
+#' @returns An [a5_cell] vector, or an [a5_cell_list] if `simplify = FALSE`.
+#'
+#' @seealso [a5_uncompact()] for the cells at the covering's resolution,
+#'   [a5_covering_resolution()], [a5_cell_children_range()].
+#' @export
+#' @examples
+#' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 8)
+#' disk <- a5_grid_disk(cell, k = 3)
+#' stored <- a5_covering_stored(disk)
+#' a5_get_resolution(stored)
+#'
+#' # one id range per stored cell, at the covering's resolution
+#' a5_cell_children_range(stored, resolution = a5_covering_resolution(disk))
+a5_covering_stored <- function(x, simplify = TRUE) {
+  x <- as_a5_covering(x)
+  check_flag(simplify)
+  one_to_many(a5_covering_stored_rs(x, simplify), simplify)
 }
 
 #' Wrap a Rust-built list of coverings

@@ -354,6 +354,15 @@ a5_covering_normalise_rs <- function(x, resolution) .Call(wrap__a5_covering_norm
 #' @keywords internal
 a5_uncompact_rs <- function(x, resolution, simplify) .Call(wrap__a5_uncompact_rs, x, resolution, simplify)
 
+#' The stored (compacted) cells of each covering, without the compaction
+#' marker.
+#'
+#' @param x List of coverings.
+#' @param simplify As for `a5_uncompact_rs()`.
+#' @noRd
+#' @keywords internal
+a5_covering_stored_rs <- function(x, simplify) .Call(wrap__a5_covering_stored_rs, x, simplify)
+
 #' Resolution, cell count and stored-cell count of every covering.
 #'
 #' @param x List of coverings.

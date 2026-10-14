@@ -56,6 +56,9 @@
   tests pairs of coverings; `a5_count()` and `a5_area()` give the number of
   cells and the area each covering stands for. Combining coverings at
   different resolutions is an error, as upstream.
+* New `a5_covering_stored()` returns the compacted cells a covering
+  stores, without the compaction marker, for index range queries with
+  `a5_cell_children_range()`.
 * New `a5_covering_to_arrow()` and `a5_covering_from_arrow()` convert
   coverings to and from Arrow `list<uint64>` with the compaction marker, the
   layout DuckDB, Python and JavaScript A5 code read.

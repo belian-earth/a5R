@@ -135,3 +135,33 @@ test_that("a list<uint64> element holding a null cell is an error", {
   arr <- arrow::Array$create(list(c(1, 2), c(3, NA)), type = arrow::list_of(arrow::uint64()))
   expect_error(a5_covering_from_arrow(arr), "covering 2 contains a null cell")
 })
+
+test_that("a5_covering_stored returns the compacted cells", {
+  cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 8)
+  disk <- a5_grid_disk(cell, k = 3)
+  stored <- a5_covering_stored(disk)
+  expect_s3_class(stored, "a5_cell")
+  expect_length(stored, a5_covering_summary_rs(disk)$stored)
+  expect_true(any(a5_get_resolution(stored) < 8L))
+  # the stored cells rebuild the covering and expand to its cells
+  expect_identical(as_a5_covering(stored, resolution = 8L), disk)
+  expect_identical(
+    vctrs::vec_sort(a5_cell_to_children(stored, resolution = 8L)),
+    vctrs::vec_sort(a5_uncompact(disk))
+  )
+})
+
+test_that("a5_covering_stored keeps coverings apart with simplify = FALSE", {
+  cells <- a5_lonlat_to_cell(c(-3.19, 10), c(55.95, 20), resolution = 6)
+  disks <- c(a5_grid_disk(cells, k = 2), NA, as_a5_covering(a5_cell(character()), resolution = 6L))
+  out <- a5_covering_stored(disks, simplify = FALSE)
+  expect_s3_class(out, "a5_cell_list")
+  expect_length(out, 4L)
+  expect_identical(out[[1]], a5_covering_stored(disks[1]))
+  expect_length(out[[3]], 0L)
+  expect_length(out[[4]], 0L)
+  expect_identical(
+    a5_covering_stored(disks),
+    vctrs::vec_c(out[[1]], out[[2]])
+  )
+})

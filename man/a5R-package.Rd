@@ -61,6 +61,7 @@ conversion
 coverings
 \item \link[=a5_covering]{a5_covering_resolution()} --- the resolution a covering
 stands for
+\item \code{\link[=a5_covering_stored]{a5_covering_stored()}} --- the compacted cells a covering stores
 \item \code{\link[=a5_union]{a5_union()}} / \link[=a5_set_operations]{a5_intersect()} /
 \link[=a5_set_operations]{a5_difference()} --- combine coverings
 \item \code{\link[=a5_contains]{a5_contains()}} / \link[=a5_covering_predicates]{a5_overlaps()} --- test

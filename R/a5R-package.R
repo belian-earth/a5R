@@ -38,6 +38,7 @@
 #'   coverings
 #' - [a5_covering_resolution()][a5_covering] --- the resolution a covering
 #'   stands for
+#' - [a5_covering_stored()] --- the compacted cells a covering stores
 #' - [a5_union()] / [a5_intersect()][a5_set_operations] /
 #'   [a5_difference()][a5_set_operations] --- combine coverings
 #' - [a5_contains()] / [a5_overlaps()][a5_covering_predicates] --- test

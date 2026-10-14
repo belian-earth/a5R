@@ -63,11 +63,11 @@ for, and \code{\link[=a5_uncompact]{a5_uncompact()}} expands coverings to their 
 }
 \section{Working with coverings}{
 
-Use coverings through a5R functions rather than by reading the stored
-cells. The stored cells are index parents (see \link{a5_hierarchy}): their
-outlines do not nest geometrically, so drawing them shows overlaps and
-gaps. Uncompact a covering before plotting or joining it to data keyed by
-cell.
+Use coverings through a5R functions where one fits. The stored cells are
+index parents (see \link{a5_hierarchy}): their outlines do not nest
+geometrically, so drawing them shows overlaps and gaps. Uncompact a
+covering before plotting or joining it to data keyed by cell. For index
+range queries, \code{\link[=a5_covering_stored]{a5_covering_stored()}} returns the stored cells.
 
 \code{length()} counts coverings, not cells. \code{x[i]} and \code{x[[i]]} both return
 coverings, and \code{c()} concatenates them. Two coverings of the same cells
