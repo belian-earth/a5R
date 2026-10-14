@@ -78,6 +78,12 @@
   a negative value used to hang. Its documentation now gives the default,
   `max(1, 2^(6 - resolution))` segments per edge, and how far a single
   segment strays from the curved cell edge at each resolution.
+* `a5_polygon_to_cells()` handles `wk::rct()` boxes that previously gave
+  wrong results. A box covering the whole globe gives every cell instead of
+  none, and a box reaching from pole to pole keeps its west and east edges
+  on their meridians. Any other box spanning 180 degrees of longitude or
+  more is an error, because its great-circle edges would run the short way
+  round. The documentation now states that polygon edges are great circles.
 * New `vignette("coverings")` on building, combining, testing and measuring
   coverings. `vignette("arrow-parquet")` covers storing coverings and
   migrating data written before 1.0, and `vignette("spatial-hierarchy")` is

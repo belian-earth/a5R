@@ -721,3 +721,49 @@ test_that("containment rejects invalid values", {
     "containment"
   )
 })
+
+test_that("a whole-globe rct gives every cell", {
+  globe <- wk::rct(-180, -90, 180, 90)
+  for (res in c(0L, 3L)) {
+    expect_identical(a5_count(a5_polygon_to_cells(globe, res)), a5_get_num_cells(res))
+    expect_identical(
+      a5_count(a5_polygon_to_cells(globe, res, containment = "overlapping")),
+      a5_get_num_cells(res)
+    )
+  }
+})
+
+test_that("a pole-to-pole rct keeps its edges on their meridians", {
+  lune <- a5_polygon_to_cells(wk::rct(0, -90, 90, 90), 3)
+  inner <- a5_polygon_to_cells(wk::rct(0, -89.99, 90, 89.99), 3)
+  # a quarter of the globe, with cells of the near-pole box included
+  expect_true(all(a5_contains(lune, a5_uncompact(inner))))
+  expect_lt(abs(a5_count(lune) - a5_get_num_cells(3) / 4), 10)
+})
+
+test_that("ordinary rct boxes match their polygons", {
+  boxes <- wk::rct(c(-60, 10), c(-30, 40), c(60, 20), c(30, 50))
+  expect_identical(
+    a5_polygon_to_cells(boxes, 5),
+    a5_polygon_to_cells(wk::as_wkb(boxes), 5)
+  )
+})
+
+test_that("rct results keep input order around whole-globe and NA boxes", {
+  boxes <- wk::rct(
+    c(-180, 0, NA, -180),
+    c(-90, 0, NA, -90),
+    c(180, 10, NA, 180),
+    c(90, 10, NA, 90)
+  )
+  out <- a5_polygon_to_cells(boxes, 3)
+  expect_length(out, 4L)
+  expect_identical(a5_count(out[c(1, 4)]), rep(a5_get_num_cells(3), 2))
+  expect_identical(out[2], a5_polygon_to_cells(boxes[2], 3))
+  expect_identical(a5_count(out[3]), 0)
+})
+
+test_that("rct boxes 180 degrees wide or more are refused", {
+  expect_error(a5_polygon_to_cells(wk::rct(-100, -60, 100, 60), 3), "200 degrees")
+  expect_error(a5_polygon_to_cells(wk::rct(-180, -60, 180, 60), 3), "Split it")
+})

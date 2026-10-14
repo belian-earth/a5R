@@ -62,6 +62,22 @@ Coordinates must be WGS 84 longitude/latitude in degrees. Rings are
 closed automatically; a trailing duplicate vertex is dropped if
 present.
 
+Polygon edges are great-circle arcs, the shortest path on the sphere
+between consecutive vertices, as in the other A5 libraries and in s2. An
+edge between two points on the same parallel therefore bows toward the
+pole: a 20 degree edge along 10 degrees north peaks at 10.15 degrees
+north, and a 1 degree edge at that latitude bows by about 40 m. An edge
+whose ends are antipodal has no single great circle and gives an
+undefined result. Where
+edges should follow parallels, as in GeoJSON (RFC 7946 defines its edges
+as straight in longitude and latitude), add vertices along them first.
+
+A \code{\link[wk:rct]{wk::rct()}} box is a polygon with great-circle edges like any other,
+with two exceptions: a box covering the whole globe (\code{wk::rct(-180, -90, 180, 90)}) gives every cell, and a box reaching from pole to pole keeps
+its west and east edges on their meridians. Any other box spanning 180
+degrees of longitude or more is an error, because its top and bottom
+edges would run the short way round the globe.
+
 Where no A5 cell centroids at the specified \code{resolution} fall within
 the geometry, its covering is empty.
 
