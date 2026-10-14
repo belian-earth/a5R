@@ -37,6 +37,9 @@ R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 - [`a5_cell_to_boundary()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_boundary.md)
   — cell boundary polygons (WKB or WKT)
 
+- [`a5_cell_to_boundary_xy()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_boundary_xy.md)
+  — cell boundary vertices as flat vectors
+
 - [`a5_cell_area()`](https://belian-earth.github.io/a5R/dev/reference/a5_resolution_stats.md)
   — cell area at a given resolution
 

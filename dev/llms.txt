@@ -187,6 +187,8 @@ Cell boundaries, areas, counts, and distances.
 
 - [`a5_cell_to_boundary()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_boundary.md)
   : Get cell boundary polygons
+- [`a5_cell_to_boundary_xy()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_boundary_xy.md)
+  : Get cell boundary vertices as flat coordinate vectors
 - [`a5_cell_distance()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_distance.md)
   : Distance between cell centroids
 - [`a5_cell_area()`](https://belian-earth.github.io/a5R/dev/reference/a5_resolution_stats.md)

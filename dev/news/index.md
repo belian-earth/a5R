@@ -105,8 +105,31 @@
   [`a5_is_valid()`](https://belian-earth.github.io/a5R/dev/reference/a5_is_valid.md)
   becomes a generic that also accepts an `a5_cell_list`, returning one
   value per element.
+- New
+  [`a5_cell_to_boundary_xy()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_boundary_xy.md)
+  returns the boundary vertices of many cells as flat `x` and `y`
+  vectors with per-cell `lengths`, ready for a single
+  [`grid::polygonGrob()`](https://rdrr.io/r/grid/grid.polygon.html). It
+  skips building a geometry per cell, so it is about 1.5 times faster
+  than
+  [`a5_cell_to_boundary()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_boundary.md)
+  followed by
+  [`wk::wk_coords()`](https://paleolimbot.github.io/wk/reference/wk_vertices.html)
+  on one thread, 3 times faster on four, and allocates an eighth of the
+  memory.
 
 ### Other changes
+
+- [`a5_cell_to_boundary()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_boundary.md)
+  builds its output faster, with identical results: on a million cells,
+  WKB takes about 25% less time on one thread and half the time on four,
+  and WKT about 20% less.
+
+- [`a5_cell_to_boundary()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_boundary.md)
+  rejects a `segments` value below 1 or `NA`; a negative value used to
+  hang. Its documentation now gives the default,
+  `max(1, 2^(6 - resolution))` segments per edge, and how far a single
+  segment strays from the curved cell edge at each resolution.
 
 - New
   [`vignette("coverings")`](https://belian-earth.github.io/a5R/dev/articles/coverings.md)

@@ -86,8 +86,14 @@ ellipsoid.</p>
 
 
 <dt id="arg-segments">segments<a class="anchor" aria-label="anchor" href="#arg-segments"></a></dt>
-<dd><p>Integer scalar or <code>NULL</code>. Number of interpolation segments
-per edge for geodesic accuracy. <code>NULL</code> uses the default (straight edges).</p></dd>
+<dd><p>Integer scalar or <code>NULL</code>. Number of segments per cell
+edge. A5 cell edges are slightly curved on the sphere: a single segment
+between two vertices strays from the true edge by up to about 450 m at
+resolution 6, 25 m at resolution 8 and 1.5 m at resolution 10. The
+error falls with the square of the number of segments. <code>NULL</code> uses the
+A5 default of <code>max(1, 2^(6 - resolution))</code>, so at resolution 6 and finer
+each edge is a single segment. Pass a larger value when the polygons are
+used for spatial tests rather than display.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -97,7 +103,8 @@ per edge for geodesic accuracy. <code>NULL</code> uses the default (straight edg
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="a5_coordinates.html">a5_cell_to_lonlat()</a></code> for cell centroids.</p></div>
+    <div class="dont-index"><p><code><a href="a5_cell_to_boundary_xy.html">a5_cell_to_boundary_xy()</a></code> for the same vertices as flat
+coordinate vectors; <code><a href="a5_coordinates.html">a5_cell_to_lonlat()</a></code> for cell centroids.</p></div>
     </div>
 
     <div class="section level2">
