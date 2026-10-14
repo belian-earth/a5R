@@ -71,3 +71,82 @@ test_that("cell_area rejects non-area units", {
   expect_error(a5_cell_area(5, units = "kg"), "area unit")
   expect_error(a5_cell_area(5, units = "nonsense"), "area unit")
 })
+
+test_that("boundary rejects invalid segments", {
+  cell <- a5_lonlat_to_cell(0, 0, resolution = 5)
+  expect_error(a5_cell_to_boundary(cell, segments = 0L), "positive integer")
+  expect_error(a5_cell_to_boundary(cell, segments = -1L), "positive integer")
+  expect_error(a5_cell_to_boundary(cell, segments = NA_integer_), "positive integer")
+  expect_error(a5_cell_to_boundary_xy(cell, segments = 0L), "positive integer")
+  expect_error(a5_cell_to_boundary_xy(cell, segments = 1:2), "size 1")
+  expect_error(a5_cell_to_boundary_xy(cell, closed = NA), "TRUE")
+})
+
+# Vertices of a5_cell_to_boundary() as x, y, lengths, for comparison.
+boundary_coords <- function(cell, closed, segments = NULL) {
+  wkb <- a5_cell_to_boundary(cell, closed = closed, segments = segments)
+  coords <- wk::wk_coords(wkb)
+  lengths <- tabulate(coords$feature_id, nbins = length(cell))
+  list(x = coords$x, y = coords$y, lengths = lengths)
+}
+
+test_that("boundary_xy returns flat x, y and lengths", {
+  cells <- a5_lonlat_to_cell(c(0, 10, -10), c(0, 20, -20), resolution = 9)
+  xy <- a5_cell_to_boundary_xy(cells)
+  expect_named(xy, c("x", "y", "lengths"))
+  expect_type(xy$x, "double")
+  expect_type(xy$y, "double")
+  expect_type(xy$lengths, "integer")
+  expect_identical(xy$lengths, rep(5L, 3))
+  expect_length(xy$x, 15L)
+  expect_length(xy$y, 15L)
+})
+
+test_that("boundary_xy matches cell_to_boundary vertices", {
+  lon <- c(-3.19, 120, -60, 45)
+  lat <- c(55.95, -30, 10, 80)
+  cells <- c(
+    a5_lonlat_to_cell(lon, lat, resolution = 2),
+    a5_lonlat_to_cell(lon, lat, resolution = 7),
+    a5_lonlat_to_cell(lon, lat, resolution = 14)
+  )
+  expect_identical(
+    a5_cell_to_boundary_xy(cells),
+    boundary_coords(cells, closed = FALSE)
+  )
+  expect_identical(
+    a5_cell_to_boundary_xy(cells, closed = TRUE),
+    boundary_coords(cells, closed = TRUE)
+  )
+  expect_identical(
+    a5_cell_to_boundary_xy(cells, segments = 3L),
+    boundary_coords(cells, closed = FALSE, segments = 3L)
+  )
+})
+
+test_that("boundary_xy vertex counts follow resolution and segments", {
+  cells <- a5_lonlat_to_cell(0, 0, resolution = c(3, 6, 10))
+  # default segments: max(1, 2^(6 - resolution)) per edge, five edges
+  expect_identical(a5_cell_to_boundary_xy(cells)$lengths, c(40L, 5L, 5L))
+  expect_identical(
+    a5_cell_to_boundary_xy(cells, closed = TRUE, segments = 2L)$lengths,
+    rep(11L, 3)
+  )
+})
+
+test_that("boundary_xy gives NA cells length 0", {
+  cells <- a5_cell(c(NA, "0800000000000006", NA))
+  xy <- a5_cell_to_boundary_xy(cells)
+  expect_identical(xy$lengths[c(1, 3)], c(0L, 0L))
+  expect_length(xy$x, xy$lengths[2])
+
+  empty <- a5_cell_to_boundary_xy(a5_cell(character()))
+  expect_identical(empty, list(x = double(), y = double(), lengths = integer()))
+})
+
+test_that("boundary_xy keeps longitudes continuous across the antimeridian", {
+  cell <- a5_lonlat_to_cell(179.99, 0, resolution = 5)
+  xy <- a5_cell_to_boundary_xy(cell)
+  expect_true(any(abs(xy$x) > 180))
+  expect_lt(diff(range(xy$x)), 180)
+})

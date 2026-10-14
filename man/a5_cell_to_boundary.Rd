@@ -19,8 +19,14 @@ a5_cell_to_boundary(
 \item{closed}{Logical scalar; if \code{TRUE} (default) the ring is closed
 (first vertex repeated at end).}
 
-\item{segments}{Integer scalar or \code{NULL}. Number of interpolation segments
-per edge for geodesic accuracy. \code{NULL} uses the default (straight edges).}
+\item{segments}{Integer scalar or \code{NULL}. Number of segments per cell
+edge. A5 cell edges are slightly curved on the sphere: a single segment
+between two vertices strays from the true edge by up to about 450 m at
+resolution 6, 25 m at resolution 8 and 1.5 m at resolution 10. The
+error falls with the square of the number of segments. \code{NULL} uses the
+A5 default of \code{max(1, 2^(6 - resolution))}, so at resolution 6 and finer
+each edge is a single segment. Pass a larger value when the polygons are
+used for spatial tests rather than display.}
 }
 \value{
 A \code{wk_wkt} or \code{wk_wkb} vector of polygon geometries with
@@ -37,5 +43,6 @@ a5_cell_to_boundary(cell)
 a5_cell_to_boundary(cell, format = "wkt")
 }
 \seealso{
-\code{\link[=a5_cell_to_lonlat]{a5_cell_to_lonlat()}} for cell centroids.
+\code{\link[=a5_cell_to_boundary_xy]{a5_cell_to_boundary_xy()}} for the same vertices as flat
+coordinate vectors; \code{\link[=a5_cell_to_lonlat]{a5_cell_to_lonlat()}} for cell centroids.
 }
