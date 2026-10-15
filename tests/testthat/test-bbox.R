@@ -50,3 +50,9 @@ test_that("missing geometries give NA boxes; matrix input works", {
   m <- cbind(c(0, 10, 10, 0), c(0, 0, 10, 10))
   expect_equal(rct_values(a5_bbox(m))[c(1, 3)], c(0, 10))
 })
+
+test_that("wk_rct boxes are polygons with great-circle edges", {
+  b <- rct_values(a5_bbox(wk::rct(-30, 50, 30, 60)))
+  expect_equal(b[c(1, 2, 3)], c(-30, 50, 30), tolerance = 1e-9)
+  expect_gt(b[4], 63)
+})
