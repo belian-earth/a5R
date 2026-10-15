@@ -294,6 +294,27 @@ fn cells_proxy_rs(cells: List) -> List {
     list!(hi = hi, lo = lo)
 }
 
+/// Element-wise equality of two equal-length cell vectors, NA where either
+/// cell is NA. Compares the stored bytes without decoding ids.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn cells_equal_rs(a: List, b: List) -> Logicals {
+    let (ca, cb) = (CellSlices::from_list(&a), CellSlices::from_list(&b));
+    let n = ca.len;
+    let mut out = Logicals::new(n);
+    {
+        let o: &mut [Rbool] = &mut out;
+        for i in 0..n {
+            o[i] = match (ca.get(i), cb.get(i)) {
+                (Some(x), Some(y)) => (x == y).into(),
+                _ => Rbool::na(),
+            };
+        }
+    }
+    out
+}
+
 /// Parse one hex id: 1 to 16 hex digits, optionally prefixed `0x`. Shorter
 /// ids are zero-padded on the left, as some A5 libraries write them.
 fn parse_hex_id(s: &str) -> Option<u64> {
@@ -308,12 +329,12 @@ fn parse_hex_id(s: &str) -> Option<u64> {
 }
 
 /// Convert hex strings to cell raw bytes.
-/// Returns list(b1 = raw(), ..., b8 = raw()); errors on the first string
-/// that is not a hex id.
+/// Returns list(b1 = raw(), ..., b8 = raw()), or the 1-based position of the
+/// first string that is not a hex id, as an integer, for R to report.
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn hex_to_raw8_rs(cells: Strings) -> extendr_api::Result<List> {
+fn hex_to_raw8_rs(cells: Strings) -> Robj {
     let n = cells.len();
     let mut values: Vec<Option<u64>> = Vec::with_capacity(n);
     for i in 0..n {
@@ -325,22 +346,17 @@ fn hex_to_raw8_rs(cells: Strings) -> extendr_api::Result<List> {
         match parse_hex_id(s.as_ref()) {
             Some(id) if id != NA_SENTINEL => values.push(Some(id)),
             Some(_) => values.push(None),
-            None => {
-                return Err(Error::Other(format!(
-                    "Element {} of `x` is not a hex cell id: \"{}\". Ids are 1 to 16 hex digits, optionally prefixed with 0x.",
-                    i + 1,
-                    s.as_ref() as &str
-                )))
-            }
+            None => return ((i + 1) as i32).into(),
         }
     }
-    Ok(u64s_to_raw8_list(values))
+    u64s_to_raw8_list(values).into()
 }
 
 extendr_module! {
     mod cell_raw;
     fn cells_is_na_rs;
     fn cells_proxy_rs;
+    fn cells_equal_rs;
     fn raw8_to_hex_rs;
     fn hex_to_raw8_rs;
 }

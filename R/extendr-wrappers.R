@@ -22,14 +22,20 @@ cells_is_na_rs <- function(cells) .Call(wrap__cells_is_na_rs, cells)
 #' @keywords internal
 cells_proxy_rs <- function(cells) .Call(wrap__cells_proxy_rs, cells)
 
+#' Element-wise equality of two equal-length cell vectors, NA where either
+#' cell is NA. Compares the stored bytes without decoding ids.
+#' @noRd
+#' @keywords internal
+cells_equal_rs <- function(a, b) .Call(wrap__cells_equal_rs, a, b)
+
 #' Convert cell raw bytes to hex strings (zero-padded to 16 chars).
 #' @noRd
 #' @keywords internal
 raw8_to_hex_rs <- function(cells) .Call(wrap__raw8_to_hex_rs, cells)
 
 #' Convert hex strings to cell raw bytes.
-#' Returns list(b1 = raw(), ..., b8 = raw()); errors on the first string
-#' that is not a hex id.
+#' Returns list(b1 = raw(), ..., b8 = raw()), or the 1-based position of the
+#' first string that is not a hex id, as an integer, for R to report.
 #' @noRd
 #' @keywords internal
 hex_to_raw8_rs <- function(cells) .Call(wrap__hex_to_raw8_rs, cells)

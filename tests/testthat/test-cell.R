@@ -316,3 +316,16 @@ test_that("a5_cell memory is compact (8 raw vectors)", {
   sz <- as.numeric(object.size(cells))
   expect_true(sz < 50000) # well under list-of-raw overhead
 })
+
+test_that("== and != on cells match vctrs, with NA and recycling", {
+  x <- a5_cell(c("0800000000000006", NA, "fc00000000000001", "0800000000000016"))
+  y <- a5_cell(c("0800000000000006", "0800000000000006", NA, "0800000000000006"))
+  expect_identical(x == y, c(TRUE, NA, NA, FALSE))
+  expect_identical(x != y, c(FALSE, NA, NA, TRUE))
+  expect_identical(x == x[1], c(TRUE, NA, FALSE, FALSE))
+  expect_identical(x == "0800000000000006", c(TRUE, NA, FALSE, FALSE))
+  expect_identical("0800000000000016" == x, c(FALSE, NA, FALSE, TRUE))
+  expect_identical(x == x, vctrs::vec_equal(x, x, na_equal = FALSE))
+  expect_error(x[1:2] == x[1:3], class = "vctrs_error_incompatible_size")
+  expect_identical(x[0] == x[0], logical())
+})
