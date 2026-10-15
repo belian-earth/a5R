@@ -7,7 +7,7 @@ Authors@R: c(
     person("belian.earth", role = "cph"),
     person("Felix", "Palmer", role = c("ctb", "cph"),
            comment = "Author of the bundled 'a5' Rust crate"),
-    person("Authors of the dependency Rust crates", role = c("ctb", "cph"),
+    person("Authors of the dependency Rust crates", role = "cph",
            comment = "see LICENSE.note")
     )
 Description: Bindings for the "A5 geospatial index"
