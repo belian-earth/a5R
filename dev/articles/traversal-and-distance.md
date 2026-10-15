@@ -3,7 +3,7 @@
 ``` r
 
 library(a5R)
-#> a5R 0.9.9.9002 • a5 crate 1.0.0-beta.3 • A5 index 1.0 • 1 thread
+#> a5R 0.9.9.9003 • a5 crate 1.0.0-beta.3 • A5 index 1.0 • 1 thread
 ```
 
 ## Selecting cells around a point
