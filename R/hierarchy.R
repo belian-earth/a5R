@@ -73,7 +73,10 @@ a5_cell_to_parent <- function(cell, resolution = NULL) {
   if (!is.null(resolution)) {
     resolution <- check_scalar_resolution(resolution)
   }
-  cells_from_rs(from_caller(a5_cell_to_parent_rs(cell_data(cell), resolution), call = rlang::current_env()))
+  cells_from_rs(from_caller(
+    a5_cell_to_parent_rs(cell_data(cell), resolution),
+    call = rlang::current_env(), type = "resolution"
+  ))
 }
 
 #' @rdname a5_hierarchy
@@ -156,7 +159,7 @@ a5_cell_children_range <- function(cell, resolution) {
   cell <- as_a5_cell(cell)
   resolution <- check_scalar_resolution(resolution)
   if (identical(resolution, 30L)) {
-    cli::cli_abort(c(
+    a5_abort("resolution", c(
       "{.arg resolution} must be 29 or less.",
       "x" = "Descendant ids are not contiguous at resolution 30: face bit layouts overlap numerically and some faces cannot be encoded.",
       "i" = "Use {.fn a5_cell_to_children} to enumerate resolution-30 descendants."

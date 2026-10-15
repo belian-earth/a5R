@@ -33,7 +33,7 @@ a5_cell_from_arrow <- function(x) {
 
   type_str <- x$type$ToString()
   if (!identical(type_str, "uint64")) {
-    cli::cli_abort(c(
+    a5_abort("arrow", c(
       "Expected an Arrow {.code uint64} array.",
       "x" = "Got {.code {type_str}}."
     ))
@@ -61,7 +61,7 @@ a5_cell_to_arrow <- function(x) {
 #' @noRd
 check_arrow_array <- function(x, call = rlang::caller_env()) {
   if (!inherits(x, c("Array", "ChunkedArray"))) {
-    cli::cli_abort(
+    a5_abort("arrow",
       c(
         "{.arg x} must be an Arrow {.cls Array} or {.cls ChunkedArray}, not {.obj_type_friendly {x}}.",
         i = if (inherits(x, "nanoarrow_array")) "Convert it with {.fn arrow::as_arrow_array}."
@@ -117,7 +117,7 @@ a5_covering_from_arrow <- function(x) {
   check_arrow_array(x)
   type <- x$type
   if (!inherits(type, "ListType") || !identical(type$value_type$ToString(), "uint64")) {
-    cli::cli_abort(c(
+    a5_abort("arrow", c(
       "Expected an Arrow {.code list<uint64>} array.",
       "x" = "Got {.code {type$ToString()}}."
     ))

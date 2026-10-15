@@ -153,7 +153,7 @@ rct_to_cells <- function(x, resolution, containment,
   wide <- !is.na(width) & width >= 180 & !globe
   if (any(wide)) {
     i <- which(wide)[1]
-    cli::cli_abort(
+    a5_abort("geometry",
       c(
         "Box {i} of {.arg x} spans {width[i]} degrees of longitude.",
         i = "Box edges are great circles, so a box 180 degrees wide or more \
@@ -277,7 +277,7 @@ prepare_polygon_input <- function(x, call = rlang::caller_env()) {
       coords_from_data_frame(x, call = call)
     }
     if (length(ring$lon) == 0L) {
-      cli::cli_abort("{.arg x} contains no polygon rings.", call = call)
+      a5_abort("geometry", "{.arg x} contains no polygon rings.", call = call)
     }
     c(ring, list(part_feature = 1L, n_features = 1L, missing = FALSE))
   } else {
@@ -286,7 +286,7 @@ prepare_polygon_input <- function(x, call = rlang::caller_env()) {
 
   validate_feature_sizes(bundle, expected = "polygon", call = call)
   if (anyNA(bundle$lon) || anyNA(bundle$lat)) {
-    cli::cli_abort(
+    a5_abort("geometry",
       "{.arg x} must not contain {.code NA} coordinates.",
       call = call
     )
@@ -307,7 +307,7 @@ prepare_linestring_input <- function(x, call = rlang::caller_env()) {
       coords_from_data_frame(x, call = call)
     }
     if (length(line$lon) == 0L) {
-      cli::cli_abort("{.arg x} contains no linestrings.", call = call)
+      a5_abort("geometry", "{.arg x} contains no linestrings.", call = call)
     }
     c(line, list(line_feature = 1L, n_features = 1L))
   } else {
@@ -316,7 +316,7 @@ prepare_linestring_input <- function(x, call = rlang::caller_env()) {
 
   validate_feature_sizes(bundle, expected = "linestring", call = call)
   if (anyNA(bundle$lon) || anyNA(bundle$lat)) {
-    cli::cli_abort(
+    a5_abort("geometry",
       "{.arg x} must not contain {.code NA} coordinates.",
       call = call
     )
@@ -328,14 +328,14 @@ prepare_linestring_input <- function(x, call = rlang::caller_env()) {
 #' @noRd
 coords_from_matrix <- function(x, call = rlang::caller_env()) {
   if (ncol(x) != 2L) {
-    cli::cli_abort(
+    a5_abort("geometry",
       "Matrix input must have exactly 2 columns ({.code lon}, {.code lat}); \\
        got {ncol(x)}.",
       call = call
     )
   }
   if (!is.numeric(x)) {
-    cli::cli_abort("Matrix input must be numeric.", call = call)
+    a5_abort("geometry", "Matrix input must be numeric.", call = call)
   }
   lon <- as.numeric(x[, 1L])
   lat <- as.numeric(x[, 2L])
@@ -351,7 +351,7 @@ coords_from_matrix <- function(x, call = rlang::caller_env()) {
 #' @noRd
 coords_from_data_frame <- function(x, call = rlang::caller_env()) {
   if (!all(c("lon", "lat") %in% names(x))) {
-    cli::cli_abort(
+    a5_abort("geometry",
       "Data frame input must have columns {.code lon} and {.code lat}.",
       call = call
     )
@@ -375,7 +375,7 @@ coords_from_wk_polygons <- function(x, call = rlang::caller_env()) {
   allowed <- c(POLYGON = 3L, MULTIPOLYGON = 6L)
   bad <- !is.na(meta$geometry_type) & !(meta$geometry_type %in% allowed)
   if (any(bad)) {
-    cli::cli_abort(
+    a5_abort("geometry",
       "{.arg x} must contain only {paste(names(allowed), collapse = ' or ')} geometries.",
       call = call
     )
@@ -445,7 +445,7 @@ coords_from_wk_linestrings <- function(x, call = rlang::caller_env()) {
   allowed <- c(LINESTRING = 2L, MULTILINESTRING = 5L)
   bad <- !is.na(meta$geometry_type) & !(meta$geometry_type %in% allowed)
   if (any(bad)) {
-    cli::cli_abort(
+    a5_abort("geometry",
       "{.arg x} must contain only {paste(names(allowed), collapse = ' or ')} geometries.",
       call = call
     )
@@ -501,7 +501,7 @@ check_lonlat_crs <- function(x, call = rlang::caller_env()) {
     TRUE
   }
   if (!isTRUE(lonlat)) {
-    cli::cli_abort(
+    a5_abort("geometry",
       c(
         "{.arg x} must have longitude/latitude coordinates.",
         i = "Transform it to WGS 84 first, for example with \\
@@ -517,7 +517,7 @@ check_lonlat_crs <- function(x, call = rlang::caller_env()) {
 #' @noRd
 check_lonlat_range <- function(bundle, call = rlang::caller_env()) {
   if (any(abs(bundle$lat) > 90) || any(abs(bundle$lon) > 360)) {
-    cli::cli_abort(
+    a5_abort("geometry",
       c(
         "{.arg x} has coordinates outside the longitude/latitude range.",
         i = "Coordinates must be WGS 84 longitude and latitude in degrees."
@@ -542,7 +542,7 @@ safe_wk_meta <- function(x, call = rlang::caller_env()) {
   tryCatch(
     wk::wk_meta(x),
     error = function(e) {
-      cli::cli_abort(
+      a5_abort("geometry",
         c(
           "Could not interpret {.arg x} as a geometry.",
           i = "Pass a matrix, data frame with {.code lon}/{.code lat} \\
@@ -565,7 +565,7 @@ validate_feature_sizes <- function(
   min_size <- switch(expected, polygon = 3L, linestring = 2L)
   short <- which(sizes < min_size)
   if (length(short) > 0L) {
-    cli::cli_abort(
+    a5_abort("geometry",
       "Each {expected} ring must have at least {min_size} vertices; \\
        ring {short[1]} has {sizes[short[1]]}.",
       call = call

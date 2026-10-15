@@ -76,7 +76,7 @@ a5_uncompact <- function(x, resolution = NULL, simplify = TRUE) {
     sum(s$count * 4^d * ifelse(s$resolution == 0L & d > 0L, 5 / 4, 1), na.rm = TRUE)
   }
   if (total > .Machine$integer.max) {
-    cli::cli_abort(c(
+    a5_abort("size", c(
       "Uncompacting would build {format(total, big.mark = ',', scientific = FALSE)} cells.",
       "i" = "Work with the covering instead, or uncompact a smaller area."
     ))

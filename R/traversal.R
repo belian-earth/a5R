@@ -27,7 +27,7 @@ a5_grid_disk <- function(cell, k, vertex = FALSE) {
   k <- vctrs::vec_cast(k, integer())
   check_size1(k)
   if (is.na(k) || k < 0L) {
-    cli::cli_abort("{.arg k} must be a non-negative integer, not {k}.")
+    a5_abort("argument", "{.arg k} must be a non-negative integer, not {k}.")
   }
   check_flag(vertex)
   coverings_from_rs(a5_grid_disk_rs(cell_data(cell), k, vertex))
@@ -59,7 +59,7 @@ a5_spherical_cap <- function(cell, radius) {
   radius <- vctrs::vec_cast(radius, double())
   check_size1(radius)
   if (!is.finite(radius) || radius < 0) {
-    cli::cli_abort("{.arg radius} must be a finite, non-negative number, not {radius}.")
+    a5_abort("argument", "{.arg radius} must be a finite, non-negative number, not {radius}.")
   }
   coverings_from_rs(a5_spherical_cap_rs(cell_data(cell), radius))
 }

@@ -99,13 +99,13 @@ as_a5_covering.list <- function(x, resolution = NULL, ...) {
   }
   is_raw <- vapply(x, function(el) is.null(el) || is.raw(el), logical(1))
   if (!all(is_raw)) {
-    cli::cli_abort(
+    a5_abort("cell",
       "{.arg x} must be a list of {.cls a5_cell} vectors or of raw vectors."
     )
   }
   odd <- which(lengths(x) %% 8L != 0L)
   if (length(odd) > 0L) {
-    cli::cli_abort(
+    a5_abort("cell",
       "Raw element {odd[1]} of {.arg x} has {length(x[[odd[1]]])} bytes, not a multiple of 8."
     )
   }
@@ -115,7 +115,7 @@ as_a5_covering.list <- function(x, resolution = NULL, ...) {
 
 #' @export
 as_a5_covering.default <- function(x, ...) {
-  cli::cli_abort("Can't convert {.obj_type_friendly {x}} to {.cls a5_covering}.")
+  a5_abort("cell", "Can't convert {.obj_type_friendly {x}} to {.cls a5_covering}.")
 }
 
 #' @rdname a5_covering

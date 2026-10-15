@@ -30,7 +30,7 @@
 #' a5_is_valid_cell(a5_cell("fd00000000000000"))
 a5_cell <- function(x = character()) {
   x <- vctrs::vec_cast(x, character())
-  cells_from_rs(from_caller(hex_to_raw8_rs(x), call = rlang::current_env()))
+  cells_from_rs(from_caller(hex_to_raw8_rs(x), call = rlang::current_env(), type = "cell"))
 }
 
 new_a5_cell <- function(
@@ -90,7 +90,7 @@ as_a5_cell <- function(x) {
     return(x)
   }
   if (is_a5_covering(x)) {
-    cli::cli_abort(c(
+    a5_abort("cell", c(
       "Can't use an {.cls a5_covering} as cells.",
       "i" = "Use {.fn a5_uncompact} to get the cells of a covering."
     ), call = rlang::caller_env())
@@ -228,7 +228,7 @@ vec_cast.a5_cell.a5_cell <- function(x, to, ...) x
 #' @noRd
 #' @keywords internal
 vec_cast.a5_cell.character <- function(x, to, ...) {
-  cells_from_rs(hex_to_raw8_rs(x))
+  cells_from_rs(from_caller(hex_to_raw8_rs(x), call = NULL, type = "cell"))
 }
 
 #' @export

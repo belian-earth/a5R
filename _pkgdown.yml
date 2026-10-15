@@ -75,9 +75,10 @@ reference:
   - a5_polygon_to_cells
   - a5_linestring_to_cells
 - title: Configuration
-  desc: Thread control for parallel processing.
+  desc: Thread control for parallel processing, and error classes.
   contents:
   - a5_set_threads
+  - a5_errors
 - title: wk integration
   desc: Methods for the wk geometry framework.
   contents: wk_methods

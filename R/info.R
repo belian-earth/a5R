@@ -74,7 +74,7 @@ a5_get_num_children <- function(parent_resolution, child_resolution) {
   parent_resolution <- check_scalar_resolution(parent_resolution)
   child_resolution <- check_scalar_resolution(child_resolution)
   if (child_resolution < parent_resolution) {
-    cli::cli_abort(
+    a5_abort("resolution",
       "{.arg child_resolution} ({child_resolution}) must not be coarser than {.arg parent_resolution} ({parent_resolution})."
     )
   }
