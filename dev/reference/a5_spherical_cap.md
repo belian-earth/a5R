@@ -7,7 +7,7 @@ great-circle distance of its centre, as an
 ## Usage
 
 ``` r
-a5_spherical_cap(cell, radius)
+a5_spherical_cap(cell, radius, units = "m")
 ```
 
 ## Arguments
@@ -20,7 +20,17 @@ a5_spherical_cap(cell, radius)
 
 - radius:
 
-  Numeric scalar, great-circle radius in metres.
+  Non-negative numeric scalar, great-circle radius in `units`, or a
+  [units](https://r-quantities.github.io/units/reference/units.html)
+  object of length. It is measured on the sphere A5 uses internally, so
+  membership can differ by a fraction of a percent of `radius` from
+  distances given by
+  [`a5_cell_distance()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_distance.md).
+
+- units:
+
+  Character scalar, the length unit of a plain numeric `radius`: `"m"`
+  (the default) or any unit convertible from metres, such as `"km"`.
 
 ## Value
 

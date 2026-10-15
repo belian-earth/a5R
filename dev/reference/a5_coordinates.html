@@ -77,7 +77,8 @@ resolution returns the cell.</p>
 
 
 <dt id="arg-lat">lat<a class="anchor" aria-label="anchor" href="#arg-lat"></a></dt>
-<dd><p>Numeric vector of latitudes in degrees.</p></dd>
+<dd><p>Numeric vector of latitudes in degrees, between -90 and 90.
+Non-finite coordinates (<code>NA</code>, <code>NaN</code>, <code>Inf</code>) give <code>NA</code> cells.</p></dd>
 
 
 <dt id="arg-resolution">resolution<a class="anchor" aria-label="anchor" href="#arg-resolution"></a></dt>

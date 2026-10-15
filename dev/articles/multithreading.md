@@ -3,6 +3,7 @@
 ``` r
 
 library(a5R)
+#> a5R 0.9.9.9002 • a5 crate 1.0.0-beta.3 • A5 index 1.0 • 1 thread
 ```
 
 a5R can parallelise vectorised operations using multiple threads via
@@ -35,15 +36,24 @@ options(a5R.threads = 4)
 # Sys.setenv(A5R_NUM_THREADS = 4) 
 ```
 
-[`a5_set_threads()`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md)
-invisibly returns the previous value, making temporary changes easy:
+To use more threads for one block of code only, wrap it in
+[`with()`](https://rdrr.io/r/base/with.html), as with
+`mirai::daemons()`. The previous count is restored afterwards, even if
+the code fails:
 
 ``` r
 
-old <- a5_set_threads(4)
-# ... parallel work ...
-a5_set_threads(old)
+cells <- a5_lonlat_to_cell(runif(1e4, -180, 180), runif(1e4, -80, 80), 10)
+boundaries <- with(a5_set_threads(4), {
+  a5_cell_to_boundary(cells)
+})
+a5_get_threads()
+#> [1] 1
 ```
+
+[`a5_set_threads()`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md)
+also returns the previous count, so `old <- a5_set_threads(4)` and later
+`a5_set_threads(old)` work too.
 
 ## What gets parallelised
 

@@ -88,9 +88,10 @@ single outer ring.</p></li>
 
 <dt id="arg-containment">containment<a class="anchor" aria-label="anchor" href="#arg-containment"></a></dt>
 <dd><p>Character scalar selecting which cells to include.
-<code>"centre"</code> (the default) includes a cell when its centre lies inside
-the polygon. <code>"overlapping"</code> additionally includes every cell that
-overlaps the polygon boundary, so the result fully covers the polygon.
+<code>"centre"</code> (the default; <code>"center"</code> also works) includes a cell when its
+centre lies inside the polygon. <code>"overlapping"</code> additionally includes
+every cell that overlaps the polygon boundary, so the result fully
+covers the polygon.
 The overlapping set is a superset of the centre set.</p></dd>
 
 </dl></div>
@@ -135,6 +136,11 @@ with two exceptions: a box covering the whole globe (<code>wk::rct(-180, -90, 18
 its west and east edges on their meridians. Any other box spanning 180
 degrees of longitude or more is an error, because its top and bottom
 edges would run the short way round the globe.</p>
+<p>Rings must not cross themselves. A self-intersecting ring, such as a bow
+tie, gives an undefined result that can include cells thousands of
+kilometres outside the polygon. Because edges are great circles, a ring
+that is valid in longitude and latitude can still cross itself on the
+sphere; <code><a href="https://r-spatial.github.io/s2/reference/s2_is_collection.html" class="external-link">s2::s2_is_valid()</a></code> checks rings with the same edge model.</p>
 <p>Where no A5 cell centroids at the specified <code>resolution</code> fall within
 the geometry, its covering is empty.</p>
 <p>Matrix and <code>data.frame</code> inputs are treated as a single ring; for

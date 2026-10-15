@@ -129,6 +129,13 @@
 
         </dt>
         <dd>Convert between a5_covering and Arrow list<uint64> arrays</uint64></dd>
+
+        <dt>
+
+          <code><a href="a5_to_arrow_table.html">a5_to_arrow_table()</a></code> <code><a href="a5_to_arrow_table.html">a5_from_arrow_table()</a></code>
+
+        </dt>
+        <dd>Convert data frames with cell columns to and from Arrow tables</dd>
       </dl></div><div class="section level2">
       <h2 id="hierarchy">Hierarchy<a class="anchor" aria-label="anchor" href="#hierarchy"></a></h2>
 
@@ -159,6 +166,13 @@
 
         </dt>
         <dd>Supercells and subcells: parents and children by location</dd>
+
+        <dt>
+
+          <code><a href="a5_covering_to_supercells.html">a5_covering_to_supercells()</a></code>
+
+        </dt>
+        <dd>Supercells of a covering</dd>
 
         <dt>
 
@@ -314,10 +328,17 @@
 
         </dt>
         <dd>Cells traced by a great-circle linestring</dd>
+
+        <dt>
+
+          <code><a href="a5_bbox.html">a5_bbox()</a></code>
+
+        </dt>
+        <dd>Bounding box of polygons with great-circle edges</dd>
       </dl></div><div class="section level2">
       <h2 id="configuration">Configuration<a class="anchor" aria-label="anchor" href="#configuration"></a></h2>
 
-      <div class="section-desc"><p>Thread control for parallel processing.</p></div>
+      <div class="section-desc"><p>Package information, thread control, error classes and the C API.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -326,10 +347,31 @@
 
       <dl><dt>
 
-          <code><a href="a5_threads.html">a5_set_threads()</a></code> <code><a href="a5_threads.html">a5_get_threads()</a></code>
+          <code><a href="a5_info.html">a5_info()</a></code>
+
+        </dt>
+        <dd>a5R build and session information</dd>
+
+        <dt>
+
+          <code><a href="a5_threads.html">a5_set_threads()</a></code> <code><a href="a5_threads.html">with(<i>&lt;a5_threads&gt;</i>)</a></code> <code><a href="a5_threads.html">a5_get_threads()</a></code>
 
         </dt>
         <dd>Set the number of threads used by a5R</dd>
+
+        <dt>
+
+          <code><a href="a5_errors.html">a5_errors</a></code>
+
+        </dt>
+        <dd>Error classes</dd>
+
+        <dt>
+
+          <code><a href="a5_c_api.html">a5_c_api</a></code>
+
+        </dt>
+        <dd>C API for other packages</dd>
       </dl></div><div class="section level2">
       <h2 id="wk-integration">wk integration<a class="anchor" aria-label="anchor" href="#wk-integration"></a></h2>
 

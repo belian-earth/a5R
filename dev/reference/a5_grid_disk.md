@@ -20,7 +20,7 @@ a5_grid_disk(cell, k, vertex = FALSE)
 
 - k:
 
-  Integer scalar, number of hops.
+  Non-negative integer scalar, number of hops.
 
 - vertex:
 

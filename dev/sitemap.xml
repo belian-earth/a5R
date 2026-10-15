@@ -12,6 +12,8 @@
 <url><loc>https://belian-earth.github.io/a5R/dev/index.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/news/index.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5R-package.html</loc></url>
+<url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_bbox.html</loc></url>
+<url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_c_api.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_cell.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_cell_child.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_cell_children_range.html</loc></url>
@@ -27,10 +29,13 @@
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_covering_measures.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_covering_predicates.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_covering_stored.html</loc></url>
+<url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_covering_to_supercells.html</loc></url>
+<url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_errors.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_get_res0_cells.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_get_resolution.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.html</loc></url>
+<url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_info.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_is_valid.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_linestring_to_cells.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_migrate.html</loc></url>
@@ -40,6 +45,7 @@
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_threads.html</loc></url>
+<url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_to_arrow_table.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/a5_u64_to_hex.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/index.html</loc></url>
 <url><loc>https://belian-earth.github.io/a5R/dev/reference/wk_methods.html</loc></url>

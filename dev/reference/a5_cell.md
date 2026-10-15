@@ -29,10 +29,12 @@ An `a5_cell` vector (`a5_cell`, `as_a5_cell`), or a logical scalar
 
 ## Details
 
-`a5_cell()` accepts any 16-digit hex string without checking that it
-encodes an A5 cell, so an `a5_cell` vector can hold values that are not
-cells. Check ids from outside sources, such as a file or a database,
-with
+Ids are hex strings of up to 16 digits, optionally prefixed with `0x`.
+Shorter ids, as some A5 libraries write them, are padded with leading
+zeros, and a string that is not a hex id is an error. `a5_cell()` does
+not check that an id encodes an A5 cell, so an `a5_cell` vector can hold
+values that are not cells. Check ids from outside sources, such as a
+file or a database, with
 [`a5_is_valid_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_is_valid.md).
 
 ## See also

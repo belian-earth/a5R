@@ -25,7 +25,8 @@ a5_cell_to_children(cell, resolution = NULL, simplify = TRUE)
 
   Integer scalar target resolution, or `NULL` for one step: the
   immediate parent for `a5_cell_to_parent()`, the immediate children for
-  `a5_cell_to_children()`.
+  `a5_cell_to_children()`. For `a5_cell_to_parent()` it must not be
+  finer than any cell's resolution.
 
 - simplify:
 

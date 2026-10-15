@@ -97,9 +97,9 @@ frame column, with one covering per feature or per centre cell.</p>
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>For <code>as_a5_covering()</code>: an <a href="a5_cell.html">a5_cell</a> vector (one covering), an
-<a href="a5_cell_list.html">a5_cell_list</a> (one covering per element), or a list of raw vectors of
-little-endian 64-bit values, as stored by other A5 libraries (<code>NULL</code>
-elements are missing). For <code>a5_covering_resolution()</code> and
+<a href="a5_cell_list.html">a5_cell_list</a> (one covering per element), or a list of <a href="a5_cell.html">a5_cell</a>
+vectors or of raw vectors of little-endian 64-bit values, as stored by
+other A5 libraries. <code>NULL</code> list elements are missing coverings. For <code>a5_covering_resolution()</code> and
 <code>is_a5_covering()</code>: any object.</p></dd>
 
 

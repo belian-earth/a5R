@@ -60,9 +60,52 @@
   now checks the index encoding. It used to return `TRUE` for any
   non-missing `a5_cell` and for any hex string that parsed, whether or
   not the value was a cell; hex strings must now also be 16 digits.
+- [`a5_compact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)’s
+  first argument is now `cell`, as in other functions that take cells,
+  rather than `cells`.
 
 ### New features
 
+- [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md)
+  accepts `containment = "center"` as well as `"centre"`, and
+  [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md)
+  gains `units`, taking the radius in any length unit or as a `units`
+  object.
+- Errors have class `a5R_error` and a subclass naming what went wrong,
+  such as `a5R_error_resolution` or `a5R_error_geometry`, so code can
+  handle them without matching messages. See
+  [`?a5_errors`](https://belian-earth.github.io/a5R/dev/reference/a5_errors.md).
+- New
+  [`a5_info()`](https://belian-earth.github.io/a5R/dev/reference/a5_info.md)
+  gives the a5R, bundled a5 crate, A5 index and C API versions and the
+  thread count, as a list that prints as a summary. The same summary is
+  shown on one line when a5R is attached. Record its `index` with stored
+  cells.
+- a5R exports a C API (`a5R.h`, see
+  [`?a5_c_api`](https://belian-earth.github.io/a5R/dev/reference/a5_c_api.md))
+  for packages that convert between 64-bit ids and `a5_cell` vectors in
+  compiled code, so they need not rely on how `a5_cell` stores its data.
+- New
+  [`a5_bbox()`](https://belian-earth.github.io/a5R/dev/reference/a5_bbox.md)
+  gives the longitude/latitude box of polygons as A5 sees them, with
+  great-circle edges that can bow beyond the vertices’ latitudes.
+- New
+  [`a5_covering_to_supercells()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_to_supercells.md)
+  gives the coarse cells containing the centres of a covering’s cells
+  without building them.
+- `with(a5_set_threads(n), expr)` runs `expr` on `n` threads and
+  restores the previous count afterwards, as
+  `with(mirai::daemons(n), expr)` does.
+  [`a5_set_threads()`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md)
+  returns the previous count as an `a5_threads` object to make this
+  work.
+- New
+  [`a5_to_arrow_table()`](https://belian-earth.github.io/a5R/dev/reference/a5_to_arrow_table.md)
+  and
+  [`a5_from_arrow_table()`](https://belian-earth.github.io/a5R/dev/reference/a5_to_arrow_table.md)
+  convert data frames with cell and covering columns to and from Arrow
+  tables, tagging the table with the index version and refusing tables
+  from another index.
 - New
   [`a5_migrate()`](https://belian-earth.github.io/a5R/dev/reference/a5_migrate.md)
   converts ids from a5R before 1.0 to the current index.
@@ -124,6 +167,79 @@
   memory.
 
 ### Other changes
+
+- Functions returning many cells write them straight into R’s vectors,
+  in parallel when threads are enabled, instead of staging them first:
+  [`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)
+  is about 2.5 times faster on millions of cells, and
+  [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/dev/reference/a5_coordinates.md)
+  and
+  [`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)
+  up to a third faster, with lower peak memory.
+
+- [`a5_lonlat_to_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_coordinates.md)
+  returns `NA` for `NaN` and infinite coordinates, which used to give
+  valid cells, and errors on latitudes outside \[-90, 90\], which used
+  to wrap onto plausible but wrong cells.
+
+- A panic inside the a5 crate during a multi-threaded call no longer
+  leaves every later parallel call, and
+  [`a5_set_threads()`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md),
+  failing until R restarts.
+  [`a5_set_threads()`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md)
+  rejects counts below 1 and `NA`, and keeps the previous count if the
+  thread pool cannot be built.
+
+- [`a5_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell.md)
+  accepts ids of fewer than 16 hex digits, as written by a5-js and
+  DuckDB, and a `0x` prefix. A string that is not a hex id is now an
+  error instead of a silent `NA`.
+
+- `NA` cells are missing to vctrs: `==` against `NA` gives `NA`, and
+  sorting puts `NA` last instead of among the resolution-30 cells.
+
+- [`as_a5_covering()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering.md)
+  treats `NULL` list elements as missing coverings, so null coverings
+  read back from Arrow stay `NA` instead of becoming empty.
+
+- [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md)
+  and
+  [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_linestring_to_cells.md)
+  error on `sf` and `terra` input in a projected CRS, and on coordinates
+  outside the longitude/latitude range. The documentation now warns that
+  self-intersecting rings give undefined results.
+
+- [`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md)
+  rejects a negative or `NA` `k`, and
+  [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md)
+  a negative or non-finite `radius`.
+
+- [`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)’s
+  size guard counts the 5 children of a resolution-0 cell, so it no
+  longer lets through requests up to 25% over the limit.
+
+- Scalar resolution arguments reject `NA` with a clear error, and
+  [`a5_get_num_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_resolution_stats.md)
+  errors when the child resolution is coarser than the parent instead of
+  returning 0.
+
+- [`a5_cell_from_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_from_arrow.md)
+  and
+  [`a5_covering_from_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_from_arrow.md)
+  give a clear error for input that is not an Arrow array.
+
+- [`a5_cell_children_range()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_children_range.md)
+  and
+  [`a5_cell_child()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_child.md)
+  reach resolution 29 from any cell, as documented, instead of erroring
+  beyond 20 levels.
+
+- The world cell’s boundary is `POLYGON EMPTY` instead of an invalid
+  polygon.
+
+- [`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)
+  errors when `resolution` is finer than a cell’s resolution, instead of
+  returning a descendant.
 
 - [`a5_cell_to_boundary()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_boundary.md)
   builds its output faster, with identical results: on a million cells,

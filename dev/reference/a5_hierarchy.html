@@ -79,7 +79,8 @@ Both follow the cell index, so they are cheap bit operations.</p>
 <dt id="arg-resolution">resolution<a class="anchor" aria-label="anchor" href="#arg-resolution"></a></dt>
 <dd><p>Integer scalar target resolution, or <code>NULL</code> for one step:
 the immediate parent for <code>a5_cell_to_parent()</code>, the immediate children
-for <code>a5_cell_to_children()</code>.</p></dd>
+for <code>a5_cell_to_children()</code>. For <code>a5_cell_to_parent()</code> it must not be
+finer than any cell's resolution.</p></dd>
 
 
 <dt id="arg-simplify">simplify<a class="anchor" aria-label="anchor" href="#arg-simplify"></a></dt>

@@ -83,7 +83,8 @@
     
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/belian-earth/a5R" class="external-link">a5R</a></span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/belian-earth/a5R" class="external-link">a5R</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; a5R 0.9.9.9002 • a5 crate 1.0.0-beta.3 • A5 index 1.0 • 1 thread</span></span></code></pre></div>
 <p>a5R can parallelise vectorised operations using multiple threads via
 <a href="https://docs.rs/rayon" class="external-link">rayon</a>. By default a5R uses a single
 thread, so there is zero overhead. You opt in to parallelism when you
@@ -108,12 +109,19 @@ environment variable, useful for scripts and batch jobs:</p>
 <span></span>
 <span><span class="co"># Or as an environment variable</span></span>
 <span><span class="co"># Sys.setenv(A5R_NUM_THREADS = 4) </span></span></code></pre></div>
-<p><code><a href="../reference/a5_threads.html">a5_set_threads()</a></code> invisibly returns the previous value,
-making temporary changes easy:</p>
+<p>To use more threads for one block of code only, wrap it in
+<code><a href="https://rdrr.io/r/base/with.html" class="external-link">with()</a></code>, as with <code>mirai::daemons()</code>. The previous
+count is restored afterwards, even if the code fails:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">old</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_threads.html">a5_set_threads</a></span><span class="op">(</span><span class="fl">4</span><span class="op">)</span></span>
-<span><span class="co"># ... parallel work ...</span></span>
-<span><span class="fu"><a href="../reference/a5_threads.html">a5_set_threads</a></span><span class="op">(</span><span class="va">old</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">1e4</span>, <span class="op">-</span><span class="fl">180</span>, <span class="fl">180</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">1e4</span>, <span class="op">-</span><span class="fl">80</span>, <span class="fl">80</span><span class="op">)</span>, <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="va">boundaries</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_threads.html">a5_set_threads</a></span><span class="op">(</span><span class="fl">4</span><span class="op">)</span>, <span class="op">{</span></span>
+<span>  <span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/a5_threads.html">a5_get_threads</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 1</span></span></code></pre></div>
+<p><code><a href="../reference/a5_threads.html">a5_set_threads()</a></code> also returns the previous count, so
+<code>old &lt;- a5_set_threads(4)</code> and later
+<code>a5_set_threads(old)</code> work too.</p>
 </div>
 <div class="section level2">
 <h2 id="what-gets-parallelised">What gets parallelised<a class="anchor" aria-label="anchor" href="#what-gets-parallelised"></a>

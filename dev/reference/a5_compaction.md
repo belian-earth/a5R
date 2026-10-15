@@ -12,14 +12,14 @@ without duplicates.
 ## Usage
 
 ``` r
-a5_compact(cells, resolution = NULL)
+a5_compact(cell, resolution = NULL)
 
 a5_uncompact(x, resolution = NULL, simplify = TRUE)
 ```
 
 ## Arguments
 
-- cells:
+- cell:
 
   An
   [a5_cell](https://belian-earth.github.io/a5R/dev/reference/a5_cell.md)

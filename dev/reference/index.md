@@ -42,6 +42,10 @@ Lossless conversion to and from Arrow arrays.
 
   Convert between a5_covering and Arrow list arrays
 
+- [`a5_to_arrow_table()`](https://belian-earth.github.io/a5R/dev/reference/a5_to_arrow_table.md)
+  [`a5_from_arrow_table()`](https://belian-earth.github.io/a5R/dev/reference/a5_to_arrow_table.md)
+  : Convert data frames with cell columns to and from Arrow tables
+
 ## Hierarchy
 
 Navigate the cell hierarchy across resolutions.
@@ -54,6 +58,8 @@ Navigate the cell hierarchy across resolutions.
 - [`a5_cell_to_supercell()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
   [`a5_cell_to_subcell()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
   : Supercells and subcells: parents and children by location
+- [`a5_covering_to_supercells()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_to_supercells.md)
+  : Supercells of a covering
 - [`a5_cell_child()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_child.md)
   : The i-th child of each cell
 - [`a5_cell_children_range()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_children_range.md)
@@ -118,14 +124,23 @@ Convert polygons and linestrings to cells covering them.
   : Cells inside or overlapping a polygon
 - [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_linestring_to_cells.md)
   : Cells traced by a great-circle linestring
+- [`a5_bbox()`](https://belian-earth.github.io/a5R/dev/reference/a5_bbox.md)
+  : Bounding box of polygons with great-circle edges
 
 ## Configuration
 
-Thread control for parallel processing.
+Package information, thread control, error classes and the C API.
 
+- [`a5_info()`](https://belian-earth.github.io/a5R/dev/reference/a5_info.md)
+  : a5R build and session information
 - [`a5_set_threads()`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md)
+  [`with(`*`<a5_threads>`*`)`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md)
   [`a5_get_threads()`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md)
   : Set the number of threads used by a5R
+- [`a5_errors`](https://belian-earth.github.io/a5R/dev/reference/a5_errors.md)
+  : Error classes
+- [`a5_c_api`](https://belian-earth.github.io/a5R/dev/reference/a5_c_api.md)
+  : C API for other packages
 
 ## wk integration
 

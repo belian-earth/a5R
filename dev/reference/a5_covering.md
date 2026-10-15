@@ -39,10 +39,11 @@ a5_covering_resolution(x)
   [a5_cell](https://belian-earth.github.io/a5R/dev/reference/a5_cell.md)
   vector (one covering), an
   [a5_cell_list](https://belian-earth.github.io/a5R/dev/reference/a5_cell_list.md)
-  (one covering per element), or a list of raw vectors of little-endian
-  64-bit values, as stored by other A5 libraries (`NULL` elements are
-  missing). For `a5_covering_resolution()` and `is_a5_covering()`: any
-  object.
+  (one covering per element), or a list of
+  [a5_cell](https://belian-earth.github.io/a5R/dev/reference/a5_cell.md)
+  vectors or of raw vectors of little-endian 64-bit values, as stored by
+  other A5 libraries. `NULL` list elements are missing coverings. For
+  `a5_covering_resolution()` and `is_a5_covering()`: any object.
 
 - ...:
 
