@@ -47,7 +47,7 @@ reference:
   - a5_get_resolution
   - a5_hierarchy
   - a5_spatial_hierarchy
-  - a5_cell_to_resolution
+  - a5_covering_to_supercells
   - a5_cell_child
   - a5_cell_children_range
   - a5_get_res0_cells

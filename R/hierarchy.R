@@ -245,61 +245,28 @@ a5_cell_to_subcell <- function(cell, resolution = NULL) {
   coverings_from_rs(a5_cell_to_subcell_rs(cell_data(cell), resolution))
 }
 
-#' Cells and coverings at another resolution, by location
+#' Supercells of a covering
 #'
-#' `a5_cell_to_resolution()` expresses cells of one resolution at another,
-#' using the exact partition of [a5_spatial_hierarchy]: the supercells
-#' containing their centres when `resolution` is coarser, the subcells whose
-#' centres lie inside them when finer. `a5_covering_to_supercells()` gives,
-#' for each covering, the cells at a coarser `resolution` that contain the
-#' centre of at least one of its cells, such as the partitions of a store
-#' that hold an area's data, without building the covering's cells.
+#' `a5_covering_to_supercells()` gives, for each covering, the cells at a
+#' coarser `resolution` that contain the centre of at least one of its
+#' cells, such as the partitions of a store that hold an area's data. It
+#' matches `a5_cell_to_supercell(a5_uncompact(x), resolution)` without
+#' duplicates, but never builds the covering's cells.
 #'
-#' @param cell An [a5_cell] vector, all at one resolution.
 #' @param x An [a5_covering] vector.
-#' @param resolution Integer scalar target resolution. For
-#'   `a5_covering_to_supercells()`, at or coarser than each covering's
-#'   resolution.
-#' @returns
-#' * `a5_cell_to_resolution()`: an [a5_cell] vector at `resolution`, without
-#'   duplicates or `NA`.
-#' * `a5_covering_to_supercells()`: an [a5_covering] vector at `resolution`,
-#'   the same length as `x`. `NA` where `x` is `NA`.
+#' @param resolution Integer scalar target resolution, at or coarser than
+#'   each covering's resolution.
+#' @returns An [a5_covering] vector at `resolution`, the same length as `x`.
+#'   `NA` where `x` is `NA`.
 #'
-#' @seealso [a5_cell_to_supercell()], [a5_cell_to_subcell()]
+#' @seealso [a5_cell_to_supercell()]
 #' @export
 #' @examples
-#' cells <- a5_lonlat_to_cell(c(-3.19, -3.20), c(55.95, 55.96), resolution = 12)
-#' a5_cell_to_resolution(cells, 9)
-#' length(a5_cell_to_resolution(cells, 13))
-#'
 #' area <- a5_polygon_to_cells(
 #'   wk::wkt("POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))"),
 #'   resolution = 14
 #' )
 #' a5_uncompact(a5_covering_to_supercells(area, 6))
-a5_cell_to_resolution <- function(cell, resolution) {
-  cell <- as_a5_cell(cell)
-  resolution <- check_scalar_resolution(resolution)
-  cell <- vctrs::vec_unique(cell[!is.na(cell)])
-  from <- unique(a5_get_resolution(cell))
-  if (length(from) > 1L) {
-    a5_abort(
-      "resolution",
-      "{.arg cell} must all have one resolution, not {length(from)} ({paste(sort(from), collapse = ', ')})."
-    )
-  }
-  if (length(cell) == 0L || from == resolution) {
-    return(cell)
-  }
-  if (resolution < from) {
-    return(vctrs::vec_unique(a5_cell_to_supercell(cell, resolution)))
-  }
-  a5_uncompact(a5_cell_to_subcell(cell, resolution))
-}
-
-#' @rdname a5_cell_to_resolution
-#' @export
 a5_covering_to_supercells <- function(x, resolution) {
   x <- as_a5_covering(x)
   resolution <- check_scalar_resolution(resolution)
