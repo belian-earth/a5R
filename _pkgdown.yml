@@ -80,6 +80,7 @@ reference:
   contents:
   - a5_set_threads
   - a5_errors
+  - a5_c_api
 - title: wk integration
   desc: Methods for the wk geometry framework.
   contents: wk_methods
