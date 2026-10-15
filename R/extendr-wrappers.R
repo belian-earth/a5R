@@ -200,6 +200,11 @@ a5_cell_to_children_rs <- function(cells, child_resolution, simplify) .Call(wrap
 #' @keywords internal
 a5_cell_to_supercell_rs <- function(cells, resolution) .Call(wrap__a5_cell_to_supercell_rs, cells, resolution)
 
+#' Supercells of every covering.
+#' @noRd
+#' @keywords internal
+a5_covering_to_supercells_rs <- function(x, resolution) .Call(wrap__a5_covering_to_supercells_rs, x, resolution)
+
 #' Subcells: the finer cells whose centres lie in each cell, as coverings.
 #'
 #' @param cells List with b1..b8 raw vectors.

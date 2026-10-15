@@ -57,3 +57,18 @@ test_that("a Rust panic in a parallel call does not break later calls", {
   expect_identical(a5_set_threads(1L), 2L)
   expect_length(a5_cell_to_children(cell, 7), 16L)
 })
+
+test_that("with_a5_threads and local_a5_threads restore the count", {
+  old <- a5_set_threads(1L)
+  on.exit(a5_set_threads(old))
+  expect_identical(with_a5_threads(3, a5_get_threads()), 3L)
+  expect_identical(a5_get_threads(), 1L)
+  expect_error(with_a5_threads(2, stop("boom")), "boom")
+  expect_identical(a5_get_threads(), 1L)
+  f <- function() {
+    local_a5_threads(4)
+    a5_get_threads()
+  }
+  expect_identical(f(), 4L)
+  expect_identical(a5_get_threads(), 1L)
+})
