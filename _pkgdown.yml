@@ -34,7 +34,6 @@ reference:
   - a5_is_valid
   - a5_u64_to_hex
   - a5_migrate
-  - a5_index_version
 - title: Arrow & Parquet
   desc: Lossless conversion to and from Arrow arrays.
   contents:
@@ -79,8 +78,9 @@ reference:
   - a5_linestring_to_cells
   - a5_bbox
 - title: Configuration
-  desc: Thread control for parallel processing, and error classes.
+  desc: Package information, thread control, error classes and the C API.
   contents:
+  - a5_info
   - a5_set_threads
   - a5_errors
   - a5_c_api

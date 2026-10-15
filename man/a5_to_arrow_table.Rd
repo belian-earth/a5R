@@ -26,7 +26,8 @@ a data frame.
 \code{a5_to_arrow_table()} converts a data frame to an Arrow \code{Table}, writing
 \link{a5_cell} columns as \code{uint64} and \link{a5_covering} columns as \verb{list<uint64>}
 (see \code{\link[=a5_cell_to_arrow]{a5_cell_to_arrow()}} and \code{\link[=a5_covering_to_arrow]{a5_covering_to_arrow()}}), and records
-\code{\link[=a5_index_version]{a5_index_version()}} in the schema metadata under \code{"a5:index_version"}.
+the A5 index version (\code{a5_info()$index}) in the schema metadata under
+\code{"a5:index_version"}.
 \code{a5_from_arrow_table()} reverses it, turning \code{uint64} columns into cells
 and \verb{list<uint64>} columns into coverings.
 }
@@ -48,5 +49,5 @@ identical(back$cell, df$cell)
 \dontshow{\}) # examplesIf}
 }
 \seealso{
-\code{\link[=a5_index_version]{a5_index_version()}}
+\code{\link[=a5_info]{a5_info()}}
 }

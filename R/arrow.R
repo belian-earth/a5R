@@ -141,7 +141,8 @@ a5_covering_to_arrow <- function(x) {
 #' `a5_to_arrow_table()` converts a data frame to an Arrow `Table`, writing
 #' [a5_cell] columns as `uint64` and [a5_covering] columns as `list<uint64>`
 #' (see [a5_cell_to_arrow()] and [a5_covering_to_arrow()]), and records
-#' [a5_index_version()] in the schema metadata under `"a5:index_version"`.
+#' the A5 index version (`a5_info()$index`) in the schema metadata under
+#' `"a5:index_version"`.
 #' `a5_from_arrow_table()` reverses it, turning `uint64` columns into cells
 #' and `list<uint64>` columns into coverings.
 #'
@@ -158,7 +159,7 @@ a5_covering_to_arrow <- function(x) {
 #'   `list<uint64>` column respectively.
 #' @returns `a5_to_arrow_table()`: an Arrow `Table`. `a5_from_arrow_table()`:
 #'   a data frame.
-#' @seealso [a5_index_version()]
+#' @seealso [a5_info()]
 #' @export
 #' @examplesIf requireNamespace("arrow", quietly = TRUE)
 #' cells <- a5_lonlat_to_cell(c(-3.19, 135), c(55.95, 0), resolution = 10)
@@ -183,7 +184,7 @@ a5_to_arrow_table <- function(x) {
     }
   })
   tbl <- do.call(arrow::arrow_table, cols)
-  tbl$metadata[["a5:index_version"]] <- a5_index_version()
+  tbl$metadata[["a5:index_version"]] <- A5_INDEX_VERSION
   tbl
 }
 
@@ -193,9 +194,9 @@ a5_from_arrow_table <- function(x, cells = NULL, coverings = NULL) {
   rlang::check_installed("arrow", reason = "to convert Arrow tables to data frames")
   tbl <- arrow::as_arrow_table(x)
   version <- tbl$metadata[["a5:index_version"]]
-  if (!is.null(version) && !identical(version, a5_index_version())) {
+  if (!is.null(version) && !identical(version, A5_INDEX_VERSION)) {
     a5_abort("cell", c(
-      "{.arg x} holds ids from A5 index {version}, not {a5_index_version()}.",
+      "{.arg x} holds ids from A5 index {version}, not {A5_INDEX_VERSION}.",
       "i" = "Convert pre-1.0 ids once with {.fn a5_migrate}."
     ))
   }

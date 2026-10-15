@@ -15,7 +15,8 @@
 #' R_xlen_t n = a5R_cells_to_u64(cells, ids, is_na);
 #' ```
 #'
-#' `a5R_api_version()` returns the version of the API, currently 1. NA cells
+#' `a5R_api_version()` returns the version of the API, currently 1, also
+#' given by `a5_info()$c_api`. NA cells
 #' are flagged in an `int` array, as in an R logical vector, rather than
 #' encoded in the id. Packages written in Rust can call the same functions
 #' through `R_GetCCallable("a5R", "a5R_cells_from_u64")` and its siblings;

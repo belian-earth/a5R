@@ -51,9 +51,10 @@
 * Errors have class `a5R_error` and a subclass naming what went wrong, such
   as `a5R_error_resolution` or `a5R_error_geometry`, so code can handle them
   without matching messages. See `?a5_errors`.
-* New `a5_index_version()` names the A5 index of a5R's ids ("1.0"), to
-  record with stored cells, and `a5_crate_version()` gives the version of
-  the bundled a5 Rust crate.
+* New `a5_info()` gives the a5R, bundled a5 crate, A5 index and C API
+  versions and the thread count, as a list that prints as a summary. The
+  same summary is shown on one line when a5R is attached. Record its
+  `index` with stored cells.
 * a5R exports a C API (`a5R.h`, see `?a5_c_api`) for packages that convert
   between 64-bit ids and `a5_cell` vectors in compiled code, so they need
   not rely on how `a5_cell` stores its data.

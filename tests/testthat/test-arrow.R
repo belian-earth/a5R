@@ -151,7 +151,7 @@ test_that("data frames round-trip through Arrow tables and Parquet", {
   df <- data.frame(cell = cells, value = c(1.5, 2.5, NA), name = c("a", "b", "c"))
   df$disk <- a5_grid_disk(cells, k = 1)
   tbl <- a5_to_arrow_table(df)
-  expect_identical(tbl$metadata[["a5:index_version"]], a5_index_version())
+  expect_identical(tbl$metadata[["a5:index_version"]], a5_info()$index)
   expect_identical(tbl$schema$cell$type$ToString(), "uint64")
   back <- a5_from_arrow_table(tbl)
   expect_identical(back$cell, df$cell)
