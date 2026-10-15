@@ -84,6 +84,11 @@ a5_cell_to_boundary_wkb_rs <- function(cells, closed_ring, segments) .Call(wrap_
 #' @keywords internal
 a5_cell_to_boundary_xy_rs <- function(cells, closed_ring, segments) .Call(wrap__a5_cell_to_boundary_xy_rs, cells, closed_ring, segments)
 
+#' Version of the bundled a5 crate, read from Cargo.lock at build time.
+#' @noRd
+#' @keywords internal
+a5_crate_version_rs <- function() .Call(wrap__a5_crate_version_rs)
+
 #' Get the area (in square metres) of cells at a given resolution.
 #'
 #' @param resolution Integer vector of resolutions (0--30).

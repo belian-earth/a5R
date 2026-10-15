@@ -34,6 +34,7 @@ reference:
   - a5_is_valid
   - a5_u64_to_hex
   - a5_migrate
+  - a5_index_version
 - title: Arrow & Parquet
   desc: Lossless conversion to and from Arrow arrays.
   contents:

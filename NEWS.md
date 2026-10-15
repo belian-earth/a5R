@@ -46,6 +46,9 @@
 * Errors have class `a5R_error` and a subclass naming what went wrong, such
   as `a5R_error_resolution` or `a5R_error_geometry`, so code can handle them
   without matching messages. See `?a5_errors`.
+* New `a5_index_version()` names the A5 index of a5R's ids ("1.0"), to
+  record with stored cells, and `a5_crate_version()` gives the version of
+  the bundled a5 Rust crate.
 * New `a5_migrate()` converts ids from a5R before 1.0 to the current index.
 * New `as_a5_covering()` builds coverings from cells, cell lists or raw
   64-bit values written by other A5 libraries, sorting and compacting them;
