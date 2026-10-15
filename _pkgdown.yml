@@ -82,7 +82,6 @@ reference:
   desc: Thread control for parallel processing, and error classes.
   contents:
   - a5_set_threads
-  - with_a5_threads
   - a5_errors
   - a5_c_api
 - title: wk integration

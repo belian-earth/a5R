@@ -5,7 +5,7 @@ test_that("default threads is 1", {
 test_that("set/get threads works", {
     withr::defer(a5_set_threads(1L))
     old <- a5_set_threads(2L)
-    expect_equal(old, 1L)
+    expect_equal(as.integer(old), 1L)
     expect_equal(a5_get_threads(), 2L)
 })
 
@@ -54,22 +54,29 @@ test_that("a Rust panic in a parallel call does not break later calls", {
   try(a5_grid_disk(a5_cell("0000000000000000"), 1), silent = TRUE)
   cell <- a5_lonlat_to_cell(0, 0, 5)
   expect_length(a5_cell_to_children(cell, 7), 16L)
-  expect_identical(a5_set_threads(1L), 2L)
+  expect_identical(as.integer(a5_set_threads(1L)), 2L)
   expect_length(a5_cell_to_children(cell, 7), 16L)
 })
 
-test_that("with_a5_threads and local_a5_threads restore the count", {
+test_that("with(a5_set_threads(n), expr) restores the count", {
   old <- a5_set_threads(1L)
   on.exit(a5_set_threads(old))
-  expect_identical(with_a5_threads(3, a5_get_threads()), 3L)
+  expect_identical(with(a5_set_threads(3), a5_get_threads()), 3L)
   expect_identical(a5_get_threads(), 1L)
-  expect_error(with_a5_threads(2, stop("boom")), "boom")
+  expect_error(with(a5_set_threads(2), stop("boom")), "boom")
   expect_identical(a5_get_threads(), 1L)
-  f <- function() {
-    local_a5_threads(4)
-    a5_get_threads()
-  }
-  expect_identical(f(), 4L)
+  # nested blocks unwind in order
+  with(a5_set_threads(2), {
+    with(a5_set_threads(4), expect_identical(a5_get_threads(), 4L))
+    expect_identical(a5_get_threads(), 2L)
+  })
+  expect_identical(a5_get_threads(), 1L)
+  # the returned object prints and converts like the count
+  prev <- a5_set_threads(2)
+  expect_s3_class(prev, "a5_threads")
+  expect_identical(as.integer(prev), 1L)
+  expect_output(print(prev), "previous count: 1")
+  a5_set_threads(prev)
   expect_identical(a5_get_threads(), 1L)
 })
 

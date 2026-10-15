@@ -4,11 +4,27 @@
 #' functions. Set to 1 (the default) for sequential processing with zero
 #' overhead, or higher for parallel execution via rayon.
 #'
-#' @param n Integer scalar. Number of threads. Must be >= 1.
-#' @returns Invisibly returns the previous thread count.
+#' `a5_set_threads()` returns the previous thread count, so a change can be
+#' scoped to a block of code with [with()], as `mirai::daemons()` is:
+#' `with(a5_set_threads(4), expr)` runs `expr` on four threads and then
+#' restores the previous count, even if `expr` fails.
+#'
+#' @param n Integer scalar. Number of threads. Must be >= 1. The value
+#'   returned by an earlier `a5_set_threads()` call also works.
+#' @param data The value of `a5_set_threads()`.
+#' @param expr Code to run with that thread count.
+#' @param ... Unused.
+#' @returns `a5_set_threads()`: the previous thread count, invisibly, as an
+#'   `a5_threads` object. `with()`: the value of `expr`. `a5_get_threads()`:
+#'   the current count, an integer scalar.
 #' @rdname a5_threads
 #' @export
+#' @examples
+#' cells <- a5_lonlat_to_cell(runif(1000, -180, 180), runif(1000, -80, 80), 10)
+#' b <- with(a5_set_threads(2), a5_cell_to_boundary(cells))
+#' a5_get_threads()
 a5_set_threads <- function(n = 1L) {
+  if (inherits(n, "a5_threads")) n <- as.integer(n)
   n <- vctrs::vec_cast(n, integer())
   check_size1(n)
   if (is.na(n) || n < 1L) {
@@ -16,52 +32,24 @@ a5_set_threads <- function(n = 1L) {
   }
   old <- a5_get_threads_rs()
   a5_set_threads_rs(n)
-  invisible(old)
+  invisible(structure(old, class = "a5_threads"))
 }
 
-#' Get the current number of threads
-#'
 #' @rdname a5_threads
-#' @returns Integer scalar.
+#' @export
+with.a5_threads <- function(data, expr, ...) {
+  on.exit(a5_set_threads(data), add = TRUE)
+  expr
+}
+
+#' @export
+print.a5_threads <- function(x, ...) {
+  cat("<a5_threads> previous count:", as.integer(x), "\n")
+  invisible(x)
+}
+
+#' @rdname a5_threads
 #' @export
 a5_get_threads <- function() {
   a5_get_threads_rs()
-}
-
-#' Use a number of threads temporarily
-#'
-#' `with_a5_threads()` runs `code` with `n` threads and restores the previous
-#' count afterwards, even on error. `local_a5_threads()` sets `n` threads
-#' until the calling function, or `.local_envir`, exits.
-#'
-#' @param n Integer scalar. Number of threads, at least 1.
-#' @param code Code to run.
-#' @param .local_envir The environment whose exit restores the thread count.
-#' @returns `with_a5_threads()`: the value of `code`. `local_a5_threads()`:
-#'   the previous thread count, invisibly.
-#' @seealso [a5_set_threads()]
-#' @export
-#' @examples
-#' cells <- a5_lonlat_to_cell(runif(1000, -180, 180), runif(1000, -80, 80), 10)
-#' b <- with_a5_threads(2, a5_cell_to_boundary(cells))
-#' a5_get_threads()
-#'
-#' f <- function() {
-#'   local_a5_threads(2)
-#'   a5_get_threads()
-#' }
-#' f()
-#' a5_get_threads()
-with_a5_threads <- function(n, code) {
-  old <- a5_set_threads(n)
-  on.exit(a5_set_threads(old), add = TRUE)
-  force(code)
-}
-
-#' @rdname with_a5_threads
-#' @export
-local_a5_threads <- function(n, .local_envir = parent.frame()) {
-  old <- a5_set_threads(n)
-  do.call(on.exit, list(call("a5_set_threads", old), add = TRUE), envir = .local_envir)
-  invisible(old)
 }

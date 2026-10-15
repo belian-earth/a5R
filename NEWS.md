@@ -61,8 +61,10 @@
   them, with great-circle edges that can bow beyond the vertices' latitudes.
 * New `a5_covering_to_supercells()` gives the coarse cells containing the
   centres of a covering's cells without building them.
-* New `with_a5_threads()` and `local_a5_threads()` set the thread count for
-  a block of code or a function and restore it afterwards.
+* `with(a5_set_threads(n), expr)` runs `expr` on `n` threads and restores
+  the previous count afterwards, as `with(mirai::daemons(n), expr)` does.
+  `a5_set_threads()` returns the previous count as an `a5_threads` object to
+  make this work.
 * New `a5_to_arrow_table()` and `a5_from_arrow_table()` convert data frames
   with cell and covering columns to and from Arrow tables, tagging the
   table with the index version and refusing tables from another index.

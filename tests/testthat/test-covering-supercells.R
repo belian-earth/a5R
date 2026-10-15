@@ -6,7 +6,7 @@ test_that("a5_covering_to_supercells matches supercells of the uncompacted cells
   ))
   cv <- a5_polygon_to_cells(polys, 11)
   for (threads in c(1L, 2L)) {
-    sc <- with_a5_threads(threads, a5_covering_to_supercells(cv, 7))
+    sc <- with(a5_set_threads(threads), a5_covering_to_supercells(cv, 7))
     expect_identical(is.na(sc), c(FALSE, TRUE, FALSE))
     for (i in c(1L, 3L)) {
       expect_identical(a5_covering_resolution(sc[i]), 7L)
