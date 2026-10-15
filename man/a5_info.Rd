@@ -25,8 +25,9 @@ package is attached with \code{\link[=library]{library()}}.
 The \code{index} element names the A5 cell index that a5R's ids belong to. Ids
 from different index versions look alike, and nothing in an id says which
 version wrote it (see \code{\link[=a5_migrate]{a5_migrate()}}), so record \code{index} with stored
-cells and check it when reading them back. With Arrow and Parquet, store
-it in the schema metadata under the key \code{"a5:index_version"}.
+cells and check it when reading them back. With Arrow and Parquet,
+\code{\link[=a5_to_arrow_table]{a5_to_arrow_table()}} stores it in the schema metadata under the key
+\code{"a5:index_version"}, and \code{\link[=a5_from_arrow_table]{a5_from_arrow_table()}} checks it.
 }
 \examples{
 a5_info()

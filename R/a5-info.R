@@ -7,8 +7,9 @@
 #' The `index` element names the A5 cell index that a5R's ids belong to. Ids
 #' from different index versions look alike, and nothing in an id says which
 #' version wrote it (see [a5_migrate()]), so record `index` with stored
-#' cells and check it when reading them back. With Arrow and Parquet, store
-#' it in the schema metadata under the key `"a5:index_version"`.
+#' cells and check it when reading them back. With Arrow and Parquet,
+#' [a5_to_arrow_table()] stores it in the schema metadata under the key
+#' `"a5:index_version"`, and [a5_from_arrow_table()] checks it.
 #'
 #' @returns A list of class `a5_info` with elements:
 #'   - `version`: the a5R package version, a character scalar.
