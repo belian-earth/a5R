@@ -10,8 +10,8 @@ crate-type = [ 'staticlib' ]
 name = 'a5R'
 
 [dependencies]
-extendr-api = '0.8.2'
-a5 = '1.0.0-beta.2'
+extendr-api = '0.9.0'
+a5 = '=1.0.0-beta.3'
 geographiclib-rs = { version = '0.2', default-features = false }
 rayon = '1.11'
 

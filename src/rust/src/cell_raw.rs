@@ -292,7 +292,7 @@ fn hex_to_raw8_rs(cells: Strings) -> List {
         if s.is_na() {
             values.push(None);
         } else {
-            match a5::hex_to_u64(s.as_str()) {
+            match a5::hex_to_u64(s.as_ref()) {
                 Ok(id) if id != NA_SENTINEL => values.push(Some(id)),
                 _ => values.push(None),
             }

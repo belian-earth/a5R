@@ -17,7 +17,7 @@ fn a5_cell_area_rs(resolution: Integers) -> Doubles {
         if r.is_na() {
             out.set_elt(i, Rfloat::na());
         } else {
-            out.set_elt(i, Rfloat::from(a5::cell_area(r.inner())));
+            out.set_elt(i, Rfloat::from(a5::cell_area(r.0)));
         }
     }
     out
@@ -41,7 +41,7 @@ fn a5_cell_edge_length_avg_rs(resolution: Integers) -> Doubles {
         if r.is_na() {
             out.set_elt(i, Rfloat::na());
         } else {
-            out.set_elt(i, Rfloat::from(a5::cell_edge_length_avg(r.inner())));
+            out.set_elt(i, Rfloat::from(a5::cell_edge_length_avg(r.0)));
         }
     }
     out
@@ -106,7 +106,7 @@ fn a5_is_valid_hex_rs(cell: Strings) -> Logicals {
             out.set_elt(i, Rbool::na());
         } else {
             let valid = s.len() == 16
-                && a5::hex_to_u64(s.as_str()).is_ok_and(a5::is_valid_cell);
+                && a5::hex_to_u64(s.as_ref()).is_ok_and(a5::is_valid_cell);
             out.set_elt(i, Rbool::from(valid));
         }
     }

@@ -7,7 +7,7 @@
 #' @useDynLib a5R, .registration = TRUE
 NULL
 
-a5_set_threads_rs <- function(n) invisible(.Call(wrap__a5_set_threads_rs, n))
+a5_set_threads_rs <- function(n) .Call(wrap__a5_set_threads_rs, n)
 
 a5_get_threads_rs <- function() .Call(wrap__a5_get_threads_rs)
 
