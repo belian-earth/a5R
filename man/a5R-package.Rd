@@ -138,6 +138,8 @@ Authors:
 Other contributors:
 \itemize{
   \item belian.earth [copyright holder]
+  \item Felix Palmer (Author of the bundled 'a5' Rust crate) [contributor, copyright holder]
+  \item Authors of the dependency Rust crates (see LICENSE.note) [contributor, copyright holder]
 }
 
 }

@@ -3,7 +3,7 @@
 \name{a5_covering_from_arrow}
 \alias{a5_covering_from_arrow}
 \alias{a5_covering_to_arrow}
-\title{Convert between a5_covering and Arrow list\if{html}{\out{<uint64>}} arrays}
+\title{Convert between a5_covering and Arrow \verb{list<uint64>} arrays}
 \usage{
 a5_covering_from_arrow(x)
 

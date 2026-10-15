@@ -68,7 +68,7 @@ arrow_slots <- function(x) {
   slots
 }
 
-#' Convert between a5_covering and Arrow list<uint64> arrays
+#' Convert between a5_covering and Arrow `list<uint64>` arrays
 #'
 #' Losslessly convert [a5_covering] vectors to and from Arrow
 #' `list<uint64>` arrays, one list element per covering. Each element holds

@@ -36,7 +36,7 @@ jobs:
       - if: ${{ runner.os == 'windows' && runner.arch == 'ARM64' }}
         run: |
           rustup target add aarch64-pc-windows-gnullvm
-          echo "R_CHECK_FORCE_SUGGESTS_=false" >> $GITHUB_ENV
+          echo "_R_CHECK_FORCE_SUGGESTS_=false" >> $GITHUB_ENV
 
       - uses: r-lib/actions/setup-pandoc@v2
 

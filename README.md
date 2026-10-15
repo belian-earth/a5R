@@ -8,7 +8,7 @@
 [![R-CMD-check](https://github.com/belian-earth/a5R/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/belian-earth/a5R/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
 coverage](https://codecov.io/gh/belian-earth/a5R/graph/badge.svg)](https://app.codecov.io/gh/belian-earth/a5R)
-[![extendr](https://img.shields.io/badge/extendr-%5E0.8.1-276DC2)](https://extendr.rs/extendr/extendr_api/)
+[![extendr](https://img.shields.io/badge/extendr-%5E0.9.0-276DC2)](https://extendr.rs/extendr/extendr_api/)
 [![Lifecycle:
 stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![License:Apache](https://img.shields.io/github/license/belian-earth/a5R)](https://www.apache.org/licenses/LICENSE-2.0)
