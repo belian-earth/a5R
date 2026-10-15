@@ -30,7 +30,7 @@
 #' a5_is_valid_cell(a5_cell("fd00000000000000"))
 a5_cell <- function(x = character()) {
   x <- vctrs::vec_cast(x, character())
-  cells_from_rs(from_caller(hex_to_raw8_rs(x), call = rlang::current_env(), type = "cell"))
+  cells_from_hex(x)
 }
 
 new_a5_cell <- function(
@@ -67,6 +67,20 @@ new_a5_cell <- function(
 #' @noRd
 cells_from_rs <- function(x) {
   structure(x, class = c("a5_cell", "vctrs_rcrd", "vctrs_vctr"))
+}
+
+#' Parse hex ids, erroring on the first string that is not one
+#' @noRd
+cells_from_hex <- function(x, call = rlang::caller_env()) {
+  out <- hex_to_raw8_rs(x)
+  if (is.integer(out)) {
+    a5_abort(
+      "cell",
+      "Element {out} of {.arg x} is not a hex cell id: {.val {x[[out]]}}. Ids are 1 to 16 hex digits, optionally prefixed with 0x.",
+      call = call
+    )
+  }
+  cells_from_rs(out)
 }
 
 #' Pass cell fields to Rust as a named list
@@ -181,6 +195,25 @@ cell_proxy <- function(x) {
   vctrs::new_data_frame(cells_proxy_rs(unclass(x)))
 }
 
+#' `==` and `!=` compare ids directly in Rust: building two comparison
+#' proxies would cost more than the comparison. Other operators fall through
+#' to vctrs.
+#' @export
+#' @noRd
+#' @keywords internal
+Ops.a5_cell <- function(e1, e2) {
+  if (.Generic != "==" && .Generic != "!=") {
+    return(NextMethod())
+  }
+  if (!(is_a5_cell(e1) && is_a5_cell(e2) && length(e1) == length(e2))) {
+    args <- vctrs::vec_recycle_common(!!!vctrs::vec_cast_common(e1, e2))
+    e1 <- args[[1L]]
+    e2 <- args[[2L]]
+  }
+  out <- cells_equal_rs(unclass(e1), unclass(e2))
+  if (.Generic == "!=") !out else out
+}
+
 #' @exportS3Method vctrs::vec_proxy_equal
 #' @noRd
 #' @keywords internal
@@ -228,7 +261,7 @@ vec_cast.a5_cell.a5_cell <- function(x, to, ...) x
 #' @noRd
 #' @keywords internal
 vec_cast.a5_cell.character <- function(x, to, ...) {
-  cells_from_rs(from_caller(hex_to_raw8_rs(x), call = NULL, type = "cell"))
+  cells_from_hex(x, call = NULL)
 }
 
 #' @export

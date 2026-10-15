@@ -1,7 +1,7 @@
 use extendr_api::prelude::*;
 use rayon::prelude::*;
 
-use crate::cell_raw::{cells_from_fn, CellSlices};
+use crate::cell_raw::{cells_from_fn, par_chunk, CellSlices, PAR_MIN};
 use crate::threading::{get_num_threads, maybe_par};
 
 /// Convert longitude/latitude coordinates to A5 cell indices.
@@ -52,19 +52,19 @@ fn a5_cell_to_lonlat_rs(cells: List, normalise: bool) -> List {
     let mut lat_out = Doubles::new(n);
     {
         let (lon, lat): (&mut [Rfloat], &mut [Rfloat]) = (&mut lon_out, &mut lat_out);
-        if get_num_threads() <= 1 || n < 4096 {
+        if get_num_threads() <= 1 || n < PAR_MIN {
             for i in 0..n {
                 (lon[i], lat[i]) = one(i);
             }
         } else {
-            const CHUNK: usize = 16384;
+            let chunk = par_chunk(n);
             maybe_par(|| {
-                lon.par_chunks_mut(CHUNK)
-                    .zip(lat.par_chunks_mut(CHUNK))
+                lon.par_chunks_mut(chunk)
+                    .zip(lat.par_chunks_mut(chunk))
                     .enumerate()
                     .for_each(|(c, (lo, la))| {
                         for k in 0..lo.len() {
-                            (lo[k], la[k]) = one(c * CHUNK + k);
+                            (lo[k], la[k]) = one(c * chunk + k);
                         }
                     })
             });

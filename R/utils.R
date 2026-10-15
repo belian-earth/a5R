@@ -132,16 +132,24 @@ check_resolution <- function(resolution,
 check_scalar_resolution <- function(resolution,
                                     arg = rlang::caller_arg(resolution),
                                     call = rlang::caller_env()) {
-  force(arg)
-  resolution <- vctrs::vec_cast(resolution, integer(), x_arg = arg, call = call)
-  check_size1(resolution, arg = arg, call = call)
-  if (is.na(resolution)) {
+  # Fast path for the common case, a bare whole number in range: base R
+  # checks cost a fraction of a microsecond, vctrs and rlang several.
+  if (
+    is.numeric(resolution) && length(resolution) == 1L &&
+      is.null(attributes(resolution)) && !is.na(resolution) &&
+      resolution >= 0 && resolution <= 30 && resolution == trunc(resolution)
+  ) {
+    return(as.integer(resolution))
+  }
+  res <- vctrs::vec_cast(resolution, integer(), x_arg = arg, call = call)
+  check_size1(res, arg = arg, call = call)
+  if (is.na(res)) {
     a5_abort("resolution", "{.arg {arg}} must not be `NA`.", call = call)
   }
-  if (resolution < 0L || resolution > 30L) {
-    a5_abort("resolution", "{.arg {arg}} must be between 0 and 30, not {resolution}.", call = call)
+  if (res < 0L || res > 30L) {
+    a5_abort("resolution", "{.arg {arg}} must be between 0 and 30, not {res}.", call = call)
   }
-  resolution
+  res
 }
 
 #' Run a Rust call, re-raising its error from the user's call

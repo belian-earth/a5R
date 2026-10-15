@@ -3,6 +3,7 @@
 S3method("[<-",a5_cell)
 S3method("[[",a5_covering)
 S3method("length<-",a5_cell)
+S3method(Ops,a5_cell)
 S3method(a5_is_valid,a5_cell_list)
 S3method(a5_is_valid,a5_covering)
 S3method(a5_is_valid,default)

@@ -104,22 +104,23 @@ fn a5_get_resolution_rs(cells: List) -> Integers {
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_cell_to_parent_rs(cells: List, parent_resolution: Nullable<i32>) -> extendr_api::Result<List> {
+fn a5_cell_to_parent_rs(cells: List, parent_resolution: Nullable<i32>) -> Robj {
     let pres: Option<i32> = match parent_resolution {
         Nullable::NotNull(v) => Some(v),
         Nullable::Null => None,
     };
 
+    // A cell coarser than the target is an input error. Return that cell's
+    // resolution, as an integer, for R to report: raising it here would make
+    // every call pay for an R-side handler.
     if let Some(p) = pres {
         let cs = CellSlices::from_list(&cells);
         if let Some(r) = (0..cs.len).filter_map(|i| cs.get(i)).map(a5::get_resolution).find(|&r| r < p) {
-            return Err(Error::Other(format!(
-                "`resolution` ({p}) must not be finer than the cell resolution ({r})."
-            )));
+            return r.into();
         }
     }
 
-    Ok(map_cells_to_cells(&cells, |id| a5::cell_to_parent(id, pres).ok()))
+    map_cells_to_cells(&cells, |id| a5::cell_to_parent(id, pres).ok()).into()
 }
 
 /// Get child cells of every input cell.

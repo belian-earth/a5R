@@ -73,10 +73,14 @@ a5_cell_to_parent <- function(cell, resolution = NULL) {
   if (!is.null(resolution)) {
     resolution <- check_scalar_resolution(resolution)
   }
-  cells_from_rs(from_caller(
-    a5_cell_to_parent_rs(cell_data(cell), resolution),
-    call = rlang::current_env(), type = "resolution"
-  ))
+  out <- a5_cell_to_parent_rs(cell_data(cell), resolution)
+  if (is.integer(out)) {
+    a5_abort(
+      "resolution",
+      "{.arg resolution} ({resolution}) must not be finer than the cell resolution ({out})."
+    )
+  }
+  cells_from_rs(out)
 }
 
 #' @rdname a5_hierarchy
