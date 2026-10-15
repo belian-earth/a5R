@@ -143,3 +143,40 @@ test_that("non-Arrow input gets a clear error", {
   na <- structure(list(), class = "nanoarrow_array")
   expect_error(a5_cell_from_arrow(na), "as_arrow_array")
 })
+
+test_that("data frames round-trip through Arrow tables and Parquet", {
+  skip_if_not_installed("arrow")
+  cells <- a5_lonlat_to_cell(c(-3.19, 135, 0), c(55.95, 0, 0), 10)
+  cells[3] <- NA
+  df <- data.frame(cell = cells, value = c(1.5, 2.5, NA), name = c("a", "b", "c"))
+  df$disk <- a5_grid_disk(cells, k = 1)
+  tbl <- a5_to_arrow_table(df)
+  expect_identical(tbl$metadata[["a5:index_version"]], a5_index_version())
+  expect_identical(tbl$schema$cell$type$ToString(), "uint64")
+  back <- a5_from_arrow_table(tbl)
+  expect_identical(back$cell, df$cell)
+  expect_identical(back$disk, df$disk)
+  expect_identical(back$value, df$value)
+  expect_identical(back$name, df$name)
+
+  f <- withr::local_tempfile(fileext = ".parquet")
+  arrow::write_parquet(tbl, f)
+  back2 <- a5_from_arrow_table(arrow::read_parquet(f, as_data_frame = FALSE))
+  expect_identical(back2$cell, df$cell)
+  expect_identical(back2$disk, df$disk)
+
+  # only the named columns become cells
+  plain <- a5_from_arrow_table(tbl, cells = character(), coverings = character())
+  expect_false(is_a5_cell(plain$cell))
+  expect_error(a5_from_arrow_table(tbl, cells = "nope"), class = "a5R_error_argument")
+})
+
+test_that("a table tagged with another index version is refused", {
+  skip_if_not_installed("arrow")
+  tbl <- a5_to_arrow_table(data.frame(cell = a5_lonlat_to_cell(0, 0, 5)))
+  tbl$metadata[["a5:index_version"]] <- "0"
+  expect_error(a5_from_arrow_table(tbl), class = "a5R_error_cell")
+  # untagged tables are read as they are
+  tbl$metadata[["a5:index_version"]] <- NULL
+  expect_true(is_a5_cell(a5_from_arrow_table(tbl)$cell))
+})

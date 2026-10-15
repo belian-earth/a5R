@@ -40,6 +40,7 @@ reference:
   contents:
   - a5_cell_from_arrow
   - a5_covering_from_arrow
+  - a5_to_arrow_table
 - title: Hierarchy
   desc: Navigate the cell hierarchy across resolutions.
   contents:

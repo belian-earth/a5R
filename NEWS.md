@@ -60,6 +60,9 @@
   centres of a covering's cells without building them.
 * New `with_a5_threads()` and `local_a5_threads()` set the thread count for
   a block of code or a function and restore it afterwards.
+* New `a5_to_arrow_table()` and `a5_from_arrow_table()` convert data frames
+  with cell and covering columns to and from Arrow tables, tagging the
+  table with the index version and refusing tables from another index.
 * New `a5_migrate()` converts ids from a5R before 1.0 to the current index.
 * New `as_a5_covering()` builds coverings from cells, cell lists or raw
   64-bit values written by other A5 libraries, sorting and compacting them;

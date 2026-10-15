@@ -135,3 +135,88 @@ a5_covering_to_arrow <- function(x) {
   slots <- a5_covering_to_arrow_rs(x)
   arrow::Array$import_from_c(slots$array, slots$schema)
 }
+
+#' Convert data frames with cell columns to and from Arrow tables
+#'
+#' `a5_to_arrow_table()` converts a data frame to an Arrow `Table`, writing
+#' [a5_cell] columns as `uint64` and [a5_covering] columns as `list<uint64>`
+#' (see [a5_cell_to_arrow()] and [a5_covering_to_arrow()]), and records
+#' [a5_index_version()] in the schema metadata under `"a5:index_version"`.
+#' `a5_from_arrow_table()` reverses it, turning `uint64` columns into cells
+#' and `list<uint64>` columns into coverings.
+#'
+#' Ids stay exact throughout, never passing through doubles or text, so the
+#' pair suits Parquet files and DuckDB queries. A table whose metadata
+#' records a different index version is an error, since its ids would name
+#' other cells; convert such ids with [a5_migrate()].
+#'
+#' @param x For `a5_to_arrow_table()`, a data frame. For
+#'   `a5_from_arrow_table()`, an Arrow `Table`, `RecordBatch`, or anything
+#'   [arrow::as_arrow_table()] accepts, such as a query result.
+#' @param cells,coverings Names of the columns to read as cells and as
+#'   coverings, or `NULL` (the default) for every `uint64` and every
+#'   `list<uint64>` column respectively.
+#' @returns `a5_to_arrow_table()`: an Arrow `Table`. `a5_from_arrow_table()`:
+#'   a data frame.
+#' @seealso [a5_index_version()]
+#' @export
+#' @examplesIf requireNamespace("arrow", quietly = TRUE)
+#' cells <- a5_lonlat_to_cell(c(-3.19, 135), c(55.95, 0), resolution = 10)
+#' df <- data.frame(cell = cells, value = c(1.5, 2.5))
+#' df$disk <- a5_grid_disk(cells, k = 1)
+#' tbl <- a5_to_arrow_table(df)
+#' tbl$schema
+#' back <- a5_from_arrow_table(tbl)
+#' identical(back$cell, df$cell)
+a5_to_arrow_table <- function(x) {
+  rlang::check_installed("arrow", reason = "to convert data frames to Arrow tables")
+  if (!is.data.frame(x)) {
+    a5_abort("argument", "{.arg x} must be a data frame, not {.obj_type_friendly {x}}.")
+  }
+  cols <- lapply(x, function(col) {
+    if (is_a5_cell(col)) {
+      a5_cell_to_arrow(col)
+    } else if (is_a5_covering(col)) {
+      a5_covering_to_arrow(col)
+    } else {
+      arrow::Array$create(col)
+    }
+  })
+  tbl <- do.call(arrow::arrow_table, cols)
+  tbl$metadata[["a5:index_version"]] <- a5_index_version()
+  tbl
+}
+
+#' @rdname a5_to_arrow_table
+#' @export
+a5_from_arrow_table <- function(x, cells = NULL, coverings = NULL) {
+  rlang::check_installed("arrow", reason = "to convert Arrow tables to data frames")
+  tbl <- arrow::as_arrow_table(x)
+  version <- tbl$metadata[["a5:index_version"]]
+  if (!is.null(version) && !identical(version, a5_index_version())) {
+    a5_abort("cell", c(
+      "{.arg x} holds ids from A5 index {version}, not {a5_index_version()}.",
+      "i" = "Convert pre-1.0 ids once with {.fn a5_migrate}."
+    ))
+  }
+  types <- vapply(tbl$schema$fields, function(f) f$type$ToString(), character(1))
+  names(types) <- names(tbl)
+  if (is.null(cells)) cells <- names(types)[types == "uint64"]
+  if (is.null(coverings)) coverings <- names(types)[grepl("^list<.*: uint64>$", types)]
+  missing <- setdiff(c(cells, coverings), names(tbl))
+  if (length(missing)) {
+    a5_abort("argument", "{.arg x} has no column{?s} {.val {missing}}.")
+  }
+  out <- lapply(names(tbl), function(nm) {
+    col <- tbl[[nm]]
+    if (nm %in% cells) {
+      a5_cell_from_arrow(col)
+    } else if (nm %in% coverings) {
+      a5_covering_from_arrow(col)
+    } else {
+      as.vector(col)
+    }
+  })
+  names(out) <- names(tbl)
+  vctrs::new_data_frame(out, n = tbl$num_rows)
+}
