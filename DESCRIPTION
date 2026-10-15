@@ -4,7 +4,11 @@ Version: 0.9.9.9002
 Authors@R: c(
     person("Hugh", "Graham", role = c("aut", "cre"),
            email = "hugh@belian.earth"),
-    person("belian.earth", role = "cph")
+    person("belian.earth", role = "cph"),
+    person("Felix", "Palmer", role = c("ctb", "cph"),
+           comment = "Author of the bundled 'a5' Rust crate"),
+    person("Authors of the dependency Rust crates", role = "cph",
+           comment = "see LICENSE.note")
     )
 Description: Bindings for the "A5 geospatial index"
     <https://a5geo.org/>. 'A5' partitions the Earth's surface into
@@ -40,8 +44,9 @@ Suggests:
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/rextendr/version: 0.5.0
-SystemRequirements: Cargo (Rust's package manager), rustc
+SystemRequirements: Cargo (Rust's package manager), rustc (>= 1.82.0)
 Encoding: UTF-8
+Language: en-GB
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 8.0.0
 Config/roxygen2/version: 8.0.0

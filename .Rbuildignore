@@ -18,8 +18,9 @@
 ^doc$
 ^Meta$
 ^benchmarks$
-^inst/hex/a5Rhex\.R$   
+^inst/hex/a5Rhex\.R$
 ^scratch$
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$
 ^revdep$
+^TODO\.local\.md$

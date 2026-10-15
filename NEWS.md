@@ -178,8 +178,7 @@
   partition, so aggregating fine cells to a coarser grid counts each fine
   cell once, inside the coarse cell it lies in. Subcells are returned as one
   covering per cell. `a5_cell_to_parent()` and `a5_cell_to_children()` are
-  unchanged and now document the difference (requested by
-  belian-production).
+  unchanged and now document the difference.
 
 * Missing values filled in by vctrs are now `NA`, not the world cell (#27).
   Combining with `NA`, subsetting with an `NA` index, assigning `NA`,
@@ -209,7 +208,7 @@
   concatenates the elements into one `a5_cell` vector. Base `unlist()` on a
   plain list of `a5_cell` vectors returns a meaningless raw vector;
   `as_a5_cell_list()` wraps such a list so `unlist()` works.
-* Base R compatibility for `a5_cell` (reported by the ramet project):
+* Base R compatibility for `a5_cell`:
   `match()` and `%in%` are about ten times faster via an exact `mtfrm()`
   method instead of hex conversion; `x[i] <- value` past the end and
   `length(x) <- n` grow the vector with `NA`, so `rbind()` on data frames
