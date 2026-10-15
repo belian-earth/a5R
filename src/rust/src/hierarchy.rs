@@ -273,8 +273,18 @@ fn a5_get_res0_cells_rs() -> List {
 }
 
 /// The supercells at `resolution` of a covering's cells: the coarse cells
-/// containing each cell's centre, as a covering at `resolution`. Walks the
-/// cells without building them.
+/// containing each cell's centre, as a covering at `resolution`.
+///
+/// The subcells of a coarse cell are exactly the fine cells whose supercell it
+/// is, so a coarse cell belongs when its subcells overlap the covering. Rather
+/// than visit every fine cell, this searches the coarse cells: it starts from
+/// the supercell of one fine cell in each stored cell, keeps each candidate
+/// whose subcells overlap the covering's curve ranges, and tries the
+/// neighbours of every kept cell until none is added. The fine cells of a
+/// stored cell form a contiguous stretch of curve, and the supercells of
+/// adjacent fine cells are the same or neighbours, so the search reaches every
+/// supercell. Its cost grows with the number of stored and coarse cells, not
+/// with the number of fine cells.
 fn covering_supercells(values: &[u64], resolution: i32) -> std::result::Result<Vec<u64>, String> {
     let r = a5::covering_resolution(values);
     let stored: Vec<u64> = values.iter().copied().filter(|&c| !a5::is_compaction_marker(c)).collect();
@@ -286,44 +296,62 @@ fn covering_supercells(values: &[u64], resolution: i32) -> std::result::Result<V
             "resolution ({resolution}) must not be finer than the covering's resolution ({r})"
         ));
     }
-    let blocks = stored
-        .iter()
-        .map(|&c| Descendants::new(c, r))
-        .collect::<std::result::Result<Vec<_>, _>>()?;
-    // (block, first k, last k) chunks of at most CHUNK cells, for parallel work
-    const CHUNK: u64 = 1 << 16;
-    let mut chunks: Vec<(usize, u64, u64)> = Vec::new();
-    for (b, d) in blocks.iter().enumerate() {
-        let mut k = 0;
-        while k < d.count() {
-            let end = (k + CHUNK).min(d.count());
-            chunks.push((b, k, end));
-            k = end;
-        }
+    if resolution == r {
+        return cells_to_covering(stored, Some(resolution));
     }
-    let supercells = |&(b, k0, k1): &(usize, u64, u64)| -> std::result::Result<HashSet<u64>, String> {
-        let mut set = HashSet::new();
-        let mut last = u64::MAX;
-        for k in k0..k1 {
-            let sc = a5::cell_to_supercell(blocks[b].nth(k), resolution)?;
-            // neighbouring cells along the curve usually share a supercell
-            if sc != last {
-                set.insert(sc);
-                last = sc;
+
+    // The covering's cells as sorted, disjoint ranges of curve slots
+    let slots = |c: u64| -> std::result::Result<(u64, u64), String> {
+        let first = cell_first_slot(c)?;
+        Ok((first, first + cell_slot_count(c)))
+    };
+    let mut runs = stored.iter().map(|&c| slots(c)).collect::<std::result::Result<Vec<_>, _>>()?;
+    runs.sort_unstable();
+    let overlaps = |(lo, hi): (u64, u64)| -> bool {
+        let i = runs.partition_point(|&(_, end)| end <= lo);
+        i < runs.len() && runs[i].0 < hi
+    };
+    // Does the coarse cell hold the centre of any of the covering's cells?
+    let holds = |coarse: u64| -> std::result::Result<bool, String> {
+        for c in a5::cell_to_subcell(coarse, r)? {
+            if !a5::is_compaction_marker(c) && overlaps(slots(c)?) {
+                return Ok(true);
             }
         }
-        Ok(set)
+        Ok(false)
     };
-    let sets: Vec<std::result::Result<HashSet<u64>, String>> = if get_num_threads() <= 1 {
-        chunks.iter().map(supercells).collect()
-    } else {
-        maybe_par(|| chunks.par_iter().map(supercells).collect())
-    };
-    let mut all = HashSet::new();
-    for s in sets {
-        all.extend(s?);
+
+    let mut seen: HashSet<u64> = HashSet::new();
+    let mut frontier: Vec<u64> = Vec::new();
+    for &c in &stored {
+        let seed = a5::cell_to_supercell(Descendants::new(c, r)?.nth(0), resolution)?;
+        if seen.insert(seed) {
+            frontier.push(seed);
+        }
     }
-    cells_to_covering(all.into_iter().collect(), Some(resolution))
+    let mut found: Vec<u64> = Vec::new();
+    while !frontier.is_empty() {
+        let test = |&p: &u64| holds(p).map(|h| h.then_some(p));
+        let kept: Vec<std::result::Result<Option<u64>, String>> =
+            if get_num_threads() <= 1 || frontier.len() < 8 {
+                frontier.iter().map(test).collect()
+            } else {
+                maybe_par(|| frontier.par_iter().map(test).collect())
+            };
+        let mut next = Vec::new();
+        for k in kept {
+            if let Some(p) = k? {
+                found.push(p);
+                for n in a5::uncompact(&a5::grid_disk_vertex(p, 1)?)? {
+                    if seen.insert(n) {
+                        next.push(n);
+                    }
+                }
+            }
+        }
+        frontier = next;
+    }
+    cells_to_covering(found, Some(resolution))
 }
 
 /// Supercells of every covering.
