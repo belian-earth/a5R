@@ -4,15 +4,19 @@
 \alias{a5_spherical_cap}
 \title{Cells within a great-circle radius}
 \usage{
-a5_spherical_cap(cell, radius)
+a5_spherical_cap(cell, radius, units = "m")
 }
 \arguments{
 \item{cell}{An \link{a5_cell} vector of centre cells.}
 
-\item{radius}{Non-negative numeric scalar, great-circle radius in metres.
-It is measured on the sphere A5 uses internally, so membership can
+\item{radius}{Non-negative numeric scalar, great-circle radius in \code{units},
+or a \link[units:units]{units} object of length. It is measured on the sphere A5 uses internally, so membership can
 differ by a fraction of a percent of \code{radius} from distances given by
 \code{\link[=a5_cell_distance]{a5_cell_distance()}}.}
+
+\item{units}{Character scalar, the length unit of a plain numeric
+\code{radius}: \code{"m"} (the default) or any unit convertible from metres, such
+as \code{"km"}.}
 }
 \value{
 An \link{a5_covering} vector the same length as \code{cell}, at the

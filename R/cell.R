@@ -74,7 +74,8 @@ cells_from_rs <- function(x) {
 cells_from_hex <- function(x, call = rlang::caller_env()) {
   out <- hex_to_raw8_rs(x)
   if (is.integer(out)) {
-    cli::cli_abort(
+    a5_abort(
+      "cell",
       "Element {out} of {.arg x} is not a hex cell id: {.val {x[[out]]}}. Ids are 1 to 16 hex digits, optionally prefixed with 0x.",
       call = call
     )
@@ -103,7 +104,7 @@ as_a5_cell <- function(x) {
     return(x)
   }
   if (is_a5_covering(x)) {
-    cli::cli_abort(c(
+    a5_abort("cell", c(
       "Can't use an {.cls a5_covering} as cells.",
       "i" = "Use {.fn a5_uncompact} to get the cells of a covering."
     ), call = rlang::caller_env())

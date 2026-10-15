@@ -6,12 +6,12 @@
 \alias{a5_uncompact}
 \title{Compact and uncompact sets of cells}
 \usage{
-a5_compact(cells, resolution = NULL)
+a5_compact(cell, resolution = NULL)
 
 a5_uncompact(x, resolution = NULL, simplify = TRUE)
 }
 \arguments{
-\item{cells}{An \link{a5_cell} vector. \code{NA} cells are skipped.}
+\item{cell}{An \link{a5_cell} vector. \code{NA} cells are skipped.}
 
 \item{resolution}{Integer scalar resolution. For \code{a5_compact()}, the
 resolution the covering stands for: by default that of the finest cell,

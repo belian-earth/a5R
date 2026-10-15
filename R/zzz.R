@@ -11,4 +11,8 @@
     a5_set_threads_rs(as.integer(n))
   }
 }
+
+.onAttach <- function(libname, pkgname) {
+  packageStartupMessage(a5_info_line())
+}
 # nocov end

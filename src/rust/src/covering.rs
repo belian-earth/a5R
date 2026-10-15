@@ -2,7 +2,7 @@ use extendr_api::prelude::*;
 use extendr_api::wrapper::Nullable;
 use rayon::prelude::*;
 
-use crate::cell_raw::{collect_ids, map_cells, u64s_to_raw8_list, with_marker, CellSlices};
+use crate::cell_raw::{collect_ids, ids_to_raw8_list, map_cells, with_marker, CellSlices};
 use crate::threading::{get_num_threads, maybe_par};
 use a5::core::serialization::{cell_first_slot, cell_slot_count};
 
@@ -251,24 +251,25 @@ fn covering_cells_robj(
     results: Vec<Option<std::result::Result<Vec<u64>, String>>>,
     simplify: bool,
 ) -> Robj {
-    let unwrap = |r: Option<std::result::Result<Vec<u64>, String>>| -> Vec<Option<u64>> {
+    let unwrap = |r: Option<std::result::Result<Vec<u64>, String>>| -> Vec<u64> {
         match r {
-            Some(Ok(v)) => v.into_iter().map(Some).collect(),
+            Some(Ok(v)) => v,
             Some(Err(e)) => throw_r_error(format!("{} failed: {}", name, e)),
             None => Vec::new(),
         }
     };
     if simplify {
-        let mut flat: Vec<Option<u64>> = Vec::new();
-        for r in results {
-            flat.extend(unwrap(r));
+        let mut results: Vec<Vec<u64>> = results.into_iter().map(unwrap).collect();
+        if results.len() == 1 {
+            return ids_to_raw8_list(&results.pop().unwrap()).into();
         }
-        return u64s_to_raw8_list(flat).into();
+        let flat: Vec<u64> = results.into_iter().flatten().collect();
+        return ids_to_raw8_list(&flat).into();
     }
     let elements: Vec<Robj> = results
         .into_iter()
         .map(|r| {
-            let mut cell: Robj = u64s_to_raw8_list(unwrap(r)).into();
+            let mut cell: Robj = ids_to_raw8_list(&unwrap(r)).into();
             cell.set_class(["a5_cell", "vctrs_rcrd", "vctrs_vctr"])
                 .expect("set class on a5_cell");
             cell

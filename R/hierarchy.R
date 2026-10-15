@@ -75,7 +75,8 @@ a5_cell_to_parent <- function(cell, resolution = NULL) {
   }
   out <- a5_cell_to_parent_rs(cell_data(cell), resolution)
   if (is.integer(out)) {
-    cli::cli_abort(
+    a5_abort(
+      "resolution",
       "{.arg resolution} ({resolution}) must not be finer than the cell resolution ({out})."
     )
   }
@@ -162,7 +163,7 @@ a5_cell_children_range <- function(cell, resolution) {
   cell <- as_a5_cell(cell)
   resolution <- check_scalar_resolution(resolution)
   if (identical(resolution, 30L)) {
-    cli::cli_abort(c(
+    a5_abort("resolution", c(
       "{.arg resolution} must be 29 or less.",
       "x" = "Descendant ids are not contiguous at resolution 30: face bit layouts overlap numerically and some faces cannot be encoded.",
       "i" = "Use {.fn a5_cell_to_children} to enumerate resolution-30 descendants."
@@ -246,4 +247,35 @@ a5_cell_to_subcell <- function(cell, resolution = NULL) {
   cell <- as_a5_cell(cell)
   resolution <- check_optional_resolution(resolution)
   coverings_from_rs(a5_cell_to_subcell_rs(cell_data(cell), resolution))
+}
+
+#' Supercells of a covering
+#'
+#' `a5_covering_to_supercells()` gives, for each covering, the cells at a
+#' coarser `resolution` that contain the centre of at least one of its
+#' cells, such as the partitions of a store that hold an area's data. It
+#' matches `a5_cell_to_supercell(a5_uncompact(x), resolution)` without
+#' duplicates, but never builds the covering's cells.
+#'
+#' @param x An [a5_covering] vector.
+#' @param resolution Integer scalar target resolution, at or coarser than
+#'   each covering's resolution.
+#' @returns An [a5_covering] vector at `resolution`, the same length as `x`.
+#'   `NA` where `x` is `NA`.
+#'
+#' @seealso [a5_cell_to_supercell()]
+#' @export
+#' @examples
+#' area <- a5_polygon_to_cells(
+#'   wk::wkt("POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))"),
+#'   resolution = 14
+#' )
+#' a5_uncompact(a5_covering_to_supercells(area, 6))
+a5_covering_to_supercells <- function(x, resolution) {
+  x <- as_a5_covering(x)
+  resolution <- check_scalar_resolution(resolution)
+  coverings_from_rs(from_caller(
+    a5_covering_to_supercells_rs(x, resolution),
+    call = rlang::current_env(), type = "resolution"
+  ))
 }

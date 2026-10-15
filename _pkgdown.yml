@@ -39,12 +39,14 @@ reference:
   contents:
   - a5_cell_from_arrow
   - a5_covering_from_arrow
+  - a5_to_arrow_table
 - title: Hierarchy
   desc: Navigate the cell hierarchy across resolutions.
   contents:
   - a5_get_resolution
   - a5_hierarchy
   - a5_spatial_hierarchy
+  - a5_covering_to_supercells
   - a5_cell_child
   - a5_cell_children_range
   - a5_get_res0_cells
@@ -74,10 +76,14 @@ reference:
   contents:
   - a5_polygon_to_cells
   - a5_linestring_to_cells
+  - a5_bbox
 - title: Configuration
-  desc: Thread control for parallel processing.
+  desc: Package information, thread control, error classes and the C API.
   contents:
+  - a5_info
   - a5_set_threads
+  - a5_errors
+  - a5_c_api
 - title: wk integration
   desc: Methods for the wk geometry framework.
   contents: wk_methods

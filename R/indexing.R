@@ -49,7 +49,7 @@ a5_lonlat_to_cell <- function(lon, lat, resolution) {
 check_latitude <- function(lat, call = rlang::caller_env()) {
   bad <- which(abs(lat) > 90)
   if (length(bad)) {
-    cli::cli_abort(
+    a5_abort("geometry",
       "{.arg lat} must be between -90 and 90, not {lat[bad[1]]} (element {bad[1]}).",
       call = call
     )

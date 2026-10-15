@@ -10,7 +10,7 @@ NULL
 #' @noRd
 check_size1 <- function(x, arg = rlang::caller_arg(x), call = rlang::caller_env()) {
   if (length(x) != 1L) {
-    cli::cli_abort(
+    a5_abort("argument",
       "{.arg {arg}} must have size 1, not size {length(x)}.",
       call = call
     )
@@ -22,7 +22,7 @@ check_size1 <- function(x, arg = rlang::caller_arg(x), call = rlang::caller_env(
 #' @noRd
 check_flag <- function(x, arg = rlang::caller_arg(x), call = rlang::caller_env()) {
   if (!is.logical(x) || length(x) != 1L || is.na(x)) {
-    cli::cli_abort("{.arg {arg}} must be `TRUE` or `FALSE`.", call = call)
+    a5_abort("argument", "{.arg {arg}} must be `TRUE` or `FALSE`.", call = call)
   }
   invisible(x)
 }
@@ -105,7 +105,7 @@ check_units <- function(units, base, what, call = rlang::caller_env()) {
     !is.null(units) && !identical(units, base) &&
       !units::ud_are_convertible(base, units)
   ) {
-    cli::cli_abort(
+    a5_abort("argument",
       "{.arg units} must be {what} convertible from {base} (or NULL), not {.val {units}}.",
       call = call
     )
@@ -119,7 +119,7 @@ check_resolution <- function(resolution,
                              call = rlang::caller_env()) {
   bad <- !is.na(resolution) & (resolution < min | resolution > max)
   if (any(bad)) {
-    cli::cli_abort(
+    a5_abort("resolution",
       "{.arg resolution} must be between {min} and {max}, not {resolution[which(bad)[1]]}.",
       call = call
     )
@@ -144,10 +144,10 @@ check_scalar_resolution <- function(resolution,
   res <- vctrs::vec_cast(resolution, integer(), x_arg = arg, call = call)
   check_size1(res, arg = arg, call = call)
   if (is.na(res)) {
-    cli::cli_abort("{.arg {arg}} must not be `NA`.", call = call)
+    a5_abort("resolution", "{.arg {arg}} must not be `NA`.", call = call)
   }
   if (res < 0L || res > 30L) {
-    cli::cli_abort("{.arg {arg}} must be between 0 and 30, not {res}.", call = call)
+    a5_abort("resolution", "{.arg {arg}} must be between 0 and 30, not {res}.", call = call)
   }
   res
 }
@@ -155,11 +155,12 @@ check_scalar_resolution <- function(resolution,
 #' Run a Rust call, re-raising its error from the user's call
 #'
 #' Rust errors surface as `Error in a5_xxx_rs(...)`, naming an internal
-#' function. This re-raises them as if from `call`, the exported function.
+#' function. This re-raises them as if from `call`, the exported function,
+#' with class `a5R_error` and, when given, `a5R_error_<type>`.
 #' @noRd
-from_caller <- function(expr, call) {
+from_caller <- function(expr, call, type = NULL) {
   tryCatch(expr, error = function(e) {
     msg <- conditionMessage(e)
-    cli::cli_abort("{msg}", call = call)
+    a5_abort(type, "{msg}", call = call)
   })
 }

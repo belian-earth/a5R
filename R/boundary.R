@@ -101,7 +101,7 @@ check_segments <- function(segments, call = rlang::caller_env()) {
   segments <- vctrs::vec_cast(segments, integer(), call = call)
   check_size1(segments, call = call)
   if (is.na(segments) || segments < 1L) {
-    cli::cli_abort(
+    a5_abort("argument",
       "{.arg segments} must be a positive integer or `NULL`, not {segments}.",
       call = call
     )

@@ -2,23 +2,44 @@
 % Please edit documentation in R/threads.R
 \name{a5_set_threads}
 \alias{a5_set_threads}
+\alias{with.a5_threads}
 \alias{a5_get_threads}
 \title{Set the number of threads used by a5R}
 \usage{
 a5_set_threads(n = 1L)
 
+\method{with}{a5_threads}(data, expr, ...)
+
 a5_get_threads()
 }
 \arguments{
-\item{n}{Integer scalar. Number of threads. Must be >= 1.}
+\item{n}{Integer scalar. Number of threads. Must be >= 1. The value
+returned by an earlier \code{a5_set_threads()} call also works.}
+
+\item{data}{The value of \code{a5_set_threads()}.}
+
+\item{expr}{Code to run with that thread count.}
+
+\item{...}{Unused.}
 }
 \value{
-Invisibly returns the previous thread count.
-
-Integer scalar.
+\code{a5_set_threads()}: the previous thread count, invisibly, as an
+\code{a5_threads} object. \code{with()}: the value of \code{expr}. \code{a5_get_threads()}:
+the current count, an integer scalar.
 }
 \description{
 Controls the number of threads used for parallel processing in vectorised
 functions. Set to 1 (the default) for sequential processing with zero
 overhead, or higher for parallel execution via rayon.
+}
+\details{
+\code{a5_set_threads()} returns the previous thread count, so a change can be
+scoped to a block of code with \code{\link[=with]{with()}}, as \code{mirai::daemons()} is:
+\code{with(a5_set_threads(4), expr)} runs \code{expr} on four threads and then
+restores the previous count, even if \code{expr} fails.
+}
+\examples{
+cells <- a5_lonlat_to_cell(runif(1000, -180, 180), runif(1000, -80, 80), 10)
+b <- with(a5_set_threads(2), a5_cell_to_boundary(cells))
+a5_get_threads()
 }

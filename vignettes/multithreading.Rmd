@@ -48,14 +48,20 @@ options(a5R.threads = 4)
 # Sys.setenv(A5R_NUM_THREADS = 4) 
 ```
 
-`a5_set_threads()` invisibly returns the previous value, making temporary
-changes easy:
+To use more threads for one block of code only, wrap it in `with()`, as
+with `mirai::daemons()`. The previous count is restored afterwards, even if
+the code fails:
 
 ```{r}
-old <- a5_set_threads(4)
-# ... parallel work ...
-a5_set_threads(old)
+cells <- a5_lonlat_to_cell(runif(1e4, -180, 180), runif(1e4, -80, 80), 10)
+boundaries <- with(a5_set_threads(4), {
+  a5_cell_to_boundary(cells)
+})
+a5_get_threads()
 ```
+
+`a5_set_threads()` also returns the previous count, so
+`old <- a5_set_threads(4)` and later `a5_set_threads(old)` work too.
 
 ## What gets parallelised
 

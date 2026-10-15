@@ -90,6 +90,11 @@ a5_cell_to_boundary_wkb_rs <- function(cells, closed_ring, segments) .Call(wrap_
 #' @keywords internal
 a5_cell_to_boundary_xy_rs <- function(cells, closed_ring, segments) .Call(wrap__a5_cell_to_boundary_xy_rs, cells, closed_ring, segments)
 
+#' Version of the bundled a5 crate, read from Cargo.lock at build time.
+#' @noRd
+#' @keywords internal
+a5_crate_version_rs <- function() .Call(wrap__a5_crate_version_rs)
+
 #' Get the area (in square metres) of cells at a given resolution.
 #'
 #' @param resolution Integer vector of resolutions (0--30).
@@ -200,6 +205,11 @@ a5_cell_to_children_rs <- function(cells, child_resolution, simplify) .Call(wrap
 #' @noRd
 #' @keywords internal
 a5_cell_to_supercell_rs <- function(cells, resolution) .Call(wrap__a5_cell_to_supercell_rs, cells, resolution)
+
+#' Supercells of every covering.
+#' @noRd
+#' @keywords internal
+a5_covering_to_supercells_rs <- function(x, resolution) .Call(wrap__a5_covering_to_supercells_rs, x, resolution)
 
 #' Subcells: the finer cells whose centres lie in each cell, as coverings.
 #'
@@ -438,5 +448,11 @@ a5_covering_to_arrow_rs <- function(x) .Call(wrap__a5_covering_to_arrow_rs, x)
 #' @noRd
 #' @keywords internal
 a5_covering_from_arrow_rs <- function(holder) .Call(wrap__a5_covering_from_arrow_rs, holder)
+
+#' Bounding boxes per feature: list(xmin, ymin, xmax, ymax), NA for a
+#' feature with no rings.
+#' @noRd
+#' @keywords internal
+a5_bbox_rs <- function(lon, lat, offsets, part_id, is_outer, part_feature, n_features) .Call(wrap__a5_bbox_rs, lon, lat, offsets, part_id, is_outer, part_feature, n_features)
 
 
