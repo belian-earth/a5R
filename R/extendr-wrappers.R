@@ -438,4 +438,10 @@ a5_covering_to_arrow_rs <- function(x) .Call(wrap__a5_covering_to_arrow_rs, x)
 #' @keywords internal
 a5_covering_from_arrow_rs <- function(holder) .Call(wrap__a5_covering_from_arrow_rs, holder)
 
+#' Bounding boxes per feature: list(xmin, ymin, xmax, ymax), NA for a
+#' feature with no rings.
+#' @noRd
+#' @keywords internal
+a5_bbox_rs <- function(lon, lat, offsets, part_id, is_outer, part_feature, n_features) .Call(wrap__a5_bbox_rs, lon, lat, offsets, part_id, is_outer, part_feature, n_features)
+
 

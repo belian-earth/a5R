@@ -52,6 +52,8 @@
 * a5R exports a C API (`a5R.h`, see `?a5_c_api`) for packages that convert
   between 64-bit ids and `a5_cell` vectors in compiled code, so they need
   not rely on how `a5_cell` stores its data.
+* New `a5_bbox()` gives the longitude/latitude box of polygons as A5 sees
+  them, with great-circle edges that can bow beyond the vertices' latitudes.
 * New `a5_migrate()` converts ids from a5R before 1.0 to the current index.
 * New `as_a5_covering()` builds coverings from cells, cell lists or raw
   64-bit values written by other A5 libraries, sorting and compacting them;

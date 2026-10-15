@@ -14,6 +14,7 @@ mod traversal;
 mod regions;
 mod covering;
 mod arrow_ffi;
+mod bbox;
 
 extendr_module! {
     mod a5R;
@@ -28,4 +29,5 @@ extendr_module! {
     use regions;
     use covering;
     use arrow_ffi;
+    use bbox;
 }
