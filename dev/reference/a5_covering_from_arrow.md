@@ -1,4 +1,4 @@
-# Convert between a5_covering and Arrow list arrays
+# Convert between a5_covering and Arrow `list<uint64>` arrays
 
 Losslessly convert
 [a5_covering](https://belian-earth.github.io/a5R/dev/reference/a5_covering.md)

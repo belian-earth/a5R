@@ -186,3 +186,9 @@ Authors:
 Other contributors:
 
 - belian.earth \[copyright holder\]
+
+- Felix Palmer (Author of the bundled 'a5' Rust crate) \[contributor,
+  copyright holder\]
+
+- Authors of the dependency Rust crates (see LICENSE.note) \[copyright
+  holder\]

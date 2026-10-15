@@ -312,8 +312,7 @@
   [`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)
   and
   [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)
-  are unchanged and now document the difference (requested by
-  belian-production).
+  are unchanged and now document the difference.
 
 - Missing values filled in by vctrs are now `NA`, not the world cell
   ([\#27](https://github.com/belian-earth/a5R/issues/27)). Combining
@@ -359,7 +358,7 @@
   wraps such a list so [`unlist()`](https://rdrr.io/r/base/unlist.html)
   works.
 
-- Base R compatibility for `a5_cell` (reported by the ramet project):
+- Base R compatibility for `a5_cell`:
   [`match()`](https://rdrr.io/r/base/match.html) and `%in%` are about
   ten times faster via an exact
   [`mtfrm()`](https://rdrr.io/r/base/mtfrm.html) method instead of hex

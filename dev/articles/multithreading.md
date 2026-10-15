@@ -103,7 +103,7 @@ outweigh the benefit. As a rule of thumb:
 - **1,000–10,000**: 2-4 threads helps for heavy ops (boundary, indexing)
 - **\> 10,000**: use as many threads as you have cores
 
-Here’s a quick comparison on 100k cells:
+Here is a quick comparison on about 700,000 cells:
 
 ``` r
 

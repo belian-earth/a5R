@@ -6,6 +6,12 @@
 
 - **belian.earth**. Copyright holder.
 
+- **Felix Palmer**. Contributor, copyright holder.  
+  Author of the bundled 'a5' Rust crate
+
+- **Authors of the dependency Rust crates**. Copyright holder.  
+  see LICENSE.note
+
 ## Citation
 
 Source:

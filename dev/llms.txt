@@ -160,7 +160,7 @@ Lossless conversion to and from Arrow arrays.
   [`a5_covering_to_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_from_arrow.md)
   :
 
-  Convert between a5_covering and Arrow list arrays
+  Convert between a5_covering and Arrow `list<uint64>` arrays
 
 - [`a5_to_arrow_table()`](https://belian-earth.github.io/a5R/dev/reference/a5_to_arrow_table.md)
   [`a5_from_arrow_table()`](https://belian-earth.github.io/a5R/dev/reference/a5_to_arrow_table.md)
