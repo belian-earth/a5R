@@ -23,9 +23,10 @@
 #'     single outer ring.
 #' @param resolution Integer scalar target resolution (0-30).
 #' @param containment Character scalar selecting which cells to include.
-#'   `"centre"` (the default) includes a cell when its centre lies inside
-#'   the polygon. `"overlapping"` additionally includes every cell that
-#'   overlaps the polygon boundary, so the result fully covers the polygon.
+#'   `"centre"` (the default; `"center"` also works) includes a cell when its
+#'   centre lies inside the polygon. `"overlapping"` additionally includes
+#'   every cell that overlaps the polygon boundary, so the result fully
+#'   covers the polygon.
 #'   The overlapping set is a superset of the centre set.
 #'
 #' @returns An [a5_covering] vector with one element per feature (one for
@@ -102,6 +103,7 @@
 a5_polygon_to_cells <- function(x, resolution,
                                 containment = c("centre", "overlapping")) {
   resolution <- check_scalar_resolution(resolution)
+  if (identical(containment, "center")) containment <- "centre"
   containment <- arg_match_default(containment, c("centre", "overlapping"))
 
   if (inherits(x, "wk_rct")) {

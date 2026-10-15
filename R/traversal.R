@@ -39,10 +39,13 @@ a5_grid_disk <- function(cell, k, vertex = FALSE) {
 #' great-circle distance of its centre, as an [a5_covering].
 #'
 #' @param cell An [a5_cell] vector of centre cells.
-#' @param radius Non-negative numeric scalar, great-circle radius in metres.
-#'   It is measured on the sphere A5 uses internally, so membership can
+#' @param radius Non-negative numeric scalar, great-circle radius in `units`,
+#'   or a [units][units::units] object of length. It is measured on the sphere A5 uses internally, so membership can
 #'   differ by a fraction of a percent of `radius` from distances given by
 #'   [a5_cell_distance()].
+#' @param units Character scalar, the length unit of a plain numeric
+#'   `radius`: `"m"` (the default) or any unit convertible from metres, such
+#'   as `"km"`.
 #' @returns An [a5_covering] vector the same length as `cell`, at the
 #'   resolution of each centre cell. `NA` where `cell` is `NA`. Use
 #'   [a5_uncompact()] for the cells.
@@ -54,9 +57,17 @@ a5_grid_disk <- function(cell, k, vertex = FALSE) {
 #' cap <- a5_spherical_cap(cell, radius = 1000)
 #' cap
 #' a5_uncompact(cap)
-a5_spherical_cap <- function(cell, radius) {
+a5_spherical_cap <- function(cell, radius, units = "m") {
   cell <- as_a5_cell(cell)
-  radius <- vctrs::vec_cast(radius, double())
+  if (inherits(radius, "units")) {
+    radius <- as.numeric(units::set_units(radius, "m", mode = "standard"))
+  } else {
+    check_units(units, "m", "a length unit")
+    radius <- vctrs::vec_cast(radius, double())
+    if (!is.null(units) && !identical(units, "m")) {
+      radius <- as.numeric(units::set_units(units::set_units(radius, units, mode = "standard"), "m", mode = "standard"))
+    }
+  }
   check_size1(radius)
   if (!is.finite(radius) || radius < 0) {
     a5_abort("argument", "{.arg radius} must be a finite, non-negative number, not {radius}.")

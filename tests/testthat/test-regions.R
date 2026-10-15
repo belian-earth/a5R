@@ -709,10 +709,6 @@ test_that("containment rejects invalid values", {
     "containment"
   )
   expect_error(
-    a5_polygon_to_cells(poly, 10, containment = "center"),
-    "centre"
-  )
-  expect_error(
     a5_polygon_to_cells(poly, 10, containment = 1),
     "containment"
   )
@@ -790,5 +786,13 @@ test_that("coordinates outside the lon/lat range are rejected", {
   expect_error(
     a5_linestring_to_cells(wk::wkt("LINESTRING (0 0, 400 0)"), 4),
     "outside the longitude/latitude range"
+  )
+})
+
+test_that("containment accepts center as well as centre", {
+  poly <- wk::wkt("POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))")
+  expect_identical(
+    a5_polygon_to_cells(poly, 8, containment = "center"),
+    a5_polygon_to_cells(poly, 8, containment = "centre")
   )
 })

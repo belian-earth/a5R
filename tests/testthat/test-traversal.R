@@ -71,3 +71,11 @@ test_that("k and radius are validated", {
   }
   expect_no_error(a5_spherical_cap(cell, 0))
 })
+
+test_that("a5_spherical_cap takes radius units", {
+  cell <- a5_lonlat_to_cell(0, 0, 8)
+  m <- a5_spherical_cap(cell, 5000)
+  expect_identical(a5_spherical_cap(cell, 5, units = "km"), m)
+  expect_identical(a5_spherical_cap(cell, units::set_units(5, "km")), m)
+  expect_error(a5_spherical_cap(cell, 5, units = "kg"), "length unit")
+})

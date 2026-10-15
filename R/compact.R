@@ -10,7 +10,7 @@
 #' Both work on the index hierarchy (see [a5_hierarchy]), so the coverage they
 #' preserve is the set of index descendants, not a geometric area.
 #'
-#' @param cells An [a5_cell] vector. `NA` cells are skipped.
+#' @param cell An [a5_cell] vector. `NA` cells are skipped.
 #' @param x An [a5_covering] vector, or an [a5_cell] vector treated as one
 #'   covering (see `as_a5_covering()`).
 #' @param resolution Integer scalar resolution. For `a5_compact()`, the
@@ -53,10 +53,10 @@ NULL
 
 #' @rdname a5_compaction
 #' @export
-a5_compact <- function(cells, resolution = NULL) {
-  cells <- as_a5_cell(cells)
+a5_compact <- function(cell, resolution = NULL) {
+  cell <- as_a5_cell(cell)
   resolution <- check_optional_resolution(resolution)
-  coverings_from_rs(from_caller(a5_compact_rs(cell_data(cells), resolution), call = rlang::current_env()))
+  coverings_from_rs(from_caller(a5_compact_rs(cell_data(cell), resolution), call = rlang::current_env()))
 }
 
 #' @rdname a5_compaction

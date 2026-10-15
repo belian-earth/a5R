@@ -40,9 +40,14 @@
 * `a5_is_valid()` now checks the index encoding. It used to return `TRUE`
   for any non-missing `a5_cell` and for any hex string that parsed, whether
   or not the value was a cell; hex strings must now also be 16 digits.
+* `a5_compact()`'s first argument is now `cell`, as in other functions that
+  take cells, rather than `cells`.
 
 ## New features
 
+* `a5_polygon_to_cells()` accepts `containment = "center"` as well as
+  `"centre"`, and `a5_spherical_cap()` gains `units`, taking the radius in
+  any length unit or as a `units` object.
 * Errors have class `a5R_error` and a subclass naming what went wrong, such
   as `a5R_error_resolution` or `a5R_error_geometry`, so code can handle them
   without matching messages. See `?a5_errors`.

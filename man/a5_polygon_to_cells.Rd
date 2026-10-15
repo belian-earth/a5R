@@ -22,9 +22,10 @@ single outer ring.
 \item{resolution}{Integer scalar target resolution (0-30).}
 
 \item{containment}{Character scalar selecting which cells to include.
-\code{"centre"} (the default) includes a cell when its centre lies inside
-the polygon. \code{"overlapping"} additionally includes every cell that
-overlaps the polygon boundary, so the result fully covers the polygon.
+\code{"centre"} (the default; \code{"center"} also works) includes a cell when its
+centre lies inside the polygon. \code{"overlapping"} additionally includes
+every cell that overlaps the polygon boundary, so the result fully
+covers the polygon.
 The overlapping set is a superset of the centre set.}
 }
 \value{
