@@ -36,3 +36,24 @@ test_that("results are identical with 1 vs 2 threads", {
     expect_identical(res_1, res_2)
     expect_identical(valid_1, valid_2)
 })
+
+test_that("a5_set_threads rejects invalid counts and keeps the old one", {
+  old <- a5_set_threads(1L)
+  on.exit(a5_set_threads(old))
+  expect_error(a5_set_threads(-1), "positive integer")
+  expect_error(a5_set_threads(0), "positive integer")
+  expect_error(a5_set_threads(NA), "positive integer")
+  expect_identical(a5_get_threads(), 1L)
+})
+
+test_that("a Rust panic in a parallel call does not break later calls", {
+  old <- a5_set_threads(2L)
+  on.exit(a5_set_threads(old))
+  # the world cell panicked inside the a5 crate (1.0.0-beta.3); whatever it
+  # does now, later parallel calls and a5_set_threads() must still work
+  try(a5_grid_disk(a5_cell("0000000000000000"), 1), silent = TRUE)
+  cell <- a5_lonlat_to_cell(0, 0, 5)
+  expect_length(a5_cell_to_children(cell, 7), 16L)
+  expect_identical(a5_set_threads(1L), 2L)
+  expect_length(a5_cell_to_children(cell, 7), 16L)
+})

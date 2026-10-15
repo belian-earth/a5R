@@ -165,3 +165,17 @@ test_that("a5_covering_stored keeps coverings apart with simplify = FALSE", {
     vctrs::vec_c(out[[1]], out[[2]])
   )
 })
+
+test_that("NULL elements are missing coverings", {
+  expect_identical(is.na(as_a5_covering(list(NULL))), TRUE)
+  expect_identical(is.na(as_a5_covering(list(NULL, NULL))), c(TRUE, TRUE))
+  cell <- a5_lonlat_to_cell(0, 0, 5)
+  expect_identical(is.na(as_a5_covering(list(NULL, cell))), c(TRUE, FALSE))
+  expect_identical(is.na(as_a5_covering(list(NULL, raw(0)))), c(TRUE, FALSE))
+})
+
+test_that("an all-null Arrow covering column reads back as NA", {
+  skip_if_not_installed("arrow")
+  arr <- a5_covering_to_arrow(as_a5_covering(list(NULL, NULL)))
+  expect_identical(is.na(a5_covering_from_arrow(arr)), c(TRUE, TRUE))
+})

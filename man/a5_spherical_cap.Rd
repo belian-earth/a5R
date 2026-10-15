@@ -9,7 +9,10 @@ a5_spherical_cap(cell, radius)
 \arguments{
 \item{cell}{An \link{a5_cell} vector of centre cells.}
 
-\item{radius}{Numeric scalar, great-circle radius in metres.}
+\item{radius}{Non-negative numeric scalar, great-circle radius in metres.
+It is measured on the sphere A5 uses internally, so membership can
+differ by a fraction of a percent of \code{radius} from distances given by
+\code{\link[=a5_cell_distance]{a5_cell_distance()}}.}
 }
 \value{
 An \link{a5_covering} vector the same length as \code{cell}, at the

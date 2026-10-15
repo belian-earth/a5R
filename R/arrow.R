@@ -29,6 +29,7 @@
 #' identical(format(cell), format(back))
 a5_cell_from_arrow <- function(x) {
   rlang::check_installed("arrow", reason = "to convert Arrow arrays to a5_cell")
+  check_arrow_array(x)
 
   type_str <- x$type$ToString()
   if (!identical(type_str, "uint64")) {
@@ -54,6 +55,21 @@ a5_cell_to_arrow <- function(x) {
 
   slots <- a5_cell_to_arrow_rs(cell_data(x))
   arrow::Array$import_from_c(slots$array, slots$schema)
+}
+
+#' Error unless `x` is an arrow `Array` or `ChunkedArray`
+#' @noRd
+check_arrow_array <- function(x, call = rlang::caller_env()) {
+  if (!inherits(x, c("Array", "ChunkedArray"))) {
+    cli::cli_abort(
+      c(
+        "{.arg x} must be an Arrow {.cls Array} or {.cls ChunkedArray}, not {.obj_type_friendly {x}}.",
+        i = if (inherits(x, "nanoarrow_array")) "Convert it with {.fn arrow::as_arrow_array}."
+      ),
+      call = call
+    )
+  }
+  invisible(x)
 }
 
 #' Export every chunk of an Arrow array into Rust-owned C data interface
@@ -98,6 +114,7 @@ arrow_slots <- function(x) {
 #' identical(a5_covering_from_arrow(arr), disks)
 a5_covering_from_arrow <- function(x) {
   rlang::check_installed("arrow", reason = "to convert Arrow arrays to a5_covering")
+  check_arrow_array(x)
   type <- x$type
   if (!inherits(type, "ListType") || !identical(type$value_type$ToString(), "uint64")) {
     cli::cli_abort(c(

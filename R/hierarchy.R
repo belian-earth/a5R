@@ -70,9 +70,7 @@ NULL
 a5_cell_to_parent <- function(cell, resolution = NULL) {
   cell <- as_a5_cell(cell)
   if (!is.null(resolution)) {
-    resolution <- vctrs::vec_cast(resolution, integer())
-    check_resolution(resolution)
-    check_size1(resolution)
+    resolution <- check_scalar_resolution(resolution)
   }
   cells_from_rs(a5_cell_to_parent_rs(cell_data(cell), resolution))
 }
@@ -82,9 +80,7 @@ a5_cell_to_parent <- function(cell, resolution = NULL) {
 a5_cell_to_children <- function(cell, resolution = NULL, simplify = TRUE) {
   cell <- as_a5_cell(cell)
   if (!is.null(resolution)) {
-    resolution <- vctrs::vec_cast(resolution, integer())
-    check_resolution(resolution)
-    check_size1(resolution)
+    resolution <- check_scalar_resolution(resolution)
   }
   check_flag(simplify)
   one_to_many(a5_cell_to_children_rs(cell_data(cell), resolution, simplify), simplify)
@@ -114,9 +110,7 @@ a5_cell_to_children <- function(cell, resolution = NULL, simplify = TRUE) {
 #' identical(a5_cell_child(cell, 7, 1:16), a5_cell_to_children(cell, 7))
 a5_cell_child <- function(cell, resolution, i) {
   cell <- as_a5_cell(cell)
-  resolution <- vctrs::vec_cast(resolution, integer())
-  check_resolution(resolution)
-  check_size1(resolution)
+  resolution <- check_scalar_resolution(resolution)
   args <- vctrs::vec_recycle_common(cell = cell, i = vctrs::vec_cast(i, integer()))
   cells_from_rs(a5_cell_child_rs(cell_data(args$cell), resolution, args$i))
 }
@@ -159,9 +153,7 @@ a5_cell_child <- function(cell, resolution, i) {
 #' identical(rng$hi, children[length(children)])
 a5_cell_children_range <- function(cell, resolution) {
   cell <- as_a5_cell(cell)
-  resolution <- vctrs::vec_cast(resolution, integer())
-  check_resolution(resolution)
-  check_size1(resolution)
+  resolution <- check_scalar_resolution(resolution)
   if (identical(resolution, 30L)) {
     cli::cli_abort(c(
       "{.arg resolution} must be 29 or less.",

@@ -33,9 +33,9 @@
 #' resolution.
 #'
 #' @param x For `as_a5_covering()`: an [a5_cell] vector (one covering), an
-#'   [a5_cell_list] (one covering per element), or a list of raw vectors of
-#'   little-endian 64-bit values, as stored by other A5 libraries (`NULL`
-#'   elements are missing). For `a5_covering_resolution()` and
+#'   [a5_cell_list] (one covering per element), or a list of [a5_cell]
+#'   vectors or of raw vectors of little-endian 64-bit values, as stored by
+#'   other A5 libraries. `NULL` list elements are missing coverings. For `a5_covering_resolution()` and
 #'   `is_a5_covering()`: any object.
 #' @param resolution Integer scalar resolution the coverings stand for, or
 #'   `NULL` (the default) for the resolution of each input's finest cell. No
@@ -89,8 +89,13 @@ as_a5_covering.a5_cell_list <- function(x, resolution = NULL, ...) {
 #' @rdname a5_covering
 #' @export
 as_a5_covering.list <- function(x, resolution = NULL, ...) {
-  if (length(x) > 0L && all(vapply(x, function(el) is.null(el) || is_a5_cell(el), logical(1)))) {
-    return(as_a5_covering(as_a5_cell_list(x), resolution = resolution))
+  is_null <- vapply(x, is.null, logical(1))
+  is_cell <- vapply(x, is_a5_cell, logical(1))
+  # all-NULL input takes the raw path below, where NULL is missing
+  if (any(is_cell) && all(is_null | is_cell)) {
+    out <- as_a5_covering(as_a5_cell_list(x), resolution = resolution)
+    out[is_null] <- NA
+    return(out)
   }
   is_raw <- vapply(x, function(el) is.null(el) || is.raw(el), logical(1))
   if (!all(is_raw)) {
@@ -179,10 +184,7 @@ check_optional_resolution <- function(resolution, call = rlang::caller_env()) {
   if (is.null(resolution)) {
     return(NULL)
   }
-  resolution <- vctrs::vec_cast(resolution, integer(), call = call)
-  check_resolution(resolution, call = call)
-  check_size1(resolution, call = call)
-  resolution
+  check_scalar_resolution(resolution, call = call)
 }
 
 # --- methods ------------------------------------------------------------------

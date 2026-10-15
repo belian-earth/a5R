@@ -61,3 +61,13 @@ test_that("traversal gives an NA covering for an NA cell", {
   expect_identical(is.na(a5_spherical_cap(x, radius = 100)), c(FALSE, TRUE))
   expect_identical(lengths(a5_uncompact(a5_grid_disk(x, k = 1), simplify = FALSE))[2], 0L)
 })
+
+test_that("k and radius are validated", {
+  cell <- a5_lonlat_to_cell(0, 0, 5)
+  expect_error(a5_grid_disk(cell, -1), "non-negative")
+  expect_error(a5_grid_disk(cell, NA), "non-negative")
+  for (r in c(-1, NaN, Inf, NA)) {
+    expect_error(a5_spherical_cap(cell, r), "finite, non-negative")
+  }
+  expect_no_error(a5_spherical_cap(cell, 0))
+})

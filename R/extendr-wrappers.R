@@ -16,13 +16,20 @@ a5_get_threads_rs <- function() .Call(wrap__a5_get_threads_rs)
 #' @keywords internal
 cells_is_na_rs <- function(cells) .Call(wrap__cells_is_na_rs, cells)
 
+#' Comparison proxy: the high and low 32 bits of each id as doubles (exact),
+#' `NA` for `NA` cells. Returns list(hi = double(), lo = double()).
+#' @noRd
+#' @keywords internal
+cells_proxy_rs <- function(cells) .Call(wrap__cells_proxy_rs, cells)
+
 #' Convert cell raw bytes to hex strings (zero-padded to 16 chars).
 #' @noRd
 #' @keywords internal
 raw8_to_hex_rs <- function(cells) .Call(wrap__raw8_to_hex_rs, cells)
 
 #' Convert hex strings to cell raw bytes.
-#' Returns list(b1 = raw(), ..., b8 = raw()).
+#' Returns list(b1 = raw(), ..., b8 = raw()); errors on the first string
+#' that is not a hex id.
 #' @noRd
 #' @keywords internal
 hex_to_raw8_rs <- function(cells) .Call(wrap__hex_to_raw8_rs, cells)

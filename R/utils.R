@@ -127,6 +127,23 @@ check_resolution <- function(resolution,
   invisible(resolution)
 }
 
+#' Cast and validate a scalar, non-missing resolution
+#' @noRd
+check_scalar_resolution <- function(resolution,
+                                    arg = rlang::caller_arg(resolution),
+                                    call = rlang::caller_env()) {
+  force(arg)
+  resolution <- vctrs::vec_cast(resolution, integer(), x_arg = arg, call = call)
+  check_size1(resolution, arg = arg, call = call)
+  if (is.na(resolution)) {
+    cli::cli_abort("{.arg {arg}} must not be `NA`.", call = call)
+  }
+  if (resolution < 0L || resolution > 30L) {
+    cli::cli_abort("{.arg {arg}} must be between 0 and 30, not {resolution}.", call = call)
+  }
+  resolution
+}
+
 #' Run a Rust call, re-raising its error from the user's call
 #'
 #' Rust errors surface as `Error in a5_xxx_rs(...)`, naming an internal

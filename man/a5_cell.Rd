@@ -27,9 +27,11 @@ little-endian bytes of the u64 cell ID. This avoids the precision
 loss of floating-point storage and keeps memory compact.
 }
 \details{
-\code{a5_cell()} accepts any 16-digit hex string without checking that it
-encodes an A5 cell, so an \code{a5_cell} vector can hold values that are not
-cells. Check ids from outside sources, such as a file or a database, with
+Ids are hex strings of up to 16 digits, optionally prefixed with \verb{0x}.
+Shorter ids, as some A5 libraries write them, are padded with leading
+zeros, and a string that is not a hex id is an error. \code{a5_cell()} does not
+check that an id encodes an A5 cell, so an \code{a5_cell} vector can hold
+values that are not cells. Check ids from outside sources, such as a file or a database, with
 \code{\link[=a5_is_valid_cell]{a5_is_valid_cell()}}.
 }
 \examples{

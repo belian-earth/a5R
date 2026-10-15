@@ -1,3 +1,6 @@
+// The crate is named after the R package.
+#![allow(non_snake_case)]
+
 use extendr_api::prelude::*;
 
 mod threading;

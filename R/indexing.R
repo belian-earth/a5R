@@ -6,7 +6,8 @@
 #' resolution returns the cell.
 #'
 #' @param lon Numeric vector of longitudes in degrees.
-#' @param lat Numeric vector of latitudes in degrees.
+#' @param lat Numeric vector of latitudes in degrees, between -90 and 90.
+#'   Non-finite coordinates (`NA`, `NaN`, `Inf`) give `NA` cells.
 #' @param resolution Integer scalar or vector of resolutions (0--30),
 #'   recycled against `lon` and `lat`.
 #' @param cell An [a5_cell] vector (or character coercible to one).
@@ -38,7 +39,22 @@ NULL
 a5_lonlat_to_cell <- function(lon, lat, resolution) {
   args <- recycle_lonlat_resolution(lon, lat, resolution)
   check_resolution(args$resolution)
+  check_latitude(args$lat)
   cells_from_rs(a5_lonlat_to_cell_rs(args$lon, args$lat, args$resolution))
+}
+
+#' Error on latitudes outside \[-90, 90\], which the A5 projection would
+#' otherwise wrap onto plausible but wrong cells (swapped columns, say)
+#' @noRd
+check_latitude <- function(lat, call = rlang::caller_env()) {
+  bad <- which(abs(lat) > 90)
+  if (length(bad)) {
+    cli::cli_abort(
+      "{.arg lat} must be between -90 and 90, not {lat[bad[1]]} (element {bad[1]}).",
+      call = call
+    )
+  }
+  invisible(lat)
 }
 
 #' Cast and recycle lon/lat/resolution for the Rust entry point

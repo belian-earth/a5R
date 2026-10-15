@@ -64,21 +64,20 @@ a5_cell_edge_length_avg <- function(resolution, units = "m") {
 #' @rdname a5_resolution_stats
 #' @export
 a5_get_num_cells <- function(resolution) {
-  resolution <- vctrs::vec_cast(resolution, integer())
-  check_resolution(resolution)
-  check_size1(resolution)
+  resolution <- check_scalar_resolution(resolution)
   a5_get_num_cells_rs(resolution)
 }
 
 #' @rdname a5_resolution_stats
 #' @export
 a5_get_num_children <- function(parent_resolution, child_resolution) {
-  parent_resolution <- vctrs::vec_cast(parent_resolution, integer())
-  child_resolution <- vctrs::vec_cast(child_resolution, integer())
-  check_resolution(parent_resolution)
-  check_resolution(child_resolution)
-  check_size1(parent_resolution)
-  check_size1(child_resolution)
+  parent_resolution <- check_scalar_resolution(parent_resolution)
+  child_resolution <- check_scalar_resolution(child_resolution)
+  if (child_resolution < parent_resolution) {
+    cli::cli_abort(
+      "{.arg child_resolution} ({child_resolution}) must not be coarser than {.arg parent_resolution} ({parent_resolution})."
+    )
+  }
   a5_get_num_children_rs(parent_resolution, child_resolution)
 }
 

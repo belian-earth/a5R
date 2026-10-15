@@ -74,3 +74,18 @@ test_that("cell_to_lonlat rejects the removed `normalise` argument", {
     "unused argument"
   )
 })
+
+test_that("non-finite coordinates give NA cells", {
+  for (threads in c(1L, 2L)) {
+    old <- a5_set_threads(threads)
+    out <- a5_lonlat_to_cell(c(NaN, Inf, 0, -Inf, NA, 0), c(50, 50, NaN, 0, 0, 0), 12)
+    a5_set_threads(old)
+    expect_identical(is.na(out), c(TRUE, TRUE, TRUE, TRUE, TRUE, FALSE))
+  }
+})
+
+test_that("latitudes outside [-90, 90] are an error", {
+  expect_error(a5_lonlat_to_cell(0, 91, 12), "between -90 and 90")
+  expect_error(a5_lonlat_to_cell(c(0, 10), c(0, -135), 12), "element 2")
+  expect_no_error(a5_lonlat_to_cell(c(0, 0, 200), c(90, -90, NA), 12))
+})

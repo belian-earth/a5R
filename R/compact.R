@@ -71,8 +71,9 @@ a5_uncompact <- function(x, resolution = NULL, simplify = TRUE) {
   total <- if (is.null(resolution)) {
     sum(s$count, na.rm = TRUE)
   } else {
-    # 4 children per step except 5 from resolution 0: close enough for a guard
-    sum(s$count * 4^pmax(resolution - s$resolution, 0L), na.rm = TRUE)
+    # 5 children from resolution 0 to 1, then 4 per step
+    d <- pmax(resolution - s$resolution, 0L)
+    sum(s$count * 4^d * ifelse(s$resolution == 0L & d > 0L, 5 / 4, 1), na.rm = TRUE)
   }
   if (total > .Machine$integer.max) {
     cli::cli_abort(c(

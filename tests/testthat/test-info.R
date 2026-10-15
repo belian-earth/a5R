@@ -9,8 +9,9 @@ test_that("get_num_children same resolution returns 1", {
   expect_equal(a5_get_num_children(5, 5), 1)
 })
 
-test_that("get_num_children child < parent returns 0", {
-  expect_equal(a5_get_num_children(8, 5), 0)
+test_that("get_num_children errors when child is coarser than parent", {
+  expect_error(a5_get_num_children(8, 5), "must not be coarser")
+  expect_error(a5_get_num_children(NA, 5), "must not be `NA`")
 })
 
 test_that("get_num_children from resolution 0", {

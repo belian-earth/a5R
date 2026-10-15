@@ -27,9 +27,9 @@ a5_covering_resolution(x)
 }
 \arguments{
 \item{x}{For \code{as_a5_covering()}: an \link{a5_cell} vector (one covering), an
-\link{a5_cell_list} (one covering per element), or a list of raw vectors of
-little-endian 64-bit values, as stored by other A5 libraries (\code{NULL}
-elements are missing). For \code{a5_covering_resolution()} and
+\link{a5_cell_list} (one covering per element), or a list of \link{a5_cell}
+vectors or of raw vectors of little-endian 64-bit values, as stored by
+other A5 libraries. \code{NULL} list elements are missing coverings. For \code{a5_covering_resolution()} and
 \code{is_a5_covering()}: any object.}
 
 \item{...}{Unused.}

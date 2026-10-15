@@ -22,7 +22,7 @@ fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Lis
                 let lo = lon[i];
                 let la = lat[i];
                 let res = resolution[i];
-                if lo.is_na() || la.is_na() || res.is_na() {
+                if !lo.0.is_finite() || !la.0.is_finite() || res.is_na() {
                     None
                 } else {
                     let lonlat = a5::LonLat::new(lo.0, la.0);
@@ -37,7 +37,7 @@ fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Lis
                 let lo = lon[i];
                 let la = lat[i];
                 let res = resolution[i];
-                if lo.is_na() || la.is_na() || res.is_na() {
+                if !lo.0.is_finite() || !la.0.is_finite() || res.is_na() {
                     (0.0, 0.0, 0, true)
                 } else {
                     (lo.0, la.0, res.0, false)

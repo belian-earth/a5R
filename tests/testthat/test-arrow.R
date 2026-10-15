@@ -135,3 +135,12 @@ test_that("exported arrays outlive the cells they came from", {
   gc()
   expect_identical(format(a5_cell_from_arrow(arr)), expected)
 })
+
+test_that("non-Arrow input gets a clear error", {
+  skip_if_not_installed("arrow")
+  expect_error(a5_cell_from_arrow(1:3), "Arrow <Array> or <ChunkedArray>")
+  expect_error(a5_covering_from_arrow(list()), "Arrow <Array> or <ChunkedArray>")
+  skip_if_not_installed("nanoarrow")
+  na <- nanoarrow::as_nanoarrow_array(1:3)
+  expect_error(a5_cell_from_arrow(na), "as_arrow_array")
+})

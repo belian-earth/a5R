@@ -112,12 +112,6 @@ pub(crate) fn raw8_planes_to_list(bufs: [Vec<u8>; 8]) -> List {
     )
 }
 
-/// Extract a single u64 from a List (for scalar cell functions).
-pub(crate) fn scalar_cell_from_list(list: &List) -> Option<u64> {
-    let cs = CellSlices::from_list(list);
-    cs.get(0)
-}
-
 // --- Vectorised mappers ---
 
 /// Apply a fallible function to each cell, parallelising when threads > 1.
@@ -279,31 +273,74 @@ fn cells_is_na_rs(cells: List) -> Robj {
     Robj::from(na)
 }
 
-/// Convert hex strings to cell raw bytes.
-/// Returns list(b1 = raw(), ..., b8 = raw()).
+/// Comparison proxy: the high and low 32 bits of each id as doubles (exact),
+/// `NA` for `NA` cells. Returns list(hi = double(), lo = double()).
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn hex_to_raw8_rs(cells: Strings) -> List {
+fn cells_proxy_rs(cells: List) -> List {
+    let cs = CellSlices::from_list(&cells);
+    let mut hi = Doubles::new(cs.len);
+    let mut lo = Doubles::new(cs.len);
+    {
+        let (h, l): (&mut [Rfloat], &mut [Rfloat]) = (&mut hi, &mut lo);
+        for i in 0..cs.len {
+            (h[i], l[i]) = match cs.get(i) {
+                Some(id) => (((id >> 32) as f64).into(), ((id & 0xFFFF_FFFF) as f64).into()),
+                None => (Rfloat::na(), Rfloat::na()),
+            };
+        }
+    }
+    list!(hi = hi, lo = lo)
+}
+
+/// Parse one hex id: 1 to 16 hex digits, optionally prefixed `0x`. Shorter
+/// ids are zero-padded on the left, as some A5 libraries write them.
+fn parse_hex_id(s: &str) -> Option<u64> {
+    let digits = s
+        .strip_prefix("0x")
+        .or_else(|| s.strip_prefix("0X"))
+        .unwrap_or(s);
+    if digits.is_empty() || digits.len() > 16 || !digits.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return None;
+    }
+    u64::from_str_radix(digits, 16).ok()
+}
+
+/// Convert hex strings to cell raw bytes.
+/// Returns list(b1 = raw(), ..., b8 = raw()); errors on the first string
+/// that is not a hex id.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn hex_to_raw8_rs(cells: Strings) -> extendr_api::Result<List> {
     let n = cells.len();
     let mut values: Vec<Option<u64>> = Vec::with_capacity(n);
     for i in 0..n {
         let s = &cells[i];
         if s.is_na() {
             values.push(None);
-        } else {
-            match a5::hex_to_u64(s.as_ref()) {
-                Ok(id) if id != NA_SENTINEL => values.push(Some(id)),
-                _ => values.push(None),
+            continue;
+        }
+        match parse_hex_id(s.as_ref()) {
+            Some(id) if id != NA_SENTINEL => values.push(Some(id)),
+            Some(_) => values.push(None),
+            None => {
+                return Err(Error::Other(format!(
+                    "Element {} of `x` is not a hex cell id: \"{}\". Ids are 1 to 16 hex digits, optionally prefixed with 0x.",
+                    i + 1,
+                    s.as_ref() as &str
+                )))
             }
         }
     }
-    u64s_to_raw8_list(values)
+    Ok(u64s_to_raw8_list(values))
 }
 
 extendr_module! {
     mod cell_raw;
     fn cells_is_na_rs;
+    fn cells_proxy_rs;
     fn raw8_to_hex_rs;
     fn hex_to_raw8_rs;
 }

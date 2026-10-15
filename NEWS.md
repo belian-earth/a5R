@@ -74,6 +74,33 @@
 
 ## Other changes
 
+* `a5_lonlat_to_cell()` returns `NA` for `NaN` and infinite coordinates,
+  which used to give valid cells, and errors on latitudes outside
+  \[-90, 90\], which used to wrap onto plausible but wrong cells.
+* A panic inside the a5 crate during a multi-threaded call no longer leaves
+  every later parallel call, and `a5_set_threads()`, failing until R
+  restarts. `a5_set_threads()` rejects counts below 1 and `NA`, and keeps
+  the previous count if the thread pool cannot be built.
+* `a5_cell()` accepts ids of fewer than 16 hex digits, as written by a5-js
+  and DuckDB, and a `0x` prefix. A string that is not a hex id is now an
+  error instead of a silent `NA`.
+* `NA` cells are missing to vctrs: `==` against `NA` gives `NA`, and
+  sorting puts `NA` last instead of among the resolution-30 cells.
+* `as_a5_covering()` treats `NULL` list elements as missing coverings, so
+  null coverings read back from Arrow stay `NA` instead of becoming empty.
+* `a5_polygon_to_cells()` and `a5_linestring_to_cells()` error on `sf` and
+  `terra` input in a projected CRS, and on coordinates outside the
+  longitude/latitude range. The documentation now warns that
+  self-intersecting rings give undefined results.
+* `a5_grid_disk()` rejects a negative or `NA` `k`, and
+  `a5_spherical_cap()` a negative or non-finite `radius`.
+* `a5_uncompact()`'s size guard counts the 5 children of a resolution-0
+  cell, so it no longer lets through requests up to 25% over the limit.
+* Scalar resolution arguments reject `NA` with a clear error, and
+  `a5_get_num_children()` errors when the child resolution is coarser than
+  the parent instead of returning 0.
+* `a5_cell_from_arrow()` and `a5_covering_from_arrow()` give a clear error
+  for input that is not an Arrow array.
 * `a5_cell_to_boundary()` builds its output faster, with identical
   results: on a million cells, WKB takes about 25% less time on one thread
   and half the time on four, and WKT about 20% less.

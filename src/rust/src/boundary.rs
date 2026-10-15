@@ -6,18 +6,6 @@ use extendr_api::SEXP;
 
 use crate::cell_raw::map_cells;
 
-pub(crate) const BOUNDARY_OPTS_CLOSED: a5::CellToBoundaryOptions =
-    a5::CellToBoundaryOptions {
-        closed_ring: true,
-        segments: None,
-    };
-
-pub(crate) const BOUNDARY_OPTS_OPEN: a5::CellToBoundaryOptions =
-    a5::CellToBoundaryOptions {
-        closed_ring: false,
-        segments: None,
-    };
-
 // R C API entry points. The WKB and WKT outputs hold one R object per cell;
 // creating each through extendr registers it in extendr's protection table,
 // which costs more than the allocation itself. These build the objects

@@ -11,6 +11,9 @@
 a5_set_threads <- function(n = 1L) {
   n <- vctrs::vec_cast(n, integer())
   check_size1(n)
+  if (is.na(n) || n < 1L) {
+    cli::cli_abort("{.arg n} must be a positive integer, not {n}.")
+  }
   old <- a5_get_threads_rs()
   a5_set_threads_rs(n)
   invisible(old)
