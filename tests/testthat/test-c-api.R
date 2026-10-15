@@ -1,5 +1,6 @@
 test_that("the C API round-trips ids and NA through a5_cell", {
-  skip_on_cran()
+  # covr runs without NOT_CRAN; the test must run there to cover src/api.c
+  if (!identical(Sys.getenv("R_COVR"), "true")) skip_on_cran()
   inc <- system.file("include", package = "a5R")
   skip_if(!nzchar(inc) || !file.exists(file.path(inc, "a5R.h")))
   dir <- withr::local_tempdir()
@@ -38,4 +39,8 @@ test_that("the C API round-trips ids and NA through a5_cell", {
     c("0800000000000006", "fc00000000000001")
   )
   expect_error(.Call("client_roundtrip", 1:3, PACKAGE = "client"), "a5_cell")
+  broken <- unclass(cells)
+  broken$b3 <- 1:3
+  class(broken) <- class(cells)
+  expect_error(.Call("client_roundtrip", broken, PACKAGE = "client"), "malformed")
 })

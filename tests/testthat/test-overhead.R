@@ -85,3 +85,12 @@ test_that("default and explicit choice arguments agree", {
   expect_identical(a5_cell_distance(a, b), a5_cell_distance(a, b, method = "haversine"))
   expect_error(a5_cell_distance(a, b, method = "euclid"), "must be one of")
 })
+
+test_that("scalar resolution checks give the same result off the fast path", {
+  # a named or integer-class resolution skips the base R fast path
+  expect_identical(a5_get_num_cells(c(r = 5)), a5_get_num_cells(5))
+  expect_identical(a5_get_num_cells(5L), a5_get_num_cells(5))
+  expect_error(a5_get_num_cells(c(r = 31)), class = "a5R_error_resolution")
+  expect_error(a5_get_num_cells(5.5), "precision")
+  expect_error(a5_get_num_cells("5"), "character")
+})

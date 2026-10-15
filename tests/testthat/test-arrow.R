@@ -180,3 +180,8 @@ test_that("a table tagged with another index version is refused", {
   tbl$metadata[["a5:index_version"]] <- NULL
   expect_true(is_a5_cell(a5_from_arrow_table(tbl)$cell))
 })
+
+test_that("a5_to_arrow_table needs a data frame", {
+  skip_if_not_installed("arrow")
+  expect_error(a5_to_arrow_table(1:3), class = "a5R_error_argument")
+})
