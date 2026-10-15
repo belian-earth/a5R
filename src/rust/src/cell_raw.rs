@@ -80,21 +80,85 @@ impl<'a> CellSlices<'a> {
 
 // --- Output builder ---
 
-/// Build a named list(b1 = Raw, ..., b8 = Raw) from a Vec<Option<u64>>.
-pub(crate) fn u64s_to_raw8_list(values: Vec<Option<u64>>) -> List {
-    let n = values.len();
-    let mut bufs: [Vec<u8>; 8] = std::array::from_fn(|_| vec![0u8; n]);
-    for (i, v) in values.iter().enumerate() {
-        // None encodes NA_SENTINEL, which is stored as eight 00 bytes.
-        let bytes = match v {
-            Some(id) => encode(*id),
-            None => [0u8; 8],
+/// Below this many elements, filling output runs on one thread.
+pub(crate) const PAR_MIN: usize = 4096;
+
+/// Elements per parallel chunk for `n` elements: about four chunks per
+/// thread, so small inputs still spread over every thread, and at least
+/// 1024 elements, so scheduling stays cheap.
+pub(crate) fn par_chunk(n: usize) -> usize {
+    (n.div_ceil(4 * get_num_threads().max(1))).max(1024)
+}
+
+/// Split eight equal-length byte planes into chunks of `size` elements.
+fn chunk_planes<'a>(planes: [&'a mut [u8]; 8], size: usize) -> Vec<(usize, [&'a mut [u8]; 8])> {
+    let mut iters: Vec<std::slice::ChunksMut<'a, u8>> =
+        planes.into_iter().map(|p| p.chunks_mut(size)).collect();
+    let mut out = Vec::new();
+    let mut start = 0;
+    while let Some(first) = iters[0].next() {
+        let len = first.len();
+        let mut rest = iters[1..].iter_mut();
+        let mut first = Some(first);
+        let chunk: [&'a mut [u8]; 8] = std::array::from_fn(|j| {
+            if j == 0 { first.take().unwrap() } else { rest.next().unwrap().next().unwrap() }
+        });
+        out.push((start, chunk));
+        start += len;
+    }
+    out
+}
+
+/// Build list(b1 = Raw, ..., b8 = Raw) for `n` cells, writing `fill(i)` for
+/// element i straight into the R vectors (None is NA), in parallel chunks
+/// when threads > 1.
+pub(crate) fn cells_from_fn<F>(n: usize, fill: F) -> List
+where
+    F: Fn(usize) -> Option<u64> + Send + Sync,
+{
+    let mut robjs: [Robj; 8] = std::array::from_fn(|_| Raw::new(n).into());
+    {
+        let mut it = robjs.iter_mut();
+        let planes: [&mut [u8]; 8] =
+            std::array::from_fn(|_| it.next().unwrap().as_raw_slice_mut().expect("raw vector"));
+        let write = |start: usize, p: [&mut [u8]; 8]| {
+            for k in 0..p[0].len() {
+                // None encodes NA_SENTINEL, which is stored as eight 00 bytes.
+                let b = fill(start + k).map(encode).unwrap_or([0u8; 8]);
+                for j in 0..8 {
+                    p[j][k] = b[j];
+                }
+            }
         };
-        for j in 0..8 {
-            bufs[j][i] = bytes[j];
+        if get_num_threads() <= 1 || n < PAR_MIN {
+            write(0, planes);
+        } else {
+            let chunks = chunk_planes(planes, par_chunk(n));
+            maybe_par(|| chunks.into_par_iter().for_each(|(start, p)| write(start, p)));
         }
     }
-    raw8_planes_to_list(bufs)
+    let [b1, b2, b3, b4, b5, b6, b7, b8] = robjs;
+    list!(b1 = b1, b2 = b2, b3 = b3, b4 = b4, b5 = b5, b6 = b6, b7 = b7, b8 = b8)
+}
+
+/// Build a named list(b1 = Raw, ..., b8 = Raw) from a Vec<Option<u64>>.
+pub(crate) fn u64s_to_raw8_list(values: Vec<Option<u64>>) -> List {
+    cells_from_fn(values.len(), |i| values[i])
+}
+
+/// Build the b1..b8 list from ids, none of them NA.
+pub(crate) fn ids_to_raw8_list(values: &[u64]) -> List {
+    cells_from_fn(values.len(), |i| Some(values[i]))
+}
+
+/// Apply `f` to every cell, writing the resulting cells straight into the
+/// output (None is NA), in parallel when threads > 1.
+pub(crate) fn map_cells_to_cells<F>(cells: &List, f: F) -> List
+where
+    F: Fn(u64) -> Option<u64> + Send + Sync,
+{
+    let cs = CellSlices::from_list(cells);
+    cells_from_fn(cs.len, |i| cs.get(i).and_then(&f))
 }
 
 /// Build the named list(b1 = Raw, ..., b8 = Raw) from eight encoded byte
@@ -110,12 +174,6 @@ pub(crate) fn raw8_planes_to_list(bufs: [Vec<u8>; 8]) -> List {
         b7 = Robj::from(bufs[6].as_slice()),
         b8 = Robj::from(bufs[7].as_slice())
     )
-}
-
-/// Extract a single u64 from a List (for scalar cell functions).
-pub(crate) fn scalar_cell_from_list(list: &List) -> Option<u64> {
-    let cs = CellSlices::from_list(list);
-    cs.get(0)
 }
 
 // --- Vectorised mappers ---
@@ -188,24 +246,21 @@ where
     F: Fn(u64) -> std::result::Result<Vec<u64>, String> + Send + Sync,
 {
     let results = map_cells(cells, |id| Some(f(id)));
-    let unwrap = |r: Option<std::result::Result<Vec<u64>, String>>| -> Vec<Option<u64>> {
+    let unwrap = |r: Option<std::result::Result<Vec<u64>, String>>| -> Vec<u64> {
         match r {
-            Some(Ok(v)) => v.into_iter().map(Some).collect(),
+            Some(Ok(v)) => v,
             Some(Err(e)) => throw_r_error(format!("{} failed: {}", name, e)),
             None => Vec::new(),
         }
     };
     if simplify {
-        let mut flat: Vec<Option<u64>> = Vec::new();
-        for r in results {
-            flat.extend(unwrap(r));
-        }
-        return u64s_to_raw8_list(flat).into();
+        let flat: Vec<u64> = results.into_iter().flat_map(unwrap).collect();
+        return ids_to_raw8_list(&flat).into();
     }
     let elements: Vec<Robj> = results
         .into_iter()
         .map(|r| {
-            let mut cell: Robj = u64s_to_raw8_list(unwrap(r)).into();
+            let mut cell: Robj = ids_to_raw8_list(&unwrap(r)).into();
             cell.set_class(["a5_cell", "vctrs_rcrd", "vctrs_vctr"])
                 .expect("set class on a5_cell");
             cell
@@ -223,13 +278,16 @@ pub(crate) fn collect_ids(cells: &List) -> Vec<u64> {
 /// a5_cell objects, one per group.
 pub(crate) fn groups_to_robj(groups: Vec<Vec<u64>>, simplify: bool) -> Robj {
     if simplify {
-        let flat: Vec<Option<u64>> = groups.into_iter().flatten().map(Some).collect();
-        return u64s_to_raw8_list(flat).into();
+        if groups.len() == 1 {
+            return ids_to_raw8_list(&groups[0]).into();
+        }
+        let flat: Vec<u64> = groups.into_iter().flatten().collect();
+        return ids_to_raw8_list(&flat).into();
     }
     let elements: Vec<Robj> = groups
         .into_iter()
         .map(|g| {
-            let mut cell: Robj = u64s_to_raw8_list(g.into_iter().map(Some).collect()).into();
+            let mut cell: Robj = ids_to_raw8_list(&g).into();
             cell.set_class(["a5_cell", "vctrs_rcrd", "vctrs_vctr"])
                 .expect("set class on a5_cell");
             cell
@@ -279,31 +337,90 @@ fn cells_is_na_rs(cells: List) -> Robj {
     Robj::from(na)
 }
 
-/// Convert hex strings to cell raw bytes.
-/// Returns list(b1 = raw(), ..., b8 = raw()).
+/// Comparison proxy: the high and low 32 bits of each id as doubles (exact),
+/// `NA` for `NA` cells. Returns list(hi = double(), lo = double()).
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn hex_to_raw8_rs(cells: Strings) -> List {
+fn cells_proxy_rs(cells: List) -> List {
+    let cs = CellSlices::from_list(&cells);
+    let mut hi = Doubles::new(cs.len);
+    let mut lo = Doubles::new(cs.len);
+    {
+        let (h, l): (&mut [Rfloat], &mut [Rfloat]) = (&mut hi, &mut lo);
+        for i in 0..cs.len {
+            (h[i], l[i]) = match cs.get(i) {
+                Some(id) => (((id >> 32) as f64).into(), ((id & 0xFFFF_FFFF) as f64).into()),
+                None => (Rfloat::na(), Rfloat::na()),
+            };
+        }
+    }
+    list!(hi = hi, lo = lo)
+}
+
+/// Element-wise equality of two equal-length cell vectors, NA where either
+/// cell is NA. Compares the stored bytes without decoding ids.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn cells_equal_rs(a: List, b: List) -> Logicals {
+    let (ca, cb) = (CellSlices::from_list(&a), CellSlices::from_list(&b));
+    let n = ca.len;
+    let mut out = Logicals::new(n);
+    {
+        let o: &mut [Rbool] = &mut out;
+        for i in 0..n {
+            o[i] = match (ca.get(i), cb.get(i)) {
+                (Some(x), Some(y)) => (x == y).into(),
+                _ => Rbool::na(),
+            };
+        }
+    }
+    out
+}
+
+/// Parse one hex id: 1 to 16 hex digits, optionally prefixed `0x`. Shorter
+/// ids are zero-padded on the left, as some A5 libraries write them.
+fn parse_hex_id(s: &str) -> Option<u64> {
+    let digits = s
+        .strip_prefix("0x")
+        .or_else(|| s.strip_prefix("0X"))
+        .unwrap_or(s);
+    if digits.is_empty() || digits.len() > 16 || !digits.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return None;
+    }
+    u64::from_str_radix(digits, 16).ok()
+}
+
+/// Convert hex strings to cell raw bytes.
+/// Returns list(b1 = raw(), ..., b8 = raw()), or the 1-based position of the
+/// first string that is not a hex id, as an integer, for R to report.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn hex_to_raw8_rs(cells: Strings) -> Robj {
     let n = cells.len();
     let mut values: Vec<Option<u64>> = Vec::with_capacity(n);
     for i in 0..n {
         let s = &cells[i];
         if s.is_na() {
             values.push(None);
-        } else {
-            match a5::hex_to_u64(s.as_ref()) {
-                Ok(id) if id != NA_SENTINEL => values.push(Some(id)),
-                _ => values.push(None),
-            }
+            continue;
+        }
+        match parse_hex_id(s.as_ref()) {
+            Some(id) if id != NA_SENTINEL => values.push(Some(id)),
+            Some(_) => values.push(None),
+            None => return ((i + 1) as i32).into(),
         }
     }
-    u64s_to_raw8_list(values)
+    u64s_to_raw8_list(values).into()
 }
 
 extendr_module! {
     mod cell_raw;
     fn cells_is_na_rs;
+    fn cells_proxy_rs;
+    fn cells_equal_rs;
     fn raw8_to_hex_rs;
     fn hex_to_raw8_rs;
 }

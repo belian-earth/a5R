@@ -64,3 +64,14 @@ test_that("children_range refuses resolution 30", {
   c29 <- a5_lonlat_to_cell(0, 0, 29L)
   expect_identical(a5_cell_children_range(c29, 29L)$lo, c29)
 })
+
+test_that("children range and child reach resolution 29 from any resolution", {
+  for (res in c(0L, 3L)) {
+    cell <- a5_lonlat_to_cell(-3.19, 55.95, res)
+    rng <- a5_cell_children_range(cell, 29)
+    expect_identical(a5_get_resolution(c(rng$lo, rng$hi)), c(29L, 29L))
+    expect_identical(a5_cell_to_parent(rng$lo, res), cell)
+    expect_identical(a5_cell_to_parent(rng$hi, res), cell)
+    expect_identical(a5_cell_child(cell, 29, 1L), rng$lo)
+  }
+})

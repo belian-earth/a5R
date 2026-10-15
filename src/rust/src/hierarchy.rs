@@ -1,11 +1,14 @@
 use extendr_api::prelude::*;
 use extendr_api::wrapper::Nullable;
 
-use crate::cell_raw::{map_cells, one_to_many, u64s_to_raw8_list, CellSlices};
-use crate::covering::cells_to_coverings;
+use crate::cell_raw::{map_cells, map_cells_to_cells, one_to_many, u64s_to_raw8_list, CellSlices};
+use crate::covering::{cells_to_covering, cells_to_coverings, coverings_to_list, read_coverings};
+use crate::threading::{get_num_threads, maybe_par};
+use rayon::prelude::*;
+use std::collections::HashSet;
 use a5::core::serialization::{
-    cell_first_slot, cell_slot_count, slot_to_cell, FIRST_CURVE_RESOLUTION,
-    QUINTANT_SHIFT, RES30_QUINTANTS, SLOT_COUNTS,
+    cell_first_slot, cell_slot_count, slot_to_cell, QUINTANT_SHIFT, RES30_QUINTANTS,
+    SLOT_COUNTS,
 };
 
 /// The descendants of a cell at a finer resolution, without enumerating them.
@@ -37,9 +40,8 @@ impl Descendants {
                 child_resolution, a5::MAX_RESOLUTION
             ));
         }
-        if child_resolution - std::cmp::max(resolution, FIRST_CURVE_RESOLUTION - 1) > 20 {
-            return Err("Resolution difference too large".to_string());
-        }
+        // Unlike `a5::cell_to_children`, no limit on the resolution difference:
+        // nothing is enumerated, and slots stay below 60 * 2^58.
         let first_slot = cell_first_slot(index)?;
         let stride = SLOT_COUNTS[child_resolution as usize];
         Ok(Descendants {
@@ -102,17 +104,23 @@ fn a5_get_resolution_rs(cells: List) -> Integers {
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_cell_to_parent_rs(cells: List, parent_resolution: Nullable<i32>) -> List {
+fn a5_cell_to_parent_rs(cells: List, parent_resolution: Nullable<i32>) -> Robj {
     let pres: Option<i32> = match parent_resolution {
         Nullable::NotNull(v) => Some(v),
         Nullable::Null => None,
     };
 
-    let results = map_cells(&cells, |id| {
-        a5::cell_to_parent(id, pres).ok()
-    });
+    // A cell coarser than the target is an input error. Return that cell's
+    // resolution, as an integer, for R to report: raising it here would make
+    // every call pay for an R-side handler.
+    if let Some(p) = pres {
+        let cs = CellSlices::from_list(&cells);
+        if let Some(r) = (0..cs.len).filter_map(|i| cs.get(i)).map(a5::get_resolution).find(|&r| r < p) {
+            return r.into();
+        }
+    }
 
-    u64s_to_raw8_list(results)
+    map_cells_to_cells(&cells, |id| a5::cell_to_parent(id, pres).ok()).into()
 }
 
 /// Get child cells of every input cell.
@@ -148,14 +156,13 @@ fn a5_cell_to_supercell_rs(cells: List, resolution: Nullable<i32>) -> List {
         Nullable::NotNull(v) => Some(v),
         Nullable::Null => None,
     };
-    let results = map_cells(&cells, |id| {
+    map_cells_to_cells(&cells, |id| {
         let res = target.unwrap_or_else(|| a5::get_resolution(id) - 1);
         if res < 0 {
             return None;
         }
         a5::cell_to_supercell(id, res).ok()
-    });
-    u64s_to_raw8_list(results)
+    })
 }
 
 /// Subcells: the finer cells whose centres lie in each cell, as coverings.
@@ -265,12 +272,79 @@ fn a5_get_res0_cells_rs() -> List {
     }
 }
 
+/// The supercells at `resolution` of a covering's cells: the coarse cells
+/// containing each cell's centre, as a covering at `resolution`. Walks the
+/// cells without building them.
+fn covering_supercells(values: &[u64], resolution: i32) -> std::result::Result<Vec<u64>, String> {
+    let r = a5::covering_resolution(values);
+    let stored: Vec<u64> = values.iter().copied().filter(|&c| !a5::is_compaction_marker(c)).collect();
+    if stored.is_empty() {
+        return cells_to_covering(Vec::new(), Some(resolution));
+    }
+    if resolution > r {
+        return Err(format!(
+            "resolution ({resolution}) must not be finer than the covering's resolution ({r})"
+        ));
+    }
+    let blocks = stored
+        .iter()
+        .map(|&c| Descendants::new(c, r))
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+    // (block, first k, last k) chunks of at most CHUNK cells, for parallel work
+    const CHUNK: u64 = 1 << 16;
+    let mut chunks: Vec<(usize, u64, u64)> = Vec::new();
+    for (b, d) in blocks.iter().enumerate() {
+        let mut k = 0;
+        while k < d.count() {
+            let end = (k + CHUNK).min(d.count());
+            chunks.push((b, k, end));
+            k = end;
+        }
+    }
+    let supercells = |&(b, k0, k1): &(usize, u64, u64)| -> std::result::Result<HashSet<u64>, String> {
+        let mut set = HashSet::new();
+        let mut last = u64::MAX;
+        for k in k0..k1 {
+            let sc = a5::cell_to_supercell(blocks[b].nth(k), resolution)?;
+            // neighbouring cells along the curve usually share a supercell
+            if sc != last {
+                set.insert(sc);
+                last = sc;
+            }
+        }
+        Ok(set)
+    };
+    let sets: Vec<std::result::Result<HashSet<u64>, String>> = if get_num_threads() <= 1 {
+        chunks.iter().map(supercells).collect()
+    } else {
+        maybe_par(|| chunks.par_iter().map(supercells).collect())
+    };
+    let mut all = HashSet::new();
+    for s in sets {
+        all.extend(s?);
+    }
+    cells_to_covering(all.into_iter().collect(), Some(resolution))
+}
+
+/// Supercells of every covering.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn a5_covering_to_supercells_rs(x: List, resolution: i32) -> List {
+    let results = read_coverings(&x)
+        .into_iter()
+        .map(|c| c.map(|values| covering_supercells(&values, resolution)))
+        .collect();
+    coverings_to_list("a5_covering_to_supercells", results)
+}
+
 extendr_module! {
     mod hierarchy;
     fn a5_get_resolution_rs;
     fn a5_cell_to_parent_rs;
     fn a5_cell_to_children_rs;
     fn a5_cell_to_supercell_rs;
+    fn a5_covering_to_supercells_rs;
     fn a5_cell_to_subcell_rs;
     fn a5_cell_child_rs;
     fn a5_cell_children_range_rs;

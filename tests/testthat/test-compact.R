@@ -65,3 +65,9 @@ test_that("uncompact refuses to build too many cells", {
   world <- a5_compact(a5_get_res0_cells())
   expect_error(a5_uncompact(world, resolution = 20), "Uncompacting would build")
 })
+
+test_that("the uncompact size guard counts 5 children below resolution 0", {
+  # 7 * 5 * 4^13 = 2.35e9 cells; 4 children per step would estimate 1.88e9
+  cv <- as_a5_covering(a5_get_res0_cells()[1:7])
+  expect_error(a5_uncompact(cv, 14), "2,348,810,240 cells")
+})

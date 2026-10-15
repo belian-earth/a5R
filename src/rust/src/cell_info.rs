@@ -134,8 +134,17 @@ fn a5_migrate_rs(cells: List) -> List {
     u64s_to_raw8_list(out)
 }
 
+/// Version of the bundled a5 crate, read from Cargo.lock at build time.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn a5_crate_version_rs() -> &'static str {
+    env!("A5_CRATE_VERSION")
+}
+
 extendr_module! {
     mod cell_info;
+    fn a5_crate_version_rs;
     fn a5_cell_area_rs;
     fn a5_cell_edge_length_avg_rs;
     fn a5_get_num_cells_rs;

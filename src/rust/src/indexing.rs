@@ -1,7 +1,7 @@
 use extendr_api::prelude::*;
 use rayon::prelude::*;
 
-use crate::cell_raw::{map_cells, u64s_to_raw8_list};
+use crate::cell_raw::{cells_from_fn, par_chunk, CellSlices, PAR_MIN};
 use crate::threading::{get_num_threads, maybe_par};
 
 /// Convert longitude/latitude coordinates to A5 cell indices.
@@ -14,52 +14,14 @@ use crate::threading::{get_num_threads, maybe_par};
 /// @keywords internal
 #[extendr]
 fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> List {
-    let n = lon.len();
-
-    if get_num_threads() <= 1 {
-        let results: Vec<Option<u64>> = (0..n)
-            .map(|i| {
-                let lo = lon[i];
-                let la = lat[i];
-                let res = resolution[i];
-                if lo.is_na() || la.is_na() || res.is_na() {
-                    None
-                } else {
-                    let lonlat = a5::LonLat::new(lo.0, la.0);
-                    a5::lonlat_to_cell(lonlat, res.0).ok()
-                }
-            })
-            .collect();
-        u64s_to_raw8_list(results)
-    } else {
-        let inputs: Vec<(f64, f64, i32, bool)> = (0..n)
-            .map(|i| {
-                let lo = lon[i];
-                let la = lat[i];
-                let res = resolution[i];
-                if lo.is_na() || la.is_na() || res.is_na() {
-                    (0.0, 0.0, 0, true)
-                } else {
-                    (lo.0, la.0, res.0, false)
-                }
-            })
-            .collect();
-
-        let results: Vec<Option<u64>> = maybe_par(|| {
-            inputs
-                .par_iter()
-                .map(|&(lo, la, res, is_na)| {
-                    if is_na {
-                        return None;
-                    }
-                    let lonlat = a5::LonLat::new(lo, la);
-                    a5::lonlat_to_cell(lonlat, res).ok()
-                })
-                .collect()
-        });
-
-        u64s_to_raw8_list(results)
-    }
+    let (lon, lat, resolution): (&[Rfloat], &[Rfloat], &[Rint]) = (&lon, &lat, &resolution);
+    cells_from_fn(lon.len(), |i| {
+        let (lo, la, res) = (lon[i].0, lat[i].0, resolution[i]);
+        if !lo.is_finite() || !la.is_finite() || res.is_na() {
+            return None;
+        }
+        a5::lonlat_to_cell(a5::LonLat::new(lo, la), res.0).ok()
+    })
 }
 
 /// Convert A5 cell indices to longitude/latitude coordinates.
@@ -71,29 +33,41 @@ fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Lis
 /// @keywords internal
 #[extendr]
 fn a5_cell_to_lonlat_rs(cells: List, normalise: bool) -> List {
-    let results = map_cells(&cells, |id| {
-        let ll = a5::cell_to_lonlat(id).ok()?;
-        let lon = if normalise {
-            ((ll.longitude() + 180.0) % 360.0 + 360.0) % 360.0 - 180.0
-        } else {
-            ll.longitude()
-        };
-        Some((lon, ll.latitude()))
-    });
-
-    let n = results.len();
+    let cs = CellSlices::from_list(&cells);
+    let n = cs.len;
+    let one = |i: usize| -> (Rfloat, Rfloat) {
+        match cs.get(i).and_then(|id| a5::cell_to_lonlat(id).ok()) {
+            Some(ll) => {
+                let lon = if normalise {
+                    ((ll.longitude() + 180.0) % 360.0 + 360.0) % 360.0 - 180.0
+                } else {
+                    ll.longitude()
+                };
+                (lon.into(), ll.latitude().into())
+            }
+            None => (Rfloat::na(), Rfloat::na()),
+        }
+    };
     let mut lon_out = Doubles::new(n);
     let mut lat_out = Doubles::new(n);
-    for (i, r) in results.into_iter().enumerate() {
-        match r {
-            Some((lon, lat)) => {
-                lon_out.set_elt(i, Rfloat::from(lon));
-                lat_out.set_elt(i, Rfloat::from(lat));
+    {
+        let (lon, lat): (&mut [Rfloat], &mut [Rfloat]) = (&mut lon_out, &mut lat_out);
+        if get_num_threads() <= 1 || n < PAR_MIN {
+            for i in 0..n {
+                (lon[i], lat[i]) = one(i);
             }
-            None => {
-                lon_out.set_elt(i, Rfloat::na());
-                lat_out.set_elt(i, Rfloat::na());
-            }
+        } else {
+            let chunk = par_chunk(n);
+            maybe_par(|| {
+                lon.par_chunks_mut(chunk)
+                    .zip(lat.par_chunks_mut(chunk))
+                    .enumerate()
+                    .for_each(|(c, (lo, la))| {
+                        for k in 0..lo.len() {
+                            (lo[k], la[k]) = one(c * chunk + k);
+                        }
+                    })
+            });
         }
     }
     list!(lon = lon_out, lat = lat_out)

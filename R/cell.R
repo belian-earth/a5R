@@ -5,9 +5,11 @@
 #' little-endian bytes of the u64 cell ID. This avoids the precision
 #' loss of floating-point storage and keeps memory compact.
 #'
-#' `a5_cell()` accepts any 16-digit hex string without checking that it
-#' encodes an A5 cell, so an `a5_cell` vector can hold values that are not
-#' cells. Check ids from outside sources, such as a file or a database, with
+#' Ids are hex strings of up to 16 digits, optionally prefixed with `0x`.
+#' Shorter ids, as some A5 libraries write them, are padded with leading
+#' zeros, and a string that is not a hex id is an error. `a5_cell()` does not
+#' check that an id encodes an A5 cell, so an `a5_cell` vector can hold
+#' values that are not cells. Check ids from outside sources, such as a file or a database, with
 #' [a5_is_valid_cell()].
 #'
 #' @param x A character vector of hex-encoded A5 cell IDs, or an object
@@ -28,9 +30,7 @@
 #' a5_is_valid_cell(a5_cell("fd00000000000000"))
 a5_cell <- function(x = character()) {
   x <- vctrs::vec_cast(x, character())
-  check_hex16(x)
-  rs <- hex_to_raw8_rs(x)
-  cells_from_rs(rs)
+  cells_from_hex(x)
 }
 
 new_a5_cell <- function(
@@ -69,17 +69,18 @@ cells_from_rs <- function(x) {
   structure(x, class = c("a5_cell", "vctrs_rcrd", "vctrs_vctr"))
 }
 
-#' Check that all non-NA hex strings are exactly 16 characters
+#' Parse hex ids, erroring on the first string that is not one
 #' @noRd
-check_hex16 <- function(x) {
-  non_na <- !is.na(x)
-  bad <- non_na & nchar(x) != 16L
-  if (any(bad)) {
-    first <- x[which(bad)[1L]]
-    cli::cli_abort(
-      "Cell hex strings must be exactly 16 characters, not {nchar(first)}. {.val {first}} is invalid."
+cells_from_hex <- function(x, call = rlang::caller_env()) {
+  out <- hex_to_raw8_rs(x)
+  if (is.integer(out)) {
+    a5_abort(
+      "cell",
+      "Element {out} of {.arg x} is not a hex cell id: {.val {x[[out]]}}. Ids are 1 to 16 hex digits, optionally prefixed with 0x.",
+      call = call
     )
   }
+  cells_from_rs(out)
 }
 
 #' Pass cell fields to Rust as a named list
@@ -103,7 +104,7 @@ as_a5_cell <- function(x) {
     return(x)
   }
   if (is_a5_covering(x)) {
-    cli::cli_abort(c(
+    a5_abort("cell", c(
       "Can't use an {.cls a5_covering} as cells.",
       "i" = "Use {.fn a5_uncompact} to get the cells of a covering."
     ), call = rlang::caller_env())
@@ -181,33 +182,57 @@ is.na.a5_cell <- function(x) {
   cells_is_na_rs(cell_data(x))
 }
 
-# --- ordering: big-endian byte order = u64 numeric order ---
+# --- equality and ordering in u64 numeric order ---
 
-# True value of each stored b8 byte (stored XOR 0xFC), indexed by stored
-# value + 1. A lookup is cheaper than xor() then as.integer().
-b8_decoded <- bitwXor(0:255, 0xFC)
+#' Two exact 32-bit halves of each id as doubles, `NA` for `NA` cells
+#'
+#' Raw fields cannot hold `NA`, so without this proxy vctrs would treat `NA`
+#' cells (stored as eight 00 bytes) as an ordinary value: `==` would return
+#' `TRUE` against `NA`, `vec_detect_missing()` `FALSE`, and sorting would place
+#' `NA` among resolution-30 cells. The halves compare in u64 numeric order.
+#' @noRd
+cell_proxy <- function(x) {
+  vctrs::new_data_frame(cells_proxy_rs(unclass(x)))
+}
+
+#' `==` and `!=` compare ids directly in Rust: building two comparison
+#' proxies would cost more than the comparison. Other operators fall through
+#' to vctrs.
+#' @export
+#' @noRd
+#' @keywords internal
+Ops.a5_cell <- function(e1, e2) {
+  if (.Generic != "==" && .Generic != "!=") {
+    return(NextMethod())
+  }
+  if (!(is_a5_cell(e1) && is_a5_cell(e2) && length(e1) == length(e2))) {
+    args <- vctrs::vec_recycle_common(!!!vctrs::vec_cast_common(e1, e2))
+    e1 <- args[[1L]]
+    e2 <- args[[2L]]
+  }
+  out <- cells_equal_rs(unclass(e1), unclass(e2))
+  if (.Generic == "!=") !out else out
+}
+
+#' @exportS3Method vctrs::vec_proxy_equal
+#' @noRd
+#' @keywords internal
+vec_proxy_equal.a5_cell <- function(x, ...) {
+  cell_proxy(x)
+}
 
 #' @exportS3Method vctrs::vec_proxy_compare
 #' @noRd
 #' @keywords internal
 vec_proxy_compare.a5_cell <- function(x, ...) {
-  data.frame(
-    b8 = b8_decoded[as.integer(vctrs::field(x, "b8")) + 1L],
-    b7 = as.integer(vctrs::field(x, "b7")),
-    b6 = as.integer(vctrs::field(x, "b6")),
-    b5 = as.integer(vctrs::field(x, "b5")),
-    b4 = as.integer(vctrs::field(x, "b4")),
-    b3 = as.integer(vctrs::field(x, "b3")),
-    b2 = as.integer(vctrs::field(x, "b2")),
-    b1 = as.integer(vctrs::field(x, "b1"))
-  )
+  cell_proxy(x)
 }
 
 #' @exportS3Method vctrs::vec_proxy_order
 #' @noRd
 #' @keywords internal
 vec_proxy_order.a5_cell <- function(x, ...) {
-  vec_proxy_compare.a5_cell(x, ...)
+  cell_proxy(x)
 }
 
 # --- coercion: a5_cell <-> character ---
@@ -236,9 +261,7 @@ vec_cast.a5_cell.a5_cell <- function(x, to, ...) x
 #' @noRd
 #' @keywords internal
 vec_cast.a5_cell.character <- function(x, to, ...) {
-  check_hex16(x)
-  rs <- hex_to_raw8_rs(x)
-  cells_from_rs(rs)
+  cells_from_hex(x, call = NULL)
 }
 
 #' @export

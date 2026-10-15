@@ -709,10 +709,6 @@ test_that("containment rejects invalid values", {
     "containment"
   )
   expect_error(
-    a5_polygon_to_cells(poly, 10, containment = "center"),
-    "centre"
-  )
-  expect_error(
     a5_polygon_to_cells(poly, 10, containment = 1),
     "containment"
   )
@@ -766,4 +762,37 @@ test_that("rct results keep input order around whole-globe and NA boxes", {
 test_that("rct boxes 180 degrees wide or more are refused", {
   expect_error(a5_polygon_to_cells(wk::rct(-100, -60, 100, 60), 3), "200 degrees")
   expect_error(a5_polygon_to_cells(wk::rct(-180, -60, 180, 60), 3), "Split it")
+})
+
+test_that("projected input is rejected", {
+  skip_if_not_installed("sf")
+  poly <- sf::st_sfc(
+    sf::st_polygon(list(cbind(c(0, 1e5, 1e5, 0, 0), c(0, 0, 1e5, 1e5, 0)))),
+    crs = 3857
+  )
+  expect_error(a5_polygon_to_cells(poly, 4), "longitude/latitude coordinates")
+  line <- sf::st_sfc(sf::st_linestring(cbind(c(0, 1e5), c(0, 1e5))), crs = 3857)
+  expect_error(a5_linestring_to_cells(line, 4), "longitude/latitude coordinates")
+  # no CRS: the coordinate range still catches it
+  expect_error(a5_polygon_to_cells(sf::st_set_crs(poly, NA), 4), "outside the longitude/latitude range")
+  expect_no_error(a5_polygon_to_cells(sf::st_transform(poly, 4326), 4))
+})
+
+test_that("coordinates outside the lon/lat range are rejected", {
+  expect_error(
+    a5_polygon_to_cells(wk::wkt("POLYGON ((0 0, 1 0, 1 95, 0 0))"), 4),
+    "outside the longitude/latitude range"
+  )
+  expect_error(
+    a5_linestring_to_cells(wk::wkt("LINESTRING (0 0, 400 0)"), 4),
+    "outside the longitude/latitude range"
+  )
+})
+
+test_that("containment accepts center as well as centre", {
+  poly <- wk::wkt("POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))")
+  expect_identical(
+    a5_polygon_to_cells(poly, 8, containment = "center"),
+    a5_polygon_to_cells(poly, 8, containment = "centre")
+  )
 })

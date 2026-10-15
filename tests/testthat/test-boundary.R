@@ -150,3 +150,10 @@ test_that("boundary_xy keeps longitudes continuous across the antimeridian", {
   expect_true(any(abs(xy$x) > 180))
   expect_lt(diff(range(xy$x)), 180)
 })
+
+test_that("the world cell's boundary is an empty polygon", {
+  w <- a5_cell("0000000000000000")
+  expect_identical(as.character(a5_cell_to_boundary(w, "wkt")), "POLYGON EMPTY")
+  expect_identical(as.character(wk::as_wkt(a5_cell_to_boundary(w))), "POLYGON EMPTY")
+  expect_identical(a5_cell_to_boundary_xy(w)$lengths, 0L)
+})

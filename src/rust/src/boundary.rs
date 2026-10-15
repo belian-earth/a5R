@@ -6,18 +6,6 @@ use extendr_api::SEXP;
 
 use crate::cell_raw::map_cells;
 
-pub(crate) const BOUNDARY_OPTS_CLOSED: a5::CellToBoundaryOptions =
-    a5::CellToBoundaryOptions {
-        closed_ring: true,
-        segments: None,
-    };
-
-pub(crate) const BOUNDARY_OPTS_OPEN: a5::CellToBoundaryOptions =
-    a5::CellToBoundaryOptions {
-        closed_ring: false,
-        segments: None,
-    };
-
 // R C API entry points. The WKB and WKT outputs hold one R object per cell;
 // creating each through extendr registers it in extendr's protection table,
 // which costs more than the allocation itself. These build the objects
@@ -68,8 +56,12 @@ fn strings_from(values: &[Option<String>]) -> Strings {
     out
 }
 
-/// Format a ring as a WKT Polygon.
+/// Format a ring as a WKT Polygon. The world cell has no boundary vertices
+/// and gives an empty polygon.
 fn lonlats_to_wkt(coords: &[a5::LonLat]) -> String {
+    if coords.is_empty() {
+        return "POLYGON EMPTY".to_string();
+    }
     let mut wkt = String::with_capacity(12 + coords.len() * 40);
     wkt.push_str("POLYGON ((");
     for (j, ll) in coords.iter().enumerate() {
@@ -82,12 +74,17 @@ fn lonlats_to_wkt(coords: &[a5::LonLat]) -> String {
     wkt
 }
 
-/// Encode a slice of LonLat coordinates as a WKB Polygon (little-endian, one ring).
+/// Encode a slice of LonLat coordinates as a WKB Polygon (little-endian, one
+/// ring, or no rings for the world cell's empty boundary).
 pub(crate) fn lonlats_to_wkb(coords: &[a5::LonLat]) -> Vec<u8> {
     let n = coords.len();
     let mut buf = Vec::with_capacity(13 + n * 16);
     buf.push(0x01); // little-endian
     buf.extend_from_slice(&3u32.to_le_bytes()); // wkbPolygon
+    if n == 0 {
+        buf.extend_from_slice(&0u32.to_le_bytes()); // no rings: POLYGON EMPTY
+        return buf;
+    }
     buf.extend_from_slice(&1u32.to_le_bytes()); // 1 ring
     buf.extend_from_slice(&(n as u32).to_le_bytes()); // point count
     for ll in coords {

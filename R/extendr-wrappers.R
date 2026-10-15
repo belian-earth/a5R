@@ -16,13 +16,26 @@ a5_get_threads_rs <- function() .Call(wrap__a5_get_threads_rs)
 #' @keywords internal
 cells_is_na_rs <- function(cells) .Call(wrap__cells_is_na_rs, cells)
 
+#' Comparison proxy: the high and low 32 bits of each id as doubles (exact),
+#' `NA` for `NA` cells. Returns list(hi = double(), lo = double()).
+#' @noRd
+#' @keywords internal
+cells_proxy_rs <- function(cells) .Call(wrap__cells_proxy_rs, cells)
+
+#' Element-wise equality of two equal-length cell vectors, NA where either
+#' cell is NA. Compares the stored bytes without decoding ids.
+#' @noRd
+#' @keywords internal
+cells_equal_rs <- function(a, b) .Call(wrap__cells_equal_rs, a, b)
+
 #' Convert cell raw bytes to hex strings (zero-padded to 16 chars).
 #' @noRd
 #' @keywords internal
 raw8_to_hex_rs <- function(cells) .Call(wrap__raw8_to_hex_rs, cells)
 
 #' Convert hex strings to cell raw bytes.
-#' Returns list(b1 = raw(), ..., b8 = raw()).
+#' Returns list(b1 = raw(), ..., b8 = raw()), or the 1-based position of the
+#' first string that is not a hex id, as an integer, for R to report.
 #' @noRd
 #' @keywords internal
 hex_to_raw8_rs <- function(cells) .Call(wrap__hex_to_raw8_rs, cells)
@@ -76,6 +89,11 @@ a5_cell_to_boundary_wkb_rs <- function(cells, closed_ring, segments) .Call(wrap_
 #' @noRd
 #' @keywords internal
 a5_cell_to_boundary_xy_rs <- function(cells, closed_ring, segments) .Call(wrap__a5_cell_to_boundary_xy_rs, cells, closed_ring, segments)
+
+#' Version of the bundled a5 crate, read from Cargo.lock at build time.
+#' @noRd
+#' @keywords internal
+a5_crate_version_rs <- function() .Call(wrap__a5_crate_version_rs)
 
 #' Get the area (in square metres) of cells at a given resolution.
 #'
@@ -187,6 +205,11 @@ a5_cell_to_children_rs <- function(cells, child_resolution, simplify) .Call(wrap
 #' @noRd
 #' @keywords internal
 a5_cell_to_supercell_rs <- function(cells, resolution) .Call(wrap__a5_cell_to_supercell_rs, cells, resolution)
+
+#' Supercells of every covering.
+#' @noRd
+#' @keywords internal
+a5_covering_to_supercells_rs <- function(x, resolution) .Call(wrap__a5_covering_to_supercells_rs, x, resolution)
 
 #' Subcells: the finer cells whose centres lie in each cell, as coverings.
 #'
@@ -425,5 +448,11 @@ a5_covering_to_arrow_rs <- function(x) .Call(wrap__a5_covering_to_arrow_rs, x)
 #' @noRd
 #' @keywords internal
 a5_covering_from_arrow_rs <- function(holder) .Call(wrap__a5_covering_from_arrow_rs, holder)
+
+#' Bounding boxes per feature: list(xmin, ymin, xmax, ymax), NA for a
+#' feature with no rings.
+#' @noRd
+#' @keywords internal
+a5_bbox_rs <- function(lon, lat, offsets, part_id, is_outer, part_feature, n_features) .Call(wrap__a5_bbox_rs, lon, lat, offsets, part_id, is_outer, part_feature, n_features)
 
 

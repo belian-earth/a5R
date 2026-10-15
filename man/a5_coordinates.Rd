@@ -13,7 +13,8 @@ a5_cell_to_lonlat(cell, as_dataframe = FALSE)
 \arguments{
 \item{lon}{Numeric vector of longitudes in degrees.}
 
-\item{lat}{Numeric vector of latitudes in degrees.}
+\item{lat}{Numeric vector of latitudes in degrees, between -90 and 90.
+Non-finite coordinates (\code{NA}, \code{NaN}, \code{Inf}) give \code{NA} cells.}
 
 \item{resolution}{Integer scalar or vector of resolutions (0--30),
 recycled against \code{lon} and \code{lat}.}

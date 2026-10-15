@@ -9,7 +9,7 @@ a5_grid_disk(cell, k, vertex = FALSE)
 \arguments{
 \item{cell}{An \link{a5_cell} vector of centre cells.}
 
-\item{k}{Integer scalar, number of hops.}
+\item{k}{Non-negative integer scalar, number of hops.}
 
 \item{vertex}{Logical scalar. If \code{FALSE} (default), only edge-sharing
 neighbours are traversed. If \code{TRUE}, vertex-sharing neighbours are

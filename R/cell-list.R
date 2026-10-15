@@ -42,7 +42,7 @@ as_a5_cell_list <- function(x) {
     return(x)
   }
   if (!is.list(x) || inherits(x, "a5_cell")) {
-    cli::cli_abort("{.arg x} must be a list of {.cls a5_cell} vectors.")
+    a5_abort("cell", "{.arg x} must be a list of {.cls a5_cell} vectors.")
   }
   new_a5_cell_list(lapply(x, function(el) {
     if (is.null(el)) new_a5_cell() else as_a5_cell(el)

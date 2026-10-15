@@ -35,7 +35,8 @@ a5_get_resolution <- function(cell) {
 #' @param cell An [a5_cell] vector.
 #' @param resolution Integer scalar target resolution, or `NULL` for one step:
 #'   the immediate parent for `a5_cell_to_parent()`, the immediate children
-#'   for `a5_cell_to_children()`.
+#'   for `a5_cell_to_children()`. For `a5_cell_to_parent()` it must not be
+#'   finer than any cell's resolution.
 #' @param simplify Logical scalar. If `TRUE` (default), return one flat
 #'   [a5_cell] vector with the children of every input concatenated in input
 #'   order; which child came from which parent is not recorded. If `FALSE`,
@@ -70,11 +71,16 @@ NULL
 a5_cell_to_parent <- function(cell, resolution = NULL) {
   cell <- as_a5_cell(cell)
   if (!is.null(resolution)) {
-    resolution <- vctrs::vec_cast(resolution, integer())
-    check_resolution(resolution)
-    check_size1(resolution)
+    resolution <- check_scalar_resolution(resolution)
   }
-  cells_from_rs(a5_cell_to_parent_rs(cell_data(cell), resolution))
+  out <- a5_cell_to_parent_rs(cell_data(cell), resolution)
+  if (is.integer(out)) {
+    a5_abort(
+      "resolution",
+      "{.arg resolution} ({resolution}) must not be finer than the cell resolution ({out})."
+    )
+  }
+  cells_from_rs(out)
 }
 
 #' @rdname a5_hierarchy
@@ -82,9 +88,7 @@ a5_cell_to_parent <- function(cell, resolution = NULL) {
 a5_cell_to_children <- function(cell, resolution = NULL, simplify = TRUE) {
   cell <- as_a5_cell(cell)
   if (!is.null(resolution)) {
-    resolution <- vctrs::vec_cast(resolution, integer())
-    check_resolution(resolution)
-    check_size1(resolution)
+    resolution <- check_scalar_resolution(resolution)
   }
   check_flag(simplify)
   one_to_many(a5_cell_to_children_rs(cell_data(cell), resolution, simplify), simplify)
@@ -114,9 +118,7 @@ a5_cell_to_children <- function(cell, resolution = NULL, simplify = TRUE) {
 #' identical(a5_cell_child(cell, 7, 1:16), a5_cell_to_children(cell, 7))
 a5_cell_child <- function(cell, resolution, i) {
   cell <- as_a5_cell(cell)
-  resolution <- vctrs::vec_cast(resolution, integer())
-  check_resolution(resolution)
-  check_size1(resolution)
+  resolution <- check_scalar_resolution(resolution)
   args <- vctrs::vec_recycle_common(cell = cell, i = vctrs::vec_cast(i, integer()))
   cells_from_rs(a5_cell_child_rs(cell_data(args$cell), resolution, args$i))
 }
@@ -159,11 +161,9 @@ a5_cell_child <- function(cell, resolution, i) {
 #' identical(rng$hi, children[length(children)])
 a5_cell_children_range <- function(cell, resolution) {
   cell <- as_a5_cell(cell)
-  resolution <- vctrs::vec_cast(resolution, integer())
-  check_resolution(resolution)
-  check_size1(resolution)
+  resolution <- check_scalar_resolution(resolution)
   if (identical(resolution, 30L)) {
-    cli::cli_abort(c(
+    a5_abort("resolution", c(
       "{.arg resolution} must be 29 or less.",
       "x" = "Descendant ids are not contiguous at resolution 30: face bit layouts overlap numerically and some faces cannot be encoded.",
       "i" = "Use {.fn a5_cell_to_children} to enumerate resolution-30 descendants."
@@ -247,4 +247,35 @@ a5_cell_to_subcell <- function(cell, resolution = NULL) {
   cell <- as_a5_cell(cell)
   resolution <- check_optional_resolution(resolution)
   coverings_from_rs(a5_cell_to_subcell_rs(cell_data(cell), resolution))
+}
+
+#' Supercells of a covering
+#'
+#' `a5_covering_to_supercells()` gives, for each covering, the cells at a
+#' coarser `resolution` that contain the centre of at least one of its
+#' cells, such as the partitions of a store that hold an area's data. It
+#' matches `a5_cell_to_supercell(a5_uncompact(x), resolution)` without
+#' duplicates, but never builds the covering's cells.
+#'
+#' @param x An [a5_covering] vector.
+#' @param resolution Integer scalar target resolution, at or coarser than
+#'   each covering's resolution.
+#' @returns An [a5_covering] vector at `resolution`, the same length as `x`.
+#'   `NA` where `x` is `NA`.
+#'
+#' @seealso [a5_cell_to_supercell()]
+#' @export
+#' @examples
+#' area <- a5_polygon_to_cells(
+#'   wk::wkt("POLYGON ((-3.3 55.9, -3.1 55.9, -3.1 56, -3.3 56, -3.3 55.9))"),
+#'   resolution = 14
+#' )
+#' a5_uncompact(a5_covering_to_supercells(area, 6))
+a5_covering_to_supercells <- function(x, resolution) {
+  x <- as_a5_covering(x)
+  resolution <- check_scalar_resolution(resolution)
+  coverings_from_rs(from_caller(
+    a5_covering_to_supercells_rs(x, resolution),
+    call = rlang::current_env(), type = "resolution"
+  ))
 }

@@ -23,9 +23,10 @@
 #'     single outer ring.
 #' @param resolution Integer scalar target resolution (0-30).
 #' @param containment Character scalar selecting which cells to include.
-#'   `"centre"` (the default) includes a cell when its centre lies inside
-#'   the polygon. `"overlapping"` additionally includes every cell that
-#'   overlaps the polygon boundary, so the result fully covers the polygon.
+#'   `"centre"` (the default; `"center"` also works) includes a cell when its
+#'   centre lies inside the polygon. `"overlapping"` additionally includes
+#'   every cell that overlaps the polygon boundary, so the result fully
+#'   covers the polygon.
 #'   The overlapping set is a superset of the centre set.
 #'
 #' @returns An [a5_covering] vector with one element per feature (one for
@@ -66,6 +67,12 @@
 #' degrees of longitude or more is an error, because its top and bottom
 #' edges would run the short way round the globe.
 #'
+#' Rings must not cross themselves. A self-intersecting ring, such as a bow
+#' tie, gives an undefined result that can include cells thousands of
+#' kilometres outside the polygon. Because edges are great circles, a ring
+#' that is valid in longitude and latitude can still cross itself on the
+#' sphere; `s2::s2_is_valid()` checks rings with the same edge model.
+#'
 #' Where no A5 cell centroids at the specified `resolution` fall within
 #' the geometry, its covering is empty.
 #'
@@ -95,9 +102,8 @@
 #' a5_polygon_to_cells(polys, resolution = 8)
 a5_polygon_to_cells <- function(x, resolution,
                                 containment = c("centre", "overlapping")) {
-  resolution <- vctrs::vec_cast(resolution, integer())
-  check_resolution(resolution)
-  check_size1(resolution)
+  resolution <- check_scalar_resolution(resolution)
+  if (identical(containment, "center")) containment <- "centre"
   containment <- arg_match_default(containment, c("centre", "overlapping"))
 
   if (inherits(x, "wk_rct")) {
@@ -149,7 +155,7 @@ rct_to_cells <- function(x, resolution, containment,
   wide <- !is.na(width) & width >= 180 & !globe
   if (any(wide)) {
     i <- which(wide)[1]
-    cli::cli_abort(
+    a5_abort("geometry",
       c(
         "Box {i} of {.arg x} spans {width[i]} degrees of longitude.",
         i = "Box edges are great circles, so a box 180 degrees wide or more \
@@ -238,9 +244,7 @@ rct_to_cells <- function(x, resolution, containment,
 #' paths <- a5_linestring_to_cells(lines, resolution = 6, simplify = FALSE)
 #' lengths(paths)
 a5_linestring_to_cells <- function(x, resolution, simplify = TRUE) {
-  resolution <- vctrs::vec_cast(resolution, integer())
-  check_resolution(resolution)
-  check_size1(resolution)
+  resolution <- check_scalar_resolution(resolution)
   check_flag(simplify)
 
   bundle <- prepare_linestring_input(x)
@@ -266,6 +270,7 @@ a5_linestring_to_cells <- function(x, resolution, simplify = TRUE) {
 #' an outer ring and `0L` for a hole ring.
 #' @noRd
 prepare_polygon_input <- function(x, call = rlang::caller_env()) {
+  check_lonlat_crs(x, call = call)
   x <- maybe_coerce_spatvector(x, call = call)
   bundle <- if (is.matrix(x) || (is.data.frame(x) && !inherits(x, "sf"))) {
     ring <- if (is.matrix(x)) {
@@ -274,7 +279,7 @@ prepare_polygon_input <- function(x, call = rlang::caller_env()) {
       coords_from_data_frame(x, call = call)
     }
     if (length(ring$lon) == 0L) {
-      cli::cli_abort("{.arg x} contains no polygon rings.", call = call)
+      a5_abort("geometry", "{.arg x} contains no polygon rings.", call = call)
     }
     c(ring, list(part_feature = 1L, n_features = 1L, missing = FALSE))
   } else {
@@ -283,17 +288,19 @@ prepare_polygon_input <- function(x, call = rlang::caller_env()) {
 
   validate_feature_sizes(bundle, expected = "polygon", call = call)
   if (anyNA(bundle$lon) || anyNA(bundle$lat)) {
-    cli::cli_abort(
+    a5_abort("geometry",
       "{.arg x} must not contain {.code NA} coordinates.",
       call = call
     )
   }
+  check_lonlat_range(bundle, call = call)
   bundle
 }
 
 #' Flatten linestring input to (lon, lat, offsets)
 #' @noRd
 prepare_linestring_input <- function(x, call = rlang::caller_env()) {
+  check_lonlat_crs(x, call = call)
   x <- maybe_coerce_spatvector(x, call = call)
   bundle <- if (is.matrix(x) || (is.data.frame(x) && !inherits(x, "sf"))) {
     line <- if (is.matrix(x)) {
@@ -302,7 +309,7 @@ prepare_linestring_input <- function(x, call = rlang::caller_env()) {
       coords_from_data_frame(x, call = call)
     }
     if (length(line$lon) == 0L) {
-      cli::cli_abort("{.arg x} contains no linestrings.", call = call)
+      a5_abort("geometry", "{.arg x} contains no linestrings.", call = call)
     }
     c(line, list(line_feature = 1L, n_features = 1L))
   } else {
@@ -311,25 +318,26 @@ prepare_linestring_input <- function(x, call = rlang::caller_env()) {
 
   validate_feature_sizes(bundle, expected = "linestring", call = call)
   if (anyNA(bundle$lon) || anyNA(bundle$lat)) {
-    cli::cli_abort(
+    a5_abort("geometry",
       "{.arg x} must not contain {.code NA} coordinates.",
       call = call
     )
   }
+  check_lonlat_range(bundle, call = call)
   bundle
 }
 
 #' @noRd
 coords_from_matrix <- function(x, call = rlang::caller_env()) {
   if (ncol(x) != 2L) {
-    cli::cli_abort(
+    a5_abort("geometry",
       "Matrix input must have exactly 2 columns ({.code lon}, {.code lat}); \\
        got {ncol(x)}.",
       call = call
     )
   }
   if (!is.numeric(x)) {
-    cli::cli_abort("Matrix input must be numeric.", call = call)
+    a5_abort("geometry", "Matrix input must be numeric.", call = call)
   }
   lon <- as.numeric(x[, 1L])
   lat <- as.numeric(x[, 2L])
@@ -345,7 +353,7 @@ coords_from_matrix <- function(x, call = rlang::caller_env()) {
 #' @noRd
 coords_from_data_frame <- function(x, call = rlang::caller_env()) {
   if (!all(c("lon", "lat") %in% names(x))) {
-    cli::cli_abort(
+    a5_abort("geometry",
       "Data frame input must have columns {.code lon} and {.code lat}.",
       call = call
     )
@@ -369,7 +377,7 @@ coords_from_wk_polygons <- function(x, call = rlang::caller_env()) {
   allowed <- c(POLYGON = 3L, MULTIPOLYGON = 6L)
   bad <- !is.na(meta$geometry_type) & !(meta$geometry_type %in% allowed)
   if (any(bad)) {
-    cli::cli_abort(
+    a5_abort("geometry",
       "{.arg x} must contain only {paste(names(allowed), collapse = ' or ')} geometries.",
       call = call
     )
@@ -439,7 +447,7 @@ coords_from_wk_linestrings <- function(x, call = rlang::caller_env()) {
   allowed <- c(LINESTRING = 2L, MULTILINESTRING = 5L)
   bad <- !is.na(meta$geometry_type) & !(meta$geometry_type %in% allowed)
   if (any(bad)) {
-    cli::cli_abort(
+    a5_abort("geometry",
       "{.arg x} must contain only {paste(names(allowed), collapse = ' or ')} geometries.",
       call = call
     )
@@ -479,6 +487,49 @@ coords_from_wk_linestrings <- function(x, call = rlang::caller_env()) {
 #' inputs through `terra::geom(x, wkt = TRUE)` and wrap the result in a
 #' `wk_wkt` vector. `terra` is in `Suggests`; this path errors with a
 #' clear install hint if the package is missing.
+#' Error when `x` declares a CRS that is not longitude/latitude
+#'
+#' Only sf and terra CRS objects can be tested reliably; other inputs rely on
+#' the coordinate range check in `check_lonlat_range()`.
+#' @noRd
+check_lonlat_crs <- function(x, call = rlang::caller_env()) {
+  lonlat <- if (inherits(x, "SpatVector")) {
+    rlang::check_installed("terra", reason = "to convert terra SpatVector input.")
+    terra::is.lonlat(x, perhaps = TRUE, warn = FALSE)
+  } else if (inherits(x, c("sf", "sfc"))) {
+    crs <- sf::st_crs(x)
+    is.na(crs) || isTRUE(sf::st_is_longlat(crs))
+  } else {
+    TRUE
+  }
+  if (!isTRUE(lonlat)) {
+    a5_abort("geometry",
+      c(
+        "{.arg x} must have longitude/latitude coordinates.",
+        i = "Transform it to WGS 84 first, for example with \\
+             {.code sf::st_transform(x, 4326)}."
+      ),
+      call = call
+    )
+  }
+  invisible(x)
+}
+
+#' Error on coordinates that cannot be degrees of longitude and latitude
+#' @noRd
+check_lonlat_range <- function(bundle, call = rlang::caller_env()) {
+  if (any(abs(bundle$lat) > 90) || any(abs(bundle$lon) > 360)) {
+    a5_abort("geometry",
+      c(
+        "{.arg x} has coordinates outside the longitude/latitude range.",
+        i = "Coordinates must be WGS 84 longitude and latitude in degrees."
+      ),
+      call = call
+    )
+  }
+  invisible(bundle)
+}
+
 #' @noRd
 maybe_coerce_spatvector <- function(x, call = rlang::caller_env()) {
   if (!inherits(x, "SpatVector")) {
@@ -493,7 +544,7 @@ safe_wk_meta <- function(x, call = rlang::caller_env()) {
   tryCatch(
     wk::wk_meta(x),
     error = function(e) {
-      cli::cli_abort(
+      a5_abort("geometry",
         c(
           "Could not interpret {.arg x} as a geometry.",
           i = "Pass a matrix, data frame with {.code lon}/{.code lat} \\
@@ -516,11 +567,52 @@ validate_feature_sizes <- function(
   min_size <- switch(expected, polygon = 3L, linestring = 2L)
   short <- which(sizes < min_size)
   if (length(short) > 0L) {
-    cli::cli_abort(
+    a5_abort("geometry",
       "Each {expected} ring must have at least {min_size} vertices; \\
        ring {short[1]} has {sizes[short[1]]}.",
       call = call
     )
   }
   invisible(bundle)
+}
+
+#' Bounding box of polygons with great-circle edges
+#'
+#' Returns, for each polygon feature, the longitude/latitude box that
+#' contains its edges as A5 draws them: great circles between consecutive
+#' vertices (see [a5_polygon_to_cells()]). Such an edge bows toward the pole,
+#' so the box can extend beyond the latitudes of the vertices, which a plain
+#' vertex bounding box would miss. A ring that winds around a pole extends
+#' the box to that pole across all longitudes.
+#'
+#' Longitudes are continuous: a box crossing the antimeridian has `xmin`
+#' between -180 and 180 and `xmax` above 180.
+#'
+#' @inheritParams a5_polygon_to_cells
+#' @returns A [wk::rct()] vector with one box per feature (one for matrix and
+#'   `data.frame` input), in WGS 84 longitude and latitude. `NA` for a
+#'   missing or empty geometry.
+#'
+#' @seealso [a5_polygon_to_cells()]
+#' @export
+#' @examples
+#' # an edge along 60 degrees north bows toward the pole
+#' poly <- wk::wkt("POLYGON ((-30 50, 30 50, 30 60, -30 60, -30 50))")
+#' a5_bbox(poly)
+#' wk::wk_bbox(poly)
+a5_bbox <- function(x) {
+  if (inherits(x, "wk_rct")) {
+    x <- wk::as_wkb(x)
+  }
+  bundle <- prepare_polygon_input(x)
+  out <- a5_bbox_rs(
+    bundle$lon,
+    bundle$lat,
+    bundle$offsets,
+    bundle$part_id,
+    bundle$is_outer,
+    bundle$part_feature,
+    bundle$n_features
+  )
+  wk::rct(out$xmin, out$ymin, out$xmax, out$ymax, crs = wk::wk_crs_longlat())
 }

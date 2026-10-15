@@ -18,15 +18,35 @@ test_that("is_a5_cell works", {
   expect_false(is_a5_cell("0000000000000abc"))
 })
 
-test_that("a5_cell rejects hex strings not exactly 16 characters", {
-  expect_error(a5_cell("12346"), "exactly 16 characters")
-  expect_error(a5_cell("0800000000000006f"), "exactly 16 characters")
-  expect_error(a5_cell(c("0800000000000006", "abc")), "exactly 16 characters")
-  # NA and valid 16-char hex pass
-
+test_that("a5_cell parses short and 0x-prefixed hex, and rejects non-hex", {
+  # a5-js and DuckDB write ids without leading zeros
+  expect_identical(format(a5_cell("800000000000006")), "0800000000000006")
+  expect_identical(format(a5_cell("0x0800000000000006")), "0800000000000006")
+  expect_identical(format(a5_cell("0X800000000000006")), "0800000000000006")
+  expect_identical(format(a5_cell("ABC")), "0000000000000abc")
+  expect_error(a5_cell("0800000000000006f"), "not a hex cell id")
+  expect_error(a5_cell(c("0800000000000006", "zz")), "Element 2")
+  expect_error(a5_cell("+800000000000006"), "not a hex cell id")
+  expect_error(a5_cell(" 800000000000006"), "not a hex cell id")
+  expect_error(a5_cell(""), "not a hex cell id")
+  expect_error(a5_cell("0x"), "not a hex cell id")
   expect_length(a5_cell(c("0800000000000006", NA)), 2L)
-  # vec_cast path also validates
-  expect_error(vctrs::vec_cast("short", a5_cell()), "exactly 16 characters")
+  expect_error(vctrs::vec_cast("short", a5_cell()), "not a hex cell id")
+  expect_error(vctrs::vec_c(a5_cell("0800000000000006"), "zz"), "not a hex cell id")
+})
+
+test_that("NA cells are missing to vctrs", {
+  x <- a5_cell(c("0800000000000006", NA, "fc00000000000001"))
+  expect_identical(vctrs::vec_detect_missing(x), c(FALSE, TRUE, FALSE))
+  expect_identical(x == a5_cell(NA), c(NA, NA, NA))
+  expect_identical(x == x, c(TRUE, NA, TRUE))
+  # NA sorts last, not among the resolution-30 ids starting fc
+  expect_identical(format(vctrs::vec_sort(x)), c("0800000000000006", "fc00000000000001", NA))
+  expect_identical(format(max(x, na.rm = TRUE)), "fc00000000000001")
+  expect_identical(vctrs::vec_unique_count(c(x, x)), 3L)
+  # u64 order across the 32-bit halves
+  y <- a5_cell(c("00000000ffffffff", "0000000100000000", "ff00000000000000"))
+  expect_identical(vctrs::vec_order(y), 1:3)
 })
 
 test_that("a5_is_valid validates", {
@@ -295,4 +315,17 @@ test_that("a5_cell memory is compact (8 raw vectors)", {
   # Should be ~8 KB (8 x 1 byte x 1000), not ~56 KB+ from list-of-raw
   sz <- as.numeric(object.size(cells))
   expect_true(sz < 50000) # well under list-of-raw overhead
+})
+
+test_that("== and != on cells match vctrs, with NA and recycling", {
+  x <- a5_cell(c("0800000000000006", NA, "fc00000000000001", "0800000000000016"))
+  y <- a5_cell(c("0800000000000006", "0800000000000006", NA, "0800000000000006"))
+  expect_identical(x == y, c(TRUE, NA, NA, FALSE))
+  expect_identical(x != y, c(FALSE, NA, NA, TRUE))
+  expect_identical(x == x[1], c(TRUE, NA, FALSE, FALSE))
+  expect_identical(x == "0800000000000006", c(TRUE, NA, FALSE, FALSE))
+  expect_identical("0800000000000016" == x, c(FALSE, NA, FALSE, TRUE))
+  expect_identical(x == x, vctrs::vec_equal(x, x, na_equal = FALSE))
+  expect_error(x[1:2] == x[1:3], class = "vctrs_error_incompatible_size")
+  expect_identical(x[0] == x[0], logical())
 })

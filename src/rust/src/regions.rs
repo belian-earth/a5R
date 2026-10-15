@@ -27,7 +27,7 @@ fn containment_options(containment: &str) -> PolygonToCellsOptions {
 }
 
 /// Build per-ring `Vec<a5::LonLat>`s from flat coordinate slices and offsets.
-fn split_rings(lon: &Doubles, lat: &Doubles, offsets: &Integers) -> Vec<Vec<a5::LonLat>> {
+pub(crate) fn split_rings(lon: &Doubles, lat: &Doubles, offsets: &Integers) -> Vec<Vec<a5::LonLat>> {
     let n_rings = offsets.len().saturating_sub(1);
     let mut out: Vec<Vec<a5::LonLat>> = Vec::with_capacity(n_rings);
     for i in 0..n_rings {
@@ -48,7 +48,7 @@ fn split_rings(lon: &Doubles, lat: &Doubles, offsets: &Integers) -> Vec<Vec<a5::
 /// marks its outer ring. A part without an outer ring has no rings. The
 /// ordering matches what `a5::polygon_to_cells` expects: index 0 is the
 /// outer ring, the rest are holes.
-fn group_parts(
+pub(crate) fn group_parts(
     rings: Vec<Vec<a5::LonLat>>,
     part_id: &[i32],
     is_outer: &[i32],
