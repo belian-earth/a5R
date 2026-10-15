@@ -72,3 +72,24 @@ test_that("with_a5_threads and local_a5_threads restore the count", {
   expect_identical(f(), 4L)
   expect_identical(a5_get_threads(), 1L)
 })
+
+test_that("large inputs give identical results on 1 and 4 threads", {
+  withr::defer(a5_set_threads(1L))
+  set.seed(42)
+  n <- 50000
+  lon <- runif(n, -180, 180)
+  lat <- runif(n, -85, 85)
+  lon[c(7, 20000)] <- NA
+  run <- function(threads) {
+    a5_set_threads(threads)
+    cells <- a5_lonlat_to_cell(lon, lat, 12)
+    list(
+      cells = cells,
+      lonlat = a5_cell_to_lonlat(cells, as_dataframe = TRUE),
+      parent = a5_cell_to_parent(cells, 8),
+      super = a5_cell_to_supercell(cells, 8),
+      kids = a5_uncompact(a5_cell_to_subcell(cells[1:2000], 14))
+    )
+  }
+  expect_identical(run(1L), run(4L))
+})

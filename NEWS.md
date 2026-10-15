@@ -99,6 +99,11 @@
 
 ## Other changes
 
+* Functions returning many cells write them straight into R's vectors, in
+  parallel when threads are enabled, instead of staging them first:
+  `a5_uncompact()` is about 2.5 times faster on millions of cells, and
+  `a5_cell_to_lonlat()` and `a5_cell_to_parent()` up to a third faster,
+  with lower peak memory.
 * `a5_lonlat_to_cell()` returns `NA` for `NaN` and infinite coordinates,
   which used to give valid cells, and errors on latitudes outside
   \[-90, 90\], which used to wrap onto plausible but wrong cells.

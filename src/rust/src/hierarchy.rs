@@ -1,7 +1,7 @@
 use extendr_api::prelude::*;
 use extendr_api::wrapper::Nullable;
 
-use crate::cell_raw::{map_cells, one_to_many, u64s_to_raw8_list, CellSlices};
+use crate::cell_raw::{map_cells, map_cells_to_cells, one_to_many, u64s_to_raw8_list, CellSlices};
 use crate::covering::{cells_to_covering, cells_to_coverings, coverings_to_list, read_coverings};
 use crate::threading::{get_num_threads, maybe_par};
 use rayon::prelude::*;
@@ -119,11 +119,7 @@ fn a5_cell_to_parent_rs(cells: List, parent_resolution: Nullable<i32>) -> extend
         }
     }
 
-    let results = map_cells(&cells, |id| {
-        a5::cell_to_parent(id, pres).ok()
-    });
-
-    Ok(u64s_to_raw8_list(results))
+    Ok(map_cells_to_cells(&cells, |id| a5::cell_to_parent(id, pres).ok()))
 }
 
 /// Get child cells of every input cell.
@@ -159,14 +155,13 @@ fn a5_cell_to_supercell_rs(cells: List, resolution: Nullable<i32>) -> List {
         Nullable::NotNull(v) => Some(v),
         Nullable::Null => None,
     };
-    let results = map_cells(&cells, |id| {
+    map_cells_to_cells(&cells, |id| {
         let res = target.unwrap_or_else(|| a5::get_resolution(id) - 1);
         if res < 0 {
             return None;
         }
         a5::cell_to_supercell(id, res).ok()
-    });
-    u64s_to_raw8_list(results)
+    })
 }
 
 /// Subcells: the finer cells whose centres lie in each cell, as coverings.
