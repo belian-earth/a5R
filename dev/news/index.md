@@ -4,7 +4,7 @@
 
 ### Breaking changes
 
-- a5R now uses the a5 Rust crate 1.0.0-beta.2, which introduces A5’s
+- a5R now uses the a5 Rust crate 1.0.0-beta.3, which introduces A5’s
   permanent cell-ID system. The space-filling curve and the order of the
   dodecahedron faces are new, so **every cell id changes**: an id
   written by an earlier version of a5R is still a valid cell, but in a

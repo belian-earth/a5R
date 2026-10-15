@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9001</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,7 +51,7 @@
 <h2 class="pkg-version" data-toc-text="development version" id="a5r-development-version">a5R (development version)<a class="anchor" aria-label="anchor" href="#a5r-development-version"></a></h2>
 <div class="section level3">
 <h3 id="breaking-changes-development-version">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-development-version"></a></h3>
-<ul><li>a5R now uses the a5 Rust crate 1.0.0-beta.2, which introduces A5’s permanent cell-ID system. The space-filling curve and the order of the dodecahedron faces are new, so <strong>every cell id changes</strong>: an id written by an earlier version of a5R is still a valid cell, but in a different place, and nothing in the id says which version wrote it. Re-index stored data from its coordinates, or convert the ids once with the new <code><a href="../reference/a5_migrate.html">a5_migrate()</a></code>.</li>
+<ul><li>a5R now uses the a5 Rust crate 1.0.0-beta.3, which introduces A5’s permanent cell-ID system. The space-filling curve and the order of the dodecahedron faces are new, so <strong>every cell id changes</strong>: an id written by an earlier version of a5R is still a valid cell, but in a different place, and nothing in the id says which version wrote it. Re-index stored data from its coordinates, or convert the ids once with the new <code><a href="../reference/a5_migrate.html">a5_migrate()</a></code>.</li>
 <li>Resolution-1 cells are now pentagons rather than triangles, so their boundaries and centres change. Cells at every other resolution keep their shape and position.</li>
 <li>Compacted cell sets are now <code>a5_covering</code> vectors, one covering per element. A covering stores its compacted cells followed by a compaction marker recording the resolution they stand for, as in the other A5 libraries, so <code><a href="../reference/a5_compaction.html">a5_uncompact()</a></code> no longer needs a resolution. Coverings print as their resolution, cell count and stored-cell count, work as data frame columns, and compare equal with <code>==</code> when they hold the same cells. Use <code><a href="../reference/a5_compaction.html">a5_uncompact()</a></code> for the cells; <code><a href="../reference/a5_cell.html">as_a5_cell()</a></code> refuses a covering rather than treat its stored cells, whose outlines do not nest, as a grid.</li>
 <li>
