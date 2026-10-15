@@ -4,8 +4,8 @@ use extendr_api::wrapper::Nullable;
 use crate::cell_raw::{map_cells, one_to_many, u64s_to_raw8_list, CellSlices};
 use crate::covering::cells_to_coverings;
 use a5::core::serialization::{
-    cell_first_slot, cell_slot_count, slot_to_cell, FIRST_CURVE_RESOLUTION,
-    QUINTANT_SHIFT, RES30_QUINTANTS, SLOT_COUNTS,
+    cell_first_slot, cell_slot_count, slot_to_cell, QUINTANT_SHIFT, RES30_QUINTANTS,
+    SLOT_COUNTS,
 };
 
 /// The descendants of a cell at a finer resolution, without enumerating them.
@@ -37,9 +37,8 @@ impl Descendants {
                 child_resolution, a5::MAX_RESOLUTION
             ));
         }
-        if child_resolution - std::cmp::max(resolution, FIRST_CURVE_RESOLUTION - 1) > 20 {
-            return Err("Resolution difference too large".to_string());
-        }
+        // Unlike `a5::cell_to_children`, no limit on the resolution difference:
+        // nothing is enumerated, and slots stay below 60 * 2^58.
         let first_slot = cell_first_slot(index)?;
         let stride = SLOT_COUNTS[child_resolution as usize];
         Ok(Descendants {

@@ -101,6 +101,10 @@
   the parent instead of returning 0.
 * `a5_cell_from_arrow()` and `a5_covering_from_arrow()` give a clear error
   for input that is not an Arrow array.
+* `a5_cell_children_range()` and `a5_cell_child()` reach resolution 29 from
+  any cell, as documented, instead of erroring beyond 20 levels.
+* The world cell's boundary is `POLYGON EMPTY` instead of an invalid
+  polygon.
 * `a5_cell_to_boundary()` builds its output faster, with identical
   results: on a million cells, WKB takes about 25% less time on one thread
   and half the time on four, and WKT about 20% less.
