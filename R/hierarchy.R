@@ -35,7 +35,8 @@ a5_get_resolution <- function(cell) {
 #' @param cell An [a5_cell] vector.
 #' @param resolution Integer scalar target resolution, or `NULL` for one step:
 #'   the immediate parent for `a5_cell_to_parent()`, the immediate children
-#'   for `a5_cell_to_children()`.
+#'   for `a5_cell_to_children()`. For `a5_cell_to_parent()` it must not be
+#'   finer than any cell's resolution.
 #' @param simplify Logical scalar. If `TRUE` (default), return one flat
 #'   [a5_cell] vector with the children of every input concatenated in input
 #'   order; which child came from which parent is not recorded. If `FALSE`,
@@ -72,7 +73,7 @@ a5_cell_to_parent <- function(cell, resolution = NULL) {
   if (!is.null(resolution)) {
     resolution <- check_scalar_resolution(resolution)
   }
-  cells_from_rs(a5_cell_to_parent_rs(cell_data(cell), resolution))
+  cells_from_rs(from_caller(a5_cell_to_parent_rs(cell_data(cell), resolution), call = rlang::current_env()))
 }
 
 #' @rdname a5_hierarchy

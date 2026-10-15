@@ -101,17 +101,26 @@ fn a5_get_resolution_rs(cells: List) -> Integers {
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_cell_to_parent_rs(cells: List, parent_resolution: Nullable<i32>) -> List {
+fn a5_cell_to_parent_rs(cells: List, parent_resolution: Nullable<i32>) -> extendr_api::Result<List> {
     let pres: Option<i32> = match parent_resolution {
         Nullable::NotNull(v) => Some(v),
         Nullable::Null => None,
     };
 
+    if let Some(p) = pres {
+        let cs = CellSlices::from_list(&cells);
+        if let Some(r) = (0..cs.len).filter_map(|i| cs.get(i)).map(a5::get_resolution).find(|&r| r < p) {
+            return Err(Error::Other(format!(
+                "`resolution` ({p}) must not be finer than the cell resolution ({r})."
+            )));
+        }
+    }
+
     let results = map_cells(&cells, |id| {
         a5::cell_to_parent(id, pres).ok()
     });
 
-    u64s_to_raw8_list(results)
+    Ok(u64s_to_raw8_list(results))
 }
 
 /// Get child cells of every input cell.

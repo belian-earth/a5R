@@ -15,7 +15,8 @@ a5_cell_to_children(cell, resolution = NULL, simplify = TRUE)
 
 \item{resolution}{Integer scalar target resolution, or \code{NULL} for one step:
 the immediate parent for \code{a5_cell_to_parent()}, the immediate children
-for \code{a5_cell_to_children()}.}
+for \code{a5_cell_to_children()}. For \code{a5_cell_to_parent()} it must not be
+finer than any cell's resolution.}
 
 \item{simplify}{Logical scalar. If \code{TRUE} (default), return one flat
 \link{a5_cell} vector with the children of every input concatenated in input

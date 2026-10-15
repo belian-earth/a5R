@@ -105,6 +105,8 @@
   any cell, as documented, instead of erroring beyond 20 levels.
 * The world cell's boundary is `POLYGON EMPTY` instead of an invalid
   polygon.
+* `a5_cell_to_parent()` errors when `resolution` is finer than a cell's
+  resolution, instead of returning a descendant.
 * `a5_cell_to_boundary()` builds its output faster, with identical
   results: on a million cells, WKB takes about 25% less time on one thread
   and half the time on four, and WKT about 20% less.

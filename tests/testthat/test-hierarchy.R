@@ -74,3 +74,10 @@ test_that("cell_to_parent propagates NA", {
   expect_false(is.na(parents[1]))
   expect_true(is.na(parents[2]))
 })
+
+test_that("a5_cell_to_parent rejects a finer resolution", {
+  cells <- a5_lonlat_to_cell(c(0, 10), c(0, 10), c(5, 8))
+  expect_error(a5_cell_to_parent(cells, 6), "must not be finer than the cell resolution \\(5\\)")
+  expect_identical(a5_get_resolution(a5_cell_to_parent(cells, 5)), c(5L, 5L))
+  expect_true(is.na(a5_cell_to_parent(a5_cell(NA), 6)))
+})
