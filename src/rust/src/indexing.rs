@@ -25,8 +25,8 @@ fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Lis
                 if lo.is_na() || la.is_na() || res.is_na() {
                     None
                 } else {
-                    let lonlat = a5::LonLat::new(lo.inner(), la.inner());
-                    a5::lonlat_to_cell(lonlat, res.inner()).ok()
+                    let lonlat = a5::LonLat::new(lo.0, la.0);
+                    a5::lonlat_to_cell(lonlat, res.0).ok()
                 }
             })
             .collect();
@@ -40,7 +40,7 @@ fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Lis
                 if lo.is_na() || la.is_na() || res.is_na() {
                     (0.0, 0.0, 0, true)
                 } else {
-                    (lo.inner(), la.inner(), res.inner(), false)
+                    (lo.0, la.0, res.0, false)
                 }
             })
             .collect();

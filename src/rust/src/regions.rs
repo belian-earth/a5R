@@ -31,11 +31,11 @@ fn split_rings(lon: &Doubles, lat: &Doubles, offsets: &Integers) -> Vec<Vec<a5::
     let n_rings = offsets.len().saturating_sub(1);
     let mut out: Vec<Vec<a5::LonLat>> = Vec::with_capacity(n_rings);
     for i in 0..n_rings {
-        let start = offsets[i].inner() as usize;
-        let end = offsets[i + 1].inner() as usize;
+        let start = offsets[i].0 as usize;
+        let end = offsets[i + 1].0 as usize;
         let mut ring: Vec<a5::LonLat> = Vec::with_capacity(end.saturating_sub(start));
         for j in start..end {
-            ring.push(a5::LonLat::new(lon[j].inner(), lat[j].inner()));
+            ring.push(a5::LonLat::new(lon[j].0, lat[j].0));
         }
         out.push(ring);
     }
@@ -106,9 +106,9 @@ fn a5_polygon_to_cells_rs(
     containment: &str,
 ) -> List {
     let options = containment_options(containment);
-    let part_id: Vec<i32> = part_id.iter().map(|p| p.inner()).collect();
-    let is_outer: Vec<i32> = is_outer.iter().map(|b| b.inner()).collect();
-    let part_feature: Vec<i32> = part_feature.iter().map(|f| f.inner()).collect();
+    let part_id: Vec<i32> = part_id.iter().map(|p| p.0).collect();
+    let is_outer: Vec<i32> = is_outer.iter().map(|b| b.0).collect();
+    let part_feature: Vec<i32> = part_feature.iter().map(|f| f.0).collect();
     let parts = group_parts(
         split_rings(&lon, &lat, &offsets),
         &part_id,
@@ -170,7 +170,7 @@ fn a5_linestring_to_cells_rs(
     simplify: bool,
 ) -> Robj {
     let lines = split_rings(&lon, &lat, &offsets);
-    let line_feature: Vec<i32> = line_feature.iter().map(|f| f.inner()).collect();
+    let line_feature: Vec<i32> = line_feature.iter().map(|f| f.0).collect();
 
     let trace = |w: &Vec<a5::LonLat>| a5::line_string_to_cells(w, resolution);
     let per_line: Vec<StdResult<Vec<u64>, String>> = if get_num_threads() <= 1 || lines.len() == 1 {

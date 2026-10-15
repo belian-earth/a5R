@@ -197,7 +197,7 @@ fn a5_cell_child_rs(cells: List, child_resolution: i32, i: Integers) -> List {
                     Ok(d) => d,
                     Err(e) => throw_r_error(format!("cell_child failed: {}", e)),
                 };
-                let k = pos.inner();
+                let k = pos.0;
                 if k < 1 || (k as u64) > d.count() {
                     throw_r_error(format!(
                         "child index {} is out of range: cell {} has {} descendants at resolution {}",
