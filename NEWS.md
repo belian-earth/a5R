@@ -81,7 +81,9 @@
 * New `a5_bbox()` gives the longitude/latitude box of polygons as A5 sees
   them, with great-circle edges that can bow beyond the vertices' latitudes.
 * New `a5_covering_to_supercells()` gives the coarse cells containing the
-  centres of a covering's cells without building them.
+  centres of a covering's cells without building them. A covering of few
+  fine cells takes each one's supercell directly, so converting many small
+  coverings, such as one per feature, costs microseconds each.
 * `with(a5_threads(n), expr)` runs `expr` on `n` threads and restores
   the previous count afterwards, as `with(mirai::daemons(n), expr)` does.
   `a5_threads(n)` returns the previous count as an `a5_threads` object to

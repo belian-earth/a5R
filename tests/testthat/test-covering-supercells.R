@@ -44,3 +44,23 @@ test_that("a5_covering_to_supercells is exact across resolutions and shapes", {
   expect_identical(fast(disk, 6), brute(disk, 6))
   expect_identical(with(a5_threads(3), fast(disk, 6)), brute(disk, 6))
 })
+
+test_that("small coverings take their fine cells' supercells, at any gap", {
+  cells <- a5_lonlat_to_cell(c(8.3, -3.19, 139.7, 0), c(47.4, 55.95, 35.7, -89), 18)
+  one_each <- a5_grid_disk(cells, 0L)
+  for (res in c(0, 6, 10, 17)) {
+    expected <- do.call(c, lapply(seq_along(cells), function(i) {
+      as_a5_covering(a5_cell_to_supercell(cells[i], res))
+    }))
+    expect_identical(a5_covering_to_supercells(one_each, res), expected)
+  }
+  # a small disk, either side of the size where the search takes over
+  brute <- function(cv, res) {
+    format(vctrs::vec_sort(vctrs::vec_unique(a5_cell_to_supercell(a5_uncompact(cv), res))))
+  }
+  fast <- function(cv, res) format(vctrs::vec_sort(a5_uncompact(a5_covering_to_supercells(cv, res))))
+  disk <- a5_grid_disk(cells[1], 12L) # 400+ cells: searched at gap 1, listed beyond
+  for (res in c(17, 16, 12, 6)) {
+    expect_identical(fast(disk, res), brute(disk, res), info = res)
+  }
+})
