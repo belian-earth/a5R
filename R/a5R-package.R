@@ -62,7 +62,7 @@
 #'   Arrow `list<uint64>`
 #'
 #' @section Configuration:
-#' - [a5_set_threads()] / [a5_get_threads()] --- multi-threading control
+#' - [a5_threads()] --- multi-threading control
 #'
 #' @section Vignettes:
 #' - `vignette("a5R")` --- getting started

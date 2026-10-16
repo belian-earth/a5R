@@ -101,7 +101,7 @@ Arrow \verb{list<uint64>}
 \section{Configuration}{
 
 \itemize{
-\item \code{\link[=a5_set_threads]{a5_set_threads()}} / \code{\link[=a5_get_threads]{a5_get_threads()}} --- multi-threading control
+\item \code{\link[=a5_threads]{a5_threads()}} --- multi-threading control
 }
 }
 

@@ -6,7 +6,7 @@ test_that("a5_info reports versions and settings", {
   expect_match(info$crate, "^1\\.0\\.0")
   expect_identical(info$index, "1.0")
   expect_identical(info$c_api, 1L)
-  expect_identical(with(a5_set_threads(3), a5_info()$threads), 3L)
+  expect_identical(with(a5_threads(3), a5_info()$threads), 3L)
   expect_message(print(info), "A5 index")
   expect_match(a5R:::a5_info_line(info), "a5 crate")
 })

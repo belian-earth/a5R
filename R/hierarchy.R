@@ -202,8 +202,8 @@ a5_cell_children_range <- function(cell, child_resolution) {
 #'
 #' @section Supercell:
 #' The result equals `a5_lonlat_to_cell(a5_cell_to_lonlat(cell), resolution)`,
-#' computed without converting the centre to degrees. It takes well under
-#' half the time of [a5_lonlat_to_cell()], but far longer than
+#' computed without converting the centre to degrees. It takes about half
+#' the time of [a5_lonlat_to_cell()], but far longer than
 #' [a5_cell_to_parent()], which is a bit operation.
 #'
 #' @section Subcells:

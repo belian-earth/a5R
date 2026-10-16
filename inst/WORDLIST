@@ -6,6 +6,7 @@ Karney
 Karney's
 Lifecycle
 Losslessly
+PSOCK
 R's
 Subcells
 TypeScript
@@ -18,11 +19,13 @@ bbox
 belian
 deduplication
 dplyr
+erroring
 etc
 extendr
 geoparquet
 haversine
 io
+js
 lat
 linestring
 linestrings

@@ -353,8 +353,8 @@ test_that("a5_line_string_to_cells handles an antimeridian-crossing path", {
 # -- threading invariance ------------------------------------------------------
 
 test_that("polygon/linestring results are identical with threads > 1", {
-  prev <- a5_get_threads()
-  on.exit(a5_set_threads(prev), add = TRUE)
+  prev <- a5_threads()
+  on.exit(a5_threads(prev), add = TRUE)
 
   mp <- wk::wkt(
     "MULTIPOLYGON (((-3.5 55.5, -2.5 55.5, -2.5 56.5, -3.5 56.5, -3.5 55.5)),
@@ -367,12 +367,12 @@ test_that("polygon/linestring results are identical with threads > 1", {
 
   lines <- wk::wkt(c(as.character(ml), "LINESTRING (2.35 48.86, 13.4 52.52)"))
 
-  a5_set_threads(1)
+  a5_threads(1)
   p1 <- a5_polygon_to_cells(mp, resolution = 8)
   l1 <- a5_line_string_to_cells(ml, resolution = 5)
   f1 <- a5_line_string_to_cells(lines, resolution = 5, simplify = FALSE)
 
-  a5_set_threads(2)
+  a5_threads(2)
   p2 <- a5_polygon_to_cells(mp, resolution = 8)
   l2 <- a5_line_string_to_cells(ml, resolution = 5)
   f2 <- a5_line_string_to_cells(lines, resolution = 5, simplify = FALSE)

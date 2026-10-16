@@ -7,6 +7,12 @@
 #' @useDynLib a5R, .registration = TRUE
 NULL
 
+#' Panic inside the thread pool, for the test that a panic in a parallel call
+#' leaves the pool and later calls working.
+#' @noRd
+#' @keywords internal
+a5_test_pool_panic_rs <- function() .Call(wrap__a5_test_pool_panic_rs)
+
 a5_set_threads_rs <- function(n) .Call(wrap__a5_set_threads_rs, n)
 
 a5_get_threads_rs <- function() .Call(wrap__a5_get_threads_rs)

@@ -22,7 +22,13 @@ dir <- local({
 })
 source(file.path(dir, "utils.R"))
 
-a5_set_threads(1L)
+# The baseline build may predate a5_threads() (a5R < 0.9.9.9006).
+set_threads <- if (exists("a5_threads", asNamespace("a5R"))) {
+  a5R::a5_threads
+} else {
+  get("a5_set_threads", asNamespace("a5R"))
+}
+set_threads(1L)
 cat(sprintf("a5R %s | %s | threads = 1 | BENCH_TIME = %ss\n\n",
             packageVersion("a5R"), R.version.string, Sys.getenv("BENCH_TIME", "0.5")))
 

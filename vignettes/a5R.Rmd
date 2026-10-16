@@ -21,7 +21,9 @@ library(a5R)
 ## Index a point
 
 Map a longitude/latitude coordinate to a cell at a given resolution (0--30).
-Higher resolutions produce smaller cells.
+Higher resolutions produce smaller cells. a5R 1.0 uses A5's permanent cell
+ids; ids written by earlier versions name other cells and need converting
+once with `a5_migrate()` (see `vignette("arrow-parquet")`).
 
 ```{r}
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
@@ -45,14 +47,15 @@ boundary
 plot(boundary, col = "#206ead20", border = "#206ead", asp = 1)
 ```
 
-Boundaries are returned as `wk_wkb` vectors by default (set `format = "wkt"` for
-WKT). Both integrate directly with sf, terra, and other spatial tooling via the
+Boundaries are returned as well-known binary (WKB) `wk_wkb` vectors by
+default (set `format = "wkt"` for well-known text). Both integrate directly with sf, terra, and other spatial tooling via the
 wk package.
 
 ## Hierarchy and compaction
 
-A5 is a hierarchical grid: every cell has a **parent** at a coarser
-resolution and 4 **children** at the next finer resolution.
+Pentagons cannot nest exactly, so A5 has two hierarchies. The index
+hierarchy (`a5_cell_to_parent()`, `a5_cell_to_children()`) follows the ids:
+each cell has 4 children (5 at resolution 0), and compaction relies on it.
 
 ```{r}
 parent <- a5_cell_to_parent(cell)
@@ -62,21 +65,29 @@ children <- a5_cell_to_children(cell)
 children
 ```
 
-We can visualise the relationship: the parent (dark outline) contains
-our cell (blue fill), which in turn contains its 4 children (orange):
+The spatial hierarchy (`a5_cell_to_supercell()`, `a5_cell_to_subcells()`)
+goes by location: the supercell contains the cell's centre, and the subcells
+are the finer cells whose centres lie inside it. See
+`vignette("spatial-hierarchy")`.
 
-```{r hierarchy-plot, fig.width = 8, fig.height = 8}
-plot(NULL, xlim = c(-3.23, -3),  ylim = c(55.98, 55.99),               
-       xlab = "", ylab = "", asp = 1
-       )
-plot(a5_cell_to_boundary(a5_cell_to_children(cell)),
-     col = "#ad6e2020", border = "#ad6e20", add = TRUE)
-plot(a5_cell_to_boundary(cell), col = "#206ead40", border = "#206ead",
-     lwd = 2, add = TRUE)
-plot(a5_cell_to_boundary(parent), border = "#333333", lwd = 2, add = TRUE)
+```{r hierarchy-plot, fig.width = 5, fig.height = 4}
+supercell <- a5_cell_to_supercell(cell)
+subcells <- a5_uncompact(a5_cell_to_subcells(cell))
+
+plot(a5_cell_to_boundary(c(supercell, cell, subcells)), border = NA,
+     asp = 1 / cos(56 * pi / 180))
+plot(a5_cell_to_boundary(subcells), col = "#ad6e2020", border = "#ad6e20", add = TRUE)
+plot(a5_cell_to_boundary(cell), col = "#206ead40", border = "#206ead", lwd = 2, add = TRUE)
+plot(a5_cell_to_boundary(supercell), border = "#333333", lwd = 2, add = TRUE)
+plot(a5_cell_to_lonlat(cell), pch = 19, add = TRUE)
 ```
 
-Cell area decreases geometrically: each level is roughly 4x smaller, so
+The supercell (dark outline) contains our cell's centre (dot); the
+`r length(subcells)` subcells (orange) are the finer cells whose centres lie
+inside our cell (blue). No outline nests exactly.
+
+Cell area decreases geometrically: each level is 4 times smaller (5 times
+from resolution 0 to 1), so
 the average edge length roughly halves per level. `a5_cell_edge_length_avg()`
 gives a quick sense of cell size when choosing a resolution.
 
@@ -90,7 +101,8 @@ a5_cell_edge_length_avg(0:5, units = "km")
 `a5_compact()` stores a set of cells as an `a5_covering`: every complete
 group of siblings is replaced by its parent, and the covering records the
 resolution it stands for, so `a5_uncompact()` needs no resolution to expand
-it again.
+it again. `vignette("coverings")` covers building, combining and storing
+them.
 
 ```{r}
 children
@@ -111,15 +123,18 @@ Find neighbouring cells by hop count with `a5_grid_disk()`, or by
 great-circle distance with `a5_spherical_cap()`. Both return one covering
 per centre cell:
 
-```{r traversal, fig.width = 7}
+```{r traversal, fig.width = 7, fig.height = 4}
 disk <- a5_grid_disk(cell, k = 10)
-cap <- a5_spherical_cap(cell, radius = 50000)
+cap <- a5_spherical_cap(cell, radius = 50, units = "km")
 c(disk, cap)
 
-plot(a5_cell_to_boundary(a5_uncompact(cap)), col = "#6ead2020", border = "#6ead20", asp = 1)
+plot(a5_cell_to_boundary(a5_uncompact(cap)), col = "#6ead2020", border = "#6ead20",
+     asp = 1 / cos(56 * pi / 180))
 plot(a5_cell_to_boundary(a5_uncompact(disk)), col = "#206ead20", border = "#206ead",
-     asp = 1, add = TRUE)
+     add = TRUE)
 ```
+
+The cap is in green and the disk in blue.
 
 
 ## Converting geometries to a5 cells
@@ -129,17 +144,17 @@ polygon. It accepts any geometry that wk can handle (a `wk::rct()`
 bounding box, a WKT or WKB polygon, an `sf` / `sfc` feature) and also
 terra `SpatVector` polygons.
 
-```{r grid-plot, fig.width = 7}
+```{r grid-plot, fig.width = 7, fig.height = 4}
 covering <- a5_polygon_to_cells(wk::rct(-3.3, 55.9, -3.1, 56.0), resolution = 12)
 covering
 
 cells <- a5_uncompact(covering)
-plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
+plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead",
+     asp = 1 / cos(56 * pi / 180))
 ```
 
-A covering stores far fewer cells than it stands for: whenever four
-sibling cells all sit inside the polygon, they are stored as their
-parent. Stored cells are index parents, whose outlines do not nest (see
+A covering stores fewer cells than it stands for: whenever all the children
+of a cell sit inside the polygon, they are stored as that cell. Stored cells are index parents, whose outlines do not nest (see
 `vignette("spatial-hierarchy")`), so always uncompact before drawing.
 
 By default only cells whose centre lies inside the polygon are returned,
@@ -148,13 +163,13 @@ does not fully cover the polygon. Pass `containment = "overlapping"` to
 also keep every cell that touches the boundary, giving gap-free coverage.
 The overlapping set is always a superset of the centre set.
 
-```{r containment-plot, fig.width = 7}
+```{r containment-plot, fig.width = 7, fig.height = 4}
 overlapping <- a5_polygon_to_cells(wk::rct(-3.3, 55.9, -3.1, 56.0),
                                    resolution = 12, containment = "overlapping")
 overlapping
 
 plot(a5_cell_to_boundary(a5_uncompact(overlapping)),
-     col = "#ad6e2020", border = "#ad6e20", asp = 1)
+     col = "#ad6e2020", border = "#ad6e20", asp = 1 / cos(56 * pi / 180))
 plot(a5_cell_to_boundary(cells),
      col = "#206ead40", border = "#206ead", add = TRUE)
 plot(wk::rct(-3.3, 55.9, -3.1, 56.0), border = "#333333", lwd = 2, add = TRUE)
@@ -164,7 +179,7 @@ Each feature gets its own covering, so the result can be added to an `sf`
 data frame as a column. A `MULTIPOLYGON` feature's covering holds the cells
 of all its parts, and a `POLYGON` with holes leaves the hole cells out.
 
-```{r, eval = requireNamespace("sf", quietly = TRUE)}
+```{r, eval = requireNamespace("sf", quietly = TRUE), fig.width = 7, fig.height = 3.5}
 library(sf)
 demo(nc, ask = FALSE, echo = FALSE)
 nc$cells <- a5_polygon_to_cells(nc, resolution = 9)
@@ -203,10 +218,16 @@ cells <- a5_line_string_to_cells(a5R_strokes, resolution = 9)
 length(cells)
 
 plot(a5_cell_to_boundary(cells),
-     col = "#206ead80", border = "#37af6d", asp = 1)
+     col = "#206ead80", border = "#37af6d", asp = 1 / cos(52 * pi / 180))
 ```
 
-Each stroke is one part of the `MULTILINESTRING`; the function walks
-each great-circle path in turn and joins the strokes into one path, each
-cell kept once.
+## Next steps
+
+- `vignette("coverings")`: building, combining and storing sets of cells.
+- `vignette("spatial-hierarchy")`: moving values between resolutions by
+  location.
+- `vignette("traversal-and-distance")`: neighbourhoods and distance methods.
+- `vignette("arrow-parquet")`: exact ids in Arrow, Parquet and DuckDB.
+- `vignette("multithreading")`: parallel processing.
+- `vignette("internal-cell-representation")`: how cells are stored.
 

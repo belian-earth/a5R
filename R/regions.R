@@ -274,10 +274,7 @@ a5_line_string_to_cells <- function(x, resolution, simplify = TRUE) {
 #' @keywords internal
 #' @export
 a5_linestring_to_cells <- function(x, resolution, simplify = TRUE) {
-  cli::cli_warn(
-    "{.fn a5_linestring_to_cells} was renamed {.fn a5_line_string_to_cells} in a5R 1.0.0.",
-    class = c("a5R_warning_deprecated", "a5R_warning")
-  )
+  warn_renamed_fn("a5_linestring_to_cells", "a5_line_string_to_cells()")
   a5_line_string_to_cells(x, resolution, simplify)
 }
 

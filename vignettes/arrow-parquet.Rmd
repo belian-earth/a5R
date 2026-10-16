@@ -10,26 +10,32 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  eval = requireNamespace("arrow", quietly = TRUE) &&
+    requireNamespace("tibble", quietly = TRUE)
 )
 ```
 
 ## The uint64 problem
 
-A5 cell IDs are 64-bit unsigned integers. R has no native `uint64` type,
-and its `double` can only represent integers exactly up to 2^53. Nearly
-half of all A5 cell IDs exceed this threshold, so converting them to
-`double` silently corrupts the data.
+A5 cell ids are 64-bit unsigned integers. R has no native `uint64` type,
+and its `double` can only represent integers exactly up to 2^53. Almost
+every A5 cell id exceeds this threshold, so converting them to `double`
+silently corrupts the data.
 
-This is a problem when reading Parquet files that store A5 cell IDs as
+This is a problem when reading Parquet files that store A5 cell ids as
 `uint64` columns: the standard format used by DuckDB, Python, and
 [geoparquet.io](https://geoparquet.io/). By default, `arrow::read_parquet()`
-converts `uint64` to R's `double`, losing precision:
+converts `uint64` to R's `double`, losing precision. The same happens with
+`dplyr::collect()` on an Arrow dataset or query.
 
-```{r naive, eval = requireNamespace("arrow", quietly = TRUE), message = FALSE}
+```{r setup, eval = TRUE}
+library(a5R)
+```
+
+```{r naive, message = FALSE}
 library(arrow)
 library(tibble)
-library(a5R)
 
 # A real A5 cell: Edinburgh at resolution 20
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 20)
@@ -47,21 +53,19 @@ arrow::write_parquet(
 
 cell_as_dbl <- naive$cell_id
 
-# The double can't distinguish this cell from nearby IDs
+# The double can't distinguish this cell from nearby ids
 cell_as_dbl == cell_as_dbl + 1   # TRUE: silent corruption
 cell_as_dbl == cell_as_dbl + 100 # still TRUE
 ```
 
 ## The solution: `a5_cell_from_arrow()` and `a5_cell_to_arrow()`
 
-a5R provides two functions that bypass the lossy `double` conversion
-entirely, using Arrow's zero-copy `View()` to reinterpret the raw bytes:
+a5R provides two functions that move ids between `a5_cell` and Arrow
+`uint64` without passing through `double`:
 
-```{r bridge, eval = requireNamespace("arrow", quietly = TRUE)}
-library(a5R)
-library(tibble)
-
-# Six cities across the globe; some will have bit 63 set (quintant >= 32)
+```{r bridge}
+# Six cities across the globe. Tokyo and Sydney have bit 63 set: a signed
+# int64 would make them negative.
 cities <- tibble(
   name = c("Edinburgh", "Tokyo", "São Paulo", "Nairobi", "Anchorage", "Sydney"),
   lon  = c(   -3.19,     139.69,     -46.63,     36.82,    -149.90,    151.21),
@@ -72,10 +76,9 @@ cities$cell <- a5_lonlat_to_cell(cities$lon, cities$lat, resolution = 10)
 cities
 ```
 
-These cells work seamlessly in tibbles. Now let's enrich the data with
-some A5 operations: cell resolution and distance from Edinburgh.
+Add two ordinary columns to store alongside the cells:
 
-```{r enrich, eval = requireNamespace("arrow", quietly = TRUE)}
+```{r enrich}
 edinburgh <- cities$cell[1]
 
 cities$resolution <- a5_get_resolution(cities$cell)
@@ -88,77 +91,58 @@ cities
 
 ## Writing and reading Parquet
 
-Convert to an Arrow table and write to Parquet. The cell column is stored
-as native `uint64`, the same binary format used by DuckDB, Python, and
-geoparquet.io:
+`a5_to_arrow_table()` converts a data frame to an Arrow table, writing cell
+columns as native `uint64`, the binary format DuckDB, Python and
+geoparquet.io use, and recording the A5 index version in the schema
+metadata:
 
-```{r parquet_write, eval = requireNamespace("arrow", quietly = TRUE)}
+```{r parquet_write}
 tf <- tempfile(fileext = ".parquet")
-
-arrow_tbl <- arrow::arrow_table(
-  name = cities$name,
-  cell_id = a5_cell_to_arrow(cities$cell),
-  cell_res = cities$resolution,
-  dist_from_edinburgh_km = cities$dist_from_edinburgh_km
-)
-arrow_tbl$schema
-arrow::write_parquet(arrow_tbl, tf)
+arrow::write_parquet(a5_to_arrow_table(cities), tf)
 ```
 
-Read it back. `a5_cell_from_arrow()` recovers the exact cell IDs
-without any precision loss:
+`a5_from_arrow_table()` reads it back, recovering the exact ids. It reads
+every `uint64` column as cells unless `cells =` names them, and refuses a
+table tagged with a different index version:
 
-```{r parquet_read, eval = requireNamespace("arrow", quietly = TRUE)}
+```{r parquet_read}
 pq <- arrow::read_parquet(tf, as_data_frame = FALSE)
-
-# Recover cells from the uint64 column, bind with the rest of the data
-recovered_cells <- a5_cell_from_arrow(pq$column(1))
-result <- as.data.frame(pq)
-result$cell <- recovered_cells
-result <- tibble::as_tibble(result[c("name", "cell", "cell_res", "dist_from_edinburgh_km")])
-result
+pq$schema
+result <- a5_from_arrow_table(pq)
+identical(result$cell, cities$cell)
 ```
 
-Verify the round-trip is lossless:
-
-```{r verify, eval = requireNamespace("arrow", quietly = TRUE)}
-identical(format(cities$cell), format(result$cell))
-```
+For a single column, `a5_cell_to_arrow()` and `a5_cell_from_arrow()` convert
+between `a5_cell` and an Arrow `uint64` array.
 
 ## Storing coverings
 
 A covering, such as the cells of a polygon, is stored as a list of 64-bit
 values: its compacted cells in curve order, then a *compaction marker*
-recording the resolution they stand for (see `?a5_covering`). This is the
-layout every A5 library uses, so `a5_covering_to_arrow()` writes coverings
-to a `list<uint64>` column that DuckDB, Python and JavaScript read without
-losing the resolution:
+recording the resolution they stand for (see `vignette("coverings")`).
+This is the layout every A5 library uses, so covering columns are written as
+`list<uint64>`, which DuckDB, Python and JavaScript read without losing the
+resolution:
 
-```{r covering_write, eval = requireNamespace("arrow", quietly = TRUE)}
+```{r covering_write}
 cities$within_50km <- a5_spherical_cap(cities$cell, radius = 50000)
 cities[c("name", "within_50km")]
 
 tf <- tempfile(fileext = ".parquet")
-arrow::write_parquet(
-  arrow::arrow_table(
-    name = cities$name,
-    cell_id = a5_cell_to_arrow(cities$cell),
-    within_50km = a5_covering_to_arrow(cities$within_50km)
-  ),
-  tf
-)
+arrow::write_parquet(a5_to_arrow_table(cities[c("name", "cell", "within_50km")]), tf)
 pq <- arrow::read_parquet(tf, as_data_frame = FALSE)
 pq$schema
 ```
 
-`a5_covering_from_arrow()` reads them back. It also accepts coverings
-written by other A5 libraries, checking, sorting and compacting each one;
-an element without a compaction marker stands for the resolution of its
-finest cell.
+Reading the table back turns `list<uint64>` columns into coverings. Coverings
+written by other A5 libraries are checked, sorted and compacted; an element
+without a compaction marker stands for the resolution of its finest cell.
+`a5_covering_to_arrow()` and `a5_covering_from_arrow()` convert a single
+column.
 
-```{r covering_read, eval = requireNamespace("arrow", quietly = TRUE)}
-back <- a5_covering_from_arrow(pq$within_50km)
-identical(back, cities$within_50km)
+```{r covering_read}
+back <- a5_from_arrow_table(pq)
+identical(back$within_50km, cities$within_50km)
 ```
 
 Keep the compaction marker when moving coverings through other tools: the
@@ -172,36 +156,28 @@ a5R 1.0 uses A5's permanent cell-ID system. Its space-filling curve threads
 the cells differently from the index used by a5R 0.6 and earlier (the "v0"
 index), so every cell has a new id. A v0 id is still a valid cell in the
 current index, but in a different place, and nothing in the id records
-which version wrote it. Stored v0 ids must be converted exactly once, as
-they are read:
+which version wrote it. Files written before 1.0 carry no index tag, so
+`a5_from_arrow_table()` cannot detect them: convert stored v0 ids exactly
+once, as they are read.
 
-```{r migrate, eval = requireNamespace("arrow", quietly = TRUE)}
+```{r migrate, eval = TRUE}
 # A resolution-8 cell id written by a5R 0.6
 v0 <- a5_cell("59c4780000000000")
 a5_migrate(v0)
 ```
 
 `a5_migrate()` is a bit operation, so it is cheap on large columns. Apply
-it to every stored id column, including the cells inside stored coverings
-(`a5_compact(a5_migrate(a5_uncompact(old)))`), or re-index the data from
-its coordinates. Upstream will retire the conversion in a future version.
+it to every stored id column, including compacted cell sets, which a5R 0.6
+stored as plain cell columns
+(`a5_compact(a5_migrate(a5_uncompact(old, resolution = r)))`), or re-index
+the data from its coordinates. Upstream will retire the conversion in a
+future version.
 
 ## How it works under the hood
 
-1. **`a5_cell_to_arrow()`**: packs the eight raw-byte fields into 8-byte
-   little-endian blobs (one per cell), creates an Arrow
-   `fixed_size_binary(8)` array, then uses `View(uint64)` to
-   reinterpret the bytes as unsigned 64-bit integers. Zero-copy.
-
-2. **`a5_cell_from_arrow()`**: does the reverse, applying
-   `View(fixed_size_binary(8))` on the `uint64` array to get the raw
-   bytes, then unpacks each 8-byte blob into the eight raw-byte fields
-   used by `a5_cell`.
-
-3. **`a5_covering_to_arrow()`** and **`a5_covering_from_arrow()`** do the
-   same with `list<fixed_size_binary(8)>` and `list<uint64>`: each covering
-   is a list element of 8-byte values.
-
-The raw bytes never pass through `double`, so there is no precision loss
-at any step. See `vignette("internal-cell-representation")` for details
-on the raw-byte representation.
+All four converters run in Rust and pass one contiguous `uint64` buffer (a
+`list<uint64>` for coverings) through the Arrow C data interface, Arrow's
+standard in-memory exchange format. The ids never pass through `double`, and
+`NA` cells and missing coverings become nulls. See
+`vignette("internal-cell-representation")` for how `a5_cell` stores ids in
+R.

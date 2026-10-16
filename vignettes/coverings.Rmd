@@ -34,15 +34,7 @@ ramp <- c("#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d
 
 cells_of <- function(x) a5_cell_to_boundary(if (is_a5_covering(x)) a5_uncompact(x) else x)
 
-# The cells a covering stores, decoded from its bytes (marker dropped).
-stored_cells <- function(x) {
-  b <- unclass(x)[[1]]
-  n <- length(b) %/% 8
-  hex <- vapply(seq_len(n), function(i) {
-    paste(rev(as.character(b[(8 * i - 7):(8 * i)])), collapse = "")
-  }, "")
-  a5_cell(hex[-n])
-}
+stored_cells <- function(x) a5_covering_stored(x)
 
 panels <- function(n, top = 1.6) {
   par(mfrow = c(1, n), mar = c(0.2, 0.2, top, 0.2), xpd = NA)
@@ -113,8 +105,8 @@ sit in a data frame column next to the features they describe.
 
 ## What a covering stores
 
-A covering is stored compacted: every complete group of four sibling cells
-is replaced by their parent, and a trailing *compaction marker* records the
+A covering is stored compacted: every complete group of sibling cells is
+replaced by their parent, and a trailing *compaction marker* records the
 resolution the stored cells stand for.
 
 ```{r what}
@@ -140,14 +132,15 @@ combines, tests or measures coverings works on the stored cells without
 expanding them, which keeps it fast for coverings that stand for millions of
 cells. To draw a covering or join it to data keyed by cell, expand it with
 `a5_uncompact()`, as the figures here do. Where it helps, a second row
-shows what the same covering stores.
+shows what the same covering stores, as `a5_covering_stored()` returns it.
 
 ## Building coverings
 
 `a5_polygon_to_cells()` returns one covering per feature. By default a cell
 belongs when its centre lies inside the polygon; `containment =
 "overlapping"` also takes every cell the boundary touches, so the cells
-cover the polygon without gaps.
+cover the polygon without gaps. Polygon edges are great circles, as in the
+other A5 libraries; `a5_bbox()` gives the box those edges span.
 
 ```{r polygons}
 nc <- st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
@@ -179,14 +172,16 @@ row_labels()
 ```
 
 The functions that start from a cell return one covering per centre cell:
-`a5_grid_disk()` takes every cell within `k` steps, `a5_spherical_cap()`
+`a5_grid_disk()` takes every cell within `k` edge steps
+(`a5_grid_disk_vertex()` also steps across shared vertices),
+`a5_spherical_cap()`
 every cell whose centre is within a distance, and `a5_cell_to_subcells()`
 the finer cells whose centres lie inside a coarser cell.
 
 ```{r around}
 disk <- a5_grid_disk(raleigh, k = 3)
 cap <- a5_spherical_cap(raleigh, radius = 8000)
-coarse <- a5_cell_to_parent(raleigh, parent_resolution = 9)
+coarse <- a5_cell_to_supercell(raleigh, resolution = 9)
 subcells <- a5_cell_to_subcells(coarse, resolution = 11)
 ```
 
@@ -319,11 +314,14 @@ legend("bottomleft", bty = "n", cex = 0.7, border = NA, text.col = pal$ink,
 
 Both coverings in each pair must be at the same resolution, or it is an
 error. A5 cells do not nest across resolutions: a resolution-11 cell can
-straddle the edge between two resolution-10 cells, so a set of cells at one
-resolution does not translate into a set at another.
+straddle the edge between two resolution-10 cells. To move a covering to a
+coarser resolution, `a5_covering_to_supercells()` takes the coarse cells
+holding the centre of any of its cells (see `vignette("spatial-hierarchy")`).
 
 ```{r mismatch, error = TRUE}
-a5_union(state, a5_spherical_cap(a5_cell_to_parent(raleigh), radius = 60000))
+cap10 <- a5_spherical_cap(a5_cell_to_supercell(raleigh), radius = 60000)
+a5_union(state, cap10)
+a5_union(a5_covering_to_supercells(state, 10), cap10)
 ```
 
 ```{r nest-plot, echo = FALSE, fig.width = 3.6, fig.height = 3, fig.align = "center"}
@@ -393,7 +391,7 @@ for (step in list(list(by_centre, "centre: no shared cells"),
 }
 ```
 
-Shared cells are in aqua.
+Shared cells are in green.
 
 ## Drawing and joining
 

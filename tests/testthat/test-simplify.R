@@ -89,9 +89,9 @@ test_that("list form works as a tibble list column and unnests", {
 test_that("threads give the same result", {
   skip_if(parallel::detectCores() < 2)
   withr::local_options(list())
-  old <- a5_get_threads()
-  on.exit(a5_set_threads(old))
+  old <- a5_threads()
+  on.exit(a5_threads(old))
   single <- a5_grid_disk(cells, k = 3)
-  a5_set_threads(2L)
+  a5_threads(2L)
   expect_identical(a5_grid_disk(cells, k = 3), single)
 })
