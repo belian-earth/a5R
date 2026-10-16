@@ -179,7 +179,7 @@ fn a5_cell_to_subcell_rs(cells: List, resolution: Nullable<i32>) -> List {
         Nullable::Null => None,
     };
     cells_to_coverings(&cells, "cell_to_subcell", |id| {
-        a5::cell_to_subcell(id, target.unwrap_or_else(|| a5::get_resolution(id) + 1))
+        a5::cell_to_subcells(id, target.unwrap_or_else(|| a5::get_resolution(id) + 1))
     })
 }
 
@@ -313,7 +313,7 @@ fn covering_supercells(values: &[u64], resolution: i32) -> std::result::Result<V
     };
     // Does the coarse cell hold the centre of any of the covering's cells?
     let holds = |coarse: u64| -> std::result::Result<bool, String> {
-        for c in a5::cell_to_subcell(coarse, r)? {
+        for c in a5::cell_to_subcells(coarse, r)? {
             if !a5::is_compaction_marker(c) && overlaps(slots(c)?) {
                 return Ok(true);
             }
