@@ -29,10 +29,13 @@ This is a problem when reading Parquet files that store A5 cell ids as
 converts `uint64` to R's `double`, losing precision. The same happens with
 `dplyr::collect()` on an Arrow dataset or query.
 
+```{r setup, eval = TRUE}
+library(a5R)
+```
+
 ```{r naive, message = FALSE}
 library(arrow)
 library(tibble)
-library(a5R)
 
 # A real A5 cell: Edinburgh at resolution 20
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 20)
