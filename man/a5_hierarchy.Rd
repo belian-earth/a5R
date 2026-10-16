@@ -46,7 +46,7 @@ neighbours. Measured over random cells, the index parent is not the coarse
 cell containing a fine cell's centre for about half of fine cells one
 resolution apart, falling to about 35 percent at four or more resolutions
 apart. Use these functions for operations on ids (compaction, id ranges,
-Hilbert ordering) and \link{a5_spatial_hierarchy} when cells must nest by
+curve ordering) and \link{a5_spatial_hierarchy} when cells must nest by
 location.
 }
 

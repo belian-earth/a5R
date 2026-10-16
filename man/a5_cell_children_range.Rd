@@ -19,7 +19,7 @@ input cell. \code{NA} where \code{cell} is \code{NA}.
 \description{
 Returns the smallest and largest descendant of each cell at a finer
 resolution, without enumerating the descendants. Because the A5 index
-encodes position along a Hilbert curve with a cell's descendants sharing
+encodes position along a space-filling curve with a cell's descendants sharing
 its leading bits, the descendants of a cell at any resolution up to 29
 occupy a contiguous range of ids among all cells at that resolution: every
 cell at \code{resolution} whose id lies between \code{lo} and \code{hi} inclusive is a

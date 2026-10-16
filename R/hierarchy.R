@@ -29,7 +29,7 @@ a5_get_resolution <- function(cell) {
 #' cell containing a fine cell's centre for about half of fine cells one
 #' resolution apart, falling to about 35 percent at four or more resolutions
 #' apart. Use these functions for operations on ids (compaction, id ranges,
-#' Hilbert ordering) and [a5_spatial_hierarchy] when cells must nest by
+#' curve ordering) and [a5_spatial_hierarchy] when cells must nest by
 #' location.
 #'
 #' @param cell An [a5_cell] vector.
@@ -127,7 +127,7 @@ a5_cell_child <- function(cell, resolution, i) {
 #'
 #' Returns the smallest and largest descendant of each cell at a finer
 #' resolution, without enumerating the descendants. Because the A5 index
-#' encodes position along a Hilbert curve with a cell's descendants sharing
+#' encodes position along a space-filling curve with a cell's descendants sharing
 #' its leading bits, the descendants of a cell at any resolution up to 29
 #' occupy a contiguous range of ids among all cells at that resolution: every
 #' cell at `resolution` whose id lies between `lo` and `hi` inclusive is a
