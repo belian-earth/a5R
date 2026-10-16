@@ -49,7 +49,7 @@ test_that("a5_set_threads rejects invalid counts and keeps the old one", {
 test_that("a Rust panic in a parallel call does not break later calls", {
   old <- a5_set_threads(2L)
   on.exit(a5_set_threads(old))
-  # the world cell panicked inside the a5 crate (1.0.0-beta.3); whatever it
+  # the world cell panics inside the a5 crate (1.0.0); whatever it
   # does now, later parallel calls and a5_set_threads() must still work
   try(a5_grid_disk(a5_cell("0000000000000000"), 1), silent = TRUE)
   cell <- a5_lonlat_to_cell(0, 0, 5)
