@@ -3,7 +3,7 @@
 ``` r
 
 library(a5R)
-#> a5R 0.9.9.9004 • a5 crate 1.0.0-beta.3 • A5 index 1.0 • 1 thread
+#> a5R 0.9.9.9005 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread
 ```
 
 a5R can parallelise vectorised operations using multiple threads via

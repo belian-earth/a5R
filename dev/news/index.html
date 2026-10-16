@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9004</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,7 +51,7 @@
 <h2 class="pkg-version" data-toc-text="development version" id="a5r-development-version">a5R (development version)<a class="anchor" aria-label="anchor" href="#a5r-development-version"></a></h2>
 <div class="section level3">
 <h3 id="breaking-changes-development-version">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-development-version"></a></h3>
-<ul><li>a5R now uses the a5 Rust crate 1.0.0-beta.3, which introduces A5’s permanent cell-ID system. The space-filling curve and the order of the dodecahedron faces are new, so <strong>every cell id changes</strong>: an id written by an earlier version of a5R is still a valid cell, but in a different place, and nothing in the id says which version wrote it. Re-index stored data from its coordinates, or convert the ids once with the new <code><a href="../reference/a5_migrate.html">a5_migrate()</a></code>.</li>
+<ul><li>a5R now uses the a5 Rust crate 1.0.0, which introduces A5’s permanent cell-ID system. The space-filling curve and the order of the dodecahedron faces are new, so <strong>every cell id changes</strong>: an id written by an earlier version of a5R is still a valid cell, but in a different place, and nothing in the id says which version wrote it. Re-index stored data from its coordinates, or convert the ids once with the new <code><a href="../reference/a5_migrate.html">a5_migrate()</a></code>.</li>
 <li>Resolution-1 cells are now pentagons rather than triangles, so their boundaries and centres change. Cells at every other resolution keep their shape and position.</li>
 <li>Compacted cell sets are now <code>a5_covering</code> vectors, one covering per element. A covering stores its compacted cells followed by a compaction marker recording the resolution they stand for, as in the other A5 libraries, so <code><a href="../reference/a5_compaction.html">a5_uncompact()</a></code> no longer needs a resolution. Coverings print as their resolution, cell count and stored-cell count, work as data frame columns, and compare equal with <code>==</code> when they hold the same cells. Use <code><a href="../reference/a5_compaction.html">a5_uncompact()</a></code> for the cells; <code><a href="../reference/a5_cell.html">as_a5_cell()</a></code> refuses a covering rather than treat its stored cells, whose outlines do not nest, as a grid.</li>
 <li>
@@ -89,7 +89,8 @@
 </ul></div>
 <div class="section level3">
 <h3 id="other-changes-development-version">Other changes<a class="anchor" aria-label="anchor" href="#other-changes-development-version"></a></h3>
-<ul><li><p>Functions returning many cells write them straight into R’s vectors, in parallel when threads are enabled, instead of staging them first: <code><a href="../reference/a5_compaction.html">a5_uncompact()</a></code> is about 2.5 times faster on millions of cells, and <code><a href="../reference/a5_coordinates.html">a5_cell_to_lonlat()</a></code> and <code><a href="../reference/a5_hierarchy.html">a5_cell_to_parent()</a></code> up to a third faster, with lower peak memory.</p></li>
+<ul><li><p>The a5 crate 1.0.0 fixes two wrong results. <code><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code> with <code>containment = "centre"</code> no longer returns a whole quintant of cells for thin sliver polygons, and <code><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell()</a></code> no longer returns a cell on the wrong dodecahedron face when the previous point fell near the centre of another face.</p></li>
+<li><p>Functions returning many cells write them straight into R’s vectors, in parallel when threads are enabled, instead of staging them first: <code><a href="../reference/a5_compaction.html">a5_uncompact()</a></code> is about 2.5 times faster on millions of cells, and <code><a href="../reference/a5_coordinates.html">a5_cell_to_lonlat()</a></code> and <code><a href="../reference/a5_hierarchy.html">a5_cell_to_parent()</a></code> up to a third faster, with lower peak memory.</p></li>
 <li><p><code><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell()</a></code> returns <code>NA</code> for <code>NaN</code> and infinite coordinates, which used to give valid cells, and errors on latitudes outside [-90, 90], which used to wrap onto plausible but wrong cells.</p></li>
 <li><p>A panic inside the a5 crate during a multi-threaded call no longer leaves every later parallel call, and <code><a href="../reference/a5_threads.html">a5_set_threads()</a></code>, failing until R restarts. <code><a href="../reference/a5_threads.html">a5_set_threads()</a></code> rejects counts below 1 and <code>NA</code>, and keeps the previous count if the thread pool cannot be built.</p></li>
 <li><p><code><a href="../reference/a5_cell.html">a5_cell()</a></code> accepts ids of fewer than 16 hex digits, as written by a5-js and DuckDB, and a <code>0x</code> prefix. A string that is not a hex id is now an error instead of a silent <code>NA</code>.</p></li>

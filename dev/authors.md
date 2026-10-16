@@ -18,12 +18,12 @@ Source:
 [`DESCRIPTION`](https://github.com/belian-earth/a5R/blob/main/DESCRIPTION)
 
 Graham H (2026). *a5R: 'A5' Discrete Global Grid System*. R package
-version 0.9.9.9004, <https://github.com/belian-earth/a5R>.
+version 0.9.9.9005, <https://github.com/belian-earth/a5R>.
 
     @Manual{,
       title = {a5R: 'A5' Discrete Global Grid System},
       author = {Hugh Graham},
       year = {2026},
-      note = {R package version 0.9.9.9004},
+      note = {R package version 0.9.9.9005},
       url = {https://github.com/belian-earth/a5R},
     }

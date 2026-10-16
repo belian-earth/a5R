@@ -4,8 +4,8 @@
 
 ### Breaking changes
 
-- a5R now uses the a5 Rust crate 1.0.0-beta.3, which introduces A5’s
-  permanent cell-ID system. The space-filling curve and the order of the
+- a5R now uses the a5 Rust crate 1.0.0, which introduces A5’s permanent
+  cell-ID system. The space-filling curve and the order of the
   dodecahedron faces are new, so **every cell id changes**: an id
   written by an earlier version of a5R is still a valid cell, but in a
   different place, and nothing in the id says which version wrote it.
@@ -167,6 +167,14 @@
   memory.
 
 ### Other changes
+
+- The a5 crate 1.0.0 fixes two wrong results.
+  [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md)
+  with `containment = "centre"` no longer returns a whole quintant of
+  cells for thin sliver polygons, and
+  [`a5_lonlat_to_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_coordinates.md)
+  no longer returns a cell on the wrong dodecahedron face when the
+  previous point fell near the centre of another face.
 
 - Functions returning many cells write them straight into R’s vectors,
   in parallel when threads are enabled, instead of staging them first:
