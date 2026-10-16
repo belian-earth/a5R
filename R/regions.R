@@ -69,11 +69,13 @@
 #' degrees of longitude or more is an error, because its top and bottom
 #' edges would run the short way round the globe.
 #'
-#' Rings must not cross themselves. A self-intersecting ring, such as a bow
-#' tie, gives an undefined result that can include cells thousands of
-#' kilometres outside the polygon. Because edges are great circles, a ring
-#' that is valid in longitude and latitude can still cross itself on the
-#' sphere; `s2::s2_is_valid()` checks rings with the same edge model.
+#' Rings must not cross themselves: a ring with two edges that cross, such as
+#' a bow tie, is an error of class `a5R_error_geometry`. Repair such rings
+#' first, for example with `sf::st_make_valid()`. Because edges are great
+#' circles, a ring that is valid in longitude and latitude can still cross
+#' itself on the sphere; `s2::s2_is_valid()` checks rings with the same edge
+#' model. Rings that only touch themselves, and holes that cross the outer
+#' ring, are not checked.
 #'
 #' Where no A5 cell centroids at the specified `resolution` fall within
 #' the geometry, its covering is empty.
@@ -118,6 +120,7 @@ a5_polygon_to_cells <- function(x, resolution,
 polygons_to_coverings <- function(x, resolution, containment,
                                   call = rlang::caller_env()) {
   bundle <- prepare_polygon_input(x, call = call)
+  check_simple_rings(bundle, call = call)
 
   out <- coverings_from_rs(a5_polygon_to_cells_rs(
     bundle$lon,
@@ -276,6 +279,24 @@ a5_line_string_to_cells <- function(x, resolution, simplify = TRUE) {
 a5_linestring_to_cells <- function(x, resolution, simplify = TRUE) {
   warn_renamed_fn("a5_linestring_to_cells", "a5_line_string_to_cells()")
   a5_line_string_to_cells(x, resolution, simplify)
+}
+
+#' Error on a ring that crosses itself
+#'
+#' The a5 crate (1.0.0) fills such rings inconsistently, flooding whole
+#' quintants and running out of memory at fine resolutions. Remove this once
+#' the crate rejects them.
+#' @noRd
+check_simple_rings <- function(bundle, call = rlang::caller_env()) {
+  ring <- a5_ring_crossing_rs(bundle$lon, bundle$lat, bundle$offsets)
+  if (ring > 0L) {
+    feature <- bundle$part_feature[bundle$part_id[ring]]
+    a5_abort("geometry", c(
+      "Feature {feature} has a ring that crosses itself.",
+      "i" = "Repair it first, for example with {.fn sf::st_make_valid}."
+    ), call = call)
+  }
+  invisible(bundle)
 }
 
 # -- input preparation ---------------------------------------------------------

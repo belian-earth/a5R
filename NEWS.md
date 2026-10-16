@@ -161,8 +161,9 @@
   null coverings read back from Arrow stay `NA` instead of becoming empty.
 * `a5_polygon_to_cells()` and `a5_line_string_to_cells()` error on `sf` and
   `terra` input in a projected CRS, and on coordinates outside the
-  longitude/latitude range. The documentation now warns that
-  self-intersecting rings give undefined results.
+  longitude/latitude range. A ring that crosses itself, such as a bow tie,
+  is an error: the a5 crate filled it inconsistently, flooding whole
+  quintants and running out of memory at fine resolutions.
 * `a5_grid_disk()` rejects a negative or `NA` `k`, and
   `a5_spherical_cap()` a negative or non-finite `radius`.
 * `a5_uncompact()`'s size guard counts the 5 children of a resolution-0

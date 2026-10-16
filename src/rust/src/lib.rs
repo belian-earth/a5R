@@ -15,6 +15,7 @@ mod regions;
 mod covering;
 mod arrow_ffi;
 mod bbox;
+mod ring_check;
 
 extendr_module! {
     mod a5R;
@@ -30,4 +31,5 @@ extendr_module! {
     use covering;
     use arrow_ffi;
     use bbox;
+    use ring_check;
 }
