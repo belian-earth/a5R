@@ -417,16 +417,28 @@ fn cells_equal_rs(a: List, b: List) -> Logicals {
 }
 
 /// Parse one hex id: 1 to 16 hex digits, optionally prefixed `0x`. Shorter
-/// ids are zero-padded on the left, as some A5 libraries write them.
+/// ids are zero-padded on the left, as some A5 libraries write them. One pass
+/// over the bytes: validating first and then calling `from_str_radix` reads
+/// each digit twice.
 pub(crate) fn parse_hex_id(s: &str) -> Option<u64> {
-    let digits = s
-        .strip_prefix("0x")
-        .or_else(|| s.strip_prefix("0X"))
-        .unwrap_or(s);
-    if digits.is_empty() || digits.len() > 16 || !digits.bytes().all(|b| b.is_ascii_hexdigit()) {
+    let digits = match s.as_bytes() {
+        [b'0', b'x' | b'X', rest @ ..] => rest,
+        all => all,
+    };
+    if digits.is_empty() || digits.len() > 16 {
         return None;
     }
-    u64::from_str_radix(digits, 16).ok()
+    let mut id: u64 = 0;
+    for &c in digits {
+        let nibble = match c {
+            b'0'..=b'9' => c - b'0',
+            b'a'..=b'f' => c - b'a' + 10,
+            b'A'..=b'F' => c - b'A' + 10,
+            _ => return None,
+        };
+        id = (id << 4) | nibble as u64;
+    }
+    Some(id)
 }
 
 /// Convert hex strings to cell raw bytes.
