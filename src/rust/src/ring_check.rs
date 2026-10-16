@@ -28,16 +28,36 @@ fn dot(a: Vec3, b: Vec3) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
-/// The side of the great circle through `a` and `b` that `c` lies on.
+// Points closer than this (in unit-sphere units, about 6 um on the Earth) are
+// one point, and a point this close to a great circle lies on it. Ring
+// vertices that should coincide, as in a zero-width spike, can differ in
+// their last bits, and rounding then makes their edges appear to cross.
+const EPS: f64 = 1e-12;
+
+fn same(a: Vec3, b: Vec3) -> bool {
+    (a[0] - b[0]).abs() <= EPS && (a[1] - b[1]).abs() <= EPS && (a[2] - b[2]).abs() <= EPS
+}
+
+/// The side of the great circle through `a` and `b` that `c` lies on, or 0
+/// when `c` is within `EPS` of it.
 fn orient(a: Vec3, b: Vec3, c: Vec3) -> i8 {
-    let d = dot(cross(a, b), c);
+    let n = cross(a, b);
+    let d = dot(n, c);
+    if d.abs() <= EPS * dot(n, n).sqrt() {
+        return 0;
+    }
     (d > 0.0) as i8 - (d < 0.0) as i8
 }
 
 /// Whether arcs `ab` and `cd` cross at a point interior to both, as S2's
-/// CrossingSign decides it. Touching and collinear arcs do not count, so the
-/// check never rejects a ring it cannot be sure about.
+/// CrossingSign decides it. Arcs sharing a vertex, touching or collinear do
+/// not count, so the check never rejects a ring it cannot be sure about.
 fn arcs_cross(a: Vec3, b: Vec3, c: Vec3, d: Vec3) -> bool {
+    // Arcs that share a vertex meet there, which is not a crossing; rounding
+    // makes orient() of a shared vertex tiny but not zero
+    if same(a, c) || same(a, d) || same(b, c) || same(b, d) {
+        return false;
+    }
     let acb = -orient(a, b, c);
     let bda = orient(a, b, d);
     if acb == 0 || acb != bda {
@@ -69,11 +89,11 @@ fn ring_crosses_itself(lon: &[f64], lat: &[f64]) -> bool {
     let mut pts: Vec<Vec3> = Vec::with_capacity(lon.len());
     for (&x, &y) in lon.iter().zip(lat) {
         let p = to_unit(x, y);
-        if pts.last() != Some(&p) {
+        if !matches!(pts.last(), Some(&q) if same(q, p)) {
             pts.push(p);
         }
     }
-    if pts.len() > 1 && pts.first() == pts.last() {
+    if pts.len() > 1 && same(pts[0], pts[pts.len() - 1]) {
         pts.pop();
     }
     let n = pts.len();

@@ -834,4 +834,8 @@ test_that("a ring that crosses itself is an error, not a flood", {
   with(a5_threads(2), {
     expect_error(a5_polygon_to_cells(wk::wkt(c(ok, bow)), 10), "Feature 2")
   })
+  # a union of two pentagons from DuckDB, valid for s2, with a zero-width
+  # spike whose return vertex differs from its start in the last bits
+  spike <- wk::wkt(readLines(test_path("fixtures", "spike-ring.wkt")))
+  expect_no_error(a5_polygon_to_cells(spike, 10))
 })
