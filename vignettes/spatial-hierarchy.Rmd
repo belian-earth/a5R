@@ -238,4 +238,4 @@ resolutions and must stay where they are on the ground.
 
 Supercells and subcells cost more. The index functions are bit operations;
 `a5_cell_to_supercell()` locates each centre, in about half the time of
-`a5_lonlat_to_cell()`. Both run in parallel with `a5_set_threads()`.
+`a5_lonlat_to_cell()`. Both run in parallel with `a5_threads()`.

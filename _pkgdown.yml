@@ -81,7 +81,7 @@ reference:
   desc: Package information, thread control, error classes and the C API.
   contents:
   - a5_info
-  - a5_set_threads
+  - a5_threads
   - a5_errors
   - a5_c_api
 - title: wk integration

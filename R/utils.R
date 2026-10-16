@@ -190,3 +190,13 @@ renamed_arg <- function(value, old, new, call = rlang::caller_env()) {
   )
   value
 }
+
+#' Warn that a function was renamed
+#' @noRd
+warn_renamed_fn <- function(old, new, call = rlang::caller_env()) {
+  cli::cli_warn(
+    "{.fn {old}} was replaced by {.code {new}} in a5R 1.0.0.",
+    class = c("a5R_warning_deprecated", "a5R_warning"),
+    call = call
+  )
+}

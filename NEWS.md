@@ -31,6 +31,9 @@
 * `a5_linestring_to_cells()` is renamed `a5_line_string_to_cells()`, to
   match `line_string_to_cells()` in the other A5 libraries. The old name
   still works but warns.
+* `a5_set_threads()` and `a5_get_threads()` are replaced by `a5_threads()`,
+  which sets the count when given one and reports it otherwise, as
+  `options()` and `par()` do. The old functions still work but warn.
 * `a5_grid_disk()` loses its `vertex` argument. Use the new
   `a5_grid_disk_vertex()`, which matches `grid_disk_vertex()` in the other
   A5 libraries, for vertex-sharing neighbours.
@@ -79,9 +82,9 @@
   them, with great-circle edges that can bow beyond the vertices' latitudes.
 * New `a5_covering_to_supercells()` gives the coarse cells containing the
   centres of a covering's cells without building them.
-* `with(a5_set_threads(n), expr)` runs `expr` on `n` threads and restores
+* `with(a5_threads(n), expr)` runs `expr` on `n` threads and restores
   the previous count afterwards, as `with(mirai::daemons(n), expr)` does.
-  `a5_set_threads()` returns the previous count as an `a5_threads` object to
+  `a5_threads(n)` returns the previous count as an `a5_threads` object to
   make this work.
 * New `a5_to_arrow_table()` and `a5_from_arrow_table()` convert data frames
   with cell and covering columns to and from Arrow tables, tagging the
@@ -136,12 +139,12 @@
   which used to give valid cells, and errors on latitudes outside
   \[-90, 90\], which used to wrap onto plausible but wrong cells.
 * Forked workers (`parallel::mclapply()`, `future::multicore`) no longer
-  hang after `a5_set_threads()` with more than one thread: they inherited the
+  hang after `a5_threads()` sets more than one thread: they inherited the
   thread pool but not its threads. a5R now runs on one thread in a forked
   worker until the worker sets its own count.
 * A panic inside the a5 crate during a multi-threaded call no longer leaves
-  every later parallel call, and `a5_set_threads()`, failing until R
-  restarts. `a5_set_threads()` rejects counts below 1 and `NA`, and keeps
+  every later parallel call, and `a5_threads()`, failing until R
+  restarts. `a5_threads()` rejects counts below 1 and `NA`, and keeps
   the previous count if the thread pool cannot be built.
 * `a5_cell()` accepts ids of fewer than 16 hex digits, as written by a5-js
   and DuckDB, and a `0x` prefix. A string that is not a hex id is now an

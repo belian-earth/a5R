@@ -104,13 +104,13 @@ test_that("count and area measure the cells a covering stands for", {
 
 test_that("covering operations are identical with threads > 1", {
   skip_if(parallel::detectCores() < 2)
-  old <- a5_get_threads()
-  on.exit(a5_set_threads(old))
+  old <- a5_threads()
+  on.exit(a5_threads(old))
   cells <- a5_lonlat_to_cell(seq(-10, 10, length.out = 50), 50, resolution = 10)
   disks <- a5_grid_disk(cells, k = 4)
-  a5_set_threads(1L)
+  a5_threads(1L)
   single <- list(a5_union(disks, disks[1]), a5_contains(disks, cells), a5_overlaps(disks, disks[2]))
-  a5_set_threads(2L)
+  a5_threads(2L)
   expect_identical(
     list(a5_union(disks, disks[1]), a5_contains(disks, cells), a5_overlaps(disks, disks[2])),
     single

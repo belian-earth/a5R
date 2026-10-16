@@ -15,7 +15,7 @@
 #'   - `version`: the a5R package version, a character scalar.
 #'   - `crate`: the version of the bundled a5 Rust crate.
 #'   - `index`: the A5 cell index version of a5R's ids, `"1.0"`.
-#'   - `threads`: the current thread count (see [a5_set_threads()]).
+#'   - `threads`: the current thread count (see [a5_threads()]).
 #'   - `c_api`: the version of the C API (see [a5_c_api]).
 #' @export
 #' @examples
@@ -27,7 +27,7 @@ a5_info <- function() {
       version = as.character(utils::packageVersion("a5R")),
       crate = a5_crate_version_rs(),
       index = A5_INDEX_VERSION,
-      threads = a5_get_threads(),
+      threads = a5_threads(),
       c_api = 1L
     ),
     class = "a5_info"

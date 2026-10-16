@@ -12,7 +12,7 @@ A list of class \code{a5_info} with elements:
 \item \code{version}: the a5R package version, a character scalar.
 \item \code{crate}: the version of the bundled a5 Rust crate.
 \item \code{index}: the A5 cell index version of a5R's ids, \code{"1.0"}.
-\item \code{threads}: the current thread count (see \code{\link[=a5_set_threads]{a5_set_threads()}}).
+\item \code{threads}: the current thread count (see \code{\link[=a5_threads]{a5_threads()}}).
 \item \code{c_api}: the version of the C API (see \link{a5_c_api}).
 }
 }

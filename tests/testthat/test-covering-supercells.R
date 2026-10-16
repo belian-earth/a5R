@@ -6,7 +6,7 @@ test_that("a5_covering_to_supercells matches supercells of the uncompacted cells
   ))
   cv <- a5_polygon_to_cells(polys, 11)
   for (threads in c(1L, 2L)) {
-    sc <- with(a5_set_threads(threads), a5_covering_to_supercells(cv, 7))
+    sc <- with(a5_threads(threads), a5_covering_to_supercells(cv, 7))
     expect_identical(is.na(sc), c(FALSE, TRUE, FALSE))
     for (i in c(1L, 3L)) {
       expect_identical(a5_covering_resolution(sc[i]), 7L)
@@ -42,5 +42,5 @@ test_that("a5_covering_to_supercells is exact across resolutions and shapes", {
   # a disk covering, and the same with threads
   disk <- a5_grid_disk(a5_lonlat_to_cell(30, 30, 10), k = 20)
   expect_identical(fast(disk, 6), brute(disk, 6))
-  expect_identical(with(a5_set_threads(3), fast(disk, 6)), brute(disk, 6))
+  expect_identical(with(a5_threads(3), fast(disk, 6)), brute(disk, 6))
 })

@@ -44,8 +44,8 @@ test_that("invalid cells error as in the crate, naming the user's call", {
 })
 
 test_that("invalid cells error with threads too", {
-  old <- a5_set_threads(2L)
-  on.exit(a5_set_threads(old))
+  old <- a5_threads(2L)
+  on.exit(a5_threads(old))
   cells <- c(a5_lonlat_to_cell(runif(5000, -180, 180), runif(5000, -80, 80), 9),
              a5_cell("fd00000000000000"))
   expect_error(a5_cell_to_lonlat(cells), class = "a5R_error_cell")

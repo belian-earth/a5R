@@ -22,7 +22,7 @@ dir <- local({
 })
 source(file.path(dir, "utils.R"))
 
-a5_set_threads(1L)
+a5_threads(1L)
 cat(sprintf("a5R %s | %s | threads = 1 | BENCH_TIME = %ss\n\n",
             packageVersion("a5R"), R.version.string, Sys.getenv("BENCH_TIME", "0.5")))
 

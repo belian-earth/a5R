@@ -26,17 +26,18 @@ polygon part, covering or centre cell gains nothing.
 
 ## Setting the thread count
 
-```{r}
-# Check the current setting (default: 1)
-a5_get_threads()
+`a5_threads()` reports the thread count and `a5_threads(n)` sets it, as
+`options()` and `par()` do:
 
-# Use 2 threads
-a5_set_threads(2)
-a5_get_threads()
+```{r}
+a5_threads() # the default: 1
+
+a5_threads(2)
+a5_threads()
 ```
 
 ```{r, include = FALSE}
-a5_set_threads(1)
+a5_threads(1)
 ```
 
 `a5_info()` also reports the count. To set it for a whole script or batch
@@ -59,14 +60,14 @@ the code fails:
 ```{r}
 set.seed(1)
 cells <- a5_lonlat_to_cell(runif(1e4, -180, 180), runif(1e4, -80, 80), 10)
-boundaries <- with(a5_set_threads(2), {
+boundaries <- with(a5_threads(2), {
   a5_cell_to_boundary(cells)
 })
-a5_get_threads()
+a5_threads()
 ```
 
-`a5_set_threads()` also returns the previous count, so
-`old <- a5_set_threads(4)` and later `a5_set_threads(old)` work too.
+Setting a count returns the previous one, so `old <- a5_threads(4)` and
+later `a5_threads(old)` work too.
 
 ## What gets parallelised
 
@@ -114,12 +115,12 @@ cells <- a5_uncompact(a5_polygon_to_cells(wk::rct(-10, 50, 10, 60), resolution =
 length(cells)
 #> [1] 694889
 
-a5_set_threads(1)
+a5_threads(1)
 system.time(a5_cell_to_boundary(cells))
 #>    user  system elapsed
 #>   0.952   0.005   0.956
 
-a5_set_threads(8)
+a5_threads(8)
 system.time(a5_cell_to_boundary(cells))
 #>    user  system elapsed
 #>   1.206   0.009   0.248
@@ -138,8 +139,8 @@ the two multiplies the thread count, so keep the product within your cores:
   only if the workers leave cores idle.
 - Forked workers (`parallel::mclapply()`, `future::multicore`) inherit the
   count but not the threads, so a5R runs on one thread in each of them
-  unless the worker calls `a5_set_threads()` itself.
+  unless the worker calls `a5_threads(n)` itself.
 
-Each `a5_set_threads()` call rebuilds the thread pool, which takes well under
+Each `a5_threads(n)` call rebuilds the thread pool, which takes well under
 a millisecond, so scoping a count with `with()` around each heavy call costs
 nothing measurable.
