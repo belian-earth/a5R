@@ -85,43 +85,45 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/belian-earth/a5R" class="external-link">a5R</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; a5R 0.9.9.9006 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread</span></span></code></pre></div>
-<p>a5R can parallelise vectorised operations using multiple threads via
-<a href="https://docs.rs/rayon" class="external-link">rayon</a>. By default a5R uses a single
-thread, so there is zero overhead. You opt in to parallelism when you
-need it.</p>
+<p>a5R can parallelise vectorised operations across threads with <a href="https://docs.rs/rayon" class="external-link">rayon</a>, a Rust library for data
+parallelism. By default a5R uses a single thread, so there is no
+overhead; you opt in to parallelism when you need it. Work is split
+across elements, so a single polygon part, covering or centre cell gains
+nothing.</p>
 <div class="section level2">
 <h2 id="setting-the-thread-count">Setting the thread count<a class="anchor" aria-label="anchor" href="#setting-the-thread-count"></a>
 </h2>
+<p><code><a href="../reference/a5_threads.html">a5_threads()</a></code> reports the thread count and
+<code>a5_threads(n)</code> sets it, as <code><a href="https://rdrr.io/r/base/options.html" class="external-link">options()</a></code> and
+<code><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par()</a></code> do:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Check the current setting (default: 1)</span></span>
-<span><span class="fu"><a href="../reference/a5_threads.html">a5_get_threads</a></span><span class="op">(</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/a5_threads.html">a5_threads</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># the default: 1</span></span>
 <span><span class="co">#&gt; [1] 1</span></span>
 <span></span>
-<span><span class="co"># Use 4 threads</span></span>
-<span><span class="fu"><a href="../reference/a5_threads.html">a5_set_threads</a></span><span class="op">(</span><span class="fl">4</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/a5_threads.html">a5_get_threads</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 4</span></span></code></pre></div>
-<p>You can also set threads at package load time via an R option or
-environment variable, useful for scripts and batch jobs:</p>
+<span><span class="fu"><a href="../reference/a5_threads.html">a5_threads</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/a5_threads.html">a5_threads</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 2</span></span></code></pre></div>
+<p><code><a href="../reference/a5_info.html">a5_info()</a></code> also reports the count. To set it for a whole
+script or batch job, set an R option or environment variable before
+<code><a href="https://github.com/belian-earth/a5R" class="external-link">library(a5R)</a></code>; both are read when the package loads:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># In .Rprofile or at the top of a script</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>a5R.threads <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Or as an environment variable</span></span>
-<span><span class="co"># Sys.setenv(A5R_NUM_THREADS = 4) </span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>a5R.threads <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="va">A5R_NUM_THREADS</span><span class="op">=</span>4 <span class="ex">Rscript</span> script.R</span></code></pre></div>
 <p>To use more threads for one block of code only, wrap it in
 <code><a href="https://rdrr.io/r/base/with.html" class="external-link">with()</a></code>, as with <code>mirai::daemons()</code>. The previous
 count is restored afterwards, even if the code fails:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">1e4</span>, <span class="op">-</span><span class="fl">180</span>, <span class="fl">180</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">1e4</span>, <span class="op">-</span><span class="fl">80</span>, <span class="fl">80</span><span class="op">)</span>, <span class="fl">10</span><span class="op">)</span></span>
-<span><span class="va">boundaries</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_threads.html">a5_set_threads</a></span><span class="op">(</span><span class="fl">4</span><span class="op">)</span>, <span class="op">{</span></span>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">1e4</span>, <span class="op">-</span><span class="fl">180</span>, <span class="fl">180</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">1e4</span>, <span class="op">-</span><span class="fl">80</span>, <span class="fl">80</span><span class="op">)</span>, <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="va">boundaries</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_threads.html">a5_threads</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span>, <span class="op">{</span></span>
 <span>  <span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/a5_threads.html">a5_get_threads</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/a5_threads.html">a5_threads</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 1</span></span></code></pre></div>
-<p><code><a href="../reference/a5_threads.html">a5_set_threads()</a></code> also returns the previous count, so
-<code>old &lt;- a5_set_threads(4)</code> and later
-<code>a5_set_threads(old)</code> work too.</p>
+<p>Setting a count returns the previous one, so
+<code>old &lt;- a5_threads(4)</code> and later
+<code>a5_threads(old)</code> work too.</p>
 </div>
 <div class="section level2">
 <h2 id="what-gets-parallelised">What gets parallelised<a class="anchor" aria-label="anchor" href="#what-gets-parallelised"></a>
@@ -141,8 +143,11 @@ process each element independently:</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td><code><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary()</a></code></td>
-<td>Heavy (boundary + WKT/WKB)</td>
+<td>
+<code><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary()</a></code>,
+<code><a href="../reference/a5_cell_to_boundary_xy.html">a5_cell_to_boundary_xy()</a></code>
+</td>
+<td>Heavy (boundary + WKB/WKT)</td>
 <td>High</td>
 </tr>
 <tr class="even">
@@ -156,53 +161,63 @@ process each element independently:</p>
 <td>High</td>
 </tr>
 <tr class="even">
-<td><code><a href="../reference/a5_spherical_cap.html">a5_spherical_cap()</a></code></td>
-<td>Heavy (per-cell search)</td>
-<td>High</td>
-</tr>
-<tr class="odd">
-<td><code><a href="../reference/a5_grid_disk.html">a5_grid_disk()</a></code></td>
+<td>
+<code><a href="../reference/a5_grid_disk.html">a5_grid_disk()</a></code>, <code><a href="../reference/a5_grid_disk.html">a5_grid_disk_vertex()</a></code>,
+<code><a href="../reference/a5_spherical_cap.html">a5_spherical_cap()</a></code>
+</td>
 <td>Heavy (per-cell traversal)</td>
 <td>High</td>
 </tr>
+<tr class="odd">
+<td><code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcells()</a></code></td>
+<td>Heavy (per-cell search)</td>
+<td>High</td>
+</tr>
 <tr class="even">
-<td><code><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell()</a></code></td>
+<td>
+<code><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell()</a></code>,
+<code><a href="../reference/a5_coordinates.html">a5_cell_to_lonlat()</a></code>
+</td>
 <td>Moderate (projection)</td>
 <td>High</td>
 </tr>
 <tr class="odd">
+<td><code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_supercell()</a></code></td>
+<td>Moderate (projection)</td>
+<td>High</td>
+</tr>
+<tr class="even">
 <td><code><a href="../reference/a5_cell_distance.html">a5_cell_distance()</a></code></td>
-<td>Moderate (2x projection + distance)</td>
-<td>Medium</td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/a5_coordinates.html">a5_cell_to_lonlat()</a></code></td>
-<td>Moderate (reverse projection)</td>
+<td>Moderate (2 projections + distance)</td>
 <td>Medium</td>
 </tr>
 <tr class="odd">
-<td><code><a href="../reference/a5_hierarchy.html">a5_cell_to_children()</a></code></td>
-<td>Light (bit ops per child)</td>
+<td>
+<code>a5_union(x, y)</code>, <code><a href="../reference/a5_set_operations.html">a5_intersect()</a></code>,
+<code><a href="../reference/a5_set_operations.html">a5_difference()</a></code>, <code><a href="../reference/a5_covering_predicates.html">a5_contains()</a></code>,
+<code><a href="../reference/a5_covering_predicates.html">a5_overlaps()</a></code>
+</td>
+<td>Varies with covering size</td>
+<td>Medium</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/a5_covering_to_supercells.html">a5_covering_to_supercells()</a></code></td>
+<td>Search within each covering</td>
+<td>Medium</td>
+</tr>
+<tr class="odd">
+<td>
+<code><a href="../reference/a5_hierarchy.html">a5_cell_to_children()</a></code>, <code><a href="../reference/a5_compaction.html">a5_uncompact()</a></code>
+</td>
+<td>Light (per-element expansion)</td>
 <td>Low</td>
 </tr>
 <tr class="even">
-<td><code><a href="../reference/a5_hierarchy.html">a5_cell_to_parent()</a></code></td>
-<td>Light (bit ops + hex)</td>
-<td>Low</td>
-</tr>
-<tr class="odd">
-<td><code><a href="../reference/a5_get_resolution.html">a5_get_resolution()</a></code></td>
-<td>Light (bit ops)</td>
-<td>Low</td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/a5_compaction.html">a5_uncompact()</a></code></td>
-<td>Light (per-covering expansion)</td>
-<td>Low</td>
-</tr>
-<tr class="odd">
-<td><code><a href="../reference/a5_is_valid.html">a5_is_valid()</a></code></td>
-<td>Light (bit checks)</td>
+<td>
+<code><a href="../reference/a5_hierarchy.html">a5_cell_to_parent()</a></code>, <code><a href="../reference/a5_get_resolution.html">a5_get_resolution()</a></code>,
+<code><a href="../reference/a5_migrate.html">a5_migrate()</a></code>
+</td>
+<td>Light (bit operations)</td>
 <td>Low</td>
 </tr>
 </tbody>
@@ -214,56 +229,63 @@ assembling the result, especially the <code>simplify = FALSE</code>
 list, is sequential, so the list form gains less than the flat form.</p>
 <p>Scalar and bulk operations (<code><a href="../reference/a5_compaction.html">a5_compact()</a></code>,
 <code><a href="../reference/a5_resolution_stats.html">a5_cell_area()</a></code>, <code><a href="../reference/a5_cell_child.html">a5_cell_child()</a></code>,
-<code><a href="../reference/a5_cell_children_range.html">a5_cell_children_range()</a></code>, etc.) are unaffected: they are
-already fast or delegate to algorithms that don’t parallelise
-element-wise.</p>
+<code><a href="../reference/a5_cell_children_range.html">a5_cell_children_range()</a></code>) are unaffected: they are already
+fast or do not split by element.</p>
 </div>
 <div class="section level2">
 <h2 id="when-is-it-worthwhile">When is it worthwhile?<a class="anchor" aria-label="anchor" href="#when-is-it-worthwhile"></a>
 </h2>
-<p>Threading has a small fixed overhead (thread synchronisation, memory
-allocation for intermediate results). For small vectors this can
-outweigh the benefit. As a rule of thumb:</p>
+<p>Each parallel call pays a small fixed cost to hand work to the
+threads. For small vectors this can outweigh the benefit. As a rule of
+thumb:</p>
 <ul>
 <li>
 <strong>&lt; 1,000 elements</strong>: stick with 1 thread</li>
 <li>
-<strong>1,000–10,000</strong>: 2-4 threads helps for heavy ops
-(boundary, indexing)</li>
+<strong>1,000–10,000</strong>: 2–4 threads help for heavy operations
+(boundaries, indexing)</li>
 <li>
 <strong>&gt; 10,000</strong>: use as many threads as you have
 cores</li>
 </ul>
-<p>Here is a quick comparison on about 700,000 cells:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<p>Here is a comparison on about 695,000 cells:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_compaction.html">a5_uncompact</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells</a></span><span class="op">(</span><span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/rct.html" class="external-link">rct</a></span><span class="op">(</span><span class="op">-</span><span class="fl">10</span>, <span class="fl">50</span>, <span class="fl">10</span>, <span class="fl">60</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">12</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 704259</span></span>
+<span><span class="co">#&gt; [1] 694889</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/a5_threads.html">a5_set_threads</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cells</span>, format <span class="op">=</span> <span class="st">"wkt"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   user  system elapsed</span></span>
-<span><span class="co">#&gt;  3.124   0.000   3.122 </span></span>
+<span><span class="fu"><a href="../reference/a5_threads.html">a5_threads</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;    user  system elapsed</span></span>
+<span><span class="co">#&gt;   0.952   0.005   0.956</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/a5_threads.html">a5_set_threads</a></span><span class="op">(</span><span class="fl">8</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cells</span>, format <span class="op">=</span> <span class="st">"wkt"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   user  system elapsed</span></span>
-<span><span class="co">#&gt; 6.195   1.289   1.667 </span></span></code></pre></div>
-<p>Note that <code>user</code> time increases (total CPU work across all
-threads) while <code>elapsed</code> (wall-clock) time decreases: that is
-the parallelism at work.</p>
+<span><span class="fu"><a href="../reference/a5_threads.html">a5_threads</a></span><span class="op">(</span><span class="fl">8</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;    user  system elapsed</span></span>
+<span><span class="co">#&gt;   1.206   0.009   0.248</span></span></code></pre></div>
+<p><code>user</code> time (total CPU work across all threads) rises
+while <code>elapsed</code> (wall-clock) time falls: that is the
+parallelism at work.</p>
 </div>
 <div class="section level2">
-<h2 id="thread-safety">Thread safety<a class="anchor" aria-label="anchor" href="#thread-safety"></a>
+<h2 id="other-parallel-code">Other parallel code<a class="anchor" aria-label="anchor" href="#other-parallel-code"></a>
 </h2>
-<p>a5R uses a dedicated rayon thread pool, separate from R’s own
-parallelism. It is safe to use alongside <code>future</code>,
-<code>mirai</code>, etc. but think carefully about this nested
-parallelism as it can, if overloaded, degrade performance.</p>
-<p>The thread pool is rebuilt each time you call
-<code><a href="../reference/a5_threads.html">a5_set_threads()</a></code>, so changing the count mid-session is fine
-(and cheap) but not free: ideally, do it once at the start of your
-workflow rather than toggling per-call.</p>
+<p>a5R uses its own rayon thread pool, separate from R’s parallelism.
+Combining the two multiplies the thread count, so keep the product
+within your cores:</p>
+<ul>
+<li>Separate-process workers (<code>mirai</code>,
+<code>future::multisession</code>, PSOCK clusters) start at one a5R
+thread, like any new session. Raise it inside a worker only if the
+workers leave cores idle.</li>
+<li>Forked workers (<code><a href="https://rdrr.io/r/parallel/mclapply.html" class="external-link">parallel::mclapply()</a></code>,
+<code>future::multicore</code>) inherit the count but not the threads,
+so a5R runs on one thread in each of them unless the worker calls
+<code>a5_threads(n)</code> itself.</li>
+</ul>
+<p>Each <code>a5_threads(n)</code> call rebuilds the thread pool, which
+takes well under a millisecond, so scoping a count with
+<code><a href="https://rdrr.io/r/base/with.html" class="external-link">with()</a></code> around each heavy call costs nothing measurable.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

@@ -62,8 +62,8 @@ each value to the coarse cell it lies in.
 
 The result equals
 `a5_lonlat_to_cell(a5_cell_to_lonlat(cell), resolution)`, computed
-without converting the centre to degrees. It takes well under half the
-time of
+without converting the centre to degrees. It takes about half the time
+of
 [`a5_lonlat_to_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_coordinates.md),
 but far longer than
 [`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md),

@@ -89,9 +89,10 @@
 <h2 id="the-index-hierarchy-is-not-spatially-nested">The index hierarchy is not spatially nested<a class="anchor" aria-label="anchor" href="#the-index-hierarchy-is-not-spatially-nested"></a>
 </h2>
 <p><code><a href="../reference/a5_hierarchy.html">a5_cell_to_parent()</a></code> and
-<code><a href="../reference/a5_hierarchy.html">a5_cell_to_children()</a></code> follow the A5 index. A cell’s index
-children do not tile it: some of them lie mostly in its neighbours, and
-some cells inside it belong to a neighbour’s index.</p>
+<code><a href="../reference/a5_hierarchy.html">a5_cell_to_children()</a></code> follow the A5 index, the numbering of
+cells along A5’s space-filling curve. A cell’s index children do not
+tile it: some of them lie mostly in its neighbours, and some cells
+inside it belong to a neighbour’s index.</p>
 <p><code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_supercell()</a></code> and
 <code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcells()</a></code> follow location instead. A fine cell
 belongs to the coarse cell containing its centre: that coarse cell is
@@ -125,8 +126,9 @@ subcells sit inside the outline. The mismatch is not rare:</p>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_parent</a></span><span class="op">(</span><span class="va">fine</span>, <span class="fl">15</span><span class="op">)</span> <span class="op">!=</span> <span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_supercell</a></span><span class="op">(</span><span class="va">fine</span>, <span class="fl">15</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.3677</span></span></code></pre></div>
-<p>For about a third of res-18 cells, the index parent at res 15 is a
-neighbour of the cell they lie in, their supercell.</p>
+<p>For over a third of these res-18 cells, the index parent at res 15 is
+not the cell they lie in, their supercell, but one of its
+neighbours.</p>
 <p>The upward direction shows the same thing from the other side. Here
 is one res-10 cell whose index parent at res 8 is not the cell it lies
 in:</p>
@@ -178,6 +180,9 @@ cells outside have value 0. Average it to res 15 under each rule.</p>
 <span><span class="op">}</span></span>
 <span><span class="va">by_index</span> <span class="op">&lt;-</span> <span class="fu">mean_by</span><span class="op">(</span><span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_parent</a></span><span class="op">(</span><span class="va">layer</span>, <span class="fl">15</span><span class="op">)</span>, <span class="va">fine</span><span class="op">$</span><span class="va">value</span><span class="op">)</span></span>
 <span><span class="va">by_super</span> <span class="op">&lt;-</span> <span class="fu">mean_by</span><span class="op">(</span><span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_supercell</a></span><span class="op">(</span><span class="va">layer</span>, <span class="fl">15</span><span class="op">)</span>, <span class="va">fine</span><span class="op">$</span><span class="va">value</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="https://rdrr.io/r/base/format.html" class="external-link">format()</a></code> supplies a grouping key here because base
+grouping functions cannot group an <code>a5_cell</code> vector directly
+(see <code><a href="../articles/internal-cell-representation.html">vignette("internal-cell-representation")</a></code>).</p>
 <p>For a reference that uses neither hierarchy, drop two million random
 points on the area, place each directly in its res-15 cell, and take the
 share of points per cell that fall in the patch. This estimates each
@@ -204,10 +209,7 @@ coarse cell’s true patch fraction.</p>
 <p>Aggregating by index parent misstates the patch fraction of the cells
 it touches by about a tenth on average, and by a third at worst, because
 each coarse cell averages fine cells from its neighbours. Aggregating by
-supercell is off only by the sampling noise of the reference.
-<code><a href="https://rdrr.io/r/base/format.html" class="external-link">format()</a></code> supplies a grouping key here because base grouping
-functions cannot group an <code>a5_cell</code> vector directly (see
-<code><a href="../articles/internal-cell-representation.html">vignette("internal-cell-representation")</a></code>).</p>
+supercell is off only by the sampling noise of the reference.</p>
 <p>Mapping the reference fractions, and each rule’s error against them,
 shows where the index rule goes wrong:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
@@ -251,14 +253,13 @@ sampling noise in the reference.</p>
 <h2 id="expanding-coarse-cells">Expanding coarse cells<a class="anchor" aria-label="anchor" href="#expanding-coarse-cells"></a>
 </h2>
 <p>The downward direction is the exact inverse.
-<code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcells()</a></code> returns one covering per coarse cell:
-a compacted set that records its resolution (see
-<code><a href="../reference/a5_covering.html">?a5_covering</a></code>). Expanding the subcells of a set of coarse
-cells gives each fine cell once, inside the coarse cell whose centre
-rule claims it:</p>
+<code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcells()</a></code> returns one covering per coarse cell
+(see <code><a href="../articles/coverings.html">vignette("coverings")</a></code>). Expanding the subcells of a
+set of coarse cells gives each fine cell once, inside the coarse cell
+that holds its centre:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">patch</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_compaction.html">a5_uncompact</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_grid_disk.html">a5_grid_disk</a></span><span class="op">(</span><span class="va">cell</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">sub</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcells</a></span><span class="op">(</span><span class="va">patch</span>, resolution <span class="op">=</span> <span class="fl">11</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">coarse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_compaction.html">a5_uncompact</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_grid_disk.html">a5_grid_disk</a></span><span class="op">(</span><span class="va">cell</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">sub</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcells</a></span><span class="op">(</span><span class="va">coarse</span>, resolution <span class="op">=</span> <span class="fl">11</span><span class="op">)</span></span>
 <span><span class="va">sub</span></span>
 <span><span class="co">#&gt; &lt;a5_covering[6]&gt;</span></span>
 <span><span class="co">#&gt; [1] res 11: 62 cells (29 stored) res 11: 62 cells (29 stored)</span></span>
@@ -272,12 +273,23 @@ rule claims it:</p>
 <span><span class="va">all_kids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">kids</span><span class="op">)</span></span>
 <span><span class="fu">vctrs</span><span class="fu">::</span><span class="fu"><a href="https://vctrs.r-lib.org/reference/vec_duplicate.html" class="external-link">vec_duplicate_any</a></span><span class="op">(</span><span class="va">all_kids</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] FALSE</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_supercell</a></span><span class="op">(</span><span class="va">all_kids</span>, <span class="fl">8</span><span class="op">)</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">patch</span>, <span class="fu"><a href="https://rdrr.io/r/base/lengths.html" class="external-link">lengths</a></span><span class="op">(</span><span class="va">kids</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_supercell</a></span><span class="op">(</span><span class="va">all_kids</span>, <span class="fl">8</span><span class="op">)</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">coarse</span>, <span class="fu"><a href="https://rdrr.io/r/base/lengths.html" class="external-link">lengths</a></span><span class="op">(</span><span class="va">kids</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 <p>Counts vary slightly from cell to cell but average
 <code>4^3 = 64</code> for these three resolution steps, as for index
-children. Each covering stores far fewer cells than it stands for;
-uncompact before drawing, as the stored cells are index parents.</p>
+children. Each covering stores far fewer cells than it stands for.</p>
+<p><code><a href="../reference/a5_covering_to_supercells.html">a5_covering_to_supercells()</a></code> goes the other way for a
+whole covering: the coarse cells holding the centre of any of its cells,
+found without expanding the fine cells. It gives, for example, the
+coarse partitions that hold an area’s data:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fine_area</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_set_operations.html">a5_union</a></span><span class="op">(</span><span class="va">sub</span><span class="op">)</span></span>
+<span><span class="va">fine_area</span></span>
+<span><span class="co">#&gt; &lt;a5_covering[1]&gt;</span></span>
+<span><span class="co">#&gt; [1] res 11: 380 cells (95 stored)</span></span>
+<span><span class="fu"><a href="../reference/a5_covering_to_supercells.html">a5_covering_to_supercells</a></span><span class="op">(</span><span class="va">fine_area</span>, <span class="fl">8</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;a5_covering[1]&gt;</span></span>
+<span><span class="co">#&gt; [1] res 8: 6 cells (6 stored)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="which-to-use">Which to use<a class="anchor" aria-label="anchor" href="#which-to-use"></a>
@@ -287,8 +299,8 @@ and curve ordering. Use supercells and subcells whenever values move
 between resolutions and must stay where they are on the ground.</p>
 <p>Supercells and subcells cost more. The index functions are bit
 operations; <code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_supercell()</a></code> locates each centre, in
-well under half the time of <code><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell()</a></code>. Both run
-in parallel with <code><a href="../reference/a5_threads.html">a5_set_threads()</a></code>.</p>
+about half the time of <code><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell()</a></code>. Both run in
+parallel with <code><a href="../reference/a5_threads.html">a5_threads()</a></code>.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

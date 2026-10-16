@@ -22,7 +22,7 @@ A list of class `a5_info` with elements:
 - `index`: the A5 cell index version of a5R's ids, `"1.0"`.
 
 - `threads`: the current thread count (see
-  [`a5_set_threads()`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md)).
+  [`a5_threads()`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md)).
 
 - `c_api`: the version of the C API (see
   [a5_c_api](https://belian-earth.github.io/a5R/dev/reference/a5_c_api.md)).

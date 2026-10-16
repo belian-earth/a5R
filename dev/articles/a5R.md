@@ -9,7 +9,12 @@ library(a5R)
 ## Index a point
 
 Map a longitude/latitude coordinate to a cell at a given resolution
-(0–30). Higher resolutions produce smaller cells.
+(0–30). Higher resolutions produce smaller cells. a5R 1.0 uses A5’s
+permanent cell ids; ids written by earlier versions name other cells and
+need converting once with
+[`a5_migrate()`](https://belian-earth.github.io/a5R/dev/reference/a5_migrate.md)
+(see
+[`vignette("arrow-parquet")`](https://belian-earth.github.io/a5R/dev/articles/arrow-parquet.md)).
 
 ``` r
 
@@ -44,14 +49,18 @@ plot(boundary, col = "#206ead20", border = "#206ead", asp = 1)
 
 ![](a5R_files/figure-html/boundary-plot-1.png)
 
-Boundaries are returned as `wk_wkb` vectors by default (set
-`format = "wkt"` for WKT). Both integrate directly with sf, terra, and
-other spatial tooling via the wk package.
+Boundaries are returned as well-known binary (WKB) `wk_wkb` vectors by
+default (set `format = "wkt"` for well-known text). Both integrate
+directly with sf, terra, and other spatial tooling via the wk package.
 
 ## Hierarchy and compaction
 
-A5 is a hierarchical grid: every cell has a **parent** at a coarser
-resolution and 4 **children** at the next finer resolution.
+Pentagons cannot nest exactly, so A5 has two hierarchies. The index
+hierarchy
+([`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md),
+[`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md))
+follows the ids: each cell has 4 children (5 at resolution 0), and
+compaction relies on it.
 
 ``` r
 
@@ -66,25 +75,35 @@ children
 #> [1] 63bb942000000000 63bb946000000000 63bb94a000000000 63bb94e000000000
 ```
 
-We can visualise the relationship: the parent (dark outline) contains
-our cell (blue fill), which in turn contains its 4 children (orange):
+The spatial hierarchy
+([`a5_cell_to_supercell()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md),
+[`a5_cell_to_subcells()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md))
+goes by location: the supercell contains the cell’s centre, and the
+subcells are the finer cells whose centres lie inside it. See
+[`vignette("spatial-hierarchy")`](https://belian-earth.github.io/a5R/dev/articles/spatial-hierarchy.md).
 
 ``` r
 
-plot(NULL, xlim = c(-3.23, -3),  ylim = c(55.98, 55.99),               
-       xlab = "", ylab = "", asp = 1
-       )
-plot(a5_cell_to_boundary(a5_cell_to_children(cell)),
-     col = "#ad6e2020", border = "#ad6e20", add = TRUE)
-plot(a5_cell_to_boundary(cell), col = "#206ead40", border = "#206ead",
-     lwd = 2, add = TRUE)
-plot(a5_cell_to_boundary(parent), border = "#333333", lwd = 2, add = TRUE)
+supercell <- a5_cell_to_supercell(cell)
+subcells <- a5_uncompact(a5_cell_to_subcells(cell))
+
+plot(a5_cell_to_boundary(c(supercell, cell, subcells)), border = NA,
+     asp = 1 / cos(56 * pi / 180))
+plot(a5_cell_to_boundary(subcells), col = "#ad6e2020", border = "#ad6e20", add = TRUE)
+plot(a5_cell_to_boundary(cell), col = "#206ead40", border = "#206ead", lwd = 2, add = TRUE)
+plot(a5_cell_to_boundary(supercell), border = "#333333", lwd = 2, add = TRUE)
+plot(a5_cell_to_lonlat(cell), pch = 19, add = TRUE)
 ```
 
 ![](a5R_files/figure-html/hierarchy-plot-1.png)
 
-Cell area decreases geometrically: each level is roughly 4x smaller, so
-the average edge length roughly halves per level.
+The supercell (dark outline) contains our cell’s centre (dot); the 3
+subcells (orange) are the finer cells whose centres lie inside our cell
+(blue). No outline nests exactly.
+
+Cell area decreases geometrically: each level is 4 times smaller (5
+times from resolution 0 to 1), so the average edge length roughly halves
+per level.
 [`a5_cell_edge_length_avg()`](https://belian-earth.github.io/a5R/dev/reference/a5_resolution_stats.md)
 gives a quick sense of cell size when choosing a resolution.
 
@@ -107,6 +126,8 @@ siblings is replaced by its parent, and the covering records the
 resolution it stands for, so
 [`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md)
 needs no resolution to expand it again.
+[`vignette("coverings")`](https://belian-earth.github.io/a5R/dev/articles/coverings.md)
+covers building, combining and storing them.
 
 ``` r
 
@@ -139,17 +160,20 @@ Both return one covering per centre cell:
 ``` r
 
 disk <- a5_grid_disk(cell, k = 10)
-cap <- a5_spherical_cap(cell, radius = 50000)
+cap <- a5_spherical_cap(cell, radius = 50, units = "km")
 c(disk, cap)
 #> <a5_covering[2]>
 #> [1] res 10: 294 cells (69 stored) res 10: 239 cells (62 stored)
 
-plot(a5_cell_to_boundary(a5_uncompact(cap)), col = "#6ead2020", border = "#6ead20", asp = 1)
+plot(a5_cell_to_boundary(a5_uncompact(cap)), col = "#6ead2020", border = "#6ead20",
+     asp = 1 / cos(56 * pi / 180))
 plot(a5_cell_to_boundary(a5_uncompact(disk)), col = "#206ead20", border = "#206ead",
-     asp = 1, add = TRUE)
+     add = TRUE)
 ```
 
 ![](a5R_files/figure-html/traversal-1.png)
+
+The cap is in green and the disk in blue.
 
 ## Converting geometries to a5 cells
 
@@ -168,14 +192,15 @@ covering
 #> [1] res 12: 69 cells (36 stored)
 
 cells <- a5_uncompact(covering)
-plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
+plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead",
+     asp = 1 / cos(56 * pi / 180))
 ```
 
 ![](a5R_files/figure-html/grid-plot-1.png)
 
-A covering stores far fewer cells than it stands for: whenever four
-sibling cells all sit inside the polygon, they are stored as their
-parent. Stored cells are index parents, whose outlines do not nest (see
+A covering stores fewer cells than it stands for: whenever all the
+children of a cell sit inside the polygon, they are stored as that cell.
+Stored cells are index parents, whose outlines do not nest (see
 [`vignette("spatial-hierarchy")`](https://belian-earth.github.io/a5R/dev/articles/spatial-hierarchy.md)),
 so always uncompact before drawing.
 
@@ -194,7 +219,7 @@ overlapping
 #> [1] res 12: 90 cells (36 stored)
 
 plot(a5_cell_to_boundary(a5_uncompact(overlapping)),
-     col = "#ad6e2020", border = "#ad6e20", asp = 1)
+     col = "#ad6e2020", border = "#ad6e20", asp = 1 / cos(56 * pi / 180))
 plot(a5_cell_to_boundary(cells),
      col = "#206ead40", border = "#206ead", add = TRUE)
 plot(wk::rct(-3.3, 55.9, -3.1, 56.0), border = "#333333", lwd = 2, add = TRUE)
@@ -263,11 +288,22 @@ length(cells)
 #> [1] 182
 
 plot(a5_cell_to_boundary(cells),
-     col = "#206ead80", border = "#37af6d", asp = 1)
+     col = "#206ead80", border = "#37af6d", asp = 1 / cos(52 * pi / 180))
 ```
 
 ![](a5R_files/figure-html/linestring-a5R-1.png)
 
-Each stroke is one part of the `MULTILINESTRING`; the function walks
-each great-circle path in turn and joins the strokes into one path, each
-cell kept once.
+## Next steps
+
+- [`vignette("coverings")`](https://belian-earth.github.io/a5R/dev/articles/coverings.md):
+  building, combining and storing sets of cells.
+- [`vignette("spatial-hierarchy")`](https://belian-earth.github.io/a5R/dev/articles/spatial-hierarchy.md):
+  moving values between resolutions by location.
+- [`vignette("traversal-and-distance")`](https://belian-earth.github.io/a5R/dev/articles/traversal-and-distance.md):
+  neighbourhoods and distance methods.
+- [`vignette("arrow-parquet")`](https://belian-earth.github.io/a5R/dev/articles/arrow-parquet.md):
+  exact ids in Arrow, Parquet and DuckDB.
+- [`vignette("multithreading")`](https://belian-earth.github.io/a5R/dev/articles/multithreading.md):
+  parallel processing.
+- [`vignette("internal-cell-representation")`](https://belian-earth.github.io/a5R/dev/articles/internal-cell-representation.md):
+  how cells are stored.

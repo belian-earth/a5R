@@ -137,9 +137,7 @@ R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 
 ## Configuration
 
-- [`a5_set_threads()`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md)
-  /
-  [`a5_get_threads()`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md)
+- [`a5_threads()`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md)
   — multi-threading control
 
 ## Vignettes

@@ -8,7 +8,7 @@ its doubles are 64-bit floating point. A `double` can only represent
 integers exactly up to 2^53, while a `u64` can go up to 2^64 - 1.
 
 The obvious workaround is to store cell IDs as hex strings
-(`"0800000000000006"`). This works, but every trip across the R / Rust
+(`"0800000000000006"`). This works, but every trip across the R-Rust
 boundary requires hex parsing and formatting: O(n) string allocation
 that dominates the cost of lightweight operations like
 [`a5_get_resolution()`](https://belian-earth.github.io/a5R/dev/reference/a5_get_resolution.md)
@@ -36,9 +36,14 @@ stored bytes map one-to-one onto the original `u64`. On the Rust side,
 reconstructing the id from the eight byte slices is one XOR and a single
 `u64::from_le_bytes()` call. There are no pointers, so an `a5_cell` can
 be saved with [`saveRDS()`](https://rdrr.io/r/base/readRDS.html) like
-any other R object. Objects saved by a5R 0.6.0 or earlier used the plain
-byte layout and do not read correctly in later versions; re-create them
-from hex strings or Arrow, which store the true id.
+any other R object. Objects saved by a5R 0.6.0 or earlier use the plain
+byte layout and the pre-1.0 index. Flip the top byte, then migrate:
+
+``` r
+
+vctrs::field(old, "b8") <- xor(vctrs::field(old, "b8"), as.raw(0xFC))
+old <- a5_migrate(old)
+```
 
 ## R-side: a vctrs record type
 
@@ -74,10 +79,10 @@ cell
 a5_u64_to_hex(cell)
 #> [1] "63bb948000000000"
 
-# Round-trip from hex
-a5_cell("0800000000000006")
-#> <a5_cell[1]>
-#> [1] 0800000000000006
+# Round-trip from hex; unpadded ids and a 0x prefix are read too
+a5_cell(c("0800000000000006", "800000000000006", "0x0800000000000006"))
+#> <a5_cell[3]>
+#> [1] 0800000000000006 0800000000000006 0800000000000006
 ```
 
 ## Why this matters
@@ -107,11 +112,13 @@ format(object.size(hex), units = "MB")
 ## NA handling
 
 `NA` is the id `0xFC00000000000000`. It is never a valid cell: at
-resolutions 0 to 29 the top 6 bits hold the quintant (0 to 59), and 63
-(binary `111111`) is unused; the id does not decode as a resolution-30
-cell either. Only the full id is the sentinel. Resolution 30 keeps just
-5, 3 or 1 quintant bits at the top to make room for position bits, so
-valid resolution-30 cells can have a top byte of `0xFC`.
+resolutions 1 to 29 the top 6 bits hold the quintant (one of the 60
+fifths of the dodecahedron’s 12 faces, numbered 0 to 59), and at
+resolution 0 the face (0 to 11), so 63 (binary `111111`) never occurs;
+the id does not decode as a resolution-30 cell either. Only the full id
+is the sentinel. Resolution 30 keeps just 5, 3 or 1 quintant bits at the
+top to make room for position bits, so valid resolution-30 cells can
+have a top byte of `0xFC`.
 
 Storing `b8` XOR `0xFC` makes the sentinel’s stored form eight `00`
 bytes. That matters because vctrs fills gaps field by field, and a
@@ -171,13 +178,11 @@ by a method:
   in `c(a5_cell(NA), cells)`, or use `vctrs::vec_c(NA, cells)`, which
   combines by every argument’s type. An `NA` anywhere after the first
   argument is fine.
-
 - `split(x, cells)` and `tapply(x, cells, f)` with an `a5_cell`
   *grouping* vector see a list of eight raw vectors and group on their
   interaction, giving one group or an error. Use
   `vctrs::vec_split(x, cells)` or `vctrs::vec_group_id(cells)`, or group
   with `factor(cells)`.
-
 - [`unlist()`](https://rdrr.io/r/base/unlist.html) on a plain list of
   `a5_cell` vectors, such as
   [`lapply()`](https://rdrr.io/r/base/lapply.html) output, descends into
@@ -203,15 +208,27 @@ cells <- a5_lonlat_to_cell(c(0, 10, 0), c(0, 10, 0), resolution = 5)
 
 # A leading NA: start with a cell, or use vctrs
 c(a5_cell(NA), cells)
+#> <a5_cell[4]>
+#> [1] <NA>             4f0a000000000000 569e000000000000 4f0a000000000000
 vctrs::vec_c(NA, cells)
+#> <a5_cell[4]>
+#> [1] <NA>             4f0a000000000000 569e000000000000 4f0a000000000000
 
 # Grouping by cell: use vctrs
 vctrs::vec_split(1:3, cells)$val
-#> [[1]] 1 3   [[2]] 2
+#> [[1]]
+#> [1] 1 3
+#> 
+#> [[2]]
+#> [1] 2
 
 # Flattening lapply() output
 parts <- lapply(1:3, function(i) a5_cell_to_children(cells[i]))
 unlist(as_a5_cell_list(parts))
+#> <a5_cell[12]>
+#>  [1] 4f08800000000000 4f09800000000000 4f0a800000000000 4f0b800000000000
+#>  [5] 569c800000000000 569d800000000000 569e800000000000 569f800000000000
+#>  [9] 4f08800000000000 4f09800000000000 4f0a800000000000 4f0b800000000000
 ```
 
 ## Coverings
@@ -244,6 +261,17 @@ rev(bytes[9:16])                  # the marker, most significant byte first
 A covering never holds `NA`, so no byte is masked. A missing covering is
 a `NULL` element, which is what vctrs fills in for a list, so joins and
 `vec_init()` produce `NA` coverings with no extra work.
+
+## From compiled code
+
+The byte layout is internal and may change. Packages that build or read
+`a5_cell` vectors in C, C++ or Rust should use a5R’s C API
+([`?a5_c_api`](https://belian-earth.github.io/a5R/dev/reference/a5_c_api.md)):
+add `LinkingTo: a5R` and `Imports: a5R`, include `<a5R.h>`, and call
+`a5R_cells_from_u64()` and `a5R_cells_to_u64()`. These take plain
+`uint64_t` ids with `NA` flagged in a separate `int` array, so callers
+never see the mask or the sentinel. `a5R_api_version()`, also given by
+`a5_info()$c_api`, reports the API version.
 
 ## Summary
 

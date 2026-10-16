@@ -93,9 +93,9 @@ the features they describe.</p>
 <div class="section level2">
 <h2 id="what-a-covering-stores">What a covering stores<a class="anchor" aria-label="anchor" href="#what-a-covering-stores"></a>
 </h2>
-<p>A covering is stored compacted: every complete group of four sibling
-cells is replaced by their parent, and a trailing <em>compaction
-marker</em> records the resolution the stored cells stand for.</p>
+<p>A covering is stored compacted: every complete group of sibling cells
+is replaced by their parent, and a trailing <em>compaction marker</em>
+records the resolution the stored cells stand for.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">raleigh</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="op">-</span><span class="fl">78.64</span>, <span class="fl">35.78</span>, resolution <span class="op">=</span> <span class="fl">11</span><span class="op">)</span></span>
 <span><span class="va">cap</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spherical_cap.html">a5_spherical_cap</a></span><span class="op">(</span><span class="va">raleigh</span>, radius <span class="op">=</span> <span class="fl">12000</span><span class="op">)</span></span>
@@ -110,7 +110,7 @@ stored cells without expanding them, which keeps it fast for coverings
 that stand for millions of cells. To draw a covering or join it to data
 keyed by cell, expand it with <code><a href="../reference/a5_compaction.html">a5_uncompact()</a></code>, as the
 figures here do. Where it helps, a second row shows what the same
-covering stores.</p>
+covering stores, as <code><a href="../reference/a5_covering_stored.html">a5_covering_stored()</a></code> returns it.</p>
 </div>
 <div class="section level2">
 <h2 id="building-coverings">Building coverings<a class="anchor" aria-label="anchor" href="#building-coverings"></a>
@@ -118,7 +118,9 @@ covering stores.</p>
 <p><code><a href="../reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code> returns one covering per feature.
 By default a cell belongs when its centre lies inside the polygon;
 <code>containment = "overlapping"</code> also takes every cell the
-boundary touches, so the cells cover the polygon without gaps.</p>
+boundary touches, so the cells cover the polygon without gaps. Polygon
+edges are great circles, as in the other A5 libraries;
+<code><a href="../reference/a5_bbox.html">a5_bbox()</a></code> gives the box those edges span.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">nc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">st_read</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"shape/nc.shp"</span>, package <span class="op">=</span> <span class="st">"sf"</span><span class="op">)</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">nc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_transform.html" class="external-link">st_transform</a></span><span class="op">(</span><span class="va">nc</span>, <span class="fl">4326</span><span class="op">)</span> <span class="co"># A5 works in WGS 84 longitude and latitude</span></span>
@@ -132,13 +134,14 @@ boundary touches, so the cells cover the polygon without gaps.</p>
 <p><img src="coverings_files/figure-html/polygons-plot-1.png" class="r-plt" alt="" width="672"></p>
 <p>The functions that start from a cell return one covering per centre
 cell: <code><a href="../reference/a5_grid_disk.html">a5_grid_disk()</a></code> takes every cell within <code>k</code>
-steps, <code><a href="../reference/a5_spherical_cap.html">a5_spherical_cap()</a></code> every cell whose centre is within
-a distance, and <code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcells()</a></code> the finer cells whose
-centres lie inside a coarser cell.</p>
+edge steps (<code><a href="../reference/a5_grid_disk.html">a5_grid_disk_vertex()</a></code> also steps across shared
+vertices), <code><a href="../reference/a5_spherical_cap.html">a5_spherical_cap()</a></code> every cell whose centre is
+within a distance, and <code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcells()</a></code> the finer
+cells whose centres lie inside a coarser cell.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">disk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_grid_disk.html">a5_grid_disk</a></span><span class="op">(</span><span class="va">raleigh</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">cap</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spherical_cap.html">a5_spherical_cap</a></span><span class="op">(</span><span class="va">raleigh</span>, radius <span class="op">=</span> <span class="fl">8000</span><span class="op">)</span></span>
-<span><span class="va">coarse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_parent</a></span><span class="op">(</span><span class="va">raleigh</span>, parent_resolution <span class="op">=</span> <span class="fl">9</span><span class="op">)</span></span>
+<span><span class="va">coarse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_supercell</a></span><span class="op">(</span><span class="va">raleigh</span>, resolution <span class="op">=</span> <span class="fl">9</span><span class="op">)</span></span>
 <span><span class="va">subcells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcells</a></span><span class="op">(</span><span class="va">coarse</span>, resolution <span class="op">=</span> <span class="fl">11</span><span class="op">)</span></span></code></pre></div>
 <p><img src="coverings_files/figure-html/around-plot-1.png" class="r-plt" alt="" width="672"></p>
 <p><code><a href="../reference/a5_compaction.html">a5_compact()</a></code> turns any set of cells into a covering, and
@@ -211,13 +214,20 @@ call intersects every county with a single cap. With one argument,
 <p><img src="coverings_files/figure-html/recycle-plot-1.png" class="r-plt" alt="" width="672"></p>
 <p>Both coverings in each pair must be at the same resolution, or it is
 an error. A5 cells do not nest across resolutions: a resolution-11 cell
-can straddle the edge between two resolution-10 cells, so a set of cells
-at one resolution does not translate into a set at another.</p>
+can straddle the edge between two resolution-10 cells. To move a
+covering to a coarser resolution,
+<code><a href="../reference/a5_covering_to_supercells.html">a5_covering_to_supercells()</a></code> takes the coarse cells holding
+the centre of any of its cells (see
+<code><a href="../articles/spatial-hierarchy.html">vignette("spatial-hierarchy")</a></code>).</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/a5_set_operations.html">a5_union</a></span><span class="op">(</span><span class="va">state</span>, <span class="fu"><a href="../reference/a5_spherical_cap.html">a5_spherical_cap</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_parent</a></span><span class="op">(</span><span class="va">raleigh</span><span class="op">)</span>, radius <span class="op">=</span> <span class="fl">60000</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">cap10</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spherical_cap.html">a5_spherical_cap</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_supercell</a></span><span class="op">(</span><span class="va">raleigh</span><span class="op">)</span>, radius <span class="op">=</span> <span class="fl">60000</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/a5_set_operations.html">a5_union</a></span><span class="op">(</span><span class="va">state</span>, <span class="va">cap10</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;"> in `a5_union()`:</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> union failed for element 1: Cannot combine cells at resolution 11 with</span></span>
-<span><span class="co">#&gt;   cells at resolution 10</span></span></code></pre></div>
+<span><span class="co">#&gt;   cells at resolution 10</span></span>
+<span><span class="fu"><a href="../reference/a5_set_operations.html">a5_union</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_covering_to_supercells.html">a5_covering_to_supercells</a></span><span class="op">(</span><span class="va">state</span>, <span class="fl">10</span><span class="op">)</span>, <span class="va">cap10</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;a5_covering[1]&gt;</span></span>
+<span><span class="co">#&gt; [1] res 10: 4,096 cells (583 stored)</span></span></code></pre></div>
 <p><img src="coverings_files/figure-html/nest-plot-1.png" class="r-plt" alt="" width="345.6" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level2">
@@ -255,7 +265,7 @@ belong to both:</p>
 <span><span class="fu"><a href="../reference/a5_covering_predicates.html">a5_overlaps</a></span><span class="op">(</span><span class="va">gap_free</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">gap_free</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 <p><img src="coverings_files/figure-html/overlaps-plot-1.png" class="r-plt" alt="" width="672"></p>
-<p>Shared cells are in aqua.</p>
+<p>Shared cells are in green.</p>
 </div>
 <div class="section level2">
 <h2 id="drawing-and-joining">Drawing and joining<a class="anchor" aria-label="anchor" href="#drawing-and-joining"></a>

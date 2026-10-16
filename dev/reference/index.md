@@ -134,10 +134,9 @@ Package information, thread control, error classes and the C API.
 
 - [`a5_info()`](https://belian-earth.github.io/a5R/dev/reference/a5_info.md)
   : a5R build and session information
-- [`a5_set_threads()`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md)
+- [`a5_threads()`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md)
   [`with(`*`<a5_threads>`*`)`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md)
-  [`a5_get_threads()`](https://belian-earth.github.io/a5R/dev/reference/a5_threads.md)
-  : Set the number of threads used by a5R
+  : Get or set the number of threads used by a5R
 - [`a5_errors`](https://belian-earth.github.io/a5R/dev/reference/a5_errors.md)
   : Error classes
 - [`a5_c_api`](https://belian-earth.github.io/a5R/dev/reference/a5_c_api.md)
