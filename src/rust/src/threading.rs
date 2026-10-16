@@ -76,8 +76,25 @@ fn a5_get_threads_rs() -> i32 {
     get_num_threads() as i32
 }
 
+/// Panic inside the thread pool, for the test that a panic in a parallel call
+/// leaves the pool and later calls working.
+/// @noRd
+/// @keywords internal
+#[extendr]
+fn a5_test_pool_panic_rs() {
+    use rayon::prelude::*;
+    maybe_par(|| {
+        (0..64).into_par_iter().for_each(|i| {
+            if i == 63 {
+                panic!("a5R test panic");
+            }
+        })
+    })
+}
+
 extendr_module! {
     mod threading;
+    fn a5_test_pool_panic_rs;
     fn a5_set_threads_rs;
     fn a5_get_threads_rs;
 }

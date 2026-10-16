@@ -138,6 +138,9 @@
 * `a5_lonlat_to_cell()` returns `NA` for `NaN` and infinite coordinates,
   which used to give valid cells, and errors on latitudes outside
   \[-90, 90\], which used to wrap onto plausible but wrong cells.
+* `a5_grid_disk()`, `a5_grid_disk_vertex()` and `a5_spherical_cap()` return
+  the world cell's covering for the world cell, which is its own disk and
+  cap. They used to fail with a Rust panic.
 * Forked workers (`parallel::mclapply()`, `future::multicore`) no longer
   hang after `a5_threads()` sets more than one thread: they inherited the
   thread pool but not its threads. a5R now runs on one thread in a forked

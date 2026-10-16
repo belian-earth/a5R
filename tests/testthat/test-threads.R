@@ -49,9 +49,8 @@ test_that("a5_threads rejects invalid counts and keeps the old one", {
 test_that("a Rust panic in a parallel call does not break later calls", {
   old <- a5_threads(2L)
   on.exit(a5_threads(old))
-  # the world cell panics inside the a5 crate (1.0.0); whatever it
-  # does now, later parallel calls and a5_threads() must still work
-  try(a5_grid_disk(a5_cell("0000000000000000"), 1), silent = TRUE)
+  # later parallel calls and a5_threads() must still work after a panic
+  expect_error(a5_test_pool_panic_rs(), "a5R test panic")
   cell <- a5_lonlat_to_cell(0, 0, 5)
   expect_length(a5_cell_to_children(cell, 7), 16L)
   expect_identical(as.integer(a5_threads(1L)), 2L)

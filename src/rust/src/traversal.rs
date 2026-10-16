@@ -2,6 +2,13 @@ use extendr_api::prelude::*;
 
 use crate::covering::cells_to_coverings;
 
+// The world cell is the only cell at resolution -1, so it is its own disk and
+// cap. a5 1.0.0 panics on it there; remove this once the crate handles it
+// (a5-rs #91), which returns the same covering.
+fn world_cell_covering(id: u64) -> Option<std::result::Result<Vec<u64>, String>> {
+    (id == a5::WORLD_CELL).then(|| Ok(vec![a5::WORLD_CELL]))
+}
+
 /// Get all cells within k hops of each centre cell, through shared edges.
 ///
 /// @param cells List with b1..b8 raw vectors.
@@ -12,7 +19,9 @@ use crate::covering::cells_to_coverings;
 #[extendr]
 fn a5_grid_disk_rs(cells: List, k: i32) -> List {
     let k = k as usize;
-    cells_to_coverings(&cells, "grid_disk", |id| a5::grid_disk(id, k))
+    cells_to_coverings(&cells, "grid_disk", |id| {
+        world_cell_covering(id).unwrap_or_else(|| a5::grid_disk(id, k))
+    })
 }
 
 /// Get all cells within k hops of each centre cell, through shared vertices.
@@ -25,7 +34,9 @@ fn a5_grid_disk_rs(cells: List, k: i32) -> List {
 #[extendr]
 fn a5_grid_disk_vertex_rs(cells: List, k: i32) -> List {
     let k = k as usize;
-    cells_to_coverings(&cells, "grid_disk_vertex", |id| a5::grid_disk_vertex(id, k))
+    cells_to_coverings(&cells, "grid_disk_vertex", |id| {
+        world_cell_covering(id).unwrap_or_else(|| a5::grid_disk_vertex(id, k))
+    })
 }
 
 /// Get all cells within a great-circle radius of each centre cell.
@@ -37,7 +48,9 @@ fn a5_grid_disk_vertex_rs(cells: List, k: i32) -> List {
 /// @keywords internal
 #[extendr]
 fn a5_spherical_cap_rs(cells: List, radius: f64) -> List {
-    cells_to_coverings(&cells, "spherical_cap", |id| a5::spherical_cap(id, radius))
+    cells_to_coverings(&cells, "spherical_cap", |id| {
+        world_cell_covering(id).unwrap_or_else(|| a5::spherical_cap(id, radius))
+    })
 }
 
 extendr_module! {

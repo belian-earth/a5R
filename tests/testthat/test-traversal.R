@@ -91,3 +91,16 @@ test_that("a5_spherical_cap takes radius units", {
   expect_identical(a5_spherical_cap(cell, units::set_units(5, "km")), m)
   expect_error(a5_spherical_cap(cell, 5, units = "kg"), "length unit")
 })
+
+test_that("the world cell is its own disk and cap", {
+  world <- a5_cell("0000000000000000")
+  cell <- a5_lonlat_to_cell(0, 0, 3)
+  x <- c(world, cell, a5_cell(NA))
+  expected <- as_a5_covering(world)
+  for (res in list(a5_grid_disk(x, 2), a5_grid_disk_vertex(x, 2), a5_spherical_cap(x, 1e6))) {
+    expect_identical(res[1], expected)
+    expect_true(is.na(res[3]))
+  }
+  expect_identical(a5_grid_disk(x, 2)[2], a5_grid_disk(cell, 2))
+})
+
