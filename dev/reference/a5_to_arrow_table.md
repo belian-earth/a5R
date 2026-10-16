@@ -9,8 +9,8 @@ columns as `list<uint64>` (see
 and
 [`a5_covering_to_arrow()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_from_arrow.md)),
 and records the A5 index version (`a5_info()$index`) in the schema
-metadata under `"a5:index_version"`. `a5_from_arrow_table()` reverses
-it, turning `uint64` columns into cells and `list<uint64>` columns into
+metadata under `"a5_index"`. `a5_from_arrow_table()` reverses it,
+turning `uint64` columns into cells and `list<uint64>` columns into
 coverings.
 
 ## Usage

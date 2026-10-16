@@ -32,7 +32,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9007</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9008</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -98,7 +98,7 @@ to R’s <code>double</code>, losing precision. The same happens with
 <code><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">dplyr::collect()</a></code> on an Arrow dataset or query.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/belian-earth/a5R" class="external-link">a5R</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; a5R 0.9.9.9007 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread</span></span></code></pre></div>
+<span><span class="co">#&gt; a5R 0.9.9.9008 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread</span></span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/apache/arrow/" class="external-link">arrow</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tibble.tidyverse.org/" class="external-link">tibble</a></span><span class="op">)</span></span>
@@ -183,7 +183,8 @@ and Arrow <code>uint64</code> without passing through
 <p><code><a href="../reference/a5_to_arrow_table.html">a5_to_arrow_table()</a></code> converts a data frame to an Arrow
 table, writing cell columns as native <code>uint64</code>, the binary
 format DuckDB, Python and geoparquet.io use, and recording the A5 index
-version in the schema metadata:</p>
+version in the schema metadata under the key <code>a5_index</code>,
+which a5px and a5view write too:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
 <span><span class="fu">arrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/docs/r/reference/write_parquet.html" class="external-link">write_parquet</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_to_arrow_table.html">a5_to_arrow_table</a></span><span class="op">(</span><span class="va">cities</span><span class="op">)</span>, <span class="va">tf</span><span class="op">)</span></span></code></pre></div>

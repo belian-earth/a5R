@@ -19,7 +19,7 @@ every cell that touches the polygon boundary, giving gap-free coverage.'><meta p
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9007</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9008</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -138,11 +138,13 @@ with two exceptions: a box covering the whole globe (<code>wk::rct(-180, -90, 18
 its west and east edges on their meridians. Any other box spanning 180
 degrees of longitude or more is an error, because its top and bottom
 edges would run the short way round the globe.</p>
-<p>Rings must not cross themselves. A self-intersecting ring, such as a bow
-tie, gives an undefined result that can include cells thousands of
-kilometres outside the polygon. Because edges are great circles, a ring
-that is valid in longitude and latitude can still cross itself on the
-sphere; <code><a href="https://r-spatial.github.io/s2/reference/s2_is_collection.html" class="external-link">s2::s2_is_valid()</a></code> checks rings with the same edge model.</p>
+<p>Rings must not cross themselves: a ring with two edges that cross, such as
+a bow tie, is an error of class <code>a5R_error_geometry</code>. Repair such rings
+first, for example with <code><a href="https://r-spatial.github.io/sf/reference/valid.html" class="external-link">sf::st_make_valid()</a></code>. Because edges are great
+circles, a ring that is valid in longitude and latitude can still cross
+itself on the sphere; <code><a href="https://r-spatial.github.io/s2/reference/s2_is_collection.html" class="external-link">s2::s2_is_valid()</a></code> checks rings with the same edge
+model. Rings that only touch themselves, and holes that cross the outer
+ring, are not checked.</p>
 <p>Where no A5 cell centroids at the specified <code>resolution</code> fall within
 the geometry, its covering is empty.</p>
 <p>Matrix and <code>data.frame</code> inputs are treated as a single ring; for

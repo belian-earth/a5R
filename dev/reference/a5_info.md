@@ -36,7 +36,7 @@ which version wrote it (see
 so record `index` with stored cells and check it when reading them back.
 With Arrow and Parquet,
 [`a5_to_arrow_table()`](https://belian-earth.github.io/a5R/dev/reference/a5_to_arrow_table.md)
-stores it in the schema metadata under the key `"a5:index_version"`, and
+stores it in the schema metadata under the key `"a5_index"`, and
 [`a5_from_arrow_table()`](https://belian-earth.github.io/a5R/dev/reference/a5_to_arrow_table.md)
 checks it.
 
@@ -44,7 +44,7 @@ checks it.
 
 ``` r
 a5_info()
-#> ── a5R 0.9.9.9007 ──────────────────────────────────────────────────────────────
+#> ── a5R 0.9.9.9008 ──────────────────────────────────────────────────────────────
 #> a5 crate: 1.0.0
 #> A5 index: 1.0
 #> Threads: 1

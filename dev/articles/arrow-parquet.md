@@ -19,7 +19,7 @@ on an Arrow dataset or query.
 ``` r
 
 library(a5R)
-#> a5R 0.9.9.9007 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread
+#> a5R 0.9.9.9008 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread
 ```
 
 ``` r
@@ -111,7 +111,8 @@ cities
 [`a5_to_arrow_table()`](https://belian-earth.github.io/a5R/dev/reference/a5_to_arrow_table.md)
 converts a data frame to an Arrow table, writing cell columns as native
 `uint64`, the binary format DuckDB, Python and geoparquet.io use, and
-recording the A5 index version in the schema metadata:
+recording the A5 index version in the schema metadata under the key
+`a5_index`, which a5px and a5view write too:
 
 ``` r
 

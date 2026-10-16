@@ -17,7 +17,7 @@ package is attached with library()."><meta property="og:image" content="https://
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9007</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9008</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -78,13 +78,13 @@ from different index versions look alike, and nothing in an id says which
 version wrote it (see <code><a href="a5_migrate.html">a5_migrate()</a></code>), so record <code>index</code> with stored
 cells and check it when reading them back. With Arrow and Parquet,
 <code><a href="a5_to_arrow_table.html">a5_to_arrow_table()</a></code> stores it in the schema metadata under the key
-<code>"a5:index_version"</code>, and <code><a href="a5_to_arrow_table.html">a5_from_arrow_table()</a></code> checks it.</p>
+<code>"a5_index"</code>, and <code><a href="a5_to_arrow_table.html">a5_from_arrow_table()</a></code> checks it.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">a5_info</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> ── a5R 0.9.9.9007 ──────────────────────────────────────────────────────────────</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> ── a5R 0.9.9.9008 ──────────────────────────────────────────────────────────────</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> a5 crate: 1.0.0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> A5 index: 1.0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Threads: 1</span>
