@@ -32,7 +32,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9005</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -84,7 +84,7 @@
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/belian-earth/a5R" class="external-link">a5R</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; a5R 0.9.9.9005 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread</span></span></code></pre></div>
+<span><span class="co">#&gt; a5R 0.9.9.9006 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="the-index-hierarchy-is-not-spatially-nested">The index hierarchy is not spatially nested<a class="anchor" aria-label="anchor" href="#the-index-hierarchy-is-not-spatially-nested"></a>
 </h2>
@@ -93,14 +93,14 @@
 children do not tile it: some of them lie mostly in its neighbours, and
 some cells inside it belong to a neighbour’s index.</p>
 <p><code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_supercell()</a></code> and
-<code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcell()</a></code> follow location instead. A fine cell
+<code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcells()</a></code> follow location instead. A fine cell
 belongs to the coarse cell containing its centre: that coarse cell is
 its <em>supercell</em>, and the fine cells a coarse cell holds are its
 <em>subcells</em>.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cell</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="op">-</span><span class="fl">53.5</span>, <span class="op">-</span><span class="fl">19</span>, resolution <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
-<span><span class="va">index_kids</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="fl">11</span><span class="op">)</span></span>
-<span><span class="va">spatial_kids</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_compaction.html">a5_uncompact</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcell</a></span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="fl">11</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">index_kids</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cell</span>, child_resolution <span class="op">=</span> <span class="fl">11</span><span class="op">)</span></span>
+<span><span class="va">spatial_kids</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_compaction.html">a5_uncompact</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcells</a></span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="fl">11</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">outline</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="va">cell</span><span class="op">)</span></span>
 <span><span class="va">lim</span> <span class="op">&lt;-</span> <span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wk_bbox.html" class="external-link">wk_bbox</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_cell_to_boundary.html">a5_cell_to_boundary</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">index_kids</span>, <span class="va">spatial_kids</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
@@ -251,14 +251,14 @@ sampling noise in the reference.</p>
 <h2 id="expanding-coarse-cells">Expanding coarse cells<a class="anchor" aria-label="anchor" href="#expanding-coarse-cells"></a>
 </h2>
 <p>The downward direction is the exact inverse.
-<code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcell()</a></code> returns one covering per coarse cell:
+<code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcells()</a></code> returns one covering per coarse cell:
 a compacted set that records its resolution (see
 <code><a href="../reference/a5_covering.html">?a5_covering</a></code>). Expanding the subcells of a set of coarse
 cells gives each fine cell once, inside the coarse cell whose centre
 rule claims it:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">patch</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_compaction.html">a5_uncompact</a></span><span class="op">(</span><span class="fu"><a href="../reference/a5_grid_disk.html">a5_grid_disk</a></span><span class="op">(</span><span class="va">cell</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">sub</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcell</a></span><span class="op">(</span><span class="va">patch</span>, resolution <span class="op">=</span> <span class="fl">11</span><span class="op">)</span></span>
+<span><span class="va">sub</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcells</a></span><span class="op">(</span><span class="va">patch</span>, resolution <span class="op">=</span> <span class="fl">11</span><span class="op">)</span></span>
 <span><span class="va">sub</span></span>
 <span><span class="co">#&gt; &lt;a5_covering[6]&gt;</span></span>
 <span><span class="co">#&gt; [1] res 11: 62 cells (29 stored) res 11: 62 cells (29 stored)</span></span>

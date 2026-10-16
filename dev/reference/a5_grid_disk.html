@@ -6,8 +6,14 @@
     }
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Cells within k hops of a cell — a5_grid_disk"><meta name="description" content="Returns, for each centre cell, the cells reachable within k hops,
-including the centre cell itself, as an a5_covering."><meta property="og:description" content="Returns, for each centre cell, the cells reachable within k hops,
-including the centre cell itself, as an a5_covering."><meta property="og:image" content="https://belian-earth.github.io/a5R/logo.png"><meta name="robots" content="noindex"></head><body>
+including the centre cell itself, as an a5_covering.
+a5_grid_disk() steps between cells that share an edge;
+a5_grid_disk_vertex() also steps between cells that share only a
+vertex, so it reaches more cells for the same k."><meta property="og:description" content="Returns, for each centre cell, the cells reachable within k hops,
+including the centre cell itself, as an a5_covering.
+a5_grid_disk() steps between cells that share an edge;
+a5_grid_disk_vertex() also steps between cells that share only a
+vertex, so it reaches more cells for the same k."><meta property="og:image" content="https://belian-earth.github.io/a5R/logo.png"><meta name="robots" content="noindex"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -15,7 +21,7 @@ including the centre cell itself, as an a5_covering."><meta property="og:image" 
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9005</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,12 +58,17 @@ including the centre cell itself, as an a5_covering."><meta property="og:image" 
 
     <div class="ref-description section level2">
     <p>Returns, for each centre cell, the cells reachable within <code>k</code> hops,
-including the centre cell itself, as an <a href="a5_covering.html">a5_covering</a>.</p>
+including the centre cell itself, as an <a href="a5_covering.html">a5_covering</a>.
+<code>a5_grid_disk()</code> steps between cells that share an edge;
+<code>a5_grid_disk_vertex()</code> also steps between cells that share only a
+vertex, so it reaches more cells for the same <code>k</code>.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">a5_grid_disk</span><span class="op">(</span><span class="va">cell</span>, <span class="va">k</span>, vertex <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">a5_grid_disk</span><span class="op">(</span><span class="va">cell</span>, <span class="va">k</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">a5_grid_disk_vertex</span><span class="op">(</span><span class="va">cell</span>, <span class="va">k</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -70,12 +81,6 @@ including the centre cell itself, as an <a href="a5_covering.html">a5_covering</
 
 <dt id="arg-k">k<a class="anchor" aria-label="anchor" href="#arg-k"></a></dt>
 <dd><p>Non-negative integer scalar, number of hops.</p></dd>
-
-
-<dt id="arg-vertex">vertex<a class="anchor" aria-label="anchor" href="#arg-vertex"></a></dt>
-<dd><p>Logical scalar. If <code>FALSE</code> (default), only edge-sharing
-neighbours are traversed. If <code>TRUE</code>, vertex-sharing neighbours are
-included too.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -100,6 +105,9 @@ resolution of each centre cell. <code>NA</code> where <code>cell</code> is <code
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[6]&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 6316080000000000 63bb880000000000 63bb980000000000 63bba80000000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [5] 63beb80000000000 63bec80000000000</span>
+<span class="r-in"><span><span class="fu">a5_grid_disk_vertex</span><span class="op">(</span><span class="va">cell</span>, k <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_covering[1]&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] res 8: 8 cells (8 stored)</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">55.95</span>, <span class="fl">0</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">a5_grid_disk</span><span class="op">(</span><span class="va">cells</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="co"># one covering per cell</span></span></span>

@@ -3,11 +3,16 @@
 Returns, for each centre cell, the cells reachable within `k` hops,
 including the centre cell itself, as an
 [a5_covering](https://belian-earth.github.io/a5R/dev/reference/a5_covering.md).
+`a5_grid_disk()` steps between cells that share an edge;
+`a5_grid_disk_vertex()` also steps between cells that share only a
+vertex, so it reaches more cells for the same `k`.
 
 ## Usage
 
 ``` r
-a5_grid_disk(cell, k, vertex = FALSE)
+a5_grid_disk(cell, k)
+
+a5_grid_disk_vertex(cell, k)
 ```
 
 ## Arguments
@@ -21,11 +26,6 @@ a5_grid_disk(cell, k, vertex = FALSE)
 - k:
 
   Non-negative integer scalar, number of hops.
-
-- vertex:
-
-  Logical scalar. If `FALSE` (default), only edge-sharing neighbours are
-  traversed. If `TRUE`, vertex-sharing neighbours are included too.
 
 ## Value
 
@@ -53,6 +53,9 @@ a5_uncompact(disk)
 #> <a5_cell[6]>
 #> [1] 6316080000000000 63bb880000000000 63bb980000000000 63bba80000000000
 #> [5] 63beb80000000000 63bec80000000000
+a5_grid_disk_vertex(cell, k = 1)
+#> <a5_covering[1]>
+#> [1] res 8: 8 cells (8 stored)
 
 cells <- a5_lonlat_to_cell(c(-3.19, 0), c(55.95, 0), resolution = 5)
 a5_grid_disk(cells, k = 2) # one covering per cell

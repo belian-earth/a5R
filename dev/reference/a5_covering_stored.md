@@ -65,7 +65,7 @@ a5_get_resolution(stored)
 #>  [1] 8 8 8 8 8 7 8 8 8 8 7 7 8 8 8 8 7 7
 
 # one id range per stored cell, at the covering's resolution
-a5_cell_children_range(stored, resolution = a5_covering_resolution(disk))
+a5_cell_children_range(stored, child_resolution = a5_covering_resolution(disk))
 #>                  lo               hi
 #> 1  6315880000000000 6315880000000000
 #> 2  6315980000000000 6315980000000000

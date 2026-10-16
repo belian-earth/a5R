@@ -19,7 +19,7 @@ every cell that touches the polygon boundary, giving gap-free coverage.'><meta p
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9005</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -121,7 +121,9 @@ straddling a hole edge are included while the hole interior is still
 excluded.</p>
 <p>Coordinates must be WGS 84 longitude/latitude in degrees. Rings are
 closed automatically; a trailing duplicate vertex is dropped if
-present.</p>
+present. An outer ring with fewer than 3 distinct vertices gives an empty
+covering, and a hole with fewer than 3 is ignored, as in the other A5
+libraries.</p>
 <p>Polygon edges are great-circle arcs, the shortest path on the sphere
 between consecutive vertices, as in the other A5 libraries and in s2. An
 edge between two points on the same parallel therefore bows toward the
@@ -149,7 +151,7 @@ or <code>SpatVector</code> geometry instead.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="a5_linestring_to_cells.html">a5_linestring_to_cells()</a></code>, <code><a href="a5_compaction.html">a5_uncompact()</a></code>.</p></div>
+    <div class="dont-index"><p><code><a href="a5_line_string_to_cells.html">a5_line_string_to_cells()</a></code>, <code><a href="a5_compaction.html">a5_uncompact()</a></code>.</p></div>
     </div>
 
     <div class="section level2">

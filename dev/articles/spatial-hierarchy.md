@@ -3,7 +3,7 @@
 ``` r
 
 library(a5R)
-#> a5R 0.9.9.9005 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread
+#> a5R 0.9.9.9006 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread
 ```
 
 ## The index hierarchy is not spatially nested
@@ -17,7 +17,7 @@ neighbour’s index.
 
 [`a5_cell_to_supercell()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
 and
-[`a5_cell_to_subcell()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
+[`a5_cell_to_subcells()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
 follow location instead. A fine cell belongs to the coarse cell
 containing its centre: that coarse cell is its *supercell*, and the fine
 cells a coarse cell holds are its *subcells*.
@@ -25,8 +25,8 @@ cells a coarse cell holds are its *subcells*.
 ``` r
 
 cell <- a5_lonlat_to_cell(-53.5, -19, resolution = 8)
-index_kids <- a5_cell_to_children(cell, resolution = 11)
-spatial_kids <- a5_uncompact(a5_cell_to_subcell(cell, resolution = 11))
+index_kids <- a5_cell_to_children(cell, child_resolution = 11)
+spatial_kids <- a5_uncompact(a5_cell_to_subcells(cell, resolution = 11))
 
 outline <- a5_cell_to_boundary(cell)
 lim <- wk::wk_bbox(a5_cell_to_boundary(c(index_kids, spatial_kids)))
@@ -202,7 +202,7 @@ noise in the reference.
 ## Expanding coarse cells
 
 The downward direction is the exact inverse.
-[`a5_cell_to_subcell()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
+[`a5_cell_to_subcells()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
 returns one covering per coarse cell: a compacted set that records its
 resolution (see
 [`?a5_covering`](https://belian-earth.github.io/a5R/dev/reference/a5_covering.md)).
@@ -212,7 +212,7 @@ once, inside the coarse cell whose centre rule claims it:
 ``` r
 
 patch <- a5_uncompact(a5_grid_disk(cell, 1))
-sub <- a5_cell_to_subcell(patch, resolution = 11)
+sub <- a5_cell_to_subcells(patch, resolution = 11)
 sub
 #> <a5_covering[6]>
 #> [1] res 11: 62 cells (29 stored) res 11: 62 cells (29 stored)

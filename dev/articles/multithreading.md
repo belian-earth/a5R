@@ -3,7 +3,7 @@
 ``` r
 
 library(a5R)
-#> a5R 0.9.9.9005 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread
+#> a5R 0.9.9.9006 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread
 ```
 
 a5R can parallelise vectorised operations using multiple threads via
@@ -64,7 +64,7 @@ independently:
 |----|----|----|
 | [`a5_cell_to_boundary()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_boundary.md) | Heavy (boundary + WKT/WKB) | High |
 | [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md) | Heavy (per-part fill, hole subtraction) | High |
-| [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_linestring_to_cells.md) | Heavy (per-feature tracing) | High |
+| [`a5_line_string_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_line_string_to_cells.md) | Heavy (per-feature tracing) | High |
 | [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md) | Heavy (per-cell search) | High |
 | [`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md) | Heavy (per-cell traversal) | High |
 | [`a5_lonlat_to_cell()`](https://belian-earth.github.io/a5R/dev/reference/a5_coordinates.md) | Moderate (projection) | High |

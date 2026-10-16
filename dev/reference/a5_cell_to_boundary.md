@@ -12,8 +12,9 @@ ellipsoid.
 a5_cell_to_boundary(
   cell,
   format = c("wkb", "wkt"),
-  closed = TRUE,
-  segments = NULL
+  closed_ring = TRUE,
+  segments = NULL,
+  closed
 )
 ```
 
@@ -29,7 +30,7 @@ a5_cell_to_boundary(
 
   Character scalar, either `"wkb"` (default) or `"wkt"`.
 
-- closed:
+- closed_ring:
 
   Logical scalar; if `TRUE` (default) the ring is closed (first vertex
   repeated at end).
@@ -44,6 +45,10 @@ a5_cell_to_boundary(
   of `max(1, 2^(6 - resolution))`, so at resolution 6 and finer each
   edge is a single segment. Pass a larger value when the polygons are
   used for spatial tests rather than display.
+
+- closed:
+
+  Deprecated: renamed `closed_ring`, as in the other A5 libraries.
 
 ## Value
 

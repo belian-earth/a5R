@@ -10,7 +10,7 @@ example as a single
 ## Usage
 
 ``` r
-a5_cell_to_boundary_xy(cell, closed = FALSE, segments = NULL)
+a5_cell_to_boundary_xy(cell, closed_ring = FALSE, segments = NULL, closed)
 ```
 
 ## Arguments
@@ -21,7 +21,7 @@ a5_cell_to_boundary_xy(cell, closed = FALSE, segments = NULL)
   [a5_cell](https://belian-earth.github.io/a5R/dev/reference/a5_cell.md)
   vector.
 
-- closed:
+- closed_ring:
 
   Logical scalar; if `TRUE` each ring repeats its first vertex at the
   end. Defaults to `FALSE`, unlike
@@ -38,6 +38,10 @@ a5_cell_to_boundary_xy(cell, closed = FALSE, segments = NULL)
   of `max(1, 2^(6 - resolution))`, so at resolution 6 and finer each
   edge is a single segment. Pass a larger value when the polygons are
   used for spatial tests rather than display.
+
+- closed:
+
+  Deprecated: renamed `closed_ring`, as in the other A5 libraries.
 
 ## Value
 

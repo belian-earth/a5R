@@ -23,7 +23,7 @@ original cells, sorted in curve order and without duplicates."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9005</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -132,7 +132,7 @@ which return coverings.</p></div>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">cell</span> <span class="op">&lt;-</span> <span class="fu"><a href="a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">55.95</span>, resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">children</span> <span class="op">&lt;-</span> <span class="fu"><a href="a5_hierarchy.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">children</span> <span class="op">&lt;-</span> <span class="fu"><a href="a5_hierarchy.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cell</span>, child_resolution <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">covering</span> <span class="op">&lt;-</span> <span class="fu">a5_compact</span><span class="op">(</span><span class="va">children</span><span class="op">)</span> <span class="co"># stored as the parent</span></span></span>
 <span class="r-in"><span><span class="va">covering</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_covering[1]&gt;</span>

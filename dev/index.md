@@ -93,7 +93,7 @@ and geometry-to-cell conversion.
 - **Geometry indexing** —
   [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md)
   and
-  [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_linestring_to_cells.md)
+  [`a5_line_string_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_line_string_to_cells.md)
   map polygons and great-circle lines to cells.
 - **Traversal** —
   [`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md)
@@ -103,7 +103,7 @@ and geometry-to-cell conversion.
 - **Spatial hierarchy** —
   [`a5_cell_to_supercell()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
   and
-  [`a5_cell_to_subcell()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
+  [`a5_cell_to_subcells()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
   move between resolutions by location, so aggregation counts each fine
   cell inside the coarse cell it lies in.
 - **Multi-threading** — opt-in parallel processing via rayon for

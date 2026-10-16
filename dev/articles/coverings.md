@@ -67,15 +67,15 @@ cell:
 takes every cell within `k` steps,
 [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md)
 every cell whose centre is within a distance, and
-[`a5_cell_to_subcell()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
+[`a5_cell_to_subcells()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
 the finer cells whose centres lie inside a coarser cell.
 
 ``` r
 
 disk <- a5_grid_disk(raleigh, k = 3)
 cap <- a5_spherical_cap(raleigh, radius = 8000)
-coarse <- a5_cell_to_parent(raleigh, resolution = 9)
-subcells <- a5_cell_to_subcell(coarse, resolution = 11)
+coarse <- a5_cell_to_parent(raleigh, parent_resolution = 9)
+subcells <- a5_cell_to_subcells(coarse, resolution = 11)
 ```
 
 ![](coverings_files/figure-html/around-plot-1.png)

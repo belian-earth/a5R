@@ -35,7 +35,7 @@
 
     <a class="navbar-brand me-2" href="index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9005</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -135,11 +135,11 @@
 <li>
 <strong>Coverings</strong> — polygons, disks and caps become <code>a5_covering</code> vectors, one compacted cell set per feature, that combine (<code><a href="reference/a5_set_operations.html">a5_union()</a></code>, <code><a href="reference/a5_set_operations.html">a5_intersect()</a></code>, <code><a href="reference/a5_set_operations.html">a5_difference()</a></code>), test (<code><a href="reference/a5_covering_predicates.html">a5_contains()</a></code>) and measure (<code><a href="reference/a5_covering_measures.html">a5_area()</a></code>) without expanding to millions of cells. See <code><a href="articles/coverings.html">vignette("coverings")</a></code>.</li>
 <li>
-<strong>Geometry indexing</strong> — <code><a href="reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code> and <code><a href="reference/a5_linestring_to_cells.html">a5_linestring_to_cells()</a></code> map polygons and great-circle lines to cells.</li>
+<strong>Geometry indexing</strong> — <code><a href="reference/a5_polygon_to_cells.html">a5_polygon_to_cells()</a></code> and <code><a href="reference/a5_line_string_to_cells.html">a5_line_string_to_cells()</a></code> map polygons and great-circle lines to cells.</li>
 <li>
 <strong>Traversal</strong> — <code><a href="reference/a5_grid_disk.html">a5_grid_disk()</a></code> and <code><a href="reference/a5_spherical_cap.html">a5_spherical_cap()</a></code> select neighbours by hop count or great-circle distance.</li>
 <li>
-<strong>Spatial hierarchy</strong> — <code><a href="reference/a5_spatial_hierarchy.html">a5_cell_to_supercell()</a></code> and <code><a href="reference/a5_spatial_hierarchy.html">a5_cell_to_subcell()</a></code> move between resolutions by location, so aggregation counts each fine cell inside the coarse cell it lies in.</li>
+<strong>Spatial hierarchy</strong> — <code><a href="reference/a5_spatial_hierarchy.html">a5_cell_to_supercell()</a></code> and <code><a href="reference/a5_spatial_hierarchy.html">a5_cell_to_subcells()</a></code> move between resolutions by location, so aggregation counts each fine cell inside the coarse cell it lies in.</li>
 <li>
 <strong>Multi-threading</strong> — opt-in parallel processing via rayon for vectorised operations. See <code><a href="articles/multithreading.html">vignette("multithreading")</a></code>.</li>
 </ul>

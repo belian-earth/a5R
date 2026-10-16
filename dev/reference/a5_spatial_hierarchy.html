@@ -6,12 +6,12 @@
     }
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Supercells and subcells: parents and children by location — a5_spatial_hierarchy"><meta name="description" content="a5_cell_to_supercell() returns, for each cell, the cell at a coarser
-resolution that contains its centre. a5_cell_to_subcell() returns, for
+resolution that contains its centre. a5_cell_to_subcells() returns, for
 each cell, the cells at a finer resolution whose centres lie inside it, as
 an a5_covering. These are the location-based counterparts of
 a5_cell_to_parent() and a5_cell_to_children(), which follow the index
 and often cross into neighbouring cells (see a5_hierarchy)."><meta property="og:description" content="a5_cell_to_supercell() returns, for each cell, the cell at a coarser
-resolution that contains its centre. a5_cell_to_subcell() returns, for
+resolution that contains its centre. a5_cell_to_subcells() returns, for
 each cell, the cells at a finer resolution whose centres lie inside it, as
 an a5_covering. These are the location-based counterparts of
 a5_cell_to_parent() and a5_cell_to_children(), which follow the index
@@ -23,7 +23,7 @@ and often cross into neighbouring cells (see a5_hierarchy)."><meta property="og:
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9005</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +60,7 @@ and often cross into neighbouring cells (see a5_hierarchy)."><meta property="og:
 
     <div class="ref-description section level2">
     <p><code>a5_cell_to_supercell()</code> returns, for each cell, the cell at a coarser
-resolution that contains its centre. <code>a5_cell_to_subcell()</code> returns, for
+resolution that contains its centre. <code>a5_cell_to_subcells()</code> returns, for
 each cell, the cells at a finer resolution whose centres lie inside it, as
 an <a href="a5_covering.html">a5_covering</a>. These are the location-based counterparts of
 <code><a href="a5_hierarchy.html">a5_cell_to_parent()</a></code> and <code><a href="a5_hierarchy.html">a5_cell_to_children()</a></code>, which follow the index
@@ -71,7 +71,7 @@ and often cross into neighbouring cells (see <a href="a5_hierarchy.html">a5_hier
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">a5_cell_to_supercell</span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">a5_cell_to_subcell</span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">a5_cell_to_subcells</span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -85,7 +85,7 @@ and often cross into neighbouring cells (see <a href="a5_hierarchy.html">a5_hier
 <dt id="arg-resolution">resolution<a class="anchor" aria-label="anchor" href="#arg-resolution"></a></dt>
 <dd><p>Integer scalar target resolution, or <code>NULL</code> for one step:
 one resolution coarser for <code>a5_cell_to_supercell()</code>, one finer for
-<code>a5_cell_to_subcell()</code>. Subcells require a resolution at or finer than
+<code>a5_cell_to_subcells()</code>. Subcells require a resolution at or finer than
 every cell's own.</p></dd>
 
 </dl></div>
@@ -96,7 +96,7 @@ every cell's own.</p></dd>
 <code>NA</code> where <code>cell</code> is <code>NA</code>, where <code>resolution</code> is finer than the cell, or
 for a resolution-0 cell with <code>resolution = NULL</code>. A cell at <code>resolution</code>
 is returned unchanged.</p></li>
-<li><p><code>a5_cell_to_subcell()</code>: an <a href="a5_covering.html">a5_covering</a> vector the same length as
+<li><p><code>a5_cell_to_subcells()</code>: an <a href="a5_covering.html">a5_covering</a> vector the same length as
 <code>cell</code>. <code>NA</code> where <code>cell</code> is <code>NA</code>.</p></li>
 </ul></div>
     <div class="section level2">
@@ -142,12 +142,12 @@ subcells reach past it has all its subcells given at resolution 29.</p>
 <span class="r-in"><span><span class="fu">a5_cell_to_supercell</span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[1]&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 63bb93f8a0000000</span>
-<span class="r-in"><span><span class="fu"><a href="a5_hierarchy.html">a5_cell_to_parent</a></span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="fl">15</span><span class="op">)</span> <span class="co"># may differ</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="a5_hierarchy.html">a5_cell_to_parent</a></span><span class="op">(</span><span class="va">cell</span>, parent_resolution <span class="op">=</span> <span class="fl">15</span><span class="op">)</span> <span class="co"># may differ</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_cell[1]&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 63bb93f8a0000000</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">coarse</span> <span class="op">&lt;-</span> <span class="fu"><a href="a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">55.95</span>, resolution <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">sub</span> <span class="op">&lt;-</span> <span class="fu">a5_cell_to_subcell</span><span class="op">(</span><span class="va">coarse</span>, resolution <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">sub</span> <span class="op">&lt;-</span> <span class="fu">a5_cell_to_subcells</span><span class="op">(</span><span class="va">coarse</span>, resolution <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sub</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;a5_covering[1]&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] res 12: 14 cells (11 stored)</span>

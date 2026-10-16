@@ -21,7 +21,7 @@ hex string, so an a5_cell vector can hold values that are not cells."><meta prop
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9005</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -85,7 +85,8 @@ hex string, so an <code>a5_cell</code> vector can hold values that are not cells
     <p>A logical vector the length of <code>x</code>. <code>NA</code> where <code>x</code> is <code>NA</code>; for
 an <a href="a5_cell_list.html">a5_cell_list</a>, <code>NA</code> where an element holds <code>NA</code> and no invalid cell;
 for an <a href="a5_covering.html">a5_covering</a>, <code>NA</code> for a missing covering.
-Hex strings that are not 16 hex digits are <code>FALSE</code>.</p>
+Hex strings are read as <code><a href="a5_cell.html">a5_cell()</a></code> reads them, so ids of fewer than
+16 digits and a <code>0x</code> prefix are accepted; anything else is <code>FALSE</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

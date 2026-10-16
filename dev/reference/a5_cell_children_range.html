@@ -7,21 +7,21 @@
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Range of descendant cell ids — a5_cell_children_range"><meta name="description" content="Returns the smallest and largest descendant of each cell at a finer
 resolution, without enumerating the descendants. Because the A5 index
-encodes position along a Hilbert curve with a cell's descendants sharing
+encodes position along a space-filling curve with a cell's descendants sharing
 its leading bits, the descendants of a cell at any resolution up to 29
 occupy a contiguous range of ids among all cells at that resolution: every
-cell at resolution whose id lies between lo and hi inclusive is a
+cell at child_resolution whose id lies between lo and hi inclusive is a
 descendant, and no descendant lies outside. This makes BETWEEN lo AND hi
-an exact filter on a store of resolution cells sorted by id. Not every
+an exact filter on a store of child_resolution cells sorted by id. Not every
 integer in the range is a valid cell, and cells of other resolutions may
 fall inside it."><meta property="og:description" content="Returns the smallest and largest descendant of each cell at a finer
 resolution, without enumerating the descendants. Because the A5 index
-encodes position along a Hilbert curve with a cell's descendants sharing
+encodes position along a space-filling curve with a cell's descendants sharing
 its leading bits, the descendants of a cell at any resolution up to 29
 occupy a contiguous range of ids among all cells at that resolution: every
-cell at resolution whose id lies between lo and hi inclusive is a
+cell at child_resolution whose id lies between lo and hi inclusive is a
 descendant, and no descendant lies outside. This makes BETWEEN lo AND hi
-an exact filter on a store of resolution cells sorted by id. Not every
+an exact filter on a store of child_resolution cells sorted by id. Not every
 integer in the range is a valid cell, and cells of other resolutions may
 fall inside it."><meta property="og:image" content="https://belian-earth.github.io/a5R/logo.png"><meta name="robots" content="noindex"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -31,7 +31,7 @@ fall inside it."><meta property="og:image" content="https://belian-earth.github.
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9005</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,19 +69,19 @@ fall inside it."><meta property="og:image" content="https://belian-earth.github.
     <div class="ref-description section level2">
     <p>Returns the smallest and largest descendant of each cell at a finer
 resolution, without enumerating the descendants. Because the A5 index
-encodes position along a Hilbert curve with a cell's descendants sharing
+encodes position along a space-filling curve with a cell's descendants sharing
 its leading bits, the descendants of a cell at any resolution up to 29
 occupy a contiguous range of ids among all cells at that resolution: every
-cell at <code>resolution</code> whose id lies between <code>lo</code> and <code>hi</code> inclusive is a
+cell at <code>child_resolution</code> whose id lies between <code>lo</code> and <code>hi</code> inclusive is a
 descendant, and no descendant lies outside. This makes <code>BETWEEN lo AND hi</code>
-an exact filter on a store of <code>resolution</code> cells sorted by id. Not every
+an exact filter on a store of <code>child_resolution</code> cells sorted by id. Not every
 integer in the range is a valid cell, and cells of other resolutions may
 fall inside it.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">a5_cell_children_range</span><span class="op">(</span><span class="va">cell</span>, <span class="va">resolution</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">a5_cell_children_range</span><span class="op">(</span><span class="va">cell</span>, <span class="va">child_resolution</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -92,9 +92,9 @@ fall inside it.</p>
 <dd><p>An <a href="a5_cell.html">a5_cell</a> vector.</p></dd>
 
 
-<dt id="arg-resolution">resolution<a class="anchor" aria-label="anchor" href="#arg-resolution"></a></dt>
-<dd><p>Integer scalar target resolution from 0 to 29, at or
-finer than every cell's own resolution.</p></dd>
+<dt id="arg-child-resolution">child_resolution<a class="anchor" aria-label="anchor" href="#arg-child-resolution"></a></dt>
+<dd><p>Integer scalar target resolution from 0 to 29, at
+or finer than every cell's own resolution.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -121,8 +121,8 @@ ids to pass to SQL.</p></div>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">cell</span> <span class="op">&lt;-</span> <span class="fu"><a href="a5_coordinates.html">a5_lonlat_to_cell</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.19</span>, <span class="fl">55.95</span>, resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">rng</span> <span class="op">&lt;-</span> <span class="fu">a5_cell_children_range</span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">children</span> <span class="op">&lt;-</span> <span class="fu">vctrs</span><span class="fu">::</span><span class="fu"><a href="https://vctrs.r-lib.org/reference/vec_order.html" class="external-link">vec_sort</a></span><span class="op">(</span><span class="fu"><a href="a5_hierarchy.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cell</span>, resolution <span class="op">=</span> <span class="fl">8</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rng</span> <span class="op">&lt;-</span> <span class="fu">a5_cell_children_range</span><span class="op">(</span><span class="va">cell</span>, child_resolution <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">children</span> <span class="op">&lt;-</span> <span class="fu">vctrs</span><span class="fu">::</span><span class="fu"><a href="https://vctrs.r-lib.org/reference/vec_order.html" class="external-link">vec_sort</a></span><span class="op">(</span><span class="fu"><a href="a5_hierarchy.html">a5_cell_to_children</a></span><span class="op">(</span><span class="va">cell</span>, child_resolution <span class="op">=</span> <span class="fl">8</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">rng</span><span class="op">$</span><span class="va">lo</span>, <span class="va">children</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">rng</span><span class="op">$</span><span class="va">hi</span>, <span class="va">children</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">children</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>

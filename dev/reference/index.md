@@ -56,7 +56,7 @@ Navigate the cell hierarchy across resolutions.
   [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/dev/reference/a5_hierarchy.md)
   : Index parents and children
 - [`a5_cell_to_supercell()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
-  [`a5_cell_to_subcell()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
+  [`a5_cell_to_subcells()`](https://belian-earth.github.io/a5R/dev/reference/a5_spatial_hierarchy.md)
   : Supercells and subcells: parents and children by location
 - [`a5_covering_to_supercells()`](https://belian-earth.github.io/a5R/dev/reference/a5_covering_to_supercells.md)
   : Supercells of a covering
@@ -88,6 +88,7 @@ Cell boundaries, areas, counts, and distances.
 Neighbourhood and distance-based cell selection.
 
 - [`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md)
+  [`a5_grid_disk_vertex()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md)
   : Cells within k hops of a cell
 - [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/dev/reference/a5_spherical_cap.md)
   : Cells within a great-circle radius
@@ -122,7 +123,7 @@ Convert polygons and linestrings to cells covering them.
 
 - [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_polygon_to_cells.md)
   : Cells inside or overlapping a polygon
-- [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_linestring_to_cells.md)
+- [`a5_line_string_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_line_string_to_cells.md)
   : Cells traced by a great-circle linestring
 - [`a5_bbox()`](https://belian-earth.github.io/a5R/dev/reference/a5_bbox.md)
   : Bounding box of polygons with great-circle edges

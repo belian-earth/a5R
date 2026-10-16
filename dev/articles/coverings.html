@@ -32,7 +32,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9005</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -133,13 +133,13 @@ boundary touches, so the cells cover the polygon without gaps.</p>
 <p>The functions that start from a cell return one covering per centre
 cell: <code><a href="../reference/a5_grid_disk.html">a5_grid_disk()</a></code> takes every cell within <code>k</code>
 steps, <code><a href="../reference/a5_spherical_cap.html">a5_spherical_cap()</a></code> every cell whose centre is within
-a distance, and <code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcell()</a></code> the finer cells whose
+a distance, and <code><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcells()</a></code> the finer cells whose
 centres lie inside a coarser cell.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">disk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_grid_disk.html">a5_grid_disk</a></span><span class="op">(</span><span class="va">raleigh</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">cap</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spherical_cap.html">a5_spherical_cap</a></span><span class="op">(</span><span class="va">raleigh</span>, radius <span class="op">=</span> <span class="fl">8000</span><span class="op">)</span></span>
-<span><span class="va">coarse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_parent</a></span><span class="op">(</span><span class="va">raleigh</span>, resolution <span class="op">=</span> <span class="fl">9</span><span class="op">)</span></span>
-<span><span class="va">subcells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcell</a></span><span class="op">(</span><span class="va">coarse</span>, resolution <span class="op">=</span> <span class="fl">11</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">coarse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_hierarchy.html">a5_cell_to_parent</a></span><span class="op">(</span><span class="va">raleigh</span>, parent_resolution <span class="op">=</span> <span class="fl">9</span><span class="op">)</span></span>
+<span><span class="va">subcells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a5_spatial_hierarchy.html">a5_cell_to_subcells</a></span><span class="op">(</span><span class="va">coarse</span>, resolution <span class="op">=</span> <span class="fl">11</span><span class="op">)</span></span></code></pre></div>
 <p><img src="coverings_files/figure-html/around-plot-1.png" class="r-plt" alt="" width="672"></p>
 <p><code><a href="../reference/a5_compaction.html">a5_compact()</a></code> turns any set of cells into a covering, and
 <code><a href="../reference/a5_covering.html">as_a5_covering()</a></code> builds coverings from cell lists or from

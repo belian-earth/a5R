@@ -81,6 +81,9 @@ excluded.
 
 Coordinates must be WGS 84 longitude/latitude in degrees. Rings are
 closed automatically; a trailing duplicate vertex is dropped if present.
+An outer ring with fewer than 3 distinct vertices gives an empty
+covering, and a hole with fewer than 3 is ignored, as in the other A5
+libraries.
 
 Polygon edges are great-circle arcs, the shortest path on the sphere
 between consecutive vertices, as in the other A5 libraries and in s2. An
@@ -117,7 +120,7 @@ multi-feature data or polygons with holes, pass an `sf`, `sfc`, wk, or
 
 ## See also
 
-[`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_linestring_to_cells.md),
+[`a5_line_string_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_line_string_to_cells.md),
 [`a5_uncompact()`](https://belian-earth.github.io/a5R/dev/reference/a5_compaction.md).
 
 ## Examples

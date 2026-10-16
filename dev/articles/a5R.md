@@ -3,7 +3,7 @@
 ``` r
 
 library(a5R)
-#> a5R 0.9.9.9005 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread
+#> a5R 0.9.9.9006 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread
 ```
 
 ## Index a point
@@ -233,7 +233,7 @@ plot(a5_cell_to_boundary(a5_uncompact(nc$cells)),
 
 ## Tracing a line
 
-[`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_linestring_to_cells.md)
+[`a5_line_string_to_cells()`](https://belian-earth.github.io/a5R/dev/reference/a5_line_string_to_cells.md)
 returns the cells whose pentagons are crossed by a great-circle
 polyline. Output is in discovery order along the path. Consecutive
 waypoints are connected by great-circle arcs, so antimeridian-crossing
@@ -258,7 +258,7 @@ a5R_strokes <- wk::wkt(
   )"
 )
 
-cells <- a5_linestring_to_cells(a5R_strokes, resolution = 9)
+cells <- a5_line_string_to_cells(a5R_strokes, resolution = 9)
 length(cells)
 #> [1] 182
 

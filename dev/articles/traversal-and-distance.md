@@ -3,7 +3,7 @@
 ``` r
 
 library(a5R)
-#> a5R 0.9.9.9005 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread
+#> a5R 0.9.9.9006 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread
 ```
 
 ## Selecting cells around a point
@@ -26,16 +26,16 @@ a5_spherical_cap(origin, radius = 5000)
 #> <a5_covering[1]>
 #> [1] res 14: 621 cells (105 stored)
 
-disk <- a5_uncompact(a5_grid_disk(origin, k = 20, vertex = FALSE))
-disk_vertex <- a5_uncompact(a5_grid_disk(origin, k = 20, vertex = TRUE))
+disk <- a5_uncompact(a5_grid_disk(origin, k = 20))
+disk_vertex <- a5_uncompact(a5_grid_disk_vertex(origin, k = 20))
 cap <- a5_uncompact(a5_spherical_cap(origin, radius = 5000))
 ```
 
 [`a5_grid_disk()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md)
-selects cells by hop count rather than metric distance. With
-`vertex = FALSE` (default) only edge-sharing neighbours are traversed
-(4-connected), producing a diamond shape. Setting `vertex = TRUE`
-includes corner-sharing neighbours too (8-connected), giving a squarer
+selects cells by hop count rather than metric distance, stepping only
+between edge-sharing neighbours, which gives a diamond shape.
+[`a5_grid_disk_vertex()`](https://belian-earth.github.io/a5R/dev/reference/a5_grid_disk.md)
+also steps between corner-sharing neighbours, giving a squarer
 footprint.
 
 ## Distance heatmap
