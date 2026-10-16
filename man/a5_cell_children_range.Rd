@@ -4,13 +4,13 @@
 \alias{a5_cell_children_range}
 \title{Range of descendant cell ids}
 \usage{
-a5_cell_children_range(cell, resolution)
+a5_cell_children_range(cell, child_resolution)
 }
 \arguments{
 \item{cell}{An \link{a5_cell} vector.}
 
-\item{resolution}{Integer scalar target resolution from 0 to 29, at or
-finer than every cell's own resolution.}
+\item{child_resolution}{Integer scalar target resolution from 0 to 29, at
+or finer than every cell's own resolution.}
 }
 \value{
 A data frame with \link{a5_cell} columns \code{lo} and \code{hi}, one row per
@@ -19,12 +19,12 @@ input cell. \code{NA} where \code{cell} is \code{NA}.
 \description{
 Returns the smallest and largest descendant of each cell at a finer
 resolution, without enumerating the descendants. Because the A5 index
-encodes position along a Hilbert curve with a cell's descendants sharing
+encodes position along a space-filling curve with a cell's descendants sharing
 its leading bits, the descendants of a cell at any resolution up to 29
 occupy a contiguous range of ids among all cells at that resolution: every
-cell at \code{resolution} whose id lies between \code{lo} and \code{hi} inclusive is a
+cell at \code{child_resolution} whose id lies between \code{lo} and \code{hi} inclusive is a
 descendant, and no descendant lies outside. This makes \verb{BETWEEN lo AND hi}
-an exact filter on a store of \code{resolution} cells sorted by id. Not every
+an exact filter on a store of \code{child_resolution} cells sorted by id. Not every
 integer in the range is a valid cell, and cells of other resolutions may
 fall inside it.
 }
@@ -39,8 +39,8 @@ library falls back to resolution 29 for them. Use
 }
 \examples{
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
-rng <- a5_cell_children_range(cell, resolution = 8)
-children <- vctrs::vec_sort(a5_cell_to_children(cell, resolution = 8))
+rng <- a5_cell_children_range(cell, child_resolution = 8)
+children <- vctrs::vec_sort(a5_cell_to_children(cell, child_resolution = 8))
 identical(rng$lo, children[1])
 identical(rng$hi, children[length(children)])
 }

@@ -2,12 +2,12 @@
 #'
 #' Returns, for each centre cell, the cells reachable within `k` hops,
 #' including the centre cell itself, as an [a5_covering].
+#' `a5_grid_disk()` steps between cells that share an edge;
+#' `a5_grid_disk_vertex()` also steps between cells that share only a
+#' vertex, so it reaches more cells for the same `k`.
 #'
 #' @param cell An [a5_cell] vector of centre cells.
 #' @param k Non-negative integer scalar, number of hops.
-#' @param vertex Logical scalar. If `FALSE` (default), only edge-sharing
-#'   neighbours are traversed. If `TRUE`, vertex-sharing neighbours are
-#'   included too.
 #' @returns An [a5_covering] vector the same length as `cell`, at the
 #'   resolution of each centre cell. `NA` where `cell` is `NA`. Use
 #'   [a5_uncompact()] for the cells.
@@ -19,18 +19,29 @@
 #' disk <- a5_grid_disk(cell, k = 1)
 #' disk
 #' a5_uncompact(disk)
+#' a5_grid_disk_vertex(cell, k = 1)
 #'
 #' cells <- a5_lonlat_to_cell(c(-3.19, 0), c(55.95, 0), resolution = 5)
 #' a5_grid_disk(cells, k = 2) # one covering per cell
-a5_grid_disk <- function(cell, k, vertex = FALSE) {
+a5_grid_disk <- function(cell, k) {
   cell <- as_a5_cell(cell)
-  k <- vctrs::vec_cast(k, integer())
-  check_size1(k)
+  coverings_from_rs(a5_grid_disk_rs(cell_data(cell), check_hops(k)))
+}
+
+#' @rdname a5_grid_disk
+#' @export
+a5_grid_disk_vertex <- function(cell, k) {
+  cell <- as_a5_cell(cell)
+  coverings_from_rs(a5_grid_disk_vertex_rs(cell_data(cell), check_hops(k)))
+}
+
+check_hops <- function(k, call = rlang::caller_env()) {
+  k <- vctrs::vec_cast(k, integer(), call = call)
+  check_size1(k, call = call)
   if (is.na(k) || k < 0L) {
-    a5_abort("argument", "{.arg k} must be a non-negative integer, not {k}.")
+    a5_abort("argument", "{.arg k} must be a non-negative integer, not {k}.", call = call)
   }
-  check_flag(vertex)
-  coverings_from_rs(a5_grid_disk_rs(cell_data(cell), k, vertex))
+  k
 }
 
 #' Cells within a great-circle radius

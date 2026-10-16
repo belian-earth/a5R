@@ -88,7 +88,7 @@ disk
 a5_covering_resolution(disk)
 
 # from cells: complete sibling groups are stored as their parent
-kids <- a5_cell_to_children(cell, resolution = 10)
+kids <- a5_cell_to_children(cell, child_resolution = 10)
 as_a5_covering(kids)
 as_a5_covering(kids[-1])
 }

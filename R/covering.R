@@ -56,7 +56,7 @@
 #' a5_covering_resolution(disk)
 #'
 #' # from cells: complete sibling groups are stored as their parent
-#' kids <- a5_cell_to_children(cell, resolution = 10)
+#' kids <- a5_cell_to_children(cell, child_resolution = 10)
 #' as_a5_covering(kids)
 #' as_a5_covering(kids[-1])
 NULL
@@ -160,7 +160,7 @@ a5_covering_resolution <- function(x) {
 #' a5_get_resolution(stored)
 #'
 #' # one id range per stored cell, at the covering's resolution
-#' a5_cell_children_range(stored, resolution = a5_covering_resolution(disk))
+#' a5_cell_children_range(stored, child_resolution = a5_covering_resolution(disk))
 a5_covering_stored <- function(x, simplify = TRUE) {
   x <- as_a5_covering(x)
   check_flag(simplify)

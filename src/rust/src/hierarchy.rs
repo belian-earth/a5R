@@ -1,7 +1,7 @@
 use extendr_api::prelude::*;
 use extendr_api::wrapper::Nullable;
 
-use crate::cell_raw::{map_cells, map_cells_to_cells, one_to_many, u64s_to_raw8_list, CellSlices};
+use crate::cell_raw::{map_cells, map_cells_to_cells, one_to_many, u64s_to_raw8_list, CellSlices, FirstError};
 use crate::covering::{cells_to_covering, cells_to_coverings, coverings_to_list, read_coverings};
 use crate::threading::{get_num_threads, maybe_par};
 use rayon::prelude::*;
@@ -151,18 +151,25 @@ fn a5_cell_to_children_rs(cells: List, child_resolution: Nullable<i32>, simplify
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_cell_to_supercell_rs(cells: List, resolution: Nullable<i32>) -> List {
+fn a5_cell_to_supercell_rs(cells: List, resolution: Nullable<i32>) -> Robj {
     let target: Option<i32> = match resolution {
         Nullable::NotNull(v) => Some(v),
         Nullable::Null => None,
     };
-    map_cells_to_cells(&cells, |id| {
+    let err = FirstError::new();
+    let out = map_cells_to_cells(&cells, |id| {
         let res = target.unwrap_or_else(|| a5::get_resolution(id) - 1);
-        if res < 0 {
+        // A target finer than the cell, or above resolution 0, has no
+        // supercell: NA, as documented. Anything else failing is an error.
+        if res < 0 || res > a5::get_resolution(id) {
             return None;
         }
-        a5::cell_to_supercell(id, res).ok()
-    })
+        err.ok(a5::cell_to_supercell(id, res))
+    });
+    if let Some(e) = err.take("cell_to_supercell") {
+        return e;
+    }
+    out.into()
 }
 
 /// Subcells: the finer cells whose centres lie in each cell, as coverings.
@@ -173,12 +180,12 @@ fn a5_cell_to_supercell_rs(cells: List, resolution: Nullable<i32>) -> List {
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_cell_to_subcell_rs(cells: List, resolution: Nullable<i32>) -> List {
+fn a5_cell_to_subcells_rs(cells: List, resolution: Nullable<i32>) -> List {
     let target: Option<i32> = match resolution {
         Nullable::NotNull(v) => Some(v),
         Nullable::Null => None,
     };
-    cells_to_coverings(&cells, "cell_to_subcell", |id| {
+    cells_to_coverings(&cells, "cell_to_subcells", |id| {
         a5::cell_to_subcells(id, target.unwrap_or_else(|| a5::get_resolution(id) + 1))
     })
 }
@@ -373,7 +380,7 @@ extendr_module! {
     fn a5_cell_to_children_rs;
     fn a5_cell_to_supercell_rs;
     fn a5_covering_to_supercells_rs;
-    fn a5_cell_to_subcell_rs;
+    fn a5_cell_to_subcells_rs;
     fn a5_cell_child_rs;
     fn a5_cell_children_range_rs;
     fn a5_get_res0_cells_rs;

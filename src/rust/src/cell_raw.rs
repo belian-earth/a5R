@@ -178,6 +178,43 @@ pub(crate) fn raw8_planes_to_list(bufs: [Vec<u8>; 8]) -> List {
 
 // --- Vectorised mappers ---
 
+/// The first error from a crate call made inside a (possibly parallel) map,
+/// returned to R once the map is done. Holding it in a mutex costs
+/// nothing until a call fails.
+pub(crate) struct FirstError(std::sync::Mutex<Option<String>>);
+
+impl FirstError {
+    pub(crate) fn new() -> Self {
+        FirstError(std::sync::Mutex::new(None))
+    }
+
+    /// The value of `r`, or `None` after recording its error.
+    pub(crate) fn ok<T>(&self, r: std::result::Result<T, String>) -> Option<T> {
+        match r {
+            Ok(v) => Some(v),
+            Err(e) => {
+                let mut first = self.0.lock().unwrap();
+                if first.is_none() {
+                    *first = Some(e);
+                }
+                None
+            }
+        }
+    }
+
+    /// The recorded error, if any, as an `a5R_rs_error` object for the R
+    /// wrapper to raise from the user's call (see `check_rs()`): raising it
+    /// here would name the internal function, and catching it in R would make
+    /// every call pay for a handler.
+    pub(crate) fn take(self, name: &str) -> Option<Robj> {
+        self.0.into_inner().unwrap().map(|e| {
+            let mut out: Robj = list!(message = format!("{} failed: {}", name, e)).into();
+            out.set_class(&["a5R_rs_error"]).unwrap();
+            out
+        })
+    }
+}
+
 /// Apply a fallible function to each cell, parallelising when threads > 1.
 pub(crate) fn map_cells<T, F>(cells: &List, f: F) -> Vec<Option<T>>
 where
@@ -380,16 +417,28 @@ fn cells_equal_rs(a: List, b: List) -> Logicals {
 }
 
 /// Parse one hex id: 1 to 16 hex digits, optionally prefixed `0x`. Shorter
-/// ids are zero-padded on the left, as some A5 libraries write them.
-fn parse_hex_id(s: &str) -> Option<u64> {
-    let digits = s
-        .strip_prefix("0x")
-        .or_else(|| s.strip_prefix("0X"))
-        .unwrap_or(s);
-    if digits.is_empty() || digits.len() > 16 || !digits.bytes().all(|b| b.is_ascii_hexdigit()) {
+/// ids are zero-padded on the left, as some A5 libraries write them. One pass
+/// over the bytes: validating first and then calling `from_str_radix` reads
+/// each digit twice.
+pub(crate) fn parse_hex_id(s: &str) -> Option<u64> {
+    let digits = match s.as_bytes() {
+        [b'0', b'x' | b'X', rest @ ..] => rest,
+        all => all,
+    };
+    if digits.is_empty() || digits.len() > 16 {
         return None;
     }
-    u64::from_str_radix(digits, 16).ok()
+    let mut id: u64 = 0;
+    for &c in digits {
+        let nibble = match c {
+            b'0'..=b'9' => c - b'0',
+            b'a'..=b'f' => c - b'a' + 10,
+            b'A'..=b'F' => c - b'A' + 10,
+            _ => return None,
+        };
+        id = (id << 4) | nibble as u64;
+    }
+    Some(id)
 }
 
 /// Convert hex strings to cell raw bytes.

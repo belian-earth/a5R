@@ -48,7 +48,9 @@
 #'
 #' Coordinates must be WGS 84 longitude/latitude in degrees. Rings are
 #' closed automatically; a trailing duplicate vertex is dropped if
-#' present.
+#' present. An outer ring with fewer than 3 distinct vertices gives an empty
+#' covering, and a hole with fewer than 3 is ignored, as in the other A5
+#' libraries.
 #'
 #' Polygon edges are great-circle arcs, the shortest path on the sphere
 #' between consecutive vertices, as in the other A5 libraries and in s2. An
@@ -80,7 +82,7 @@
 #' multi-feature data or polygons with holes, pass an `sf`, `sfc`, wk,
 #' or `SpatVector` geometry instead.
 #'
-#' @seealso [a5_linestring_to_cells()], [a5_uncompact()].
+#' @seealso [a5_line_string_to_cells()], [a5_uncompact()].
 #' @export
 #' @examples
 #' poly <- wk::wkt(
@@ -219,7 +221,8 @@ rct_to_cells <- function(x, resolution, containment,
 #' @details
 #' Consecutive waypoints are connected by great-circle arcs (not rhumb
 #' lines or planar segments), so antimeridian-crossing paths work
-#' transparently when written in unwrapped lon/lat.
+#' transparently when written in unwrapped lon/lat. A line string with a
+#' single waypoint gives the cell containing it.
 #'
 #' A path is an ordered sequence, so the result is a vector of cells rather
 #' than an [a5_covering]; use [as_a5_covering()] to treat the cells a path
@@ -233,7 +236,7 @@ rct_to_cells <- function(x, resolution, containment,
 #' @export
 #' @examples
 #' line <- wk::wkt("LINESTRING (2.35 48.86, -0.13 51.51)")
-#' cells <- a5_linestring_to_cells(line, resolution = 6)
+#' cells <- a5_line_string_to_cells(line, resolution = 6)
 #' cells
 #'
 #' # One path per feature
@@ -241,15 +244,15 @@ rct_to_cells <- function(x, resolution, containment,
 #'   "LINESTRING (2.35 48.86, -0.13 51.51)",
 #'   "LINESTRING (2.35 48.86, 4.83 45.76)"
 #' ))
-#' paths <- a5_linestring_to_cells(lines, resolution = 6, simplify = FALSE)
+#' paths <- a5_line_string_to_cells(lines, resolution = 6, simplify = FALSE)
 #' lengths(paths)
-a5_linestring_to_cells <- function(x, resolution, simplify = TRUE) {
+a5_line_string_to_cells <- function(x, resolution, simplify = TRUE) {
   resolution <- check_scalar_resolution(resolution)
   check_flag(simplify)
 
   bundle <- prepare_linestring_input(x)
 
-  one_to_many(a5_linestring_to_cells_rs(
+  one_to_many(a5_line_string_to_cells_rs(
     bundle$lon,
     bundle$lat,
     bundle$offsets,
@@ -258,6 +261,24 @@ a5_linestring_to_cells <- function(x, resolution, simplify = TRUE) {
     resolution,
     simplify
   ), simplify)
+}
+
+#' Deprecated: use [a5_line_string_to_cells()]
+#'
+#' `a5_linestring_to_cells()` was renamed [a5_line_string_to_cells()] to
+#' match `line_string_to_cells()` in the other A5 libraries. The old name
+#' still works but warns.
+#'
+#' @inheritParams a5_line_string_to_cells
+#' @returns As [a5_line_string_to_cells()].
+#' @keywords internal
+#' @export
+a5_linestring_to_cells <- function(x, resolution, simplify = TRUE) {
+  cli::cli_warn(
+    "{.fn a5_linestring_to_cells} was renamed {.fn a5_line_string_to_cells} in a5R 1.0.0.",
+    class = c("a5R_warning_deprecated", "a5R_warning")
+  )
+  a5_line_string_to_cells(x, resolution, simplify)
 }
 
 # -- input preparation ---------------------------------------------------------
@@ -286,7 +307,6 @@ prepare_polygon_input <- function(x, call = rlang::caller_env()) {
     coords_from_wk_polygons(x, call = call)
   }
 
-  validate_feature_sizes(bundle, expected = "polygon", call = call)
   if (anyNA(bundle$lon) || anyNA(bundle$lat)) {
     a5_abort("geometry",
       "{.arg x} must not contain {.code NA} coordinates.",
@@ -316,7 +336,6 @@ prepare_linestring_input <- function(x, call = rlang::caller_env()) {
     coords_from_wk_linestrings(x, call = call)
   }
 
-  validate_feature_sizes(bundle, expected = "linestring", call = call)
   if (anyNA(bundle$lon) || anyNA(bundle$lat)) {
     a5_abort("geometry",
       "{.arg x} must not contain {.code NA} coordinates.",
@@ -555,25 +574,6 @@ safe_wk_meta <- function(x, call = rlang::caller_env()) {
       )
     }
   )
-}
-
-#' @noRd
-validate_feature_sizes <- function(
-  bundle,
-  expected,
-  call = rlang::caller_env()
-) {
-  sizes <- diff(bundle$offsets)
-  min_size <- switch(expected, polygon = 3L, linestring = 2L)
-  short <- which(sizes < min_size)
-  if (length(short) > 0L) {
-    a5_abort("geometry",
-      "Each {expected} ring must have at least {min_size} vertices; \\
-       ring {short[1]} has {sizes[short[1]]}.",
-      call = call
-    )
-  }
-  invisible(bundle)
 }
 
 #' Bounding box of polygons with great-circle edges

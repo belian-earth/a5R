@@ -14,9 +14,9 @@ test_that("grid_disk k=1 holds the centre and its neighbours", {
   expect_true(all(a5_get_resolution(result) == 8L))
 })
 
-test_that("grid_disk vertex=TRUE holds more cells than vertex=FALSE", {
-  edge <- a5_uncompact(a5_grid_disk(cell, k = 1, vertex = FALSE))
-  vert <- a5_uncompact(a5_grid_disk(cell, k = 1, vertex = TRUE))
+test_that("grid_disk_vertex holds more cells than grid_disk", {
+  edge <- a5_uncompact(a5_grid_disk(cell, k = 1))
+  vert <- a5_uncompact(a5_grid_disk_vertex(cell, k = 1))
   expect_gt(length(vert), length(edge))
   expect_true(all(vctrs::vec_in(edge, vert)))
 })
@@ -48,11 +48,23 @@ test_that("traversal gives one covering per centre cell", {
 })
 
 test_that("grid_disk errors on invalid cell", {
-  expect_error(a5_grid_disk(a5_cell("zzzz"), k = 1))
+  bad <- a5_cell("fd00000000000000")
+  expect_error(a5_grid_disk(bad, k = 1), "Invalid cell")
+  expect_error(a5_grid_disk_vertex(bad, k = 1), "Invalid cell")
+})
+
+test_that("grid_disk_vertex validates k and propagates NA", {
+  expect_error(a5_grid_disk_vertex(cell, k = -1), class = "a5R_error_argument")
+  expect_error(a5_grid_disk_vertex(cell, k = 1:2), "size 1")
+  expect_error(a5_grid_disk_vertex(cell), "k")
+  expect_identical(
+    is.na(a5_grid_disk_vertex(c(cell, a5_cell(NA)), k = 1)),
+    c(FALSE, TRUE)
+  )
 })
 
 test_that("spherical_cap errors on invalid cell", {
-  expect_error(a5_spherical_cap(a5_cell("zzzz"), radius = 100))
+  expect_error(a5_spherical_cap(a5_cell("fd00000000000000"), radius = 100), "Invalid cell")
 })
 
 test_that("traversal gives an NA covering for an NA cell", {

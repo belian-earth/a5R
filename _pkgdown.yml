@@ -75,7 +75,7 @@ reference:
   desc: Convert polygons and linestrings to cells covering them.
   contents:
   - a5_polygon_to_cells
-  - a5_linestring_to_cells
+  - a5_line_string_to_cells
   - a5_bbox
 - title: Configuration
   desc: Package information, thread control, error classes and the C API.

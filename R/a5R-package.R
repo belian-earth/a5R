@@ -29,7 +29,7 @@
 #' - [a5_get_resolution()] --- extract resolution from cell IDs
 #' - [a5_cell_to_parent()] --- navigate to coarser cells
 #' - [a5_cell_to_children()] --- navigate to finer cells
-#' - [a5_cell_to_supercell()] / [a5_cell_to_subcell()][a5_spatial_hierarchy]
+#' - [a5_cell_to_supercell()] / [a5_cell_to_subcells()][a5_spatial_hierarchy]
 #'   --- move between resolutions by location
 #' - [a5_get_res0_cells()] --- the 12 root cells
 #'
@@ -52,7 +52,7 @@
 #'
 #' @section Geometry indexing:
 #' - [a5_polygon_to_cells()] --- cells inside (or overlapping) a polygon
-#' - [a5_linestring_to_cells()] --- cells crossed by a great-circle polyline
+#' - [a5_line_string_to_cells()] --- cells crossed by a great-circle polyline
 #'
 #' @section Arrow & Parquet:
 #' - [a5_cell_from_arrow()] / [a5_cell_to_arrow()][a5_cell_from_arrow] ---

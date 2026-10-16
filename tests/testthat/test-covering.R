@@ -26,7 +26,7 @@ test_that("missing coverings are NA", {
 })
 
 test_that("format shows resolution, cells and stored cells", {
-  kids <- a5_cell_to_children(cells[1], resolution = 10)
+  kids <- a5_cell_to_children(cells[1], child_resolution = 10)
   expect_identical(format(a5_compact(kids)), "res 10: 16 cells (1 stored)")
   expect_identical(format(a5_compact(kids[1])), "res 10: 1 cell (1 stored)")
   expect_identical(format(a5_compact(a5_cell(), resolution = 3)), "res 3: empty")
@@ -146,7 +146,7 @@ test_that("a5_covering_stored returns the compacted cells", {
   # the stored cells rebuild the covering and expand to its cells
   expect_identical(as_a5_covering(stored, resolution = 8L), disk)
   expect_identical(
-    vctrs::vec_sort(a5_cell_to_children(stored, resolution = 8L)),
+    vctrs::vec_sort(a5_cell_to_children(stored, child_resolution = 8L)),
     vctrs::vec_sort(a5_uncompact(disk))
   )
 })

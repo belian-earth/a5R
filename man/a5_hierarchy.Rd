@@ -6,17 +6,22 @@
 \alias{a5_cell_to_children}
 \title{Index parents and children}
 \usage{
-a5_cell_to_parent(cell, resolution = NULL)
+a5_cell_to_parent(cell, parent_resolution = NULL, resolution)
 
-a5_cell_to_children(cell, resolution = NULL, simplify = TRUE)
+a5_cell_to_children(cell, child_resolution = NULL, simplify = TRUE, resolution)
 }
 \arguments{
 \item{cell}{An \link{a5_cell} vector.}
 
-\item{resolution}{Integer scalar target resolution, or \code{NULL} for one step:
-the immediate parent for \code{a5_cell_to_parent()}, the immediate children
-for \code{a5_cell_to_children()}. For \code{a5_cell_to_parent()} it must not be
-finer than any cell's resolution.}
+\item{parent_resolution}{Integer scalar target resolution for
+\code{a5_cell_to_parent()}, or \code{NULL} (default) for the immediate parent. It
+must not be finer than any cell's resolution; \code{-1} gives the world cell.}
+
+\item{resolution}{Deprecated: renamed \code{parent_resolution} and
+\code{child_resolution}, as in the other A5 libraries.}
+
+\item{child_resolution}{Integer scalar target resolution for
+\code{a5_cell_to_children()}, or \code{NULL} (default) for the immediate children.}
 
 \item{simplify}{Logical scalar. If \code{TRUE} (default), return one flat
 \link{a5_cell} vector with the children of every input concatenated in input
@@ -46,19 +51,19 @@ neighbours. Measured over random cells, the index parent is not the coarse
 cell containing a fine cell's centre for about half of fine cells one
 resolution apart, falling to about 35 percent at four or more resolutions
 apart. Use these functions for operations on ids (compaction, id ranges,
-Hilbert ordering) and \link{a5_spatial_hierarchy} when cells must nest by
+curve ordering) and \link{a5_spatial_hierarchy} when cells must nest by
 location.
 }
 
 \examples{
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
 a5_cell_to_parent(cell)
-a5_cell_to_parent(cell, resolution = 5)
+a5_cell_to_parent(cell, parent_resolution = 5)
 
 a5_cell_to_children(cell)
 cells <- a5_lonlat_to_cell(c(-3.19, 0), c(55.95, 0), resolution = 5)
-a5_cell_to_children(cells, resolution = 7)                   # 32 cells
-a5_cell_to_children(cells, resolution = 7, simplify = FALSE) # list of 2
+a5_cell_to_children(cells, child_resolution = 7)                   # 32 cells
+a5_cell_to_children(cells, child_resolution = 7, simplify = FALSE) # list of 2
 
 # children map back to their parent
 all(a5_cell_to_parent(a5_cell_to_children(cell, 12), 10) == cell)

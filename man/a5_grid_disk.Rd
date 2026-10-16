@@ -2,18 +2,17 @@
 % Please edit documentation in R/traversal.R
 \name{a5_grid_disk}
 \alias{a5_grid_disk}
+\alias{a5_grid_disk_vertex}
 \title{Cells within k hops of a cell}
 \usage{
-a5_grid_disk(cell, k, vertex = FALSE)
+a5_grid_disk(cell, k)
+
+a5_grid_disk_vertex(cell, k)
 }
 \arguments{
 \item{cell}{An \link{a5_cell} vector of centre cells.}
 
 \item{k}{Non-negative integer scalar, number of hops.}
-
-\item{vertex}{Logical scalar. If \code{FALSE} (default), only edge-sharing
-neighbours are traversed. If \code{TRUE}, vertex-sharing neighbours are
-included too.}
 }
 \value{
 An \link{a5_covering} vector the same length as \code{cell}, at the
@@ -23,12 +22,16 @@ resolution of each centre cell. \code{NA} where \code{cell} is \code{NA}. Use
 \description{
 Returns, for each centre cell, the cells reachable within \code{k} hops,
 including the centre cell itself, as an \link{a5_covering}.
+\code{a5_grid_disk()} steps between cells that share an edge;
+\code{a5_grid_disk_vertex()} also steps between cells that share only a
+vertex, so it reaches more cells for the same \code{k}.
 }
 \examples{
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 8)
 disk <- a5_grid_disk(cell, k = 1)
 disk
 a5_uncompact(disk)
+a5_grid_disk_vertex(cell, k = 1)
 
 cells <- a5_lonlat_to_cell(c(-3.19, 0), c(55.95, 0), resolution = 5)
 a5_grid_disk(cells, k = 2) # one covering per cell

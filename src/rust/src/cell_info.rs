@@ -1,6 +1,6 @@
 use extendr_api::prelude::*;
 
-use crate::cell_raw::{map_cells, u64s_to_raw8_list, CellSlices};
+use crate::cell_raw::{map_cells, parse_hex_id, u64s_to_raw8_list, CellSlices};
 
 /// Get the area (in square metres) of cells at a given resolution.
 ///
@@ -90,7 +90,7 @@ fn a5_is_valid_cell_rs(cells: List) -> Logicals {
     out
 }
 
-/// Validate hex cell ID strings: 16 hex digits encoding an A5 cell.
+/// Validate hex cell ID strings, read as `a5_cell()` reads them.
 ///
 /// @param cell Character vector of hex strings to validate.
 /// @return Logical vector: NA where the string is NA.
@@ -105,8 +105,7 @@ fn a5_is_valid_hex_rs(cell: Strings) -> Logicals {
         if s.is_na() {
             out.set_elt(i, Rbool::na());
         } else {
-            let valid = s.len() == 16
-                && a5::hex_to_u64(s.as_ref()).is_ok_and(a5::is_valid_cell);
+            let valid = parse_hex_id(s.as_ref()).is_some_and(a5::is_valid_cell);
             out.set_elt(i, Rbool::from(valid));
         }
     }

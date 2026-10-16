@@ -160,7 +160,7 @@ fn a5_polygon_to_cells_rs(
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_linestring_to_cells_rs(
+fn a5_line_string_to_cells_rs(
     lon: Doubles,
     lat: Doubles,
     offsets: Integers,
@@ -199,5 +199,5 @@ fn a5_linestring_to_cells_rs(
 extendr_module! {
     mod regions;
     fn a5_polygon_to_cells_rs;
-    fn a5_linestring_to_cells_rs;
+    fn a5_line_string_to_cells_rs;
 }

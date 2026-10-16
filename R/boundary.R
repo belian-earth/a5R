@@ -6,7 +6,7 @@
 #'
 #' @param cell An [a5_cell] vector.
 #' @param format Character scalar, either `"wkb"` (default) or `"wkt"`.
-#' @param closed Logical scalar; if `TRUE` (default) the ring is closed
+#' @param closed_ring Logical scalar; if `TRUE` (default) the ring is closed
 #'   (first vertex repeated at end).
 #' @param segments Integer scalar or `NULL`. Number of segments per cell
 #'   edge. A5 cell edges are slightly curved on the sphere: a single segment
@@ -16,6 +16,8 @@
 #'   A5 default of `max(1, 2^(6 - resolution))`, so at resolution 6 and finer
 #'   each edge is a single segment. Pass a larger value when the polygons are
 #'   used for spatial tests rather than display.
+#' @param closed Deprecated: renamed `closed_ring`, as in the other A5
+#'   libraries.
 #' @returns A `wk_wkt` or `wk_wkb` vector of polygon geometries with
 #'   `wk::wk_crs_longlat()` CRS.
 #'
@@ -29,20 +31,24 @@
 a5_cell_to_boundary <- function(
   cell,
   format = c("wkb", "wkt"),
-  closed = TRUE,
-  segments = NULL
+  closed_ring = TRUE,
+  segments = NULL,
+  closed
 ) {
+  if (!missing(closed)) {
+    closed_ring <- renamed_arg(closed, "closed", "closed_ring")
+  }
   cell <- as_a5_cell(cell)
   format <- arg_match_default(format, c("wkb", "wkt"))
-  closed <- vctrs::vec_cast(closed, logical())
-  check_flag(closed)
+  closed_ring <- vctrs::vec_cast(closed_ring, logical())
+  check_flag(closed_ring)
   segments <- check_segments(segments)
   cd <- cell_data(cell)
   if (format == "wkb") {
-    raw_list <- a5_cell_to_boundary_wkb_rs(cd, closed, segments)
+    raw_list <- check_rs(a5_cell_to_boundary_wkb_rs(cd, closed_ring, segments))
     wk::new_wk_wkb(raw_list, crs = wk::wk_crs_longlat())
   } else {
-    wkt <- a5_cell_to_boundary_rs(cd, closed, segments)
+    wkt <- check_rs(a5_cell_to_boundary_rs(cd, closed_ring, segments))
     wk::new_wk_wkt(wkt, crs = wk::wk_crs_longlat())
   }
 }
@@ -62,9 +68,9 @@ a5_cell_to_boundary <- function(
 #' a pole cannot be drawn as a simple polygon in longitude and latitude.
 #'
 #' @inheritParams a5_cell_to_boundary
-#' @param closed Logical scalar; if `TRUE` each ring repeats its first vertex
-#'   at the end. Defaults to `FALSE`, unlike [a5_cell_to_boundary()], since
-#'   polygon drawing closes rings itself.
+#' @param closed_ring Logical scalar; if `TRUE` each ring repeats its first
+#'   vertex at the end. Defaults to `FALSE`, unlike [a5_cell_to_boundary()],
+#'   since polygon drawing closes rings itself.
 #' @returns A list with three elements:
 #'   - `x`: double vector of longitudes, every cell's vertices in turn.
 #'   - `y`: double vector of latitudes, aligned with `x`.
@@ -84,12 +90,16 @@ a5_cell_to_boundary <- function(
 #'   id.lengths = xy$lengths,
 #'   default.units = "native"
 #' )
-a5_cell_to_boundary_xy <- function(cell, closed = FALSE, segments = NULL) {
+a5_cell_to_boundary_xy <- function(cell, closed_ring = FALSE, segments = NULL,
+                                   closed) {
+  if (!missing(closed)) {
+    closed_ring <- renamed_arg(closed, "closed", "closed_ring")
+  }
   cell <- as_a5_cell(cell)
-  closed <- vctrs::vec_cast(closed, logical())
-  check_flag(closed)
+  closed_ring <- vctrs::vec_cast(closed_ring, logical())
+  check_flag(closed_ring)
   segments <- check_segments(segments)
-  a5_cell_to_boundary_xy_rs(cell_data(cell), closed, segments)
+  check_rs(a5_cell_to_boundary_xy_rs(cell_data(cell), closed_ring, segments))
 }
 
 #' Validate `segments`: `NULL` or a single integer of at least 1

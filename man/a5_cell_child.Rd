@@ -4,16 +4,16 @@
 \alias{a5_cell_child}
 \title{The i-th child of each cell}
 \usage{
-a5_cell_child(cell, resolution, i)
+a5_cell_child(cell, child_resolution, i)
 }
 \arguments{
 \item{cell}{An \link{a5_cell} vector.}
 
-\item{resolution}{Integer scalar target resolution, at or finer than every
-cell's own resolution.}
+\item{child_resolution}{Integer scalar target resolution, at or finer
+than every cell's own resolution.}
 
 \item{i}{Integer vector of 1-based child positions, recycled against
-\code{cell}. Must lie within \code{1:a5_get_num_children(res, resolution)} for each
+\code{cell}. Must lie within \code{1:a5_get_num_children(res, child_resolution)} for each
 cell's resolution \code{res}; out of range is an error.}
 }
 \value{
@@ -28,7 +28,7 @@ cells, where building the full child list to pick one element is wasteful.
 }
 \examples{
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
-a5_cell_child(cell, resolution = 7, i = 1:16)
+a5_cell_child(cell, child_resolution = 7, i = 1:16)
 identical(a5_cell_child(cell, 7, 1:16), a5_cell_to_children(cell, 7))
 }
 \seealso{

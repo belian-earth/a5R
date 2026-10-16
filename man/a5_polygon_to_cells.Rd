@@ -61,7 +61,9 @@ excluded.
 
 Coordinates must be WGS 84 longitude/latitude in degrees. Rings are
 closed automatically; a trailing duplicate vertex is dropped if
-present.
+present. An outer ring with fewer than 3 distinct vertices gives an empty
+covering, and a hole with fewer than 3 is ignored, as in the other A5
+libraries.
 
 Polygon edges are great-circle arcs, the shortest path on the sphere
 between consecutive vertices, as in the other A5 libraries and in s2. An
@@ -112,5 +114,5 @@ polys <- wk::wkt(c(
 a5_polygon_to_cells(polys, resolution = 8)
 }
 \seealso{
-\code{\link[=a5_linestring_to_cells]{a5_linestring_to_cells()}}, \code{\link[=a5_uncompact]{a5_uncompact()}}.
+\code{\link[=a5_line_string_to_cells]{a5_line_string_to_cells()}}, \code{\link[=a5_uncompact]{a5_uncompact()}}.
 }

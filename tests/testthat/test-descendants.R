@@ -2,7 +2,7 @@ test_that("cell_child matches cell_to_children element-wise", {
   for (r in c(0L, 1L, 2L, 5L)) {
     cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = r)
     for (rc in c(r, r + 1L, r + 3L)) {
-      children <- a5_cell_to_children(cell, resolution = rc)
+      children <- a5_cell_to_children(cell, child_resolution = rc)
       n <- length(children)
       expect_identical(a5_cell_child(cell, rc, seq_len(n)), children)
     }

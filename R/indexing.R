@@ -95,7 +95,7 @@ recycle_lonlat_resolution <- function(lon, lat, resolution) {
 #' @export
 a5_cell_to_lonlat <- function(cell, as_dataframe = FALSE) {
   cell <- as_a5_cell(cell)
-  ll <- a5_cell_to_lonlat_rs(cell_data(cell), TRUE)
+  ll <- check_rs(a5_cell_to_lonlat_rs(cell_data(cell), TRUE))
   # Low-level constructors: the Rust output is already validated, and
   # data.frame() / wk::xy() spend tens of microseconds re-checking it.
   if (as_dataframe) {

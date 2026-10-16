@@ -6,5 +6,5 @@ round_the_world <- wk::wkt(paste0(
 ))
 
 bench_group("lineStringToCells")
-bench_case("lineStringToCells London-Paris res 9", a5_linestring_to_cells(london_paris, resolution = 9L))
-bench_case("lineStringToCells round-the-world res 6", a5_linestring_to_cells(round_the_world, resolution = 6L))
+bench_case("lineStringToCells London-Paris res 9", a5_line_string_to_cells(london_paris, resolution = 9L))
+bench_case("lineStringToCells round-the-world res 6", a5_line_string_to_cells(round_the_world, resolution = 6L))

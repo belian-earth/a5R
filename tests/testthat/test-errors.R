@@ -18,3 +18,36 @@ test_that("errors carry a5R classes", {
   # every class is also an a5R_error
   expect_error(a5_cell("zz"), class = "a5R_error")
 })
+
+test_that("invalid cells error as in the crate, naming the user's call", {
+  bad <- a5_cell(c("fd00000000000000", NA))
+  ok <- a5_lonlat_to_cell(0, 0, 5)
+  for (f in list(
+    function(x) a5_cell_to_lonlat(x),
+    function(x) a5_cell_to_boundary(x),
+    function(x) a5_cell_to_boundary(x, format = "wkt"),
+    function(x) a5_cell_to_boundary_xy(x),
+    function(x) a5_cell_to_supercell(x, 0)
+  )) {
+    expect_error(f(c(ok, bad)), "Invalid cell", class = "a5R_error_cell")
+    expect_no_error(f(c(ok, a5_cell(NA))))
+  }
+  # a missing cell is still missing, not an error
+  na <- c(ok, a5_cell(NA))
+  expect_identical(is.na(a5_cell_to_lonlat(na, as_dataframe = TRUE)$lon), c(FALSE, TRUE))
+  expect_identical(is.na(a5_cell_to_boundary(na)), c(FALSE, TRUE))
+  expect_identical(a5_cell_to_boundary_xy(na)$lengths[2], 0L)
+  expect_identical(is.na(a5_cell_to_supercell(na, 0)), c(FALSE, TRUE))
+  expect_error(a5_cell_to_lonlat(bad), "^cell_to_lonlat failed")
+  err <- tryCatch(a5_cell_to_boundary(bad), error = identity)
+  expect_identical(conditionCall(err)[[1]], quote(a5_cell_to_boundary))
+})
+
+test_that("invalid cells error with threads too", {
+  old <- a5_set_threads(2L)
+  on.exit(a5_set_threads(old))
+  cells <- c(a5_lonlat_to_cell(runif(5000, -180, 180), runif(5000, -80, 80), 9),
+             a5_cell("fd00000000000000"))
+  expect_error(a5_cell_to_lonlat(cells), class = "a5R_error_cell")
+  expect_error(a5_cell_to_boundary_xy(cells), class = "a5R_error_cell")
+})

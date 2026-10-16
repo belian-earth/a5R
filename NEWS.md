@@ -28,7 +28,23 @@
   A feature's parts and holes are still combined. A missing geometry gives
   an `NA` covering and an empty geometry an empty covering; both used to be
   errors.
-* `a5_linestring_to_cells()` gains `simplify`: with `simplify = FALSE` it
+* `a5_linestring_to_cells()` is renamed `a5_line_string_to_cells()`, to
+  match `line_string_to_cells()` in the other A5 libraries. The old name
+  still works but warns.
+* `a5_grid_disk()` loses its `vertex` argument. Use the new
+  `a5_grid_disk_vertex()`, which matches `grid_disk_vertex()` in the other
+  A5 libraries, for vertex-sharing neighbours.
+* Arguments take the names used by the a5 crate and a5-js: `resolution`
+  becomes `parent_resolution` in `a5_cell_to_parent()` and
+  `child_resolution` in `a5_cell_to_children()`, and `closed` becomes
+  `closed_ring` in `a5_cell_to_boundary()` and `a5_cell_to_boundary_xy()`.
+  The old names still work but warn. `a5_cell_child()` and
+  `a5_cell_children_range()` also take `child_resolution`.
+* `a5_cell_to_lonlat()`, `a5_cell_to_boundary()`,
+  `a5_cell_to_boundary_xy()` and `a5_cell_to_supercell()` error on an id
+  that is not an A5 cell, as the a5 crate and a5R's other functions do.
+  They used to return `NA` or an empty boundary.
+* `a5_line_string_to_cells()` gains `simplify`: with `simplify = FALSE` it
   returns an `a5_cell_list` with one ordered path per feature, for a list
   column. The default flat form concatenates the paths, so a cell crossed
   by several features now appears once per feature rather than once
@@ -39,7 +55,8 @@
   refuses to build more than `.Machine$integer.max` cells.
 * `a5_is_valid()` now checks the index encoding. It used to return `TRUE`
   for any non-missing `a5_cell` and for any hex string that parsed, whether
-  or not the value was a cell; hex strings must now also be 16 digits.
+  or not the value was a cell. Hex strings are read as `a5_cell()` reads
+  them, so unpadded ids, as the a5 crate writes them, are accepted.
 * `a5_compact()`'s first argument is now `cell`, as in other functions that
   take cells, rather than `cells`.
 
@@ -100,6 +117,11 @@
 
 ## Other changes
 
+* As in the other A5 libraries, `a5_line_string_to_cells()` gives the cell
+  containing a single waypoint, and `a5_polygon_to_cells()` gives an empty
+  covering for an outer ring of fewer than 3 distinct vertices and ignores
+  such holes. Both used to error.
+* `a5_cell_to_parent()` accepts `resolution = -1`, giving the world cell.
 * The a5 crate 1.0.0 fixes two wrong results. `a5_polygon_to_cells()`
   with `containment = "centre"` no longer returns a whole quintant of
   cells for thin sliver polygons, and `a5_lonlat_to_cell()` no longer
@@ -124,7 +146,7 @@
   sorting puts `NA` last instead of among the resolution-30 cells.
 * `as_a5_covering()` treats `NULL` list elements as missing coverings, so
   null coverings read back from Arrow stay `NA` instead of becoming empty.
-* `a5_polygon_to_cells()` and `a5_linestring_to_cells()` error on `sf` and
+* `a5_polygon_to_cells()` and `a5_line_string_to_cells()` error on `sf` and
   `terra` input in a projected CRS, and on coordinates outside the
   longitude/latitude range. The documentation now warns that
   self-intersecting rings give undefined results.
@@ -174,9 +196,9 @@
 * `a5_polygon_to_cells()` merges a feature's parts with the upstream
   covering union, without expanding each part to full resolution first.
 
-* New `a5_cell_to_supercell()` and `a5_cell_to_subcell()` move between
+* New `a5_cell_to_supercell()` and `a5_cell_to_subcells()` move between
   resolutions by cell centre rather than by index, wrapping the upstream
-  `cell_to_supercell()` and `cell_to_subcell()`. The A5 index hierarchy is
+  `cell_to_supercell()` and `cell_to_subcells()`. The A5 index hierarchy is
   not spatially nested: for about half of cells one resolution apart, and
   about 35% at four or more apart, the index parent is not the coarse cell
   containing the fine cell's centre. Supercells and subcells form an exact

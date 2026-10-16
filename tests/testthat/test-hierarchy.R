@@ -11,7 +11,7 @@ test_that("cell_to_parent returns coarser cell", {
 
 test_that("cell_to_parent with explicit resolution", {
   cell <- a5_lonlat_to_cell(0, 0, resolution = 10)
-  parent <- a5_cell_to_parent(cell, resolution = 5)
+  parent <- a5_cell_to_parent(cell, parent_resolution = 5)
   expect_equal(a5_get_resolution(parent), 5L)
 })
 
@@ -36,7 +36,7 @@ test_that("cell_to_parent is vectorised", {
 
 test_that("cell_to_children with explicit resolution", {
   cell <- a5_lonlat_to_cell(0, 0, resolution = 5)
-  children <- a5_cell_to_children(cell, resolution = 7)
+  children <- a5_cell_to_children(cell, child_resolution = 7)
   expect_length(children, 16L)
   expect_true(all(a5_get_resolution(children) == 7L))
 })
@@ -80,4 +80,26 @@ test_that("a5_cell_to_parent rejects a finer resolution", {
   expect_error(a5_cell_to_parent(cells, 6), "must not be finer than the cell resolution \\(5\\)")
   expect_identical(a5_get_resolution(a5_cell_to_parent(cells, 5)), c(5L, 5L))
   expect_true(is.na(a5_cell_to_parent(a5_cell(NA), 6)))
+})
+
+test_that("a5_cell_to_parent at resolution -1 gives the world cell, as in the crate", {
+  world <- a5_cell("0000000000000000")
+  cells <- a5_lonlat_to_cell(c(0, 10), c(0, 10), c(0, 8))
+  expect_identical(a5_cell_to_parent(cells, -1), c(world, world))
+  expect_identical(a5_cell_to_parent(cells[1], -1), a5_cell_to_parent(cells[1]))
+  expect_error(a5_cell_to_parent(cells, -2), "between -1 and 30")
+})
+
+test_that("the old resolution argument still works but warns", {
+  cell <- a5_lonlat_to_cell(-3.19, 55.95, 10)
+  expect_warning(
+    p <- a5_cell_to_parent(cell, resolution = 5),
+    "renamed `parent_resolution`", class = "a5R_warning_deprecated"
+  )
+  expect_identical(p, a5_cell_to_parent(cell, 5))
+  expect_warning(
+    k <- a5_cell_to_children(cell, resolution = 11),
+    "renamed `child_resolution`", class = "a5R_warning_deprecated"
+  )
+  expect_identical(k, a5_cell_to_children(cell, 11))
 })

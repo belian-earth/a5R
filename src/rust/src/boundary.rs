@@ -4,7 +4,7 @@ use extendr_api::prelude::*;
 use extendr_api::wrapper::Nullable;
 use extendr_api::SEXP;
 
-use crate::cell_raw::map_cells;
+use crate::cell_raw::{map_cells, FirstError};
 
 // R C API entry points. The WKB and WKT outputs hold one R object per cell;
 // creating each through extendr registers it in extendr's protection table,
@@ -107,21 +107,25 @@ fn a5_cell_to_boundary_rs(
     cells: List,
     closed_ring: bool,
     segments: Nullable<i32>,
-) -> Strings {
+) -> Robj {
     let seg: Option<i32> = match segments {
         Nullable::NotNull(s) => Some(s),
         Nullable::Null => None,
     };
 
+    let err = FirstError::new();
     let results = map_cells(&cells, |id| {
         let opts = a5::CellToBoundaryOptions {
             closed_ring,
             segments: seg,
         };
-        let boundary = a5::cell_to_boundary(id, Some(opts)).ok()?;
+        let boundary = err.ok(a5::cell_to_boundary(id, Some(opts)))?;
         Some(lonlats_to_wkt(&boundary))
     });
-    strings_from(&results)
+    if let Some(e) = err.take("cell_to_boundary") {
+        return e;
+    }
+    strings_from(&results).into()
 }
 
 /// Get boundary polygons for A5 cells as WKB raw vectors.
@@ -137,22 +141,25 @@ fn a5_cell_to_boundary_wkb_rs(
     cells: List,
     closed_ring: bool,
     segments: Nullable<i32>,
-) -> List {
+) -> Robj {
     let seg: Option<i32> = match segments {
         Nullable::NotNull(s) => Some(s),
         Nullable::Null => None,
     };
 
+    let err = FirstError::new();
     let results = map_cells(&cells, |id| {
         let opts = a5::CellToBoundaryOptions {
             closed_ring,
             segments: seg,
         };
-        let boundary = a5::cell_to_boundary(id, Some(opts)).ok()?;
+        let boundary = err.ok(a5::cell_to_boundary(id, Some(opts)))?;
         Some(lonlats_to_wkb(&boundary))
     });
-
-    raw_list(&results)
+    if let Some(e) = err.take("cell_to_boundary") {
+        return e;
+    }
+    raw_list(&results).into()
 }
 
 /// Get boundary vertices for A5 cells as flat coordinate vectors.
@@ -169,19 +176,23 @@ fn a5_cell_to_boundary_xy_rs(
     cells: List,
     closed_ring: bool,
     segments: Nullable<i32>,
-) -> List {
+) -> Robj {
     let seg: Option<i32> = match segments {
         Nullable::NotNull(s) => Some(s),
         Nullable::Null => None,
     };
 
+    let err = FirstError::new();
     let results = map_cells(&cells, |id| {
         let opts = a5::CellToBoundaryOptions {
             closed_ring,
             segments: seg,
         };
-        a5::cell_to_boundary(id, Some(opts)).ok()
+        err.ok(a5::cell_to_boundary(id, Some(opts)))
     });
+    if let Some(e) = err.take("cell_to_boundary") {
+        return e;
+    }
 
     let total: usize = results.iter().flatten().map(|b| b.len()).sum();
     let mut x: Robj = Doubles::new(total).into();
@@ -208,7 +219,7 @@ fn a5_cell_to_boundary_xy_rs(
             ls[i] = boundary.len() as i32;
         }
     }
-    list!(x = x, y = y, lengths = lengths)
+    list!(x = x, y = y, lengths = lengths).into()
 }
 
 extendr_module! {
