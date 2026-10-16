@@ -89,8 +89,9 @@
   `a5_threads(n)` returns the previous count as an `a5_threads` object to
   make this work.
 * New `a5_to_arrow_table()` and `a5_from_arrow_table()` convert data frames
-  with cell and covering columns to and from Arrow tables, tagging the
-  table with the index version and refusing tables from another index.
+  with cell and covering columns to and from Arrow tables, recording the
+  index version under the schema metadata key `a5_index` and refusing
+  tables from another index.
 * New `a5_migrate()` converts ids from a5R before 1.0 to the current index.
 * New `as_a5_covering()` builds coverings from cells, cell lists or raw
   64-bit values written by other A5 libraries, sorting and compacting them;

@@ -94,7 +94,7 @@ cities
 `a5_to_arrow_table()` converts a data frame to an Arrow table, writing cell
 columns as native `uint64`, the binary format DuckDB, Python and
 geoparquet.io use, and recording the A5 index version in the schema
-metadata:
+metadata under the key `a5_index`, which a5px and a5view write too:
 
 ```{r parquet_write}
 tf <- tempfile(fileext = ".parquet")
