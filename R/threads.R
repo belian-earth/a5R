@@ -9,6 +9,12 @@
 #' `with(a5_set_threads(4), expr)` runs `expr` on four threads and then
 #' restores the previous count, even if `expr` fails.
 #'
+#' A forked worker, as created by [parallel::mclapply()] or
+#' `future::multicore`, inherits the count but not the threads, so a5R runs
+#' on one thread there until the worker calls `a5_set_threads()` itself.
+#' Separate-process workers, as from `mirai` or `future::multisession`, start
+#' at one thread like any new session.
+#'
 #' @param n Integer scalar. Number of threads. Must be >= 1. The value
 #'   returned by an earlier `a5_set_threads()` call also works.
 #' @param data The value of `a5_set_threads()`.

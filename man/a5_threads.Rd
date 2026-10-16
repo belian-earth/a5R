@@ -37,6 +37,12 @@ overhead, or higher for parallel execution via rayon.
 scoped to a block of code with \code{\link[=with]{with()}}, as \code{mirai::daemons()} is:
 \code{with(a5_set_threads(4), expr)} runs \code{expr} on four threads and then
 restores the previous count, even if \code{expr} fails.
+
+A forked worker, as created by \code{\link[parallel:mclapply]{parallel::mclapply()}} or
+\code{future::multicore}, inherits the count but not the threads, so a5R runs
+on one thread there until the worker calls \code{a5_set_threads()} itself.
+Separate-process workers, as from \code{mirai} or \code{future::multisession}, start
+at one thread like any new session.
 }
 \examples{
 cells <- a5_lonlat_to_cell(runif(1000, -180, 180), runif(1000, -80, 80), 10)

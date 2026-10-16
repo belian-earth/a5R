@@ -33,6 +33,7 @@ Suggests:
     arrow,
     grid,
     knitr,
+    parallel,
     pillar,
     rmarkdown,
     sf,

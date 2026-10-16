@@ -100,3 +100,25 @@ test_that("large inputs give identical results on 1 and 4 threads", {
   }
   expect_identical(run(1L), run(4L))
 })
+
+test_that("forked workers run on one thread instead of hanging", {
+  skip_on_os("windows")
+  old <- a5_set_threads(2L)
+  on.exit(a5_set_threads(old))
+  cells <- a5_lonlat_to_cell(runif(20000, -180, 180), runif(20000, -80, 80), 10)
+  ref <- a5_cell_to_lonlat(cells, as_dataframe = TRUE)
+  res <- parallel::mclapply(1:2, function(i) {
+    list(
+      n = a5_get_threads(),
+      same = identical(a5_cell_to_lonlat(cells, as_dataframe = TRUE), ref),
+      reset = with(a5_set_threads(2L), a5_get_threads())
+    )
+  }, mc.cores = 2L)
+  for (r in res) {
+    expect_identical(r$n, 1L)
+    expect_true(r$same)
+    expect_identical(r$reset, 2L)
+  }
+  expect_identical(a5_get_threads(), 2L)
+  expect_identical(a5_cell_to_lonlat(cells, as_dataframe = TRUE), ref)
+})
