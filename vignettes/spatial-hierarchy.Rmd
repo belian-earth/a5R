@@ -32,7 +32,7 @@ its *subcells*.
 ```{r children-plot, fig.width = 7, fig.height = 3.6, echo = -c(1, 11)}
 op <- par(mfrow = c(1, 2), mar = c(0.5, 0.5, 2, 0.5))
 cell <- a5_lonlat_to_cell(-53.5, -19, resolution = 8)
-index_kids <- a5_cell_to_children(cell, resolution = 11)
+index_kids <- a5_cell_to_children(cell, child_resolution = 11)
 spatial_kids <- a5_uncompact(a5_cell_to_subcells(cell, resolution = 11))
 
 outline <- a5_cell_to_boundary(cell)

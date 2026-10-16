@@ -55,7 +55,7 @@ that work on compacted sets.
 
 \examples{
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
-children <- a5_cell_to_children(cell, resolution = 7)
+children <- a5_cell_to_children(cell, child_resolution = 7)
 covering <- a5_compact(children) # stored as the parent
 covering
 a5_uncompact(covering)           # the 16 children again

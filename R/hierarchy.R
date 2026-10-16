@@ -33,15 +33,18 @@ a5_get_resolution <- function(cell) {
 #' location.
 #'
 #' @param cell An [a5_cell] vector.
-#' @param resolution Integer scalar target resolution, or `NULL` for one step:
-#'   the immediate parent for `a5_cell_to_parent()`, the immediate children
-#'   for `a5_cell_to_children()`. For `a5_cell_to_parent()` it must not be
-#'   finer than any cell's resolution, and `-1` gives the world cell.
+#' @param parent_resolution Integer scalar target resolution for
+#'   `a5_cell_to_parent()`, or `NULL` (default) for the immediate parent. It
+#'   must not be finer than any cell's resolution; `-1` gives the world cell.
+#' @param child_resolution Integer scalar target resolution for
+#'   `a5_cell_to_children()`, or `NULL` (default) for the immediate children.
 #' @param simplify Logical scalar. If `TRUE` (default), return one flat
 #'   [a5_cell] vector with the children of every input concatenated in input
 #'   order; which child came from which parent is not recorded. If `FALSE`,
 #'   return an [a5_cell_list]: a [vctrs::list_of()] of [a5_cell] vectors with
 #'   one element per input, suitable for a list column.
+#' @param resolution Deprecated: renamed `parent_resolution` and
+#'   `child_resolution`, as in the other A5 libraries.
 #' @returns
 #' * `a5_cell_to_parent()`: an [a5_cell] vector the same length as `cell`.
 #' * `a5_cell_to_children()`: an [a5_cell] vector, or an [a5_cell_list] when
@@ -55,12 +58,12 @@ a5_get_resolution <- function(cell) {
 #' @examples
 #' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
 #' a5_cell_to_parent(cell)
-#' a5_cell_to_parent(cell, resolution = 5)
+#' a5_cell_to_parent(cell, parent_resolution = 5)
 #'
 #' a5_cell_to_children(cell)
 #' cells <- a5_lonlat_to_cell(c(-3.19, 0), c(55.95, 0), resolution = 5)
-#' a5_cell_to_children(cells, resolution = 7)                   # 32 cells
-#' a5_cell_to_children(cells, resolution = 7, simplify = FALSE) # list of 2
+#' a5_cell_to_children(cells, child_resolution = 7)                   # 32 cells
+#' a5_cell_to_children(cells, child_resolution = 7, simplify = FALSE) # list of 2
 #'
 #' # children map back to their parent
 #' all(a5_cell_to_parent(a5_cell_to_children(cell, 12), 10) == cell)
@@ -68,16 +71,19 @@ NULL
 
 #' @rdname a5_hierarchy
 #' @export
-a5_cell_to_parent <- function(cell, resolution = NULL) {
-  cell <- as_a5_cell(cell)
-  if (!is.null(resolution)) {
-    resolution <- check_scalar_resolution(resolution, min = -1L)
+a5_cell_to_parent <- function(cell, parent_resolution = NULL, resolution) {
+  if (!missing(resolution)) {
+    parent_resolution <- renamed_arg(resolution, "resolution", "parent_resolution")
   }
-  out <- a5_cell_to_parent_rs(cell_data(cell), resolution)
+  cell <- as_a5_cell(cell)
+  if (!is.null(parent_resolution)) {
+    parent_resolution <- check_scalar_resolution(parent_resolution, min = -1L)
+  }
+  out <- a5_cell_to_parent_rs(cell_data(cell), parent_resolution)
   if (is.integer(out)) {
     a5_abort(
       "resolution",
-      "{.arg resolution} ({resolution}) must not be finer than the cell resolution ({out})."
+      "{.arg parent_resolution} ({parent_resolution}) must not be finer than the cell resolution ({out})."
     )
   }
   cells_from_rs(out)
@@ -85,13 +91,17 @@ a5_cell_to_parent <- function(cell, resolution = NULL) {
 
 #' @rdname a5_hierarchy
 #' @export
-a5_cell_to_children <- function(cell, resolution = NULL, simplify = TRUE) {
+a5_cell_to_children <- function(cell, child_resolution = NULL, simplify = TRUE,
+                                resolution) {
+  if (!missing(resolution)) {
+    child_resolution <- renamed_arg(resolution, "resolution", "child_resolution")
+  }
   cell <- as_a5_cell(cell)
-  if (!is.null(resolution)) {
-    resolution <- check_scalar_resolution(resolution)
+  if (!is.null(child_resolution)) {
+    child_resolution <- check_scalar_resolution(child_resolution)
   }
   check_flag(simplify)
-  one_to_many(a5_cell_to_children_rs(cell_data(cell), resolution, simplify), simplify)
+  one_to_many(a5_cell_to_children_rs(cell_data(cell), child_resolution, simplify), simplify)
 }
 
 #' The i-th child of each cell
@@ -102,10 +112,10 @@ a5_cell_to_children <- function(cell, resolution = NULL, simplify = TRUE) {
 #' cells, where building the full child list to pick one element is wasteful.
 #'
 #' @param cell An [a5_cell] vector.
-#' @param resolution Integer scalar target resolution, at or finer than every
-#'   cell's own resolution.
+#' @param child_resolution Integer scalar target resolution, at or finer
+#'   than every cell's own resolution.
 #' @param i Integer vector of 1-based child positions, recycled against
-#'   `cell`. Must lie within `1:a5_get_num_children(res, resolution)` for each
+#'   `cell`. Must lie within `1:a5_get_num_children(res, child_resolution)` for each
 #'   cell's resolution `res`; out of range is an error.
 #' @returns An [a5_cell] vector the same length as `cell`. `NA` where `cell`
 #'   or `i` is `NA`.
@@ -114,13 +124,13 @@ a5_cell_to_children <- function(cell, resolution = NULL, simplify = TRUE) {
 #' @export
 #' @examples
 #' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
-#' a5_cell_child(cell, resolution = 7, i = 1:16)
+#' a5_cell_child(cell, child_resolution = 7, i = 1:16)
 #' identical(a5_cell_child(cell, 7, 1:16), a5_cell_to_children(cell, 7))
-a5_cell_child <- function(cell, resolution, i) {
+a5_cell_child <- function(cell, child_resolution, i) {
   cell <- as_a5_cell(cell)
-  resolution <- check_scalar_resolution(resolution)
+  child_resolution <- check_scalar_resolution(child_resolution)
   args <- vctrs::vec_recycle_common(cell = cell, i = vctrs::vec_cast(i, integer()))
-  cells_from_rs(a5_cell_child_rs(cell_data(args$cell), resolution, args$i))
+  cells_from_rs(a5_cell_child_rs(cell_data(args$cell), child_resolution, args$i))
 }
 
 #' Range of descendant cell ids
@@ -130,9 +140,9 @@ a5_cell_child <- function(cell, resolution, i) {
 #' encodes position along a space-filling curve with a cell's descendants sharing
 #' its leading bits, the descendants of a cell at any resolution up to 29
 #' occupy a contiguous range of ids among all cells at that resolution: every
-#' cell at `resolution` whose id lies between `lo` and `hi` inclusive is a
+#' cell at `child_resolution` whose id lies between `lo` and `hi` inclusive is a
 #' descendant, and no descendant lies outside. This makes `BETWEEN lo AND hi`
-#' an exact filter on a store of `resolution` cells sorted by id. Not every
+#' an exact filter on a store of `child_resolution` cells sorted by id. Not every
 #' integer in the range is a valid cell, and cells of other resolutions may
 #' fall inside it.
 #'
@@ -145,8 +155,8 @@ a5_cell_child <- function(cell, resolution, i) {
 #' [a5_cell_to_children()] if you need resolution-30 descendants.
 #'
 #' @param cell An [a5_cell] vector.
-#' @param resolution Integer scalar target resolution from 0 to 29, at or
-#'   finer than every cell's own resolution.
+#' @param child_resolution Integer scalar target resolution from 0 to 29, at
+#'   or finer than every cell's own resolution.
 #' @returns A data frame with [a5_cell] columns `lo` and `hi`, one row per
 #'   input cell. `NA` where `cell` is `NA`.
 #'
@@ -155,21 +165,21 @@ a5_cell_child <- function(cell, resolution, i) {
 #' @export
 #' @examples
 #' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
-#' rng <- a5_cell_children_range(cell, resolution = 8)
-#' children <- vctrs::vec_sort(a5_cell_to_children(cell, resolution = 8))
+#' rng <- a5_cell_children_range(cell, child_resolution = 8)
+#' children <- vctrs::vec_sort(a5_cell_to_children(cell, child_resolution = 8))
 #' identical(rng$lo, children[1])
 #' identical(rng$hi, children[length(children)])
-a5_cell_children_range <- function(cell, resolution) {
+a5_cell_children_range <- function(cell, child_resolution) {
   cell <- as_a5_cell(cell)
-  resolution <- check_scalar_resolution(resolution)
-  if (identical(resolution, 30L)) {
+  child_resolution <- check_scalar_resolution(child_resolution)
+  if (identical(child_resolution, 30L)) {
     a5_abort("resolution", c(
-      "{.arg resolution} must be 29 or less.",
+      "{.arg child_resolution} must be 29 or less.",
       "x" = "Descendant ids are not contiguous at resolution 30: face bit layouts overlap numerically and some faces cannot be encoded.",
       "i" = "Use {.fn a5_cell_to_children} to enumerate resolution-30 descendants."
     ))
   }
-  rs <- a5_cell_children_range_rs(cell_data(cell), resolution)
+  rs <- a5_cell_children_range_rs(cell_data(cell), child_resolution)
   vctrs::new_data_frame(list(lo = cells_from_rs(rs$lo), hi = cells_from_rs(rs$hi)))
 }
 
@@ -224,7 +234,7 @@ a5_cell_children_range <- function(cell, resolution) {
 #' @examples
 #' cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 18)
 #' a5_cell_to_supercell(cell, resolution = 15)
-#' a5_cell_to_parent(cell, resolution = 15) # may differ
+#' a5_cell_to_parent(cell, parent_resolution = 15) # may differ
 #'
 #' coarse <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
 #' sub <- a5_cell_to_subcells(coarse, resolution = 12)

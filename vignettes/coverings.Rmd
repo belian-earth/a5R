@@ -186,7 +186,7 @@ the finer cells whose centres lie inside a coarser cell.
 ```{r around}
 disk <- a5_grid_disk(raleigh, k = 3)
 cap <- a5_spherical_cap(raleigh, radius = 8000)
-coarse <- a5_cell_to_parent(raleigh, resolution = 9)
+coarse <- a5_cell_to_parent(raleigh, parent_resolution = 9)
 subcells <- a5_cell_to_subcells(coarse, resolution = 11)
 ```
 

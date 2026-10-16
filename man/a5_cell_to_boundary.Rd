@@ -7,8 +7,9 @@
 a5_cell_to_boundary(
   cell,
   format = c("wkb", "wkt"),
-  closed = TRUE,
-  segments = NULL
+  closed_ring = TRUE,
+  segments = NULL,
+  closed
 )
 }
 \arguments{
@@ -16,7 +17,7 @@ a5_cell_to_boundary(
 
 \item{format}{Character scalar, either \code{"wkb"} (default) or \code{"wkt"}.}
 
-\item{closed}{Logical scalar; if \code{TRUE} (default) the ring is closed
+\item{closed_ring}{Logical scalar; if \code{TRUE} (default) the ring is closed
 (first vertex repeated at end).}
 
 \item{segments}{Integer scalar or \code{NULL}. Number of segments per cell
@@ -27,6 +28,9 @@ error falls with the square of the number of segments. \code{NULL} uses the
 A5 default of \code{max(1, 2^(6 - resolution))}, so at resolution 6 and finer
 each edge is a single segment. Pass a larger value when the polygons are
 used for spatial tests rather than display.}
+
+\item{closed}{Deprecated: renamed \code{closed_ring}, as in the other A5
+libraries.}
 }
 \value{
 A \code{wk_wkt} or \code{wk_wkb} vector of polygon geometries with

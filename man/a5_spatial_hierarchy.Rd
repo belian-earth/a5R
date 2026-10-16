@@ -67,7 +67,7 @@ subcells reach past it has all its subcells given at resolution 29.
 \examples{
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 18)
 a5_cell_to_supercell(cell, resolution = 15)
-a5_cell_to_parent(cell, resolution = 15) # may differ
+a5_cell_to_parent(cell, parent_resolution = 15) # may differ
 
 coarse <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
 sub <- a5_cell_to_subcells(coarse, resolution = 12)

@@ -14,8 +14,8 @@ test_that("boundary has lonlat CRS", {
 
 test_that("boundary with closed = FALSE omits repeated vertex", {
   cell <- a5_lonlat_to_cell(0, 0, resolution = 5)
-  open <- a5_cell_to_boundary(cell, format = "wkt", closed = FALSE)
-  closed <- a5_cell_to_boundary(cell, format = "wkt", closed = TRUE)
+  open <- a5_cell_to_boundary(cell, format = "wkt", closed_ring = FALSE)
+  closed <- a5_cell_to_boundary(cell, format = "wkt", closed_ring = TRUE)
   # closed ring repeats the first vertex, so its WKT is longer
   expect_true(nchar(as.character(closed)) > nchar(as.character(open)))
 })
@@ -79,12 +79,12 @@ test_that("boundary rejects invalid segments", {
   expect_error(a5_cell_to_boundary(cell, segments = NA_integer_), "positive integer")
   expect_error(a5_cell_to_boundary_xy(cell, segments = 0L), "positive integer")
   expect_error(a5_cell_to_boundary_xy(cell, segments = 1:2), "size 1")
-  expect_error(a5_cell_to_boundary_xy(cell, closed = NA), "TRUE")
+  expect_error(a5_cell_to_boundary_xy(cell, closed_ring = NA), "TRUE")
 })
 
 # Vertices of a5_cell_to_boundary() as x, y, lengths, for comparison.
 boundary_coords <- function(cell, closed, segments = NULL) {
-  wkb <- a5_cell_to_boundary(cell, closed = closed, segments = segments)
+  wkb <- a5_cell_to_boundary(cell, closed_ring = closed, segments = segments)
   coords <- wk::wk_coords(wkb)
   lengths <- tabulate(coords$feature_id, nbins = length(cell))
   list(x = coords$x, y = coords$y, lengths = lengths)
@@ -115,7 +115,7 @@ test_that("boundary_xy matches cell_to_boundary vertices", {
     boundary_coords(cells, closed = FALSE)
   )
   expect_identical(
-    a5_cell_to_boundary_xy(cells, closed = TRUE),
+    a5_cell_to_boundary_xy(cells, closed_ring = TRUE),
     boundary_coords(cells, closed = TRUE)
   )
   expect_identical(
@@ -129,7 +129,7 @@ test_that("boundary_xy vertex counts follow resolution and segments", {
   # default segments: max(1, 2^(6 - resolution)) per edge, five edges
   expect_identical(a5_cell_to_boundary_xy(cells)$lengths, c(40L, 5L, 5L))
   expect_identical(
-    a5_cell_to_boundary_xy(cells, closed = TRUE, segments = 2L)$lengths,
+    a5_cell_to_boundary_xy(cells, closed_ring = TRUE, segments = 2L)$lengths,
     rep(11L, 3)
   )
 })
@@ -156,4 +156,18 @@ test_that("the world cell's boundary is an empty polygon", {
   expect_identical(as.character(a5_cell_to_boundary(w, "wkt")), "POLYGON EMPTY")
   expect_identical(as.character(wk::as_wkt(a5_cell_to_boundary(w))), "POLYGON EMPTY")
   expect_identical(a5_cell_to_boundary_xy(w)$lengths, 0L)
+})
+
+test_that("the old closed argument still works but warns", {
+  cell <- a5_lonlat_to_cell(-3.19, 55.95, 5)
+  expect_warning(
+    b <- a5_cell_to_boundary(cell, closed = FALSE),
+    "renamed `closed_ring`", class = "a5R_warning_deprecated"
+  )
+  expect_identical(b, a5_cell_to_boundary(cell, closed_ring = FALSE))
+  expect_warning(
+    xy <- a5_cell_to_boundary_xy(cell, closed = TRUE),
+    class = "a5R_warning_deprecated"
+  )
+  expect_identical(xy, a5_cell_to_boundary_xy(cell, closed_ring = TRUE))
 })

@@ -24,7 +24,7 @@ test_that("uncompact expands to the covering's resolution or finer", {
   expanded <- a5_uncompact(a5_compact(cell), resolution = 7)
   expect_length(expanded, 16L)
   expect_true(all(a5_get_resolution(expanded) == 7L))
-  expect_identical(expanded, a5_cell_to_children(cell, resolution = 7))
+  expect_identical(expanded, a5_cell_to_children(cell, child_resolution = 7))
   expect_error(a5_uncompact(a5_compact(children), resolution = 5), "coarser")
 })
 
@@ -38,7 +38,7 @@ test_that("uncompact accepts plain cells as one covering", {
 })
 
 test_that("compact and uncompact round-trip, sorted and deduplicated", {
-  kids <- a5_cell_to_children(cell, resolution = 8)
+  kids <- a5_cell_to_children(cell, child_resolution = 8)
   shuffled <- c(kids[c(40, 3, 64)], kids, kids[1:5])
   expect_identical(a5_uncompact(a5_compact(shuffled)), vctrs::vec_sort(kids))
   expect_identical(a5_compact(shuffled), a5_compact(cell, resolution = 8))

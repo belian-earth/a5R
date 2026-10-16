@@ -179,3 +179,14 @@ check_rs <- function(out, call = rlang::caller_env()) {
   }
   out
 }
+
+#' Warn that an argument was renamed, and pass its value on
+#' @noRd
+renamed_arg <- function(value, old, new, call = rlang::caller_env()) {
+  cli::cli_warn(
+    "{.arg {old}} was renamed {.arg {new}} in a5R 1.0.0.",
+    class = c("a5R_warning_deprecated", "a5R_warning"),
+    call = call
+  )
+  value
+}

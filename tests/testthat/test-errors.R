@@ -32,6 +32,12 @@ test_that("invalid cells error as in the crate, naming the user's call", {
     expect_error(f(c(ok, bad)), "Invalid cell", class = "a5R_error_cell")
     expect_no_error(f(c(ok, a5_cell(NA))))
   }
+  # a missing cell is still missing, not an error
+  na <- c(ok, a5_cell(NA))
+  expect_identical(is.na(a5_cell_to_lonlat(na, as_dataframe = TRUE)$lon), c(FALSE, TRUE))
+  expect_identical(is.na(a5_cell_to_boundary(na)), c(FALSE, TRUE))
+  expect_identical(a5_cell_to_boundary_xy(na)$lengths[2], 0L)
+  expect_identical(is.na(a5_cell_to_supercell(na, 0)), c(FALSE, TRUE))
   expect_error(a5_cell_to_lonlat(bad), "^cell_to_lonlat failed")
   err <- tryCatch(a5_cell_to_boundary(bad), error = identity)
   expect_identical(conditionCall(err)[[1]], quote(a5_cell_to_boundary))

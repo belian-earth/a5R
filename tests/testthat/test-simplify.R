@@ -3,7 +3,7 @@
 
 cells <- a5_lonlat_to_cell(c(-3.19, 0, 139.7), c(55.95, 0, 35.69), resolution = 5)
 ops <- list(
-  children = function(x, ...) a5_cell_to_children(x, resolution = 7, ...),
+  children = function(x, ...) a5_cell_to_children(x, child_resolution = 7, ...),
   disk = function(x, ...) a5_uncompact(a5_grid_disk(x, k = 2), ...),
   cap = function(x, ...) a5_uncompact(a5_spherical_cap(x, radius = 200000), ...)
 )
@@ -40,12 +40,12 @@ test_that("NA input contributes nothing", {
 })
 
 test_that("a5_cell_list unlists to an a5_cell vector and survives slicing", {
-  lst <- a5_cell_to_children(cells, resolution = 7, simplify = FALSE)
+  lst <- a5_cell_to_children(cells, child_resolution = 7, simplify = FALSE)
   expect_identical(unlist(lst), vctrs::list_unchop(lst))
-  expect_identical(unlist(lst), a5_cell_to_children(cells, resolution = 7))
+  expect_identical(unlist(lst), a5_cell_to_children(cells, child_resolution = 7))
   expect_s3_class(unlist(lst), "a5_cell")
   expect_s3_class(lst[2:3], "a5_cell_list")
-  expect_identical(unlist(lst[2:3]), a5_cell_to_children(cells[2:3], resolution = 7))
+  expect_identical(unlist(lst[2:3]), a5_cell_to_children(cells[2:3], child_resolution = 7))
   expect_identical(vctrs::vec_ptype_abbr(lst), "list<a5_cell>")
   expect_length(unlist(a5_uncompact(a5_grid_disk(a5_cell(NA), k = 1), simplify = FALSE)), 0L)
 })
@@ -54,7 +54,7 @@ test_that("a5_cell_list unnests with tidyr", {
   skip_if_not_installed("tidyr")
   skip_if_not_installed("tibble")
   df <- tibble::tibble(cell = cells)
-  df$children <- a5_cell_to_children(df$cell, resolution = 6, simplify = FALSE)
+  df$children <- a5_cell_to_children(df$cell, child_resolution = 6, simplify = FALSE)
   expect_match(format(vctrs::vec_ptype_abbr(df$children)), "list<a5_cell>")
   long <- tidyr::unnest(df, "children")
   expect_identical(nrow(long), 12L)
@@ -75,7 +75,7 @@ test_that("simplify must be a flag", {
 test_that("list form works as a tibble list column and unnests", {
   skip_if_not_installed("tibble")
   df <- tibble::tibble(cell = cells)
-  df$children <- a5_cell_to_children(df$cell, resolution = 6, simplify = FALSE)
+  df$children <- a5_cell_to_children(df$cell, child_resolution = 6, simplify = FALSE)
   expect_identical(lengths(df$children), rep(4L, 3))
   # Long form: parent repeated per child alongside the flat children.
   long <- vctrs::new_data_frame(list(

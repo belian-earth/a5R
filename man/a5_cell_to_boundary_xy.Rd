@@ -4,14 +4,14 @@
 \alias{a5_cell_to_boundary_xy}
 \title{Get cell boundary vertices as flat coordinate vectors}
 \usage{
-a5_cell_to_boundary_xy(cell, closed = FALSE, segments = NULL)
+a5_cell_to_boundary_xy(cell, closed_ring = FALSE, segments = NULL, closed)
 }
 \arguments{
 \item{cell}{An \link{a5_cell} vector.}
 
-\item{closed}{Logical scalar; if \code{TRUE} each ring repeats its first vertex
-at the end. Defaults to \code{FALSE}, unlike \code{\link[=a5_cell_to_boundary]{a5_cell_to_boundary()}}, since
-polygon drawing closes rings itself.}
+\item{closed_ring}{Logical scalar; if \code{TRUE} each ring repeats its first
+vertex at the end. Defaults to \code{FALSE}, unlike \code{\link[=a5_cell_to_boundary]{a5_cell_to_boundary()}},
+since polygon drawing closes rings itself.}
 
 \item{segments}{Integer scalar or \code{NULL}. Number of segments per cell
 edge. A5 cell edges are slightly curved on the sphere: a single segment
@@ -21,6 +21,9 @@ error falls with the square of the number of segments. \code{NULL} uses the
 A5 default of \code{max(1, 2^(6 - resolution))}, so at resolution 6 and finer
 each edge is a single segment. Pass a larger value when the polygons are
 used for spatial tests rather than display.}
+
+\item{closed}{Deprecated: renamed \code{closed_ring}, as in the other A5
+libraries.}
 }
 \value{
 A list with three elements:

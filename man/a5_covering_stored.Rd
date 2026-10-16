@@ -36,7 +36,7 @@ stored <- a5_covering_stored(disk)
 a5_get_resolution(stored)
 
 # one id range per stored cell, at the covering's resolution
-a5_cell_children_range(stored, resolution = a5_covering_resolution(disk))
+a5_cell_children_range(stored, child_resolution = a5_covering_resolution(disk))
 }
 \seealso{
 \code{\link[=a5_uncompact]{a5_uncompact()}} for the cells at the covering's resolution,

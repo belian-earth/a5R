@@ -34,6 +34,12 @@
 * `a5_grid_disk()` loses its `vertex` argument. Use the new
   `a5_grid_disk_vertex()`, which matches `grid_disk_vertex()` in the other
   A5 libraries, for vertex-sharing neighbours.
+* Arguments take the names used by the a5 crate and a5-js: `resolution`
+  becomes `parent_resolution` in `a5_cell_to_parent()` and
+  `child_resolution` in `a5_cell_to_children()`, and `closed` becomes
+  `closed_ring` in `a5_cell_to_boundary()` and `a5_cell_to_boundary_xy()`.
+  The old names still work but warn. `a5_cell_child()` and
+  `a5_cell_children_range()` also take `child_resolution`.
 * `a5_cell_to_lonlat()`, `a5_cell_to_boundary()`,
   `a5_cell_to_boundary_xy()` and `a5_cell_to_supercell()` error on an id
   that is not an A5 cell, as the a5 crate and a5R's other functions do.
