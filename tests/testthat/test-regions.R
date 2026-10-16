@@ -812,3 +812,30 @@ test_that("containment accepts center as well as centre", {
     a5_polygon_to_cells(poly, 8, containment = "centre")
   )
 })
+
+test_that("a ring that crosses itself is an error, not a flood", {
+  bow <- "POLYGON ((8.30 47.40, 8.32 47.42, 8.32 47.40, 8.30 47.42, 8.30 47.40))"
+  ok <- "POLYGON ((8.30 47.40, 8.32 47.40, 8.32 47.42, 8.30 47.42, 8.30 47.40))"
+  for (containment in c("centre", "overlapping")) {
+    expect_error(
+      a5_polygon_to_cells(wk::wkt(bow), 14, containment = containment),
+      "crosses itself", class = "a5R_error_geometry"
+    )
+  }
+  # the message names the feature
+  expect_error(a5_polygon_to_cells(wk::wkt(c(ok, ok, bow)), 10), "Feature 3")
+  # a crossing hole is caught too
+  holed <- "POLYGON ((8 47, 9 47, 9 48, 8 48, 8 47), (8.30 47.40, 8.32 47.42, 8.32 47.40, 8.30 47.42, 8.30 47.40))"
+  expect_error(a5_polygon_to_cells(wk::wkt(holed), 10), class = "a5R_error_geometry")
+  # touching and simple rings pass
+  expect_no_error(a5_polygon_to_cells(wk::wkt(ok), 10))
+  touch <- "POLYGON ((0 0, 2 0, 2 2, 1 1, 0 2, 0 0))"
+  expect_no_error(a5_polygon_to_cells(wk::wkt(touch), 8))
+  with(a5_threads(2), {
+    expect_error(a5_polygon_to_cells(wk::wkt(c(ok, bow)), 10), "Feature 2")
+  })
+  # a union of two pentagons from DuckDB, valid for s2, with a zero-width
+  # spike whose return vertex differs from its start in the last bits
+  spike <- wk::wkt(readLines(test_path("fixtures", "spike-ring.wkt")))
+  expect_no_error(a5_polygon_to_cells(spike, 10))
+})

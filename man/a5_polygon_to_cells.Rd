@@ -81,11 +81,13 @@ its west and east edges on their meridians. Any other box spanning 180
 degrees of longitude or more is an error, because its top and bottom
 edges would run the short way round the globe.
 
-Rings must not cross themselves. A self-intersecting ring, such as a bow
-tie, gives an undefined result that can include cells thousands of
-kilometres outside the polygon. Because edges are great circles, a ring
-that is valid in longitude and latitude can still cross itself on the
-sphere; \code{s2::s2_is_valid()} checks rings with the same edge model.
+Rings must not cross themselves: a ring with two edges that cross, such as
+a bow tie, is an error of class \code{a5R_error_geometry}. Repair such rings
+first, for example with \code{sf::st_make_valid()}. Because edges are great
+circles, a ring that is valid in longitude and latitude can still cross
+itself on the sphere; \code{s2::s2_is_valid()} checks rings with the same edge
+model. Rings that only touch themselves, and holes that cross the outer
+ring, are not checked.
 
 Where no A5 cell centroids at the specified \code{resolution} fall within
 the geometry, its covering is empty.

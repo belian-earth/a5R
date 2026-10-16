@@ -89,8 +89,9 @@
   `a5_threads(n)` returns the previous count as an `a5_threads` object to
   make this work.
 * New `a5_to_arrow_table()` and `a5_from_arrow_table()` convert data frames
-  with cell and covering columns to and from Arrow tables, tagging the
-  table with the index version and refusing tables from another index.
+  with cell and covering columns to and from Arrow tables, recording the
+  index version under the schema metadata key `a5_index` and refusing
+  tables from another index.
 * New `a5_migrate()` converts ids from a5R before 1.0 to the current index.
 * New `as_a5_covering()` builds coverings from cells, cell lists or raw
   64-bit values written by other A5 libraries, sorting and compacting them;
@@ -160,8 +161,9 @@
   null coverings read back from Arrow stay `NA` instead of becoming empty.
 * `a5_polygon_to_cells()` and `a5_line_string_to_cells()` error on `sf` and
   `terra` input in a projected CRS, and on coordinates outside the
-  longitude/latitude range. The documentation now warns that
-  self-intersecting rings give undefined results.
+  longitude/latitude range. A ring that crosses itself, such as a bow tie,
+  is an error: the a5 crate filled it inconsistently, flooding whole
+  quintants and running out of memory at fine resolutions.
 * `a5_grid_disk()` rejects a negative or `NA` `k`, and
   `a5_spherical_cap()` a negative or non-finite `radius`.
 * `a5_uncompact()`'s size guard counts the 5 children of a resolution-0

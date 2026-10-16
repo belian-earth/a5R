@@ -469,4 +469,12 @@ a5_covering_from_arrow_rs <- function(holder) .Call(wrap__a5_covering_from_arrow
 #' @keywords internal
 a5_bbox_rs <- function(lon, lat, offsets, part_id, is_outer, part_feature, n_features) .Call(wrap__a5_bbox_rs, lon, lat, offsets, part_id, is_outer, part_feature, n_features)
 
+#' The first ring that crosses itself, 1-based, or 0 when none does.
+#'
+#' @param lon,lat Flat coordinate vectors.
+#' @param offsets Cumulative ring offsets (length `n_rings + 1`).
+#' @noRd
+#' @keywords internal
+a5_ring_crossing_rs <- function(lon, lat, offsets) .Call(wrap__a5_ring_crossing_rs, lon, lat, offsets)
+
 

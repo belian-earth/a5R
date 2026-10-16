@@ -151,7 +151,7 @@ test_that("data frames round-trip through Arrow tables and Parquet", {
   df <- data.frame(cell = cells, value = c(1.5, 2.5, NA), name = c("a", "b", "c"))
   df$disk <- a5_grid_disk(cells, k = 1)
   tbl <- a5_to_arrow_table(df)
-  expect_identical(tbl$metadata[["a5:index_version"]], a5_info()$index)
+  expect_identical(tbl$metadata[["a5_index"]], a5_info()$index)
   expect_identical(tbl$schema$cell$type$ToString(), "uint64")
   back <- a5_from_arrow_table(tbl)
   expect_identical(back$cell, df$cell)
@@ -174,10 +174,10 @@ test_that("data frames round-trip through Arrow tables and Parquet", {
 test_that("a table tagged with another index version is refused", {
   skip_if_not_installed("arrow")
   tbl <- a5_to_arrow_table(data.frame(cell = a5_lonlat_to_cell(0, 0, 5)))
-  tbl$metadata[["a5:index_version"]] <- "0"
+  tbl$metadata[["a5_index"]] <- "0"
   expect_error(a5_from_arrow_table(tbl), class = "a5R_error_cell")
   # untagged tables are read as they are
-  tbl$metadata[["a5:index_version"]] <- NULL
+  tbl$metadata[["a5_index"]] <- NULL
   expect_true(is_a5_cell(a5_from_arrow_table(tbl)$cell))
 })
 
