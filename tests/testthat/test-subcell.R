@@ -15,7 +15,7 @@ random_cells <- function(n, resolution, seed) {
 
 # Subcells as cells, in ascending id order.
 subcells <- function(cell, resolution = NULL) {
-  vctrs::vec_sort(a5_uncompact(a5_cell_to_subcell(cell, resolution)))
+  vctrs::vec_sort(a5_uncompact(a5_cell_to_subcells(cell, resolution)))
 }
 
 test_that("supercell matches the lon/lat round trip", {
@@ -94,7 +94,7 @@ test_that("subcells of a patch partition the patch's fine cells", {
 
 test_that("subcell counts average 4^d", {
   coarse <- random_cells(200, 10, seed = 3)
-  sub <- a5_cell_to_subcell(coarse, resolution = 13)
+  sub <- a5_cell_to_subcells(coarse, resolution = 13)
   expect_s3_class(sub, "a5_covering")
   expect_length(sub, 200L)
   expect_equal(mean(lengths(a5_uncompact(sub, simplify = FALSE))), 64, tolerance = 0.05)
@@ -105,16 +105,16 @@ test_that("subcell counts average 4^d", {
 
 test_that("subcell is vectorised element-wise", {
   coarse <- random_cells(5, 9, seed = 4)
-  sub <- a5_cell_to_subcell(coarse, resolution = 11)
+  sub <- a5_cell_to_subcells(coarse, resolution = 11)
   for (i in seq_along(coarse)) {
-    expect_identical(sub[i], a5_cell_to_subcell(coarse[i], resolution = 11))
+    expect_identical(sub[i], a5_cell_to_subcells(coarse[i], resolution = 11))
   }
 })
 
 test_that("supercell and subcell default to one resolution step", {
   cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
   expect_identical(a5_cell_to_supercell(cell), a5_cell_to_supercell(cell, 9))
-  expect_identical(a5_cell_to_subcell(cell), a5_cell_to_subcell(cell, 11))
+  expect_identical(a5_cell_to_subcells(cell), a5_cell_to_subcells(cell, 11))
 })
 
 test_that("supercell and subcell handle equal, invalid and NA resolutions", {
@@ -123,12 +123,12 @@ test_that("supercell and subcell handle equal, invalid and NA resolutions", {
   expect_identical(subcells(cell, 10), cell)
   expect_true(is.na(a5_cell_to_supercell(cell, 12)))
   expect_true(is.na(a5_cell_to_supercell(a5_get_res0_cells()[1])))
-  expect_error(a5_cell_to_subcell(cell, 8), "equal to or greater")
-  expect_error(a5_cell_to_subcell(cell, 31), "between 0 and 30")
+  expect_error(a5_cell_to_subcells(cell, 8), "equal to or greater")
+  expect_error(a5_cell_to_subcells(cell, 31), "between 0 and 30")
 
   x <- a5_cell(c(format(cell), NA))
   expect_true(is.na(a5_cell_to_supercell(x, 5)[2]))
-  expect_identical(is.na(a5_cell_to_subcell(x, 11)), c(FALSE, TRUE))
+  expect_identical(is.na(a5_cell_to_subcells(x, 11)), c(FALSE, TRUE))
 })
 
 test_that("the world cell's subcells are all cells", {

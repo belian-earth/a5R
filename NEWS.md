@@ -174,9 +174,9 @@
 * `a5_polygon_to_cells()` merges a feature's parts with the upstream
   covering union, without expanding each part to full resolution first.
 
-* New `a5_cell_to_supercell()` and `a5_cell_to_subcell()` move between
+* New `a5_cell_to_supercell()` and `a5_cell_to_subcells()` move between
   resolutions by cell centre rather than by index, wrapping the upstream
-  `cell_to_supercell()` and `cell_to_subcell()`. The A5 index hierarchy is
+  `cell_to_supercell()` and `cell_to_subcells()`. The A5 index hierarchy is
   not spatially nested: for about half of cells one resolution apart, and
   about 35% at four or more apart, the index parent is not the coarse cell
   containing the fine cell's centre. Supercells and subcells form an exact

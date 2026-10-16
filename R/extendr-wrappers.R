@@ -218,7 +218,7 @@ a5_covering_to_supercells_rs <- function(x, resolution) .Call(wrap__a5_covering_
 #' @return A list of coverings, one per cell (NULL for an NA cell).
 #' @noRd
 #' @keywords internal
-a5_cell_to_subcell_rs <- function(cells, resolution) .Call(wrap__a5_cell_to_subcell_rs, cells, resolution)
+a5_cell_to_subcells_rs <- function(cells, resolution) .Call(wrap__a5_cell_to_subcells_rs, cells, resolution)
 
 #' The i-th child of each cell at a resolution, without building the list.
 #'

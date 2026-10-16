@@ -101,7 +101,7 @@ hierarchy, traversal, and geometry-to-cell conversion.
 - **Traversal** — `a5_grid_disk()` and `a5_spherical_cap()` select
   neighbours by hop count or great-circle distance.
 - **Spatial hierarchy** — `a5_cell_to_supercell()` and
-  `a5_cell_to_subcell()` move between resolutions by location, so
+  `a5_cell_to_subcells()` move between resolutions by location, so
   aggregation counts each fine cell inside the coarse cell it lies in.
 - **Multi-threading** — opt-in parallel processing via rayon for
   vectorised operations. See `vignette("multithreading")`.

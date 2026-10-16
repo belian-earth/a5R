@@ -176,7 +176,7 @@ a5_cell_children_range <- function(cell, resolution) {
 #' Supercells and subcells: parents and children by location
 #'
 #' `a5_cell_to_supercell()` returns, for each cell, the cell at a coarser
-#' resolution that contains its centre. `a5_cell_to_subcell()` returns, for
+#' resolution that contains its centre. `a5_cell_to_subcells()` returns, for
 #' each cell, the cells at a finer resolution whose centres lie inside it, as
 #' an [a5_covering]. These are the location-based counterparts of
 #' [a5_cell_to_parent()] and [a5_cell_to_children()], which follow the index
@@ -208,14 +208,14 @@ a5_cell_children_range <- function(cell, resolution) {
 #' @param cell An [a5_cell] vector.
 #' @param resolution Integer scalar target resolution, or `NULL` for one step:
 #'   one resolution coarser for `a5_cell_to_supercell()`, one finer for
-#'   `a5_cell_to_subcell()`. Subcells require a resolution at or finer than
+#'   `a5_cell_to_subcells()`. Subcells require a resolution at or finer than
 #'   every cell's own.
 #' @returns
 #' * `a5_cell_to_supercell()`: an [a5_cell] vector the same length as `cell`.
 #'   `NA` where `cell` is `NA`, where `resolution` is finer than the cell, or
 #'   for a resolution-0 cell with `resolution = NULL`. A cell at `resolution`
 #'   is returned unchanged.
-#' * `a5_cell_to_subcell()`: an [a5_covering] vector the same length as
+#' * `a5_cell_to_subcells()`: an [a5_covering] vector the same length as
 #'   `cell`. `NA` where `cell` is `NA`.
 #'
 #' @seealso [a5_hierarchy] for parents and children by index,
@@ -227,7 +227,7 @@ a5_cell_children_range <- function(cell, resolution) {
 #' a5_cell_to_parent(cell, resolution = 15) # may differ
 #'
 #' coarse <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
-#' sub <- a5_cell_to_subcell(coarse, resolution = 12)
+#' sub <- a5_cell_to_subcells(coarse, resolution = 12)
 #' sub
 #' kids <- a5_uncompact(sub)
 #' all(a5_cell_to_supercell(kids, resolution = 10) == coarse)
@@ -243,10 +243,10 @@ a5_cell_to_supercell <- function(cell, resolution = NULL) {
 
 #' @rdname a5_spatial_hierarchy
 #' @export
-a5_cell_to_subcell <- function(cell, resolution = NULL) {
+a5_cell_to_subcells <- function(cell, resolution = NULL) {
   cell <- as_a5_cell(cell)
   resolution <- check_optional_resolution(resolution)
-  coverings_from_rs(a5_cell_to_subcell_rs(cell_data(cell), resolution))
+  coverings_from_rs(a5_cell_to_subcells_rs(cell_data(cell), resolution))
 }
 
 #' Supercells of a covering

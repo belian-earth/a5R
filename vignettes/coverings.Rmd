@@ -180,14 +180,14 @@ row_labels()
 
 The functions that start from a cell return one covering per centre cell:
 `a5_grid_disk()` takes every cell within `k` steps, `a5_spherical_cap()`
-every cell whose centre is within a distance, and `a5_cell_to_subcell()`
+every cell whose centre is within a distance, and `a5_cell_to_subcells()`
 the finer cells whose centres lie inside a coarser cell.
 
 ```{r around}
 disk <- a5_grid_disk(raleigh, k = 3)
 cap <- a5_spherical_cap(raleigh, radius = 8000)
 coarse <- a5_cell_to_parent(raleigh, resolution = 9)
-subcells <- a5_cell_to_subcell(coarse, resolution = 11)
+subcells <- a5_cell_to_subcells(coarse, resolution = 11)
 ```
 
 ```{r around-plot, echo = FALSE, fig.height = 4.4}
@@ -202,7 +202,7 @@ do.call(frame, c(ext(cap, ring), main = "a5_spherical_cap(8 km)"))
 fill(cells_of(cap), pal$a)
 lines(ring_xy, col = pal$ink, lwd = 1.2)
 fill(cells_of(raleigh), pal$ink)
-do.call(frame, c(ext(subcells, cells_of(coarse)), main = "a5_cell_to_subcell(res 9 to 11)"))
+do.call(frame, c(ext(subcells, cells_of(coarse)), main = "a5_cell_to_subcells(res 9 to 11)"))
 fill(cells_of(subcells), pal$a)
 outline(cells_of(coarse), lwd = 1.6)
 do.call(frame, c(ext(disk), main = sprintf("%d stored", length(stored_cells(disk)))))

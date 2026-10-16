@@ -18,7 +18,7 @@ bench_case("cellDistance scalar", a5_cell_distance(cell, a5_cell_to_parent(cell)
 if (exists("a5_union")) {
   disk <- a5_grid_disk(cell, k = 1L)
   bench_case("cellToSupercell scalar", a5_cell_to_supercell(cell, resolution = 10L))
-  bench_case("cellToSubcell scalar", a5_cell_to_subcell(cell))
+  bench_case("cellToSubcells scalar", a5_cell_to_subcells(cell))
   bench_case("uncompact scalar", a5_uncompact(disk))
   bench_case("union scalar", a5_union(disk, disk))
   bench_case("contains scalar", a5_contains(disk, cell))

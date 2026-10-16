@@ -48,7 +48,7 @@ conversion
 \item \code{\link[=a5_get_resolution]{a5_get_resolution()}} --- extract resolution from cell IDs
 \item \code{\link[=a5_cell_to_parent]{a5_cell_to_parent()}} --- navigate to coarser cells
 \item \code{\link[=a5_cell_to_children]{a5_cell_to_children()}} --- navigate to finer cells
-\item \code{\link[=a5_cell_to_supercell]{a5_cell_to_supercell()}} / \link[=a5_spatial_hierarchy]{a5_cell_to_subcell()}
+\item \code{\link[=a5_cell_to_supercell]{a5_cell_to_supercell()}} / \link[=a5_spatial_hierarchy]{a5_cell_to_subcells()}
 --- move between resolutions by location
 \item \code{\link[=a5_get_res0_cells]{a5_get_res0_cells()}} --- the 12 root cells
 }

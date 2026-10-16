@@ -173,12 +173,12 @@ fn a5_cell_to_supercell_rs(cells: List, resolution: Nullable<i32>) -> List {
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_cell_to_subcell_rs(cells: List, resolution: Nullable<i32>) -> List {
+fn a5_cell_to_subcells_rs(cells: List, resolution: Nullable<i32>) -> List {
     let target: Option<i32> = match resolution {
         Nullable::NotNull(v) => Some(v),
         Nullable::Null => None,
     };
-    cells_to_coverings(&cells, "cell_to_subcell", |id| {
+    cells_to_coverings(&cells, "cell_to_subcells", |id| {
         a5::cell_to_subcells(id, target.unwrap_or_else(|| a5::get_resolution(id) + 1))
     })
 }
@@ -373,7 +373,7 @@ extendr_module! {
     fn a5_cell_to_children_rs;
     fn a5_cell_to_supercell_rs;
     fn a5_covering_to_supercells_rs;
-    fn a5_cell_to_subcell_rs;
+    fn a5_cell_to_subcells_rs;
     fn a5_cell_child_rs;
     fn a5_cell_children_range_rs;
     fn a5_get_res0_cells_rs;

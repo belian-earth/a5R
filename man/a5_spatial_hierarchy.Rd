@@ -3,19 +3,19 @@
 \name{a5_spatial_hierarchy}
 \alias{a5_spatial_hierarchy}
 \alias{a5_cell_to_supercell}
-\alias{a5_cell_to_subcell}
+\alias{a5_cell_to_subcells}
 \title{Supercells and subcells: parents and children by location}
 \usage{
 a5_cell_to_supercell(cell, resolution = NULL)
 
-a5_cell_to_subcell(cell, resolution = NULL)
+a5_cell_to_subcells(cell, resolution = NULL)
 }
 \arguments{
 \item{cell}{An \link{a5_cell} vector.}
 
 \item{resolution}{Integer scalar target resolution, or \code{NULL} for one step:
 one resolution coarser for \code{a5_cell_to_supercell()}, one finer for
-\code{a5_cell_to_subcell()}. Subcells require a resolution at or finer than
+\code{a5_cell_to_subcells()}. Subcells require a resolution at or finer than
 every cell's own.}
 }
 \value{
@@ -24,13 +24,13 @@ every cell's own.}
 \code{NA} where \code{cell} is \code{NA}, where \code{resolution} is finer than the cell, or
 for a resolution-0 cell with \code{resolution = NULL}. A cell at \code{resolution}
 is returned unchanged.
-\item \code{a5_cell_to_subcell()}: an \link{a5_covering} vector the same length as
+\item \code{a5_cell_to_subcells()}: an \link{a5_covering} vector the same length as
 \code{cell}. \code{NA} where \code{cell} is \code{NA}.
 }
 }
 \description{
 \code{a5_cell_to_supercell()} returns, for each cell, the cell at a coarser
-resolution that contains its centre. \code{a5_cell_to_subcell()} returns, for
+resolution that contains its centre. \code{a5_cell_to_subcells()} returns, for
 each cell, the cells at a finer resolution whose centres lie inside it, as
 an \link{a5_covering}. These are the location-based counterparts of
 \code{\link[=a5_cell_to_parent]{a5_cell_to_parent()}} and \code{\link[=a5_cell_to_children]{a5_cell_to_children()}}, which follow the index
@@ -70,7 +70,7 @@ a5_cell_to_supercell(cell, resolution = 15)
 a5_cell_to_parent(cell, resolution = 15) # may differ
 
 coarse <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 10)
-sub <- a5_cell_to_subcell(coarse, resolution = 12)
+sub <- a5_cell_to_subcells(coarse, resolution = 12)
 sub
 kids <- a5_uncompact(sub)
 all(a5_cell_to_supercell(kids, resolution = 10) == coarse)
