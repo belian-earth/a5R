@@ -291,7 +291,8 @@ fn a5_get_res0_cells_rs() -> List {
 /// stored cell form a contiguous stretch of curve, and the supercells of
 /// adjacent fine cells are the same or neighbours, so the search reaches every
 /// supercell. Its cost grows with the number of stored and coarse cells, not
-/// with the number of fine cells.
+/// with the number of fine cells. A covering of few fine cells skips the
+/// search and takes each fine cell's supercell.
 fn covering_supercells(values: &[u64], resolution: i32) -> std::result::Result<Vec<u64>, String> {
     let r = a5::covering_resolution(values);
     let stored: Vec<u64> = values.iter().copied().filter(|&c| !a5::is_compaction_marker(c)).collect();
@@ -305,6 +306,32 @@ fn covering_supercells(values: &[u64], resolution: i32) -> std::result::Result<V
     }
     if resolution == r {
         return cells_to_covering(stored, Some(resolution));
+    }
+
+    // A covering of few fine cells: take their supercells directly. Each
+    // candidate the search below tests costs about as much as 5 * 2^gap
+    // supercell lookups (its subcells trace the coarse cell's boundary at
+    // resolution r), and the search tests at least a dozen candidates.
+    let gap = (r - resolution).min(40) as u32;
+    let budget = (32u64 << gap).max(256);
+    let mut fine = Vec::with_capacity(stored.len());
+    let mut total: u64 = 0;
+    for &c in &stored {
+        let d = Descendants::new(c, r)?;
+        total = total.saturating_add(d.count());
+        if total > budget {
+            break;
+        }
+        fine.push(d);
+    }
+    if total <= budget {
+        let mut found: HashSet<u64> = HashSet::new();
+        for d in &fine {
+            for k in 0..d.count() {
+                found.insert(a5::cell_to_supercell(d.nth(k), resolution)?);
+            }
+        }
+        return cells_to_covering(found.into_iter().collect(), Some(resolution));
     }
 
     // The covering's cells as sorted, disjoint ranges of curve slots
