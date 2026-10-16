@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">a5R</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9006</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.9.9007</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -84,7 +84,7 @@
 <li>New <code><a href="../reference/a5_info.html">a5_info()</a></code> gives the a5R, bundled a5 crate, A5 index and C API versions and the thread count, as a list that prints as a summary. The same summary is shown on one line when a5R is attached. Record its <code>index</code> with stored cells.</li>
 <li>a5R exports a C API (<code>a5R.h</code>, see <code><a href="../reference/a5_c_api.html">?a5_c_api</a></code>) for packages that convert between 64-bit ids and <code>a5_cell</code> vectors in compiled code, so they need not rely on how <code>a5_cell</code> stores its data.</li>
 <li>New <code><a href="../reference/a5_bbox.html">a5_bbox()</a></code> gives the longitude/latitude box of polygons as A5 sees them, with great-circle edges that can bow beyond the vertices’ latitudes.</li>
-<li>New <code><a href="../reference/a5_covering_to_supercells.html">a5_covering_to_supercells()</a></code> gives the coarse cells containing the centres of a covering’s cells without building them.</li>
+<li>New <code><a href="../reference/a5_covering_to_supercells.html">a5_covering_to_supercells()</a></code> gives the coarse cells containing the centres of a covering’s cells without building them. A covering of few fine cells takes each one’s supercell directly, so converting many small coverings, such as one per feature, costs microseconds each.</li>
 <li>
 <code>with(a5_threads(n), expr)</code> runs <code>expr</code> on <code>n</code> threads and restores the previous count afterwards, as <code>with(mirai::daemons(n), expr)</code> does. <code>a5_threads(n)</code> returns the previous count as an <code>a5_threads</code> object to make this work.</li>
 <li>New <code><a href="../reference/a5_to_arrow_table.html">a5_to_arrow_table()</a></code> and <code><a href="../reference/a5_to_arrow_table.html">a5_from_arrow_table()</a></code> convert data frames with cell and covering columns to and from Arrow tables, tagging the table with the index version and refusing tables from another index.</li>

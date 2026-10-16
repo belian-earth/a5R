@@ -19,7 +19,7 @@ on an Arrow dataset or query.
 ``` r
 
 library(a5R)
-#> a5R 0.9.9.9006 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread
+#> a5R 0.9.9.9007 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread
 ```
 
 ``` r
