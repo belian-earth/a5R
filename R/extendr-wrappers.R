@@ -139,7 +139,7 @@ a5_get_num_children_rs <- function(parent_resolution, child_resolution) .Call(wr
 #' @keywords internal
 a5_is_valid_cell_rs <- function(cells) .Call(wrap__a5_is_valid_cell_rs, cells)
 
-#' Validate hex cell ID strings: 16 hex digits encoding an A5 cell.
+#' Validate hex cell ID strings, read as `a5_cell()` reads them.
 #'
 #' @param cell Character vector of hex strings to validate.
 #' @return Logical vector: NA where the string is NA.
@@ -247,15 +247,23 @@ a5_cell_children_range_rs <- function(cells, child_resolution) .Call(wrap__a5_ce
 #' @keywords internal
 a5_get_res0_cells_rs <- function() .Call(wrap__a5_get_res0_cells_rs)
 
-#' Get all cells within k hops of each centre cell.
+#' Get all cells within k hops of each centre cell, through shared edges.
 #'
 #' @param cells List with b1..b8 raw vectors.
 #' @param k Number of hops.
-#' @param vertex If TRUE, include vertex-sharing (8-connected) neighbours.
 #' @return A list of coverings, one per cell (NULL for an NA cell).
 #' @noRd
 #' @keywords internal
-a5_grid_disk_rs <- function(cells, k, vertex) .Call(wrap__a5_grid_disk_rs, cells, k, vertex)
+a5_grid_disk_rs <- function(cells, k) .Call(wrap__a5_grid_disk_rs, cells, k)
+
+#' Get all cells within k hops of each centre cell, through shared vertices.
+#'
+#' @param cells List with b1..b8 raw vectors.
+#' @param k Number of hops.
+#' @return A list of coverings, one per cell (NULL for an NA cell).
+#' @noRd
+#' @keywords internal
+a5_grid_disk_vertex_rs <- function(cells, k) .Call(wrap__a5_grid_disk_vertex_rs, cells, k)
 
 #' Get all cells within a great-circle radius of each centre cell.
 #'
@@ -300,7 +308,7 @@ a5_polygon_to_cells_rs <- function(lon, lat, offsets, part_id, is_outer, part_fe
 #'   a5_cell objects, one per feature.
 #' @noRd
 #' @keywords internal
-a5_linestring_to_cells_rs <- function(lon, lat, offsets, line_feature, n_features, resolution, simplify) .Call(wrap__a5_linestring_to_cells_rs, lon, lat, offsets, line_feature, n_features, resolution, simplify)
+a5_line_string_to_cells_rs <- function(lon, lat, offsets, line_feature, n_features, resolution, simplify) .Call(wrap__a5_line_string_to_cells_rs, lon, lat, offsets, line_feature, n_features, resolution, simplify)
 
 #' Element-wise union, intersection or difference of two covering lists.
 #'

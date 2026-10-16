@@ -83,7 +83,7 @@ coverings
 
 \itemize{
 \item \code{\link[=a5_polygon_to_cells]{a5_polygon_to_cells()}} --- cells inside (or overlapping) a polygon
-\item \code{\link[=a5_linestring_to_cells]{a5_linestring_to_cells()}} --- cells crossed by a great-circle polyline
+\item \code{\link[=a5_line_string_to_cells]{a5_line_string_to_cells()}} --- cells crossed by a great-circle polyline
 }
 }
 

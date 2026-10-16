@@ -1,7 +1,7 @@
 use extendr_api::prelude::*;
 use rayon::prelude::*;
 
-use crate::cell_raw::{cells_from_fn, par_chunk, CellSlices, PAR_MIN};
+use crate::cell_raw::{cells_from_fn, par_chunk, CellSlices, FirstError, PAR_MIN};
 use crate::threading::{get_num_threads, maybe_par};
 
 /// Convert longitude/latitude coordinates to A5 cell indices.
@@ -32,11 +32,12 @@ fn a5_lonlat_to_cell_rs(lon: Doubles, lat: Doubles, resolution: Integers) -> Lis
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_cell_to_lonlat_rs(cells: List, normalise: bool) -> List {
+fn a5_cell_to_lonlat_rs(cells: List, normalise: bool) -> Robj {
     let cs = CellSlices::from_list(&cells);
     let n = cs.len;
+    let err = FirstError::new();
     let one = |i: usize| -> (Rfloat, Rfloat) {
-        match cs.get(i).and_then(|id| a5::cell_to_lonlat(id).ok()) {
+        match cs.get(i).and_then(|id| err.ok(a5::cell_to_lonlat(id))) {
             Some(ll) => {
                 let lon = if normalise {
                     ((ll.longitude() + 180.0) % 360.0 + 360.0) % 360.0 - 180.0
@@ -70,7 +71,10 @@ fn a5_cell_to_lonlat_rs(cells: List, normalise: bool) -> List {
             });
         }
     }
-    list!(lon = lon_out, lat = lat_out)
+    if let Some(e) = err.take("cell_to_lonlat") {
+        return e;
+    }
+    list!(lon = lon_out, lat = lat_out).into()
 }
 
 extendr_module! {

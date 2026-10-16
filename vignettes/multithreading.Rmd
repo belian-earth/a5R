@@ -72,7 +72,7 @@ independently:
 |---|---|---|
 | `a5_cell_to_boundary()` | Heavy (boundary + WKT/WKB) | High |
 | `a5_polygon_to_cells()` | Heavy (per-part fill, hole subtraction) | High |
-| `a5_linestring_to_cells()` | Heavy (per-feature tracing) | High |
+| `a5_line_string_to_cells()` | Heavy (per-feature tracing) | High |
 | `a5_spherical_cap()` | Heavy (per-cell search) | High |
 | `a5_grid_disk()` | Heavy (per-cell traversal) | High |
 | `a5_lonlat_to_cell()` | Moderate (projection) | High |

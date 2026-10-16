@@ -81,3 +81,11 @@ test_that("a5_cell_to_parent rejects a finer resolution", {
   expect_identical(a5_get_resolution(a5_cell_to_parent(cells, 5)), c(5L, 5L))
   expect_true(is.na(a5_cell_to_parent(a5_cell(NA), 6)))
 })
+
+test_that("a5_cell_to_parent at resolution -1 gives the world cell, as in the crate", {
+  world <- a5_cell("0000000000000000")
+  cells <- a5_lonlat_to_cell(c(0, 10), c(0, 10), c(0, 8))
+  expect_identical(a5_cell_to_parent(cells, -1), c(world, world))
+  expect_identical(a5_cell_to_parent(cells[1], -1), a5_cell_to_parent(cells[1]))
+  expect_error(a5_cell_to_parent(cells, -2), "between -1 and 30")
+})

@@ -39,10 +39,10 @@ a5_cell_to_boundary <- function(
   segments <- check_segments(segments)
   cd <- cell_data(cell)
   if (format == "wkb") {
-    raw_list <- a5_cell_to_boundary_wkb_rs(cd, closed, segments)
+    raw_list <- check_rs(a5_cell_to_boundary_wkb_rs(cd, closed, segments))
     wk::new_wk_wkb(raw_list, crs = wk::wk_crs_longlat())
   } else {
-    wkt <- a5_cell_to_boundary_rs(cd, closed, segments)
+    wkt <- check_rs(a5_cell_to_boundary_rs(cd, closed, segments))
     wk::new_wk_wkt(wkt, crs = wk::wk_crs_longlat())
   }
 }
@@ -89,7 +89,7 @@ a5_cell_to_boundary_xy <- function(cell, closed = FALSE, segments = NULL) {
   closed <- vctrs::vec_cast(closed, logical())
   check_flag(closed)
   segments <- check_segments(segments)
-  a5_cell_to_boundary_xy_rs(cell_data(cell), closed, segments)
+  check_rs(a5_cell_to_boundary_xy_rs(cell_data(cell), closed, segments))
 }
 
 #' Validate `segments`: `NULL` or a single integer of at least 1

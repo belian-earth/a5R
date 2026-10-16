@@ -30,15 +30,15 @@ origin <- a5_lonlat_to_cell(35, 55, resolution = 14)
 
 a5_spherical_cap(origin, radius = 5000)
 
-disk <- a5_uncompact(a5_grid_disk(origin, k = 20, vertex = FALSE))
-disk_vertex <- a5_uncompact(a5_grid_disk(origin, k = 20, vertex = TRUE))
+disk <- a5_uncompact(a5_grid_disk(origin, k = 20))
+disk_vertex <- a5_uncompact(a5_grid_disk_vertex(origin, k = 20))
 cap <- a5_uncompact(a5_spherical_cap(origin, radius = 5000))
 ```
 
-`a5_grid_disk()` selects cells by hop count rather than metric distance.
-With `vertex = FALSE` (default) only edge-sharing neighbours are traversed
-(4-connected), producing a diamond shape. Setting `vertex = TRUE` includes
-corner-sharing neighbours too (8-connected), giving a squarer footprint.
+`a5_grid_disk()` selects cells by hop count rather than metric distance,
+stepping only between edge-sharing neighbours, which gives a diamond shape.
+`a5_grid_disk_vertex()` also steps between corner-sharing neighbours,
+giving a squarer footprint.
 
 ## Distance heatmap
 

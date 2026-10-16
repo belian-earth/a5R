@@ -128,8 +128,10 @@ check_resolution <- function(resolution,
 }
 
 #' Cast and validate a scalar, non-missing resolution
+#'
+#' `min = -1L` admits the world cell's resolution.
 #' @noRd
-check_scalar_resolution <- function(resolution,
+check_scalar_resolution <- function(resolution, min = 0L,
                                     arg = rlang::caller_arg(resolution),
                                     call = rlang::caller_env()) {
   # Fast path for the common case, a bare whole number in range: base R
@@ -137,7 +139,7 @@ check_scalar_resolution <- function(resolution,
   if (
     is.numeric(resolution) && length(resolution) == 1L &&
       is.null(attributes(resolution)) && !is.na(resolution) &&
-      resolution >= 0 && resolution <= 30 && resolution == trunc(resolution)
+      resolution >= min && resolution <= 30 && resolution == trunc(resolution)
   ) {
     return(as.integer(resolution))
   }
@@ -146,8 +148,8 @@ check_scalar_resolution <- function(resolution,
   if (is.na(res)) {
     a5_abort("resolution", "{.arg {arg}} must not be `NA`.", call = call)
   }
-  if (res < 0L || res > 30L) {
-    a5_abort("resolution", "{.arg {arg}} must be between 0 and 30, not {res}.", call = call)
+  if (res < min || res > 30L) {
+    a5_abort("resolution", "{.arg {arg}} must be between {min} and 30, not {res}.", call = call)
   }
   res
 }
@@ -163,4 +165,17 @@ from_caller <- function(expr, call, type = NULL) {
     msg <- conditionMessage(e)
     a5_abort(type, "{msg}", call = call)
   })
+}
+
+#' Raise an error a Rust call returned as an `a5R_rs_error` object
+#'
+#' Rust functions that map over cells return such an object, rather than
+#' raising, when the a5 crate rejects a cell (see `FirstError` in
+#' `cell_raw.rs`). Checking its class costs far less than a `tryCatch()`.
+#' @noRd
+check_rs <- function(out, call = rlang::caller_env()) {
+  if (inherits(out, "a5R_rs_error")) {
+    a5_abort("cell", "{out$message}", call = call)
+  }
+  out
 }

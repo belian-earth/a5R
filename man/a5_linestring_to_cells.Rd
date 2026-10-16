@@ -2,7 +2,7 @@
 % Please edit documentation in R/regions.R
 \name{a5_linestring_to_cells}
 \alias{a5_linestring_to_cells}
-\title{Cells traced by a great-circle linestring}
+\title{Deprecated: use \code{\link[=a5_line_string_to_cells]{a5_line_string_to_cells()}}}
 \usage{
 a5_linestring_to_cells(x, resolution, simplify = TRUE)
 }
@@ -25,43 +25,11 @@ order; a cell crossed by several features appears once per feature. If
 a list column.}
 }
 \value{
-An \link{a5_cell} vector at \code{resolution}, or an \link{a5_cell_list} when
-\code{simplify = FALSE}. A missing or empty geometry contributes no cells (an
-empty element in the list form).
+As \code{\link[=a5_line_string_to_cells]{a5_line_string_to_cells()}}.
 }
 \description{
-Returns, for each linestring feature, the A5 cells at \code{resolution} whose
-pentagons the great-circle path through its waypoints crosses. Each
-path's cells are uncompacted and in order along it, with duplicates
-removed first-seen; a \code{MULTILINESTRING} feature's parts are traced in
-order into one path.
+\code{a5_linestring_to_cells()} was renamed \code{\link[=a5_line_string_to_cells]{a5_line_string_to_cells()}} to
+match \code{line_string_to_cells()} in the other A5 libraries. The old name
+still works but warns.
 }
-\details{
-Consecutive waypoints are connected by great-circle arcs (not rhumb
-lines or planar segments), so antimeridian-crossing paths work
-transparently when written in unwrapped lon/lat.
-
-A path is an ordered sequence, so the result is a vector of cells rather
-than an \link{a5_covering}; use \code{\link[=as_a5_covering]{as_a5_covering()}} to treat the cells a path
-crosses as a set.
-
-Matrix and \code{data.frame} inputs are treated as a single linestring;
-for multi-feature data, pass an \code{sf}, \code{sfc}, wk, or \code{SpatVector}
-geometry instead.
-}
-\examples{
-line <- wk::wkt("LINESTRING (2.35 48.86, -0.13 51.51)")
-cells <- a5_linestring_to_cells(line, resolution = 6)
-cells
-
-# One path per feature
-lines <- wk::wkt(c(
-  "LINESTRING (2.35 48.86, -0.13 51.51)",
-  "LINESTRING (2.35 48.86, 4.83 45.76)"
-))
-paths <- a5_linestring_to_cells(lines, resolution = 6, simplify = FALSE)
-lengths(paths)
-}
-\seealso{
-\code{\link[=a5_polygon_to_cells]{a5_polygon_to_cells()}}, \code{\link[=a5_grid_disk]{a5_grid_disk()}}.
-}
+\keyword{internal}

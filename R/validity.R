@@ -30,7 +30,8 @@
 #' @returns A logical vector the length of `x`. `NA` where `x` is `NA`; for
 #'   an [a5_cell_list], `NA` where an element holds `NA` and no invalid cell;
 #'   for an [a5_covering], `NA` for a missing covering.
-#'   Hex strings that are not 16 hex digits are `FALSE`.
+#'   Hex strings are read as [a5_cell()] reads them, so ids of fewer than
+#'   16 digits and a `0x` prefix are accepted; anything else is `FALSE`.
 #'
 #' @export
 #' @examples

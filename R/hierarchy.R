@@ -36,7 +36,7 @@ a5_get_resolution <- function(cell) {
 #' @param resolution Integer scalar target resolution, or `NULL` for one step:
 #'   the immediate parent for `a5_cell_to_parent()`, the immediate children
 #'   for `a5_cell_to_children()`. For `a5_cell_to_parent()` it must not be
-#'   finer than any cell's resolution.
+#'   finer than any cell's resolution, and `-1` gives the world cell.
 #' @param simplify Logical scalar. If `TRUE` (default), return one flat
 #'   [a5_cell] vector with the children of every input concatenated in input
 #'   order; which child came from which parent is not recorded. If `FALSE`,
@@ -71,7 +71,7 @@ NULL
 a5_cell_to_parent <- function(cell, resolution = NULL) {
   cell <- as_a5_cell(cell)
   if (!is.null(resolution)) {
-    resolution <- check_scalar_resolution(resolution)
+    resolution <- check_scalar_resolution(resolution, min = -1L)
   }
   out <- a5_cell_to_parent_rs(cell_data(cell), resolution)
   if (is.integer(out)) {
@@ -238,7 +238,7 @@ NULL
 a5_cell_to_supercell <- function(cell, resolution = NULL) {
   cell <- as_a5_cell(cell)
   resolution <- check_optional_resolution(resolution)
-  cells_from_rs(a5_cell_to_supercell_rs(cell_data(cell), resolution))
+  cells_from_rs(check_rs(a5_cell_to_supercell_rs(cell_data(cell), resolution)))
 }
 
 #' @rdname a5_spatial_hierarchy

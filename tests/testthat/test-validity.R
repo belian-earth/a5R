@@ -7,14 +7,16 @@ test_that("a5_is_valid_cell checks the index encoding", {
     "f00a000000000040", # compaction marker for resolution 10
     "0000000000000040", # tag bit 6: no resolution
     "not_a_cell_value",
-    "abc",              # parses as hex, but not 16 digits
+    "12345678901234567", # 17 digits
+    "200000000000000",  # unpadded, as the crate's u64_to_hex writes it
+    "0x0200000000000000",
     NA
   )
-  expected <- c(TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, NA)
+  expected <- c(TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, NA)
   expect_identical(a5_is_valid_cell(hex), expected)
-  # a5_cell() accepts any 16-digit hex, so the same answer for a5_cell input
-  stored <- a5_cell(hex[nchar(hex) == 16 & !grepl("_", hex) | is.na(hex)])
-  expect_identical(a5_is_valid_cell(stored), c(TRUE, TRUE, FALSE, FALSE, FALSE, NA))
+  # hex is read as a5_cell() reads it, so the same answer for a5_cell input
+  parses <- -c(6, 7)
+  expect_identical(a5_is_valid_cell(a5_cell(hex[parses])), expected[parses])
 })
 
 test_that("every cell the package produces is valid", {

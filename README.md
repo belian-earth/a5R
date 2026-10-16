@@ -96,7 +96,7 @@ hierarchy, traversal, and geometry-to-cell conversion.
   measure (`a5_area()`) without expanding to millions of cells. See
   `vignette("coverings")`.
 - **Geometry indexing** — `a5_polygon_to_cells()` and
-  `a5_linestring_to_cells()` map polygons and great-circle lines to
+  `a5_line_string_to_cells()` map polygons and great-circle lines to
   cells.
 - **Traversal** — `a5_grid_disk()` and `a5_spherical_cap()` select
   neighbours by hop count or great-circle distance.

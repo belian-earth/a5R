@@ -46,7 +46,7 @@ test_that("subcell is complete and the exact inverse of supercell", {
         # every returned cell has this spatial parent
         expect_true(all(a5_cell_to_supercell(kids, res) == coarse[i]))
         # nothing is missing from a wide search area (k = 2 around the cell)
-        area <- a5_uncompact(a5_grid_disk(coarse[i], 2, vertex = TRUE), fine_res)
+        area <- a5_uncompact(a5_grid_disk_vertex(coarse[i], 2), fine_res)
         expected <- area[centre_cell(area, res) == coarse[i]]
         expect_identical(kids, vctrs::vec_sort(expected))
       }
@@ -64,7 +64,7 @@ test_that("subcell is exact at large gaps, fine resolutions and the poles", {
       kids_res <- unique(a5_get_resolution(kids))
       expect_length(kids_res, 1L)
       expect_true(kids_res == fine_res || (fine_res == 30L && kids_res == 29L))
-      area <- a5_uncompact(a5_grid_disk(coarse[i], 2, vertex = TRUE), kids_res)
+      area <- a5_uncompact(a5_grid_disk_vertex(coarse[i], 2), kids_res)
       expect_identical(kids, vctrs::vec_sort(area[centre_cell(area, res) == coarse[i]]))
     }
   }
@@ -83,11 +83,11 @@ test_that("subcell is exact at large gaps, fine resolutions and the poles", {
 
 test_that("subcells of a patch partition the patch's fine cells", {
   centre <- a5_lonlat_to_cell(-53.5, -19, resolution = 12)
-  patch <- a5_uncompact(a5_grid_disk(centre, 2, vertex = TRUE), 12)
+  patch <- a5_uncompact(a5_grid_disk_vertex(centre, 2), 12)
   kids <- subcells(patch, resolution = 14)
   expect_false(anyDuplicated(kids) > 0)
   # every fine cell whose centre falls in the patch is covered exactly once
-  area <- a5_uncompact(a5_grid_disk(centre, 3, vertex = TRUE), 14)
+  area <- a5_uncompact(a5_grid_disk_vertex(centre, 3), 14)
   inside <- area[vctrs::vec_in(centre_cell(area, 12), patch)]
   expect_identical(vctrs::vec_sort(kids), vctrs::vec_sort(inside))
 })

@@ -93,11 +93,11 @@ test_that("a5_polygon_to_cells handles a multi-polygon SpatVector", {
   expect_identical(cells_terra, cells_w)
 })
 
-test_that("a5_linestring_to_cells accepts a terra SpatVector", {
+test_that("a5_line_string_to_cells accepts a terra SpatVector", {
   skip_if_not_installed("terra")
   sv <- terra::vect("LINESTRING (2.35 48.86, -0.13 51.51)")
-  cells_terra <- a5_linestring_to_cells(sv, resolution = 5)
-  cells_w <- a5_linestring_to_cells(
+  cells_terra <- a5_line_string_to_cells(sv, resolution = 5)
+  cells_w <- a5_line_string_to_cells(
     wk::wkt("LINESTRING (2.35 48.86, -0.13 51.51)"),
     resolution = 5
   )
@@ -301,11 +301,11 @@ test_that("sf MULTIPOLYGON with a hole subtracts the hole", {
   expect_setequal(format(result_u), expected)
 })
 
-# -- a5_linestring_to_cells ----------------------------------------------------
+# -- a5_line_string_to_cells ----------------------------------------------------
 
-test_that("a5_linestring_to_cells returns ordered cells along the path", {
+test_that("a5_line_string_to_cells returns ordered cells along the path", {
   line <- wk::wkt("LINESTRING (2.35 48.86, -0.13 51.51)")
-  cells <- a5_linestring_to_cells(line, resolution = 5)
+  cells <- a5_line_string_to_cells(line, resolution = 5)
   expect_s3_class(cells, "a5_cell")
   expect_true(length(cells) >= 2)
   start <- a5_lonlat_to_cell(2.35, 48.86, resolution = 5)
@@ -315,12 +315,12 @@ test_that("a5_linestring_to_cells returns ordered cells along the path", {
   expect_equal(length(cells), length(unique(format(cells))))
 })
 
-test_that("a5_linestring_to_cells matrix and data.frame shortcuts match wk input", {
+test_that("a5_line_string_to_cells matrix and data.frame shortcuts match wk input", {
   pts <- rbind(c(2.35, 48.86), c(-0.13, 51.51))
-  c_w <- a5_linestring_to_cells(wk::wkt("LINESTRING (2.35 48.86, -0.13 51.51)"),
+  c_w <- a5_line_string_to_cells(wk::wkt("LINESTRING (2.35 48.86, -0.13 51.51)"),
                                 resolution = 5)
-  c_m <- a5_linestring_to_cells(pts, resolution = 5)
-  c_d <- a5_linestring_to_cells(data.frame(lon = pts[, 1], lat = pts[, 2]),
+  c_m <- a5_line_string_to_cells(pts, resolution = 5)
+  c_d <- a5_line_string_to_cells(data.frame(lon = pts[, 1], lat = pts[, 2]),
                                 resolution = 5)
   expect_identical(format(c_m), format(c_w))
   expect_identical(format(c_d), format(c_w))
@@ -331,7 +331,7 @@ test_that("MULTILINESTRING parts join into one deduplicated path", {
     "MULTILINESTRING ((2.35 48.86, -0.13 51.51),
                       (-0.13 51.51, 4.83 45.76))"
   )
-  cells <- a5_linestring_to_cells(ml, resolution = 5)
+  cells <- a5_line_string_to_cells(ml, resolution = 5)
   expect_s3_class(cells, "a5_cell")
   expect_equal(length(cells), length(unique(format(cells))))
   paris  <- a5_lonlat_to_cell(2.35, 48.86, resolution = 5)
@@ -341,9 +341,9 @@ test_that("MULTILINESTRING parts join into one deduplicated path", {
                   format(cells)))
 })
 
-test_that("a5_linestring_to_cells handles an antimeridian-crossing path", {
+test_that("a5_line_string_to_cells handles an antimeridian-crossing path", {
   line <- wk::wkt("LINESTRING (170 0, -170 0)")
-  cells <- a5_linestring_to_cells(line, resolution = 5)
+  cells <- a5_line_string_to_cells(line, resolution = 5)
   centres <- a5_cell_to_lonlat(cells)
   lons <- wk::wk_coords(centres)$x
   expect_true(any(lons > 160))
@@ -369,13 +369,13 @@ test_that("polygon/linestring results are identical with threads > 1", {
 
   a5_set_threads(1)
   p1 <- a5_polygon_to_cells(mp, resolution = 8)
-  l1 <- a5_linestring_to_cells(ml, resolution = 5)
-  f1 <- a5_linestring_to_cells(lines, resolution = 5, simplify = FALSE)
+  l1 <- a5_line_string_to_cells(ml, resolution = 5)
+  f1 <- a5_line_string_to_cells(lines, resolution = 5, simplify = FALSE)
 
   a5_set_threads(2)
   p2 <- a5_polygon_to_cells(mp, resolution = 8)
-  l2 <- a5_linestring_to_cells(ml, resolution = 5)
-  f2 <- a5_linestring_to_cells(lines, resolution = 5, simplify = FALSE)
+  l2 <- a5_line_string_to_cells(ml, resolution = 5)
+  f2 <- a5_line_string_to_cells(lines, resolution = 5, simplify = FALSE)
 
   expect_identical(p1, p2)
   expect_identical(l1, l2)
@@ -439,10 +439,17 @@ test_that("polygon data.frame input must have lon and lat columns", {
   )
 })
 
-test_that("polygon vertex count is enforced", {
-  expect_error(
-    a5_polygon_to_cells(matrix(c(0, 0, 1, 1), ncol = 2), resolution = 8),
-    "at least 3 vertices"
+test_that("rings with fewer than 3 distinct vertices are empty, as in the crate", {
+  two <- a5_polygon_to_cells(matrix(c(0, 0, 1, 1), ncol = 2), resolution = 8)
+  expect_identical(a5_uncompact(two), a5_cell(character()))
+  closed <- wk::wkt("POLYGON ((0 0, 1 1, 0 0))")
+  expect_identical(a5_uncompact(a5_polygon_to_cells(closed, 8)), a5_cell(character()))
+  # a degenerate hole is ignored
+  outer <- "(0 0, 2 0, 2 2, 0 2, 0 0)"
+  with_hole <- wk::wkt(sprintf("POLYGON (%s, (1 1, 1.5 1.5, 1 1))", outer))
+  expect_identical(
+    a5_polygon_to_cells(with_hole, 8),
+    a5_polygon_to_cells(wk::wkt(sprintf("POLYGON (%s)", outer)), 8)
   )
 })
 
@@ -499,7 +506,7 @@ test_that("polygon rejects non-geometry input", {
 
 test_that("linestring matrix input must have exactly 2 columns", {
   expect_error(
-    a5_linestring_to_cells(matrix(0, nrow = 4, ncol = 3), resolution = 8),
+    a5_line_string_to_cells(matrix(0, nrow = 4, ncol = 3), resolution = 8),
     "exactly 2 columns"
   )
 })
@@ -507,35 +514,44 @@ test_that("linestring matrix input must have exactly 2 columns", {
 test_that("linestring matrix input must be numeric", {
   m <- matrix(c("a", "b", "c", "d"), ncol = 2)
   expect_error(
-    a5_linestring_to_cells(m, resolution = 8),
+    a5_line_string_to_cells(m, resolution = 8),
     "must be numeric"
   )
 })
 
 test_that("linestring data.frame input must have lon and lat columns", {
   expect_error(
-    a5_linestring_to_cells(data.frame(x = 1:3, y = 1:3), resolution = 8),
+    a5_line_string_to_cells(data.frame(x = 1:3, y = 1:3), resolution = 8),
     "lon.*lat"
   )
 })
 
-test_that("linestring vertex count is enforced", {
-  expect_error(
-    a5_linestring_to_cells(matrix(c(0, 0), ncol = 2), resolution = 8),
-    "at least 2 vertices"
+test_that("a single waypoint gives the cell containing it, as in the crate", {
+  expect_identical(
+    a5_line_string_to_cells(matrix(c(10, 20), ncol = 2), resolution = 8),
+    a5_lonlat_to_cell(10, 20, resolution = 8)
   )
+})
+
+test_that("a5_linestring_to_cells() still works but warns", {
+  line <- wk::wkt("LINESTRING (2.35 48.86, -0.13 51.51)")
+  expect_warning(
+    old <- a5_linestring_to_cells(line, resolution = 5),
+    class = "a5R_warning_deprecated"
+  )
+  expect_identical(old, a5_line_string_to_cells(line, resolution = 5))
 })
 
 test_that("linestring NA coordinates error", {
   expect_error(
-    a5_linestring_to_cells(
+    a5_line_string_to_cells(
       data.frame(lon = c(0, NA, 1), lat = c(0, 0, 1)),
       resolution = 8
     ),
     "NA"
   )
   expect_error(
-    a5_linestring_to_cells(
+    a5_line_string_to_cells(
       matrix(c(0, NA, 1, 0, 0, 1), ncol = 2),
       resolution = 8
     ),
@@ -545,11 +561,11 @@ test_that("linestring NA coordinates error", {
 
 test_that("linestring rejects wrong geometry types", {
   expect_error(
-    a5_linestring_to_cells(wk::wkt("POINT (0 0)"), resolution = 8),
+    a5_line_string_to_cells(wk::wkt("POINT (0 0)"), resolution = 8),
     "LINESTRING"
   )
   expect_error(
-    a5_linestring_to_cells(
+    a5_line_string_to_cells(
       wk::wkt(square_wkt(0, 0, 1, 1)),
       resolution = 8
     ),
@@ -558,16 +574,16 @@ test_that("linestring rejects wrong geometry types", {
 })
 
 test_that("linestring empty and missing geometries contribute no cells", {
-  expect_length(a5_linestring_to_cells(wk::wkt("LINESTRING EMPTY"), resolution = 8), 0L)
-  expect_length(a5_linestring_to_cells(wk::wkt(character()), resolution = 8), 0L)
-  lst <- a5_linestring_to_cells(
+  expect_length(a5_line_string_to_cells(wk::wkt("LINESTRING EMPTY"), resolution = 8), 0L)
+  expect_length(a5_line_string_to_cells(wk::wkt(character()), resolution = 8), 0L)
+  lst <- a5_line_string_to_cells(
     wk::wkt(c("LINESTRING (2.35 48.86, -0.13 51.51)", NA, "LINESTRING EMPTY")),
     resolution = 5, simplify = FALSE
   )
   expect_identical(lengths(lst)[2:3], c(0L, 0L))
   expect_gt(lengths(lst)[1], 0L)
   expect_error(
-    a5_linestring_to_cells(matrix(numeric(), ncol = 2), resolution = 8),
+    a5_line_string_to_cells(matrix(numeric(), ncol = 2), resolution = 8),
     "no linestrings"
   )
 })
@@ -578,21 +594,21 @@ test_that("linestrings give one ordered path per feature", {
     "LINESTRING (2.35 48.86, 4.83 45.76)",
     "MULTILINESTRING ((2.35 48.86, -0.13 51.51), (-0.13 51.51, 4.83 45.76))"
   ))
-  paths <- a5_linestring_to_cells(lines, resolution = 5, simplify = FALSE)
+  paths <- a5_line_string_to_cells(lines, resolution = 5, simplify = FALSE)
   expect_s3_class(paths, "a5_cell_list")
   expect_length(paths, 3L)
   for (i in 1:3) {
-    expect_identical(paths[[i]], a5_linestring_to_cells(lines[i], resolution = 5))
+    expect_identical(paths[[i]], a5_line_string_to_cells(lines[i], resolution = 5))
   }
   # flat form: the paths concatenated, so the shared Paris cell appears twice
-  flat <- a5_linestring_to_cells(lines[1:2], resolution = 5)
+  flat <- a5_line_string_to_cells(lines[1:2], resolution = 5)
   expect_identical(flat, vctrs::list_unchop(paths[1:2]))
   paris <- a5_lonlat_to_cell(2.35, 48.86, resolution = 5)
   expect_identical(sum(flat == paris), 2L)
   # within a feature, parts are joined in order and each cell kept once
   expect_false(anyDuplicated(paths[[3]]) > 0)
   expect_identical(paths[[3]][seq_along(paths[[1]])], paths[[1]])
-  expect_error(a5_linestring_to_cells(lines, 5, simplify = NA), "TRUE")
+  expect_error(a5_line_string_to_cells(lines, 5, simplify = NA), "TRUE")
 })
 
 test_that("linestring paths fill a list column of an sf data frame", {
@@ -604,14 +620,14 @@ test_that("linestring paths fill a list column of an sf data frame", {
       "LINESTRING (2.35 48.86, 4.83 45.76)"
     ), crs = 4326)
   )
-  df$path <- a5_linestring_to_cells(df, resolution = 5, simplify = FALSE)
+  df$path <- a5_line_string_to_cells(df, resolution = 5, simplify = FALSE)
   expect_s3_class(df$path, "a5_cell_list")
-  expect_identical(df$path[[2]], a5_linestring_to_cells(df[2, ], resolution = 5))
+  expect_identical(df$path[[2]], a5_line_string_to_cells(df[2, ], resolution = 5))
 })
 
 test_that("linestring rejects non-geometry input", {
   expect_error(
-    a5_linestring_to_cells(list(a = 1, b = 2), resolution = 8),
+    a5_line_string_to_cells(list(a = 1, b = 2), resolution = 8),
     "Could not interpret"
   )
 })
@@ -623,15 +639,15 @@ test_that("resolution must be in 0..30", {
   line <- wk::wkt("LINESTRING (0 0, 1 1)")
   expect_error(a5_polygon_to_cells(poly, resolution = -1), "resolution")
   expect_error(a5_polygon_to_cells(poly, resolution = 31), "resolution")
-  expect_error(a5_linestring_to_cells(line, resolution = -1), "resolution")
-  expect_error(a5_linestring_to_cells(line, resolution = 31), "resolution")
+  expect_error(a5_line_string_to_cells(line, resolution = -1), "resolution")
+  expect_error(a5_line_string_to_cells(line, resolution = 31), "resolution")
 })
 
 test_that("resolution must be scalar", {
   poly <- wk::wkt(square_wkt(0, 0, 1, 1))
   line <- wk::wkt("LINESTRING (0 0, 1 1)")
   expect_error(a5_polygon_to_cells(poly, resolution = c(5, 6)), "size 1")
-  expect_error(a5_linestring_to_cells(line, resolution = c(5, 6)), "size 1")
+  expect_error(a5_line_string_to_cells(line, resolution = c(5, 6)), "size 1")
 })
 
 # -- containment ---------------------------------------------------------------
@@ -772,7 +788,7 @@ test_that("projected input is rejected", {
   )
   expect_error(a5_polygon_to_cells(poly, 4), "longitude/latitude coordinates")
   line <- sf::st_sfc(sf::st_linestring(cbind(c(0, 1e5), c(0, 1e5))), crs = 3857)
-  expect_error(a5_linestring_to_cells(line, 4), "longitude/latitude coordinates")
+  expect_error(a5_line_string_to_cells(line, 4), "longitude/latitude coordinates")
   # no CRS: the coordinate range still catches it
   expect_error(a5_polygon_to_cells(sf::st_set_crs(poly, NA), 4), "outside the longitude/latitude range")
   expect_no_error(a5_polygon_to_cells(sf::st_transform(poly, 4326), 4))
@@ -784,7 +800,7 @@ test_that("coordinates outside the lon/lat range are rejected", {
     "outside the longitude/latitude range"
   )
   expect_error(
-    a5_linestring_to_cells(wk::wkt("LINESTRING (0 0, 400 0)"), 4),
+    a5_line_string_to_cells(wk::wkt("LINESTRING (0 0, 400 0)"), 4),
     "outside the longitude/latitude range"
   )
 })

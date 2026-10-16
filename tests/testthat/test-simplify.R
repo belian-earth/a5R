@@ -70,7 +70,6 @@ test_that("a5_cell_list unnests with tidyr", {
 test_that("simplify must be a flag", {
   expect_error(a5_cell_to_children(cells, simplify = NA), "TRUE")
   expect_error(a5_uncompact(a5_grid_disk(cells, k = 1), simplify = "yes"), "TRUE")
-  expect_error(a5_grid_disk(cells, k = 1, vertex = c(TRUE, FALSE)), "TRUE")
 })
 
 test_that("list form works as a tibble list column and unnests", {

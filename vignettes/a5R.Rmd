@@ -176,7 +176,7 @@ plot(a5_cell_to_boundary(a5_uncompact(nc$cells)),
 
 ## Tracing a line
 
-`a5_linestring_to_cells()` returns the cells whose pentagons are
+`a5_line_string_to_cells()` returns the cells whose pentagons are
 crossed by a great-circle polyline. Output is in discovery order along
 the path. Consecutive waypoints are connected by great-circle arcs, so
 antimeridian-crossing routes work transparently.
@@ -199,7 +199,7 @@ a5R_strokes <- wk::wkt(
   )"
 )
 
-cells <- a5_linestring_to_cells(a5R_strokes, resolution = 9)
+cells <- a5_line_string_to_cells(a5R_strokes, resolution = 9)
 length(cells)
 
 plot(a5_cell_to_boundary(cells),

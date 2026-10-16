@@ -17,7 +17,8 @@ a5_is_valid_cell(x)
 A logical vector the length of \code{x}. \code{NA} where \code{x} is \code{NA}; for
 an \link{a5_cell_list}, \code{NA} where an element holds \code{NA} and no invalid cell;
 for an \link{a5_covering}, \code{NA} for a missing covering.
-Hex strings that are not 16 hex digits are \code{FALSE}.
+Hex strings are read as \code{\link[=a5_cell]{a5_cell()}} reads them, so ids of fewer than
+16 digits and a \verb{0x} prefix are accepted; anything else is \code{FALSE}.
 }
 \description{
 \code{a5_is_valid_cell()} checks each value against the A5 index encoding: its

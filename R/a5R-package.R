@@ -52,7 +52,7 @@
 #'
 #' @section Geometry indexing:
 #' - [a5_polygon_to_cells()] --- cells inside (or overlapping) a polygon
-#' - [a5_linestring_to_cells()] --- cells crossed by a great-circle polyline
+#' - [a5_line_string_to_cells()] --- cells crossed by a great-circle polyline
 #'
 #' @section Arrow & Parquet:
 #' - [a5_cell_from_arrow()] / [a5_cell_to_arrow()][a5_cell_from_arrow] ---
