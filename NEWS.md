@@ -135,6 +135,10 @@
 * `a5_lonlat_to_cell()` returns `NA` for `NaN` and infinite coordinates,
   which used to give valid cells, and errors on latitudes outside
   \[-90, 90\], which used to wrap onto plausible but wrong cells.
+* Forked workers (`parallel::mclapply()`, `future::multicore`) no longer
+  hang after `a5_set_threads()` with more than one thread: they inherited the
+  thread pool but not its threads. a5R now runs on one thread in a forked
+  worker until the worker sets its own count.
 * A panic inside the a5 crate during a multi-threaded call no longer leaves
   every later parallel call, and `a5_set_threads()`, failing until R
   restarts. `a5_set_threads()` rejects counts below 1 and `NA`, and keeps
