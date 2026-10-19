@@ -164,13 +164,17 @@ a5_migrate_rs <- function(cells) .Call(wrap__a5_migrate_rs, cells)
 
 #' Distance between pairs of cell centroids.
 #'
+#' A side of length 1 is recycled here rather than in R, so its centroid is
+#' computed once instead of once per pair.
+#'
 #' @param from_cells List with b1..b8 raw vectors for `from` cells.
 #' @param to_cells List with b1..b8 raw vectors for `to` cells.
+#' @param n Output length: the common size of `from` and `to`.
 #' @param method Distance method: "haversine", "geodesic", or "rhumb".
 #' @return Numeric vector of distances in metres.
 #' @noRd
 #' @keywords internal
-a5_cell_distance_rs <- function(from_cells, to_cells, method) .Call(wrap__a5_cell_distance_rs, from_cells, to_cells, method)
+a5_cell_distance_rs <- function(from_cells, to_cells, n, method) .Call(wrap__a5_cell_distance_rs, from_cells, to_cells, n, method)
 
 #' Get the resolution of A5 cell indices.
 #'

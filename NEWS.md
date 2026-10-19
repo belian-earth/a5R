@@ -182,6 +182,10 @@
 * `a5_cell_to_boundary()` builds its output faster, with identical
   results: on a million cells, WKB takes about 25% less time on one thread
   and half the time on four, and WKT about 20% less.
+* `a5_cell_distance()` from one cell to many (or many to one) finds the
+  single cell's centroid once instead of once per pair, with identical
+  results: on a million cells it is about twice as fast for `"haversine"`
+  and `"rhumb"` and a quarter faster for `"geodesic"`.
 * `a5_cell_to_boundary()` rejects a `segments` value below 1 or `NA`;
   a negative value used to hang. Its documentation now gives the default,
   `max(1, 2^(6 - resolution))` segments per edge, and how far a single

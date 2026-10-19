@@ -1,7 +1,10 @@
 use extendr_api::prelude::*;
 use geographiclib_rs::{Geodesic, InverseGeodesic};
 
-use crate::cell_raw::map_cell_pairs;
+use rayon::prelude::*;
+
+use crate::cell_raw::{par_chunk, CellSlices, PAR_MIN};
+use crate::threading::{get_num_threads, maybe_par};
 
 /// Mean radius of the GRS80 ellipsoid (metres). Matches the constant the
 /// `geo` crate uses for spherical (haversine / rhumb) measurements, so
@@ -46,40 +49,63 @@ fn rhumb(lon1: f64, lat1: f64, lon2: f64, lat2: f64) -> f64 {
     delta * EARTH_RADIUS_M
 }
 
-/// Distance between two cell centroids using the specified method.
-fn cell_distance(from: u64, to: u64, method: &str, geod: &Geodesic) -> Option<f64> {
-    let from_ll = a5::cell_to_lonlat(from).ok()?;
-    let to_ll = a5::cell_to_lonlat(to).ok()?;
-    let (lon1, lat1) = (from_ll.longitude(), from_ll.latitude());
-    let (lon2, lat2) = (to_ll.longitude(), to_ll.latitude());
-    Some(match method {
-        "geodesic" => geod.inverse(lat1, lon1, lat2, lon2),
-        "rhumb" => rhumb(lon1, lat1, lon2, lat2),
-        _ => haversine(lon1, lat1, lon2, lat2),
-    })
+/// A cell's centroid as (longitude, latitude), or None for NA or an invalid id.
+fn centroid(cell: Option<u64>) -> Option<(f64, f64)> {
+    let ll = a5::cell_to_lonlat(cell?).ok()?;
+    Some((ll.longitude(), ll.latitude()))
 }
 
 /// Distance between pairs of cell centroids.
 ///
+/// A side of length 1 is recycled here rather than in R, so its centroid is
+/// computed once instead of once per pair.
+///
 /// @param from_cells List with b1..b8 raw vectors for `from` cells.
 /// @param to_cells List with b1..b8 raw vectors for `to` cells.
+/// @param n Output length: the common size of `from` and `to`.
 /// @param method Distance method: "haversine", "geodesic", or "rhumb".
 /// @return Numeric vector of distances in metres.
 /// @noRd
 /// @keywords internal
 #[extendr]
-fn a5_cell_distance_rs(from_cells: List, to_cells: List, method: &str) -> Doubles {
+fn a5_cell_distance_rs(from_cells: List, to_cells: List, n: i32, method: &str) -> Doubles {
+    let n = n as usize;
+    let from = CellSlices::from_list(&from_cells);
+    let to = CellSlices::from_list(&to_cells);
+    let fixed_from = (from.len == 1).then(|| centroid(from.get(0)));
+    let fixed_to = (to.len == 1).then(|| centroid(to.get(0)));
     // WGS84 geoid for geodesic measurements; built once per call.
     let geod = Geodesic::wgs84();
-    let results = map_cell_pairs(&from_cells, &to_cells, |f, t| {
-        cell_distance(f, t, method, &geod)
-    });
+    let measure: fn(f64, f64, f64, f64, &Geodesic) -> f64 = match method {
+        "geodesic" => |lon1, lat1, lon2, lat2, g| g.inverse(lat1, lon1, lat2, lon2),
+        "rhumb" => |lon1, lat1, lon2, lat2, _| rhumb(lon1, lat1, lon2, lat2),
+        _ => |lon1, lat1, lon2, lat2, _| haversine(lon1, lat1, lon2, lat2),
+    };
+    let one = |i: usize| -> Rfloat {
+        let a = fixed_from.unwrap_or_else(|| centroid(from.get(i)));
+        let b = fixed_to.unwrap_or_else(|| centroid(to.get(i)));
+        match (a, b) {
+            (Some((lon1, lat1)), Some((lon2, lat2))) => measure(lon1, lat1, lon2, lat2, &geod).into(),
+            _ => Rfloat::na(),
+        }
+    };
 
-    let mut out = Doubles::new(results.len());
-    for (i, r) in results.into_iter().enumerate() {
-        match r {
-            Some(d) => out.set_elt(i, Rfloat::from(d)),
-            None => out.set_elt(i, Rfloat::na()),
+    let mut out = Doubles::new(n);
+    {
+        let d: &mut [Rfloat] = &mut out;
+        if get_num_threads() <= 1 || n < PAR_MIN {
+            for (i, x) in d.iter_mut().enumerate() {
+                *x = one(i);
+            }
+        } else {
+            let chunk = par_chunk(n);
+            maybe_par(|| {
+                d.par_chunks_mut(chunk).enumerate().for_each(|(c, part)| {
+                    for (k, x) in part.iter_mut().enumerate() {
+                        *x = one(c * chunk + k);
+                    }
+                })
+            });
         }
     }
     out

@@ -236,39 +236,6 @@ where
     }
 }
 
-/// Apply a fallible function to pairs of cells, parallelising when threads > 1.
-pub(crate) fn map_cell_pairs<T, F>(a: &List, b: &List, f: F) -> Vec<Option<T>>
-where
-    T: Send,
-    F: Fn(u64, u64) -> Option<T> + Send + Sync,
-{
-    let cs_a = CellSlices::from_list(a);
-    let cs_b = CellSlices::from_list(b);
-    let n = cs_a.len;
-    if get_num_threads() <= 1 {
-        (0..n)
-            .map(|i| {
-                let a = cs_a.get(i)?;
-                let b = cs_b.get(i)?;
-                f(a, b)
-            })
-            .collect()
-    } else {
-        let inputs: Vec<(Option<u64>, Option<u64>)> =
-            (0..n).map(|i| (cs_a.get(i), cs_b.get(i))).collect();
-        maybe_par(|| {
-            inputs
-                .par_iter()
-                .map(|(oa, ob)| {
-                    let a = (*oa)?;
-                    let b = (*ob)?;
-                    f(a, b)
-                })
-                .collect()
-        })
-    }
-}
-
 /// Collect u64 values from a cell List, skipping NAs.
 /// Apply a one-to-many function to every cell.
 ///

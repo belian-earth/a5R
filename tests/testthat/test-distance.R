@@ -34,6 +34,27 @@ test_that("cell_distance is vectorised and recycled", {
   expect_equal(as.numeric(d), as.numeric(e))
 })
 
+test_that("cell_distance recycles a single cell as an explicit repeat would", {
+  set.seed(1)
+  targets <- a5_lonlat_to_cell(runif(5000, -10, 10), runif(5000, 40, 60), 9)
+  targets[c(3, 4000)] <- NA
+  origin <- targets[1]
+  for (method in c("haversine", "geodesic", "rhumb")) {
+    expected <- a5_cell_distance(rep(origin, 5000), targets, method = method)
+    expect_identical(a5_cell_distance(origin, targets, method = method), expected)
+    expect_identical(
+      a5_cell_distance(targets, origin, method = method),
+      a5_cell_distance(targets, rep(origin, 5000), method = method)
+    )
+    with(a5_threads(2), {
+      expect_identical(a5_cell_distance(origin, targets, method = method), expected)
+    })
+  }
+  expect_true(all(is.na(a5_cell_distance(a5_cell(NA), targets[1:3]))))
+  expect_length(a5_cell_distance(origin, targets[0]), 0L)
+  expect_error(a5_cell_distance(targets[1:2], targets[1:3]))
+})
+
 test_that("cell_distance handles NA", {
   a <- a5_lonlat_to_cell(0, 0, resolution = 8)
   d <- a5_cell_distance(a, a5_cell(NA))
