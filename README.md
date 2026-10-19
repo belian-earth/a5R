@@ -24,8 +24,11 @@ crate](https://github.com/felixpalmer/a5-rs) via
 [extendr](https://extendr.rs/extendr/extendr_api/).
 
 A5 partitions the Earth’s surface into pentagonal cells across 31
-resolution levels. Cells are equal-area, encoded as 64-bit integers, and
-achieve millimetre-level precision at the finest resolution.
+resolution levels. Cells are equal-area and encoded as 64-bit integers;
+at the finest resolution each covers about 30 mm².
+
+a5R 1.0 uses the A5 1.0 cell index, which numbers cells differently from
+earlier versions. Convert ids stored by a5R 0.x with `a5_migrate()`.
 
 ## Installation
 
@@ -40,8 +43,8 @@ Or install the development version from GitHub:
 pak::pak("belian-earth/a5R")
 ```
 
-You will need a working [Rust toolchain](https://rustup.rs/) (`cargo`
-and `rustc`).
+Building from source needs a [Rust toolchain](https://rustup.rs/)
+(`cargo` and `rustc`).
 
 ## Quick example
 
@@ -68,42 +71,56 @@ a5_cell_to_children(cell)
 #> [1] 63bb942000000000 63bb946000000000 63bb94a000000000 63bb94e000000000
 ```
 
+Polygons become coverings, one per feature. Here North Carolina’s
+counties are filled with cells, coloured by their distance from Wake
+County’s centroid:
+
 ``` r
-# Create a collection of cells whose centres fall within a great-circle distance of 100km from the origin cell
-cells <- a5_spherical_cap(cell, radius = 100000) |> 
-  a5_uncompact()
-plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
+nc <- sf::read_sf(system.file("shape/nc.shp", package = "sf")) |>
+  sf::st_transform(4326)
+nc$a5 <- a5_polygon_to_cells(nc, resolution = 9, containment = "overlapping")
+
+cells <- unique(a5_uncompact(nc$a5))
+wake <- sf::st_coordinates(sf::st_centroid(nc$geometry[nc$NAME == "Wake"]))
+centre <- a5_lonlat_to_cell(wake[, 1], wake[, 2], resolution = 9)
+dist <- a5_cell_distance(centre, cells, units = "km")
+
+plot(a5_cell_to_boundary(cells), col = hcl.colors(50)[cut(as.numeric(dist), 50)], border = "grey50", lwd = 0.5)
+plot(nc$geometry, border = "white", lwd = 0.5, add = TRUE)
 ```
 
-<img src="man/figures/README-grid-plot-1.png" alt="A5 grid plot showing a collection of cells around a point" width="100%" />
+<img src="man/figures/README-nc-distance-1.png" alt="North Carolina's counties filled with A5 cells at resolution 9, coloured from dark near Wake County to yellow at the far west of the state." width="100%" />
 
 See `vignette("a5R")` for a full walkthrough of indexing, boundaries,
 hierarchy, traversal, and geometry-to-cell conversion.
 
 ## Features
 
-- **Vectorised Rust core** — all operations implemented in Rust and
+- **Vectorised Rust core:** all operations implemented in Rust and
   called from R via extendr. A [benchmark
   suite](https://github.com/belian-earth/a5R/tree/main/benchmarks)
   mirroring the TypeScript, Python and Rust ports runs on every pull
   request and fails on regressions above 15%.
-- **vctrs + wk integration** — cell indices use an `a5_cell` type with
+- **vctrs + wk integration:** cell indices use an `a5_cell` type with
   tibble support; geometries return as `wk_wkb`/`wk_wkt` vectors
   compatible with sf and terra.
-- **Coverings** — polygons, disks and caps become `a5_covering` vectors,
+- **Coverings:** polygons, disks and caps become `a5_covering` vectors,
   one compacted cell set per feature, that combine (`a5_union()`,
   `a5_intersect()`, `a5_difference()`), test (`a5_contains()`) and
   measure (`a5_area()`) without expanding to millions of cells. See
   `vignette("coverings")`.
-- **Geometry indexing** — `a5_polygon_to_cells()` and
+- **Geometry indexing:** `a5_polygon_to_cells()` and
   `a5_line_string_to_cells()` map polygons and great-circle lines to
   cells.
-- **Traversal** — `a5_grid_disk()` and `a5_spherical_cap()` select
+- **Traversal:** `a5_grid_disk()` and `a5_spherical_cap()` select
   neighbours by hop count or great-circle distance.
-- **Spatial hierarchy** — `a5_cell_to_supercell()` and
+- **Spatial hierarchy:** `a5_cell_to_supercell()` and
   `a5_cell_to_subcells()` move between resolutions by location, so
   aggregation counts each fine cell inside the coarse cell it lies in.
-- **Multi-threading** — opt-in parallel processing via rayon for
+- **Arrow and Parquet:** cells and coverings convert to Arrow `uint64`
+  columns and back exactly, with the A5 index recorded in the schema.
+  See `vignette("arrow-parquet")`.
+- **Multi-threading:** opt-in parallel processing via rayon for
   vectorised operations. See `vignette("multithreading")`.
 
 ## Acknowledgements
