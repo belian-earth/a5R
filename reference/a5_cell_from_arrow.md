@@ -32,13 +32,11 @@ vector. `a5_cell_to_arrow()` returns an Arrow `Array` of type `uint64`.
 
 ## Details
 
-Internally these use Arrow's zero-copy
-[`View()`](https://rdrr.io/r/utils/View.html) to reinterpret `uint64`
-bytes as `fixed_size_binary(8)`, then convert to/from the raw-byte
-representation used by
-[a5_cell](https://belian-earth.github.io/a5R/reference/a5_cell.md). The
-resulting Arrow arrays can be written directly to Parquet and read
-correctly by DuckDB, Python, and other Arrow-compatible tools.
+The conversion runs in Rust and passes one contiguous `uint64` buffer
+through the Arrow C data interface, so no value is ever converted to
+`double`. NA cells are null elements. The resulting Arrow arrays can be
+written directly to Parquet and read correctly by DuckDB, Python, and
+other Arrow-compatible tools.
 
 ## See also
 

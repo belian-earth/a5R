@@ -12,8 +12,9 @@ ellipsoid.
 a5_cell_to_boundary(
   cell,
   format = c("wkb", "wkt"),
-  closed = TRUE,
-  segments = NULL
+  closed_ring = TRUE,
+  segments = NULL,
+  closed
 )
 ```
 
@@ -28,15 +29,25 @@ a5_cell_to_boundary(
 
   Character scalar, either `"wkb"` (default) or `"wkt"`.
 
-- closed:
+- closed_ring:
 
   Logical scalar; if `TRUE` (default) the ring is closed (first vertex
   repeated at end).
 
 - segments:
 
-  Integer scalar or `NULL`. Number of interpolation segments per edge
-  for geodesic accuracy. `NULL` uses the default (straight edges).
+  Integer scalar or `NULL`. Number of segments per cell edge. A5 cell
+  edges are slightly curved on the sphere: a single segment between two
+  vertices strays from the true edge by up to about 450 m at resolution
+  6, 25 m at resolution 8 and 1.5 m at resolution 10. The error falls
+  with the square of the number of segments. `NULL` uses the A5 default
+  of `max(1, 2^(6 - resolution))`, so at resolution 6 and finer each
+  edge is a single segment. Pass a larger value when the polygons are
+  used for spatial tests rather than display.
+
+- closed:
+
+  Deprecated: renamed `closed_ring`, as in the other A5 libraries.
 
 ## Value
 
@@ -46,6 +57,8 @@ CRS.
 
 ## See also
 
+[`a5_cell_to_boundary_xy()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_boundary_xy.md)
+for the same vertices as flat coordinate vectors;
 [`a5_cell_to_lonlat()`](https://belian-earth.github.io/a5R/reference/a5_coordinates.md)
 for cell centroids.
 

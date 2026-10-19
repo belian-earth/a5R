@@ -9,7 +9,7 @@ the full child list to pick one element is wasteful.
 ## Usage
 
 ``` r
-a5_cell_child(cell, resolution, i)
+a5_cell_child(cell, child_resolution, i)
 ```
 
 ## Arguments
@@ -19,7 +19,7 @@ a5_cell_child(cell, resolution, i)
   An [a5_cell](https://belian-earth.github.io/a5R/reference/a5_cell.md)
   vector.
 
-- resolution:
+- child_resolution:
 
   Integer scalar target resolution, at or finer than every cell's own
   resolution.
@@ -27,8 +27,8 @@ a5_cell_child(cell, resolution, i)
 - i:
 
   Integer vector of 1-based child positions, recycled against `cell`.
-  Must lie within `1:a5_get_num_children(res, resolution)` for each
-  cell's resolution `res`; out of range is an error.
+  Must lie within `1:a5_get_num_children(res, child_resolution)` for
+  each cell's resolution `res`; out of range is an error.
 
 ## Value
 
@@ -44,7 +44,7 @@ vector the same length as `cell`. `NA` where `cell` or `i` is `NA`.
 
 ``` r
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
-a5_cell_child(cell, resolution = 7, i = 1:16)
+a5_cell_child(cell, child_resolution = 7, i = 1:16)
 #> <a5_cell[16]>
 #>  [1] 6314200000000000 6314600000000000 6314a00000000000 6314e00000000000
 #>  [5] 6315200000000000 6315600000000000 6315a00000000000 6315e00000000000

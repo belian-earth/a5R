@@ -37,6 +37,9 @@ R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 - [`a5_cell_to_boundary()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_boundary.md)
   — cell boundary polygons (WKB or WKT)
 
+- [`a5_cell_to_boundary_xy()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_boundary_xy.md)
+  — cell boundary vertices as flat vectors
+
 - [`a5_cell_area()`](https://belian-earth.github.io/a5R/reference/a5_resolution_stats.md)
   — cell area at a given resolution
 
@@ -65,7 +68,7 @@ R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 
 - [`a5_cell_to_supercell()`](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
   /
-  [a5_cell_to_subcell()](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
+  [a5_cell_to_subcells()](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
   — move between resolutions by location
 
 - [`a5_get_res0_cells()`](https://belian-earth.github.io/a5R/reference/a5_get_res0_cells.md)
@@ -83,6 +86,9 @@ R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 
 - [a5_covering_resolution()](https://belian-earth.github.io/a5R/reference/a5_covering.md)
   — the resolution a covering stands for
+
+- [`a5_covering_stored()`](https://belian-earth.github.io/a5R/reference/a5_covering_stored.md)
+  — the compacted cells a covering stores
 
 - [`a5_union()`](https://belian-earth.github.io/a5R/reference/a5_set_operations.md)
   /
@@ -114,7 +120,7 @@ R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 - [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_polygon_to_cells.md)
   — cells inside (or overlapping) a polygon
 
-- [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_linestring_to_cells.md)
+- [`a5_line_string_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_line_string_to_cells.md)
   — cells crossed by a great-circle polyline
 
 ## Arrow & Parquet
@@ -131,9 +137,7 @@ R bindings for the [A5](https://a5geo.org/) pentagonal geospatial index
 
 ## Configuration
 
-- [`a5_set_threads()`](https://belian-earth.github.io/a5R/reference/a5_threads.md)
-  /
-  [`a5_get_threads()`](https://belian-earth.github.io/a5R/reference/a5_threads.md)
+- [`a5_threads()`](https://belian-earth.github.io/a5R/reference/a5_threads.md)
   — multi-threading control
 
 ## Vignettes
@@ -180,3 +184,9 @@ Authors:
 Other contributors:
 
 - belian.earth \[copyright holder\]
+
+- Felix Palmer (Author of the bundled 'a5' Rust crate) \[contributor,
+  copyright holder\]
+
+- Authors of the dependency Rust crates (see LICENSE.note) \[copyright
+  holder\]

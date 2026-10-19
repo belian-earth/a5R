@@ -3,6 +3,7 @@
 ``` r
 
 library(a5R)
+#> a5R 1.0.0 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread
 ```
 
 ## The index hierarchy is not spatially nested
@@ -10,13 +11,14 @@ library(a5R)
 [`a5_cell_to_parent()`](https://belian-earth.github.io/a5R/reference/a5_hierarchy.md)
 and
 [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/reference/a5_hierarchy.md)
-follow the A5 index. A cell’s index children do not tile it: some of
-them lie mostly in its neighbours, and some cells inside it belong to a
-neighbour’s index.
+follow the A5 index, the numbering of cells along A5’s space-filling
+curve. A cell’s index children do not tile it: some of them lie mostly
+in its neighbours, and some cells inside it belong to a neighbour’s
+index.
 
 [`a5_cell_to_supercell()`](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
 and
-[`a5_cell_to_subcell()`](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
+[`a5_cell_to_subcells()`](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
 follow location instead. A fine cell belongs to the coarse cell
 containing its centre: that coarse cell is its *supercell*, and the fine
 cells a coarse cell holds are its *subcells*.
@@ -24,8 +26,8 @@ cells a coarse cell holds are its *subcells*.
 ``` r
 
 cell <- a5_lonlat_to_cell(-53.5, -19, resolution = 8)
-index_kids <- a5_cell_to_children(cell, resolution = 11)
-spatial_kids <- a5_uncompact(a5_cell_to_subcell(cell, resolution = 11))
+index_kids <- a5_cell_to_children(cell, child_resolution = 11)
+spatial_kids <- a5_uncompact(a5_cell_to_subcells(cell, resolution = 11))
 
 outline <- a5_cell_to_boundary(cell)
 lim <- wk::wk_bbox(a5_cell_to_boundary(c(index_kids, spatial_kids)))
@@ -57,8 +59,8 @@ mean(a5_cell_to_parent(fine, 15) != a5_cell_to_supercell(fine, 15))
 #> [1] 0.3677
 ```
 
-For about a third of res-18 cells, the index parent at res 15 is a
-neighbour of the cell they lie in, their supercell.
+For over a third of these res-18 cells, the index parent at res 15 is
+not the cell they lie in, their supercell, but one of its neighbours.
 
 The upward direction shows the same thing from the other side. Here is
 one res-10 cell whose index parent at res 8 is not the cell it lies in:
@@ -118,6 +120,11 @@ by_index <- mean_by(a5_cell_to_parent(layer, 15), fine$value)
 by_super <- mean_by(a5_cell_to_supercell(layer, 15), fine$value)
 ```
 
+[`format()`](https://rdrr.io/r/base/format.html) supplies a grouping key
+here because base grouping functions cannot group an `a5_cell` vector
+directly (see
+[`vignette("internal-cell-representation")`](https://belian-earth.github.io/a5R/articles/internal-cell-representation.md)).
+
 For a reference that uses neither hierarchy, drop two million random
 points on the area, place each directly in its res-15 cell, and take the
 share of points per cell that fall in the patch. This estimates each
@@ -149,10 +156,6 @@ Aggregating by index parent misstates the patch fraction of the cells it
 touches by about a tenth on average, and by a third at worst, because
 each coarse cell averages fine cells from its neighbours. Aggregating by
 supercell is off only by the sampling noise of the reference.
-[`format()`](https://rdrr.io/r/base/format.html) supplies a grouping key
-here because base grouping functions cannot group an `a5_cell` vector
-directly (see
-[`vignette("internal-cell-representation")`](https://belian-earth.github.io/a5R/articles/internal-cell-representation.md)).
 
 Mapping the reference fractions, and each rule’s error against them,
 shows where the index rule goes wrong:
@@ -201,17 +204,16 @@ noise in the reference.
 ## Expanding coarse cells
 
 The downward direction is the exact inverse.
-[`a5_cell_to_subcell()`](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
-returns one covering per coarse cell: a compacted set that records its
-resolution (see
-[`?a5_covering`](https://belian-earth.github.io/a5R/reference/a5_covering.md)).
+[`a5_cell_to_subcells()`](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
+returns one covering per coarse cell (see
+[`vignette("coverings")`](https://belian-earth.github.io/a5R/articles/coverings.md)).
 Expanding the subcells of a set of coarse cells gives each fine cell
-once, inside the coarse cell whose centre rule claims it:
+once, inside the coarse cell that holds its centre:
 
 ``` r
 
-patch <- a5_uncompact(a5_grid_disk(cell, 1))
-sub <- a5_cell_to_subcell(patch, resolution = 11)
+coarse <- a5_uncompact(a5_grid_disk(cell, 1))
+sub <- a5_cell_to_subcells(coarse, resolution = 11)
 sub
 #> <a5_covering[6]>
 #> [1] res 11: 62 cells (29 stored) res 11: 62 cells (29 stored)
@@ -225,14 +227,29 @@ lengths(kids)
 all_kids <- unlist(kids)
 vctrs::vec_duplicate_any(all_kids)
 #> [1] FALSE
-all(a5_cell_to_supercell(all_kids, 8) == rep(patch, lengths(kids)))
+all(a5_cell_to_supercell(all_kids, 8) == rep(coarse, lengths(kids)))
 #> [1] TRUE
 ```
 
 Counts vary slightly from cell to cell but average `4^3 = 64` for these
 three resolution steps, as for index children. Each covering stores far
-fewer cells than it stands for; uncompact before drawing, as the stored
-cells are index parents.
+fewer cells than it stands for.
+
+[`a5_covering_to_supercells()`](https://belian-earth.github.io/a5R/reference/a5_covering_to_supercells.md)
+goes the other way for a whole covering: the coarse cells holding the
+centre of any of its cells, found without expanding the fine cells. It
+gives, for example, the coarse partitions that hold an area’s data:
+
+``` r
+
+fine_area <- a5_union(sub)
+fine_area
+#> <a5_covering[1]>
+#> [1] res 11: 380 cells (95 stored)
+a5_covering_to_supercells(fine_area, 8)
+#> <a5_covering[1]>
+#> [1] res 8: 6 cells (6 stored)
+```
 
 ## Which to use
 
@@ -243,7 +260,7 @@ resolutions and must stay where they are on the ground.
 Supercells and subcells cost more. The index functions are bit
 operations;
 [`a5_cell_to_supercell()`](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
-locates each centre, in well under half the time of
+locates each centre, in about half the time of
 [`a5_lonlat_to_cell()`](https://belian-earth.github.io/a5R/reference/a5_coordinates.md).
 Both run in parallel with
-[`a5_set_threads()`](https://belian-earth.github.io/a5R/reference/a5_threads.md).
+[`a5_threads()`](https://belian-earth.github.io/a5R/reference/a5_threads.md).

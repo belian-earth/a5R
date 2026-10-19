@@ -2,22 +2,30 @@
 
 ## The uint64 problem
 
-A5 cell IDs are 64-bit unsigned integers. R has no native `uint64` type,
-and its `double` can only represent integers exactly up to 2^53. Nearly
-half of all A5 cell IDs exceed this threshold, so converting them to
-`double` silently corrupts the data.
+A5 cell ids are 64-bit unsigned integers. R has no native `uint64` type,
+and its `double` can only represent integers exactly up to 2^53. Almost
+every A5 cell id exceeds this threshold, so converting them to `double`
+silently corrupts the data.
 
-This is a problem when reading Parquet files that store A5 cell IDs as
+This is a problem when reading Parquet files that store A5 cell ids as
 `uint64` columns: the standard format used by DuckDB, Python, and
 [geoparquet.io](https://geoparquet.io/). By default,
 [`arrow::read_parquet()`](https://arrow.apache.org/docs/r/reference/read_parquet.html)
-converts `uint64` to R’s `double`, losing precision:
+converts `uint64` to R’s `double`, losing precision. The same happens
+with
+[`dplyr::collect()`](https://dplyr.tidyverse.org/reference/compute.html)
+on an Arrow dataset or query.
+
+``` r
+
+library(a5R)
+#> a5R 1.0.0 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread
+```
 
 ``` r
 
 library(arrow)
 library(tibble)
-library(a5R)
 
 # A real A5 cell: Edinburgh at resolution 20
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 20)
@@ -40,7 +48,7 @@ arrow::write_parquet(
 
 cell_as_dbl <- naive$cell_id
 
-# The double can't distinguish this cell from nearby IDs
+# The double can't distinguish this cell from nearby ids
 cell_as_dbl == cell_as_dbl + 1   # TRUE: silent corruption
 #> [1] TRUE
 cell_as_dbl == cell_as_dbl + 100 # still TRUE
@@ -49,17 +57,13 @@ cell_as_dbl == cell_as_dbl + 100 # still TRUE
 
 ## The solution: `a5_cell_from_arrow()` and `a5_cell_to_arrow()`
 
-a5R provides two functions that bypass the lossy `double` conversion
-entirely, using Arrow’s zero-copy
-[`View()`](https://rdrr.io/r/utils/View.html) to reinterpret the raw
-bytes:
+a5R provides two functions that move ids between `a5_cell` and Arrow
+`uint64` without passing through `double`:
 
 ``` r
 
-library(a5R)
-library(tibble)
-
-# Six cities across the globe; some will have bit 63 set (quintant >= 32)
+# Six cities across the globe. Tokyo and Sydney have bit 63 set: a signed
+# int64 would make them negative.
 cities <- tibble(
   name = c("Edinburgh", "Tokyo", "São Paulo", "Nairobi", "Anchorage", "Sydney"),
   lon  = c(   -3.19,     139.69,     -46.63,     36.82,    -149.90,    151.21),
@@ -79,8 +83,7 @@ cities
 #> 6 Sydney     151.   -33.9  9ca4cf8000000000
 ```
 
-These cells work seamlessly in tibbles. Now let’s enrich the data with
-some A5 operations: cell resolution and distance from Edinburgh.
+Add two ordinary columns to store alongside the cells:
 
 ``` r
 
@@ -105,72 +108,56 @@ cities
 
 ## Writing and reading Parquet
 
-Convert to an Arrow table and write to Parquet. The cell column is
-stored as native `uint64`, the same binary format used by DuckDB,
-Python, and geoparquet.io:
+[`a5_to_arrow_table()`](https://belian-earth.github.io/a5R/reference/a5_to_arrow_table.md)
+converts a data frame to an Arrow table, writing cell columns as native
+`uint64`, the binary format DuckDB, Python and geoparquet.io use, and
+recording the A5 index version in the schema metadata under the key
+`a5_index`, which a5px and a5view write too:
 
 ``` r
 
 tf <- tempfile(fileext = ".parquet")
-
-arrow_tbl <- arrow::arrow_table(
-  name = cities$name,
-  cell_id = a5_cell_to_arrow(cities$cell),
-  cell_res = cities$resolution,
-  dist_from_edinburgh_km = cities$dist_from_edinburgh_km
-)
-arrow_tbl$schema
-#> Schema
-#> name: string
-#> cell_id: uint64
-#> cell_res: int32
-#> dist_from_edinburgh_km: double
-arrow::write_parquet(arrow_tbl, tf)
+arrow::write_parquet(a5_to_arrow_table(cities), tf)
 ```
 
-Read it back.
-[`a5_cell_from_arrow()`](https://belian-earth.github.io/a5R/reference/a5_cell_from_arrow.md)
-recovers the exact cell IDs without any precision loss:
+[`a5_from_arrow_table()`](https://belian-earth.github.io/a5R/reference/a5_to_arrow_table.md)
+reads it back, recovering the exact ids. It reads every `uint64` column
+as cells unless `cells =` names them, and refuses a table tagged with a
+different index version:
 
 ``` r
 
 pq <- arrow::read_parquet(tf, as_data_frame = FALSE)
-
-# Recover cells from the uint64 column, bind with the rest of the data
-recovered_cells <- a5_cell_from_arrow(pq$column(1))
-result <- as.data.frame(pq)
-result$cell <- recovered_cells
-result <- tibble::as_tibble(result[c("name", "cell", "cell_res", "dist_from_edinburgh_km")])
-result
-#> # A tibble: 6 × 4
-#>   name      cell             cell_res dist_from_edinburgh_km
-#>   <chr>     <a5_cell>           <int>                  <dbl>
-#> 1 Edinburgh 63bb948000000000       10                     0 
-#> 2 Tokyo     872fb48000000000       10                  9233.
-#> 3 São Paulo 38a5138000000000       10                  9743.
-#> 4 Nairobi   6fad7b8000000000       10                  7317.
-#> 5 Anchorage 012f4c8000000000       10                  6662.
-#> 6 Sydney    9ca4cf8000000000       10                 16872.
-```
-
-Verify the round-trip is lossless:
-
-``` r
-
-identical(format(cities$cell), format(result$cell))
+pq$schema
+#> Schema
+#> name: string
+#> lon: double
+#> lat: double
+#> cell: uint64
+#> resolution: int32
+#> dist_from_edinburgh_km: double
+#> 
+#> See $metadata for additional Schema metadata
+result <- a5_from_arrow_table(pq)
+identical(result$cell, cities$cell)
 #> [1] TRUE
 ```
+
+For a single column,
+[`a5_cell_to_arrow()`](https://belian-earth.github.io/a5R/reference/a5_cell_from_arrow.md)
+and
+[`a5_cell_from_arrow()`](https://belian-earth.github.io/a5R/reference/a5_cell_from_arrow.md)
+convert between `a5_cell` and an Arrow `uint64` array.
 
 ## Storing coverings
 
 A covering, such as the cells of a polygon, is stored as a list of
 64-bit values: its compacted cells in curve order, then a *compaction
 marker* recording the resolution they stand for (see
-[`?a5_covering`](https://belian-earth.github.io/a5R/reference/a5_covering.md)).
-This is the layout every A5 library uses, so
-[`a5_covering_to_arrow()`](https://belian-earth.github.io/a5R/reference/a5_covering_from_arrow.md)
-writes coverings to a `list<uint64>` column that DuckDB, Python and
-JavaScript read without losing the resolution:
+[`vignette("coverings")`](https://belian-earth.github.io/a5R/articles/coverings.md)).
+This is the layout every A5 library uses, so covering columns are
+written as `list<uint64>`, which DuckDB, Python and JavaScript read
+without losing the resolution:
 
 ``` r
 
@@ -187,31 +174,30 @@ cities[c("name", "within_50km")]
 #> 6 Sydney    res 10: 245 cells (74 stored)
 
 tf <- tempfile(fileext = ".parquet")
-arrow::write_parquet(
-  arrow::arrow_table(
-    name = cities$name,
-    cell_id = a5_cell_to_arrow(cities$cell),
-    within_50km = a5_covering_to_arrow(cities$within_50km)
-  ),
-  tf
-)
+arrow::write_parquet(a5_to_arrow_table(cities[c("name", "cell", "within_50km")]), tf)
 pq <- arrow::read_parquet(tf, as_data_frame = FALSE)
 pq$schema
 #> Schema
 #> name: string
-#> cell_id: uint64
+#> cell: uint64
 #> within_50km: list<element: uint64>
+#> 
+#> See $metadata for additional Schema metadata
 ```
 
+Reading the table back turns `list<uint64>` columns into coverings.
+Coverings written by other A5 libraries are checked, sorted and
+compacted; an element without a compaction marker stands for the
+resolution of its finest cell.
+[`a5_covering_to_arrow()`](https://belian-earth.github.io/a5R/reference/a5_covering_from_arrow.md)
+and
 [`a5_covering_from_arrow()`](https://belian-earth.github.io/a5R/reference/a5_covering_from_arrow.md)
-reads them back. It also accepts coverings written by other A5
-libraries, checking, sorting and compacting each one; an element without
-a compaction marker stands for the resolution of its finest cell.
+convert a single column.
 
 ``` r
 
-back <- a5_covering_from_arrow(pq$within_50km)
-identical(back, cities$within_50km)
+back <- a5_from_arrow_table(pq)
+identical(back$within_50km, cities$within_50km)
 #> [1] TRUE
 ```
 
@@ -227,8 +213,11 @@ a5R 1.0 uses A5’s permanent cell-ID system. Its space-filling curve
 threads the cells differently from the index used by a5R 0.6 and earlier
 (the “v0” index), so every cell has a new id. A v0 id is still a valid
 cell in the current index, but in a different place, and nothing in the
-id records which version wrote it. Stored v0 ids must be converted
-exactly once, as they are read:
+id records which version wrote it. Files written before 1.0 carry no
+index tag, so
+[`a5_from_arrow_table()`](https://belian-earth.github.io/a5R/reference/a5_to_arrow_table.md)
+cannot detect them: convert stored v0 ids exactly once, as they are
+read.
 
 ``` r
 
@@ -241,31 +230,17 @@ a5_migrate(v0)
 
 [`a5_migrate()`](https://belian-earth.github.io/a5R/reference/a5_migrate.md)
 is a bit operation, so it is cheap on large columns. Apply it to every
-stored id column, including the cells inside stored coverings
-(`a5_compact(a5_migrate(a5_uncompact(old)))`), or re-index the data from
-its coordinates. Upstream will retire the conversion in a future
-version.
+stored id column, including compacted cell sets, which a5R 0.6 stored as
+plain cell columns
+(`a5_compact(a5_migrate(a5_uncompact(old, resolution = r)))`), or
+re-index the data from its coordinates. Upstream will retire the
+conversion in a future version.
 
 ## How it works under the hood
 
-1.  **[`a5_cell_to_arrow()`](https://belian-earth.github.io/a5R/reference/a5_cell_from_arrow.md)**:
-    packs the eight raw-byte fields into 8-byte little-endian blobs (one
-    per cell), creates an Arrow `fixed_size_binary(8)` array, then uses
-    `View(uint64)` to reinterpret the bytes as unsigned 64-bit integers.
-    Zero-copy.
-
-2.  **[`a5_cell_from_arrow()`](https://belian-earth.github.io/a5R/reference/a5_cell_from_arrow.md)**:
-    does the reverse, applying `View(fixed_size_binary(8))` on the
-    `uint64` array to get the raw bytes, then unpacks each 8-byte blob
-    into the eight raw-byte fields used by `a5_cell`.
-
-3.  **[`a5_covering_to_arrow()`](https://belian-earth.github.io/a5R/reference/a5_covering_from_arrow.md)**
-    and
-    **[`a5_covering_from_arrow()`](https://belian-earth.github.io/a5R/reference/a5_covering_from_arrow.md)**
-    do the same with `list<fixed_size_binary(8)>` and `list<uint64>`:
-    each covering is a list element of 8-byte values.
-
-The raw bytes never pass through `double`, so there is no precision loss
-at any step. See
+All four converters run in Rust and pass one contiguous `uint64` buffer
+(a `list<uint64>` for coverings) through the Arrow C data interface,
+Arrow’s standard in-memory exchange format. The ids never pass through
+`double`, and `NA` cells and missing coverings become nulls. See
 [`vignette("internal-cell-representation")`](https://belian-earth.github.io/a5R/articles/internal-cell-representation.md)
-for details on the raw-byte representation.
+for how `a5_cell` stores ids in R.

@@ -3,6 +3,7 @@
 ``` r
 
 library(a5R)
+#> a5R 1.0.0 • a5 crate 1.0.0 • A5 index 1.0 • 1 thread
 ```
 
 ## Selecting cells around a point
@@ -21,26 +22,28 @@ for the cells.
 
 origin <- a5_lonlat_to_cell(35, 55, resolution = 14)
 
-a5_spherical_cap(origin, radius = 5000)
+a5_spherical_cap(origin, radius = 5, units = "km")
 #> <a5_covering[1]>
 #> [1] res 14: 621 cells (105 stored)
 
-disk <- a5_uncompact(a5_grid_disk(origin, k = 20, vertex = FALSE))
-disk_vertex <- a5_uncompact(a5_grid_disk(origin, k = 20, vertex = TRUE))
-cap <- a5_uncompact(a5_spherical_cap(origin, radius = 5000))
+disk <- a5_uncompact(a5_grid_disk(origin, k = 20))
+disk_vertex <- a5_uncompact(a5_grid_disk_vertex(origin, k = 20))
+cap <- a5_uncompact(a5_spherical_cap(origin, radius = 5, units = "km"))
 ```
 
 [`a5_grid_disk()`](https://belian-earth.github.io/a5R/reference/a5_grid_disk.md)
-selects cells by hop count rather than metric distance. With
-`vertex = FALSE` (default) only edge-sharing neighbours are traversed
-(4-connected), producing a diamond shape. Setting `vertex = TRUE`
-includes corner-sharing neighbours too (8-connected), giving a squarer
-footprint.
+selects cells by hop count rather than metric distance, stepping only
+between edge-sharing neighbours.
+[`a5_grid_disk_vertex()`](https://belian-earth.github.io/a5R/reference/a5_grid_disk.md)
+also steps between corner-sharing neighbours, so it reaches more cells
+for the same `k`: 1,679 against 1,121 here. Neither footprint is round,
+as the cap’s is.
 
 ## Distance heatmap
 
 Compute the distance from the origin to every cell in the cap (or disk)
-and visualise it as a colour gradient.
+and visualise it as a colour gradient. Each panel has its own colour
+scale.
 
 ``` r
 
@@ -58,8 +61,8 @@ for (info in list(
   brk <- seq(0, max(as.numeric(info$d)), length.out = 257)
   cols <- pal[findInterval(as.numeric(info$d), brk, all.inside = TRUE)]
 
-  plot(a5_cell_to_boundary(info$s), col = cols, border = NA, asp = 1,
-       main = info$lab)
+  plot(a5_cell_to_boundary(info$s), col = cols, border = NA,
+       asp = 1 / cos(55 * pi / 180), main = info$lab)
   plot(a5_cell_to_boundary(origin), border = "#ffffffff", add = TRUE)
 }
 ```
@@ -75,12 +78,13 @@ border for reference.
 a5R supports three distance methods: **haversine** (great-circle),
 **geodesic** (WGS84 ellipsoid via Karney 2013), and **rhumb** (loxodrome
 / constant-bearing). For short distances they are nearly identical;
-differences grow with distance.
+differences grow with distance. The figure compares geodesic with
+haversine.
 
 ``` r
 
 wide_origin <- a5_lonlat_to_cell(35, 55, resolution = 8)
-wide_cap <- a5_uncompact(a5_spherical_cap(wide_origin, radius = 500000))
+wide_cap <- a5_uncompact(a5_spherical_cap(wide_origin, radius = 500, units = "km"))
 
 hav <- a5_cell_distance(wide_origin, wide_cap, units = "m", method = "haversine")
 geo <- a5_cell_distance(wide_origin, wide_cap, units = "m", method = "geodesic")
@@ -91,8 +95,8 @@ cols <- pal[findInterval(diff_m, brk, all.inside = TRUE)]
 
 layout(matrix(c(1, 2), nrow = 1), widths = c(4, 1))
 par(mar = c(2, 2, 2, 1))
-plot(a5_cell_to_boundary(wide_cap), col = cols, border = NA, asp = 1,
-     main = "Geodesic \u2212 Haversine (m)")
+plot(a5_cell_to_boundary(wide_cap), col = cols, border = NA,
+     asp = 1 / cos(55 * pi / 180), main = "Geodesic \u2212 Haversine (m)")
 
 par(mar = c(9, 0, 9, 9))
 image(1, seq(min(diff_m), max(diff_m), length.out = 256),
@@ -102,5 +106,6 @@ axis(4, las = 1)
 
 ![](traversal-and-distance_files/figure-html/methods-1.png)
 
-The difference is near zero at the centre and grows to ~1675 m at the
-rim (~500 km away).
+The difference is near zero at the centre and grows to about 1,675 m at
+the east and west rim, 500 km away; along the north-south axis it stays
+much smaller.

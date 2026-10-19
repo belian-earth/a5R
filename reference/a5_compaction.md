@@ -12,14 +12,14 @@ without duplicates.
 ## Usage
 
 ``` r
-a5_compact(cells, resolution = NULL)
+a5_compact(cell, resolution = NULL)
 
 a5_uncompact(x, resolution = NULL, simplify = TRUE)
 ```
 
 ## Arguments
 
-- cells:
+- cell:
 
   An [a5_cell](https://belian-earth.github.io/a5R/reference/a5_cell.md)
   vector. `NA` cells are skipped.
@@ -90,7 +90,7 @@ which return coverings.
 
 ``` r
 cell <- a5_lonlat_to_cell(-3.19, 55.95, resolution = 5)
-children <- a5_cell_to_children(cell, resolution = 7)
+children <- a5_cell_to_children(cell, child_resolution = 7)
 covering <- a5_compact(children) # stored as the parent
 covering
 #> <a5_covering[1]>

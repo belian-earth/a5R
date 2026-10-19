@@ -21,7 +21,8 @@ a5_cell_to_lonlat(cell, as_dataframe = FALSE)
 
 - lat:
 
-  Numeric vector of latitudes in degrees.
+  Numeric vector of latitudes in degrees, between -90 and 90. Non-finite
+  coordinates (`NA`, `NaN`, `Inf`) give `NA` cells.
 
 - resolution:
 

@@ -39,10 +39,11 @@ a5_covering_resolution(x)
   [a5_cell](https://belian-earth.github.io/a5R/reference/a5_cell.md)
   vector (one covering), an
   [a5_cell_list](https://belian-earth.github.io/a5R/reference/a5_cell_list.md)
-  (one covering per element), or a list of raw vectors of little-endian
-  64-bit values, as stored by other A5 libraries (`NULL` elements are
-  missing). For `a5_covering_resolution()` and `is_a5_covering()`: any
-  object.
+  (one covering per element), or a list of
+  [a5_cell](https://belian-earth.github.io/a5R/reference/a5_cell.md)
+  vectors or of raw vectors of little-endian 64-bit values, as stored by
+  other A5 libraries. `NULL` list elements are missing coverings. For
+  `a5_covering_resolution()` and `is_a5_covering()`: any object.
 
 - ...:
 
@@ -77,12 +78,14 @@ expands coverings to their cells.
 
 ## Working with coverings
 
-Use coverings through a5R functions rather than by reading the stored
-cells. The stored cells are index parents (see
+Use coverings through a5R functions where one fits. The stored cells are
+index parents (see
 [a5_hierarchy](https://belian-earth.github.io/a5R/reference/a5_hierarchy.md)):
 their outlines do not nest geometrically, so drawing them shows overlaps
 and gaps. Uncompact a covering before plotting or joining it to data
-keyed by cell.
+keyed by cell. For index range queries,
+[`a5_covering_stored()`](https://belian-earth.github.io/a5R/reference/a5_covering_stored.md)
+returns the stored cells.
 
 [`length()`](https://rdrr.io/r/base/length.html) counts coverings, not
 cells. `x[i]` and `x[[i]]` both return coverings, and
@@ -116,7 +119,7 @@ a5_covering_resolution(disk)
 #> [1] 8
 
 # from cells: complete sibling groups are stored as their parent
-kids <- a5_cell_to_children(cell, resolution = 10)
+kids <- a5_cell_to_children(cell, child_resolution = 10)
 as_a5_covering(kids)
 #> <a5_covering[1]>
 #> [1] res 10: 16 cells (1 stored)

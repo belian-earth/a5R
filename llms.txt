@@ -6,8 +6,12 @@ crate](https://github.com/felixpalmer/a5-rs) via
 [extendr](https://extendr.rs/extendr/extendr_api/).
 
 A5 partitions the Earth’s surface into pentagonal cells across 31
-resolution levels. Cells are equal-area, encoded as 64-bit integers, and
-achieve millimetre-level precision at the finest resolution.
+resolution levels. Cells are equal-area and encoded as 64-bit integers;
+at the finest resolution each covers about 30 mm².
+
+a5R 1.0 uses the A5 1.0 cell index, which numbers cells differently from
+earlier versions. Convert ids stored by a5R 0.x with
+[`a5_migrate()`](https://belian-earth.github.io/a5R/reference/a5_migrate.md).
 
 ## Installation
 
@@ -24,8 +28,8 @@ Or install the development version from GitHub:
 pak::pak("belian-earth/a5R")
 ```
 
-You will need a working [Rust toolchain](https://rustup.rs/) (`cargo`
-and `rustc`).
+Building from source needs a [Rust toolchain](https://rustup.rs/)
+(`cargo` and `rustc`).
 
 ## Quick example
 
@@ -53,16 +57,28 @@ a5_cell_to_children(cell)
 #> [1] 63bb942000000000 63bb946000000000 63bb94a000000000 63bb94e000000000
 ```
 
+Polygons become coverings, one per feature. Here North Carolina’s
+counties are filled with cells, coloured by their distance from Wake
+County’s centroid:
+
 ``` r
 
-# Create a collection of cells whose centres fall within a great-circle distance of 100km from the origin cell
-cells <- a5_spherical_cap(cell, radius = 100000) |> 
-  a5_uncompact()
-plot(a5_cell_to_boundary(cells), col = "#206ead20", border = "#206ead", asp = 1)
+nc <- sf::read_sf(system.file("shape/nc.shp", package = "sf")) |>
+  sf::st_transform(4326)
+nc$a5 <- a5_polygon_to_cells(nc, resolution = 9, containment = "overlapping")
+
+cells <- unique(a5_uncompact(nc$a5))
+wake <- sf::st_coordinates(sf::st_centroid(nc$geometry[nc$NAME == "Wake"]))
+centre <- a5_lonlat_to_cell(wake[, 1], wake[, 2], resolution = 9)
+dist <- a5_cell_distance(centre, cells, units = "km")
+
+plot(a5_cell_to_boundary(cells), col = hcl.colors(50)[cut(as.numeric(dist), 50)], border = "grey50", lwd = 0.5)
+plot(nc$geometry, border = "white", lwd = 0.5, add = TRUE)
 ```
 
-![A5 grid plot showing a collection of cells around a
-point](reference/figures/README-grid-plot-1.png)
+![North Carolina's counties filled with A5 cells at resolution 9,
+coloured from dark near Wake County to yellow at the far west of the
+state.](reference/figures/README-nc-distance-1.png)
 
 See
 [`vignette("a5R")`](https://belian-earth.github.io/a5R/articles/a5R.md)
@@ -71,15 +87,15 @@ and geometry-to-cell conversion.
 
 ## Features
 
-- **Vectorised Rust core** — all operations implemented in Rust and
+- **Vectorised Rust core:** all operations implemented in Rust and
   called from R via extendr. A [benchmark
   suite](https://github.com/belian-earth/a5R/tree/main/benchmarks)
   mirroring the TypeScript, Python and Rust ports runs on every pull
   request and fails on regressions above 15%.
-- **vctrs + wk integration** — cell indices use an `a5_cell` type with
+- **vctrs + wk integration:** cell indices use an `a5_cell` type with
   tibble support; geometries return as `wk_wkb`/`wk_wkt` vectors
   compatible with sf and terra.
-- **Coverings** — polygons, disks and caps become `a5_covering` vectors,
+- **Coverings:** polygons, disks and caps become `a5_covering` vectors,
   one compacted cell set per feature, that combine
   ([`a5_union()`](https://belian-earth.github.io/a5R/reference/a5_set_operations.md),
   [`a5_intersect()`](https://belian-earth.github.io/a5R/reference/a5_set_operations.md),
@@ -90,23 +106,27 @@ and geometry-to-cell conversion.
   ([`a5_area()`](https://belian-earth.github.io/a5R/reference/a5_covering_measures.md))
   without expanding to millions of cells. See
   [`vignette("coverings")`](https://belian-earth.github.io/a5R/articles/coverings.md).
-- **Geometry indexing** —
+- **Geometry indexing:**
   [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_polygon_to_cells.md)
   and
-  [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_linestring_to_cells.md)
+  [`a5_line_string_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_line_string_to_cells.md)
   map polygons and great-circle lines to cells.
-- **Traversal** —
+- **Traversal:**
   [`a5_grid_disk()`](https://belian-earth.github.io/a5R/reference/a5_grid_disk.md)
   and
   [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/reference/a5_spherical_cap.md)
   select neighbours by hop count or great-circle distance.
-- **Spatial hierarchy** —
+- **Spatial hierarchy:**
   [`a5_cell_to_supercell()`](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
   and
-  [`a5_cell_to_subcell()`](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
+  [`a5_cell_to_subcells()`](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
   move between resolutions by location, so aggregation counts each fine
   cell inside the coarse cell it lies in.
-- **Multi-threading** — opt-in parallel processing via rayon for
+- **Arrow and Parquet:** cells and coverings convert to Arrow `uint64`
+  columns and back exactly, with the A5 index recorded in the schema.
+  See
+  [`vignette("arrow-parquet")`](https://belian-earth.github.io/a5R/articles/arrow-parquet.md).
+- **Multi-threading:** opt-in parallel processing via rayon for
   vectorised operations. See
   [`vignette("multithreading")`](https://belian-earth.github.io/a5R/articles/multithreading.md).
 
@@ -160,7 +180,11 @@ Lossless conversion to and from Arrow arrays.
   [`a5_covering_to_arrow()`](https://belian-earth.github.io/a5R/reference/a5_covering_from_arrow.md)
   :
 
-  Convert between a5_covering and Arrow list arrays
+  Convert between a5_covering and Arrow `list<uint64>` arrays
+
+- [`a5_to_arrow_table()`](https://belian-earth.github.io/a5R/reference/a5_to_arrow_table.md)
+  [`a5_from_arrow_table()`](https://belian-earth.github.io/a5R/reference/a5_to_arrow_table.md)
+  : Convert data frames with cell columns to and from Arrow tables
 
 ## Hierarchy
 
@@ -172,8 +196,10 @@ Navigate the cell hierarchy across resolutions.
   [`a5_cell_to_children()`](https://belian-earth.github.io/a5R/reference/a5_hierarchy.md)
   : Index parents and children
 - [`a5_cell_to_supercell()`](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
-  [`a5_cell_to_subcell()`](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
+  [`a5_cell_to_subcells()`](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
   : Supercells and subcells: parents and children by location
+- [`a5_covering_to_supercells()`](https://belian-earth.github.io/a5R/reference/a5_covering_to_supercells.md)
+  : Supercells of a covering
 - [`a5_cell_child()`](https://belian-earth.github.io/a5R/reference/a5_cell_child.md)
   : The i-th child of each cell
 - [`a5_cell_children_range()`](https://belian-earth.github.io/a5R/reference/a5_cell_children_range.md)
@@ -187,6 +213,8 @@ Cell boundaries, areas, counts, and distances.
 
 - [`a5_cell_to_boundary()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_boundary.md)
   : Get cell boundary polygons
+- [`a5_cell_to_boundary_xy()`](https://belian-earth.github.io/a5R/reference/a5_cell_to_boundary_xy.md)
+  : Get cell boundary vertices as flat coordinate vectors
 - [`a5_cell_distance()`](https://belian-earth.github.io/a5R/reference/a5_cell_distance.md)
   : Distance between cell centroids
 - [`a5_cell_area()`](https://belian-earth.github.io/a5R/reference/a5_resolution_stats.md)
@@ -200,6 +228,7 @@ Cell boundaries, areas, counts, and distances.
 Neighbourhood and distance-based cell selection.
 
 - [`a5_grid_disk()`](https://belian-earth.github.io/a5R/reference/a5_grid_disk.md)
+  [`a5_grid_disk_vertex()`](https://belian-earth.github.io/a5R/reference/a5_grid_disk.md)
   : Cells within k hops of a cell
 - [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/reference/a5_spherical_cap.md)
   : Cells within a great-circle radius
@@ -212,6 +241,8 @@ Compacted sets of cells that record their resolution.
   [`is_a5_covering()`](https://belian-earth.github.io/a5R/reference/a5_covering.md)
   [`a5_covering_resolution()`](https://belian-earth.github.io/a5R/reference/a5_covering.md)
   : A5 covering vectors
+- [`a5_covering_stored()`](https://belian-earth.github.io/a5R/reference/a5_covering_stored.md)
+  : Stored cells of a covering
 - [`a5_compact()`](https://belian-earth.github.io/a5R/reference/a5_compaction.md)
   [`a5_uncompact()`](https://belian-earth.github.io/a5R/reference/a5_compaction.md)
   : Compact and uncompact sets of cells
@@ -232,16 +263,24 @@ Convert polygons and linestrings to cells covering them.
 
 - [`a5_polygon_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_polygon_to_cells.md)
   : Cells inside or overlapping a polygon
-- [`a5_linestring_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_linestring_to_cells.md)
+- [`a5_line_string_to_cells()`](https://belian-earth.github.io/a5R/reference/a5_line_string_to_cells.md)
   : Cells traced by a great-circle linestring
+- [`a5_bbox()`](https://belian-earth.github.io/a5R/reference/a5_bbox.md)
+  : Bounding box of polygons with great-circle edges
 
 ## Configuration
 
-Thread control for parallel processing.
+Package information, thread control, error classes and the C API.
 
-- [`a5_set_threads()`](https://belian-earth.github.io/a5R/reference/a5_threads.md)
-  [`a5_get_threads()`](https://belian-earth.github.io/a5R/reference/a5_threads.md)
-  : Set the number of threads used by a5R
+- [`a5_info()`](https://belian-earth.github.io/a5R/reference/a5_info.md)
+  : a5R build and session information
+- [`a5_threads()`](https://belian-earth.github.io/a5R/reference/a5_threads.md)
+  [`with(`*`<a5_threads>`*`)`](https://belian-earth.github.io/a5R/reference/a5_threads.md)
+  : Get or set the number of threads used by a5R
+- [`a5_errors`](https://belian-earth.github.io/a5R/reference/a5_errors.md)
+  : Error classes
+- [`a5_c_api`](https://belian-earth.github.io/a5R/reference/a5_c_api.md)
+  : C API for other packages
 
 ## wk integration
 

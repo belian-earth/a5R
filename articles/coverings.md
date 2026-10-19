@@ -13,9 +13,9 @@ coverings sit in a data frame column next to the features they describe.
 
 ## What a covering stores
 
-A covering is stored compacted: every complete group of four sibling
-cells is replaced by their parent, and a trailing *compaction marker*
-records the resolution the stored cells stand for.
+A covering is stored compacted: every complete group of sibling cells is
+replaced by their parent, and a trailing *compaction marker* records the
+resolution the stored cells stand for.
 
 ``` r
 
@@ -36,7 +36,9 @@ that stand for millions of cells. To draw a covering or join it to data
 keyed by cell, expand it with
 [`a5_uncompact()`](https://belian-earth.github.io/a5R/reference/a5_compaction.md),
 as the figures here do. Where it helps, a second row shows what the same
-covering stores.
+covering stores, as
+[`a5_covering_stored()`](https://belian-earth.github.io/a5R/reference/a5_covering_stored.md)
+returns it.
 
 ## Building coverings
 
@@ -44,7 +46,9 @@ covering stores.
 returns one covering per feature. By default a cell belongs when its
 centre lies inside the polygon; `containment = "overlapping"` also takes
 every cell the boundary touches, so the cells cover the polygon without
-gaps.
+gaps. Polygon edges are great circles, as in the other A5 libraries;
+[`a5_bbox()`](https://belian-earth.github.io/a5R/reference/a5_bbox.md)
+gives the box those edges span.
 
 ``` r
 
@@ -64,18 +68,20 @@ c(centre, overlapping)
 The functions that start from a cell return one covering per centre
 cell:
 [`a5_grid_disk()`](https://belian-earth.github.io/a5R/reference/a5_grid_disk.md)
-takes every cell within `k` steps,
+takes every cell within `k` edge steps
+([`a5_grid_disk_vertex()`](https://belian-earth.github.io/a5R/reference/a5_grid_disk.md)
+also steps across shared vertices),
 [`a5_spherical_cap()`](https://belian-earth.github.io/a5R/reference/a5_spherical_cap.md)
 every cell whose centre is within a distance, and
-[`a5_cell_to_subcell()`](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
+[`a5_cell_to_subcells()`](https://belian-earth.github.io/a5R/reference/a5_spatial_hierarchy.md)
 the finer cells whose centres lie inside a coarser cell.
 
 ``` r
 
 disk <- a5_grid_disk(raleigh, k = 3)
 cap <- a5_spherical_cap(raleigh, radius = 8000)
-coarse <- a5_cell_to_parent(raleigh, resolution = 9)
-subcells <- a5_cell_to_subcell(coarse, resolution = 11)
+coarse <- a5_cell_to_supercell(raleigh, resolution = 9)
+subcells <- a5_cell_to_subcells(coarse, resolution = 11)
 ```
 
 ![](coverings_files/figure-html/around-plot-1.png)
@@ -170,15 +176,22 @@ state
 
 Both coverings in each pair must be at the same resolution, or it is an
 error. A5 cells do not nest across resolutions: a resolution-11 cell can
-straddle the edge between two resolution-10 cells, so a set of cells at
-one resolution does not translate into a set at another.
+straddle the edge between two resolution-10 cells. To move a covering to
+a coarser resolution,
+[`a5_covering_to_supercells()`](https://belian-earth.github.io/a5R/reference/a5_covering_to_supercells.md)
+takes the coarse cells holding the centre of any of its cells (see
+[`vignette("spatial-hierarchy")`](https://belian-earth.github.io/a5R/articles/spatial-hierarchy.md)).
 
 ``` r
 
-a5_union(state, a5_spherical_cap(a5_cell_to_parent(raleigh), radius = 60000))
+cap10 <- a5_spherical_cap(a5_cell_to_supercell(raleigh), radius = 60000)
+a5_union(state, cap10)
 #> Error in `a5_union()`:
 #> ! union failed for element 1: Cannot combine cells at resolution 11 with
 #>   cells at resolution 10
+a5_union(a5_covering_to_supercells(state, 10), cap10)
+#> <a5_covering[1]>
+#> [1] res 10: 4,096 cells (583 stored)
 ```
 
 ![](coverings_files/figure-html/nest-plot-1.png)
@@ -228,7 +241,7 @@ a5_overlaps(gap_free[1], gap_free[2])
 
 ![](coverings_files/figure-html/overlaps-plot-1.png)
 
-Shared cells are in aqua.
+Shared cells are in green.
 
 ## Drawing and joining
 
