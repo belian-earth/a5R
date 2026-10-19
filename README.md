@@ -76,10 +76,11 @@ counties are filled with cells, coloured by their distance from Wake
 County’s centroid:
 
 ``` r
-nc <- sf::read_sf(system.file("shape/nc.shp", package = "sf"))
+nc <- sf::read_sf(system.file("shape/nc.shp", package = "sf")) |>
+  sf::st_transform(4326)
 nc$a5 <- a5_polygon_to_cells(nc, resolution = 9, containment = "overlapping")
 
-cells <- a5_uncompact(nc$a5)
+cells <- unique(a5_uncompact(nc$a5))
 wake <- sf::st_coordinates(sf::st_centroid(nc$geometry[nc$NAME == "Wake"]))
 centre <- a5_lonlat_to_cell(wake[, 1], wake[, 2], resolution = 9)
 dist <- a5_cell_distance(centre, cells, units = "km")
