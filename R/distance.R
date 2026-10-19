@@ -30,9 +30,10 @@ a5_cell_distance <- function(
 ) {
   from <- as_a5_cell(from)
   to <- as_a5_cell(to)
-  args <- vctrs::vec_recycle_common(from = from, to = to)
+  # A length-1 side is recycled in Rust, which finds its centroid once
+  n <- vctrs::vec_size_common(from = from, to = to)
   method <- arg_match_default(method, c("haversine", "geodesic", "rhumb"))
   check_units(units, "m", "a distance unit")
-  d <- a5_cell_distance_rs(cell_data(args$from), cell_data(args$to), method)
+  d <- a5_cell_distance_rs(cell_data(from), cell_data(to), n, method)
   with_units(d, "m", units)
 }
