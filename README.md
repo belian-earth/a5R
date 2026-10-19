@@ -71,27 +71,24 @@ a5_cell_to_children(cell)
 #> [1] 63bb942000000000 63bb946000000000 63bb94a000000000 63bb94e000000000
 ```
 
-Cells within 25 steps of Wake County’s centroid, coloured by distance:
+Polygons become coverings, one per feature. Here North Carolina’s
+counties are filled with cells, coloured by their distance from Wake
+County’s centroid:
 
 ``` r
-nc <- sf::read_sf(system.file("shape/nc.shp", package = "sf")) |>
-  sf::st_transform(4326)
-wake <- sf::st_coordinates(sf::st_centroid(nc$geometry[nc$NAME == "Wake"]))
-centre <- a5_lonlat_to_cell(wake[, 1], wake[, 2], resolution = 10)
+nc <- sf::read_sf(system.file("shape/nc.shp", package = "sf"))
+nc$a5 <- a5_polygon_to_cells(nc, resolution = 9, containment = "overlapping")
 
-disk <- a5_grid_disk(centre, k = 25)
-disk
-#> <a5_covering[1]>
-#> [1] res 10: 1,734 cells (192 stored)
-cells <- a5_uncompact(disk)
+cells <- a5_uncompact(nc$a5)
+wake <- sf::st_coordinates(sf::st_centroid(nc$geometry[nc$NAME == "Wake"]))
+centre <- a5_lonlat_to_cell(wake[, 1], wake[, 2], resolution = 9)
 dist <- a5_cell_distance(centre, cells, units = "km")
 
-plot(nc$geometry, border = "grey50", lwd = 0.5)
-plot(a5_cell_to_boundary(cells), col = hcl.colors(50)[cut(as.numeric(dist), 50)], border = NA, add = TRUE)
-plot(nc$geometry, border = "grey50", lwd = 0.5, add = TRUE)
+plot(a5_cell_to_boundary(cells), col = hcl.colors(50)[cut(as.numeric(dist), 50)], border = "grey50", lwd = 0.5)
+plot(nc$geometry, border = "white", lwd = 0.5, add = TRUE)
 ```
 
-<img src="man/figures/README-grid-disk-1.png" alt="North Carolina's counties with A5 cells within 25 steps of Wake County's centroid, coloured from dark at the centre to yellow at about 200 km." width="100%" />
+<img src="man/figures/README-nc-distance-1.png" alt="North Carolina's counties filled with A5 cells at resolution 9, coloured from dark near Wake County to yellow at the far west of the state." width="100%" />
 
 See `vignette("a5R")` for a full walkthrough of indexing, boundaries,
 hierarchy, traversal, and geometry-to-cell conversion.
