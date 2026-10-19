@@ -1,4 +1,4 @@
-# a5R (development version)
+# a5R 1.0.0
 
 ## Breaking changes
 
