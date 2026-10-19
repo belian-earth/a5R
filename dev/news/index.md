@@ -324,6 +324,12 @@
   WKB takes about 25% less time on one thread and half the time on four,
   and WKT about 20% less.
 
+- [`a5_cell_distance()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_distance.md)
+  from one cell to many (or many to one) finds the single cell’s
+  centroid once instead of once per pair, with identical results: on a
+  million cells it is about twice as fast for `"haversine"` and
+  `"rhumb"` and a quarter faster for `"geodesic"`.
+
 - [`a5_cell_to_boundary()`](https://belian-earth.github.io/a5R/dev/reference/a5_cell_to_boundary.md)
   rejects a `segments` value below 1 or `NA`; a negative value used to
   hang. Its documentation now gives the default,
